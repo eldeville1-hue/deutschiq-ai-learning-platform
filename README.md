@@ -1,5 +1,15 @@
 ﻿# DeutschIQ
 
+## v14 Cloud Webhook
+
+DeutschIQ can now run independently of a developer PC and ngrok. Production uses a signed Telegram webhook inside the FastAPI service, while local development keeps the existing polling workflow. The repository includes a multi-stage Docker image, Cloud Run deployment script, secret-safe configuration, health reporting, and GitHub Actions CI.
+
+- [Permanent deployment guide](docs/DEPLOYMENT.md)
+- `Dockerfile` builds the React Mini App and Python API into one container.
+- `DEPLOY-CLOUD-RUN.ps1` deploys from Windows without committing credentials.
+- Telegram webhook requests and scheduled reminder calls use separate secrets.
+- Generated environments, builds, caches and local `.env` files are excluded from Git.
+
 <!-- deutschiq-screenshots -->
 ## Product Preview
 
@@ -201,4 +211,3 @@ python -m app.bot.main
 ## Security
 
 Never commit `.env`, bot tokens, API keys, production database credentials, user data, or generated virtual environments.
-

@@ -1,0 +1,31 @@
+.env
+.env.*
+!.env.example
+backend/.env
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+venv/
+.venv/
+backend/venv/
+
+# Node / Vite
+node_modules/
+frontend/mini-app/node_modules/
+frontend/mini-app/dist/
+dist/
+*.tsbuildinfo
+
+# Local data and tools
+*.db
+*.sqlite3
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.log
+ngrok*.yml

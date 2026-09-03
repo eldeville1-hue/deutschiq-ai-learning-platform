@@ -1,0 +1,16 @@
+.git
+.github
+.env
+.env.*
+!.env.example
+**/__pycache__
+**/*.pyc
+**/venv
+**/.venv
+**/node_modules
+frontend/mini-app/dist
+docs/screenshots
+*.zip
+*.log
+tree.txt
+DeutschIQ-all-code.txt

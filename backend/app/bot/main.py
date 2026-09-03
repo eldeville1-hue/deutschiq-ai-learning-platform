@@ -206,6 +206,8 @@ async def handle_web_app_data(message: Message):
 # ==========================================
 
 async def main():
+    if settings.BOT_MODE != "polling":
+        raise RuntimeError("Standalone bot process is only for BOT_MODE=polling.")
     await bot.delete_webhook(drop_pending_updates=True)
     await bot.set_chat_menu_button(
         menu_button=MenuButtonWebApp(
@@ -219,6 +221,7 @@ async def main():
         await dp.start_polling(bot)
     finally:
         reminder_task.cancel()
+        await bot.session.close()
 
 if __name__ == "__main__":
     acquire_bot_lock(settings.BOT_TOKEN)

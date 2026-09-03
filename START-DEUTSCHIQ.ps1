@@ -26,10 +26,10 @@ if (-not $BackendReady) {
     } catch {
         throw "Port 8000 is occupied by another service. Stop it before starting DeutschIQ."
     }
-    if ($RunningVersion -ne "13.0.0") {
+    if ($RunningVersion -ne "14.0.0") {
         throw "An older DeutschIQ backend ($RunningVersion) is already running. Stop it and run this command again."
     }
-    Write-Host "DeutschIQ 13.0.0 backend is already running" -ForegroundColor Yellow
+    Write-Host "DeutschIQ 14.0.0 backend is already running" -ForegroundColor Yellow
 }
 
 $Health = $null
@@ -40,7 +40,7 @@ for ($Attempt = 1; $Attempt -le 10 -and -not $Health; $Attempt++) {
         Start-Sleep -Seconds 1
     }
 }
-if (-not $Health -or $Health.version -ne "13.0.0") {
+if (-not $Health -or $Health.version -ne "14.0.0") {
     throw "DeutschIQ backend did not become healthy. Check the backend PowerShell window."
 }
 Write-Host "Health: database=$($Health.database), AI feedback=$($Health.ai_feedback)" -ForegroundColor Cyan
@@ -69,4 +69,4 @@ if ($StartNgrok) {
     }
 }
 
-Write-Host "DeutschIQ 13.0.0 startup complete" -ForegroundColor Cyan
+Write-Host "DeutschIQ 14.0.0 startup complete" -ForegroundColor Cyan
