@@ -1,4 +1,29 @@
-# DeutschIQ
+﻿# DeutschIQ
+
+<!-- deutschiq-screenshots -->
+## Product Preview
+
+![DeutschIQ вЂ” adaptive German learning inside Telegram](docs/screenshots/deutschiq-cover.png)
+
+<p align="center">
+  <img src="docs/screenshots/01-home.png" width="230" alt="DeutschIQ personalized home screen">
+  <img src="docs/screenshots/02-diagnostic.png" width="230" alt="DeutschIQ adaptive diagnostic">
+  <img src="docs/screenshots/03-lesson.png" width="230" alt="DeutschIQ interactive lesson">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/04-plan.png" width="230" alt="DeutschIQ personalized learning plan">
+  <img src="docs/screenshots/05-analytics.png" width="230" alt="DeutschIQ mastery analytics">
+  <img src="docs/screenshots/06-ai-tutor.png" width="230" alt="DeutschIQ AI tutor">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/07-profile.png" width="230" alt="DeutschIQ learner profile">
+</p>
+
+The interface runs as a Telegram Mini App and is optimized for mobile WebView environments. Screenshots show the actual application running inside Telegram on iOS.
+
+
 
 ## v13 Precision Design
 
@@ -66,7 +91,7 @@ DeutschIQ is a Telegram Mini App for personalized German learning. It combines a
 
 ## Product highlights
 
-- Adaptive A1–B2 diagnostic with immediate explanations
+- Adaptive A1вЂ“B2 diagnostic with immediate explanations
 - Personalized grammar and vocabulary skill analysis
 - 30-day roadmap with 30 lessons and 90 starter exercises
 - AI tutor with daily free limits and session history
@@ -101,15 +126,15 @@ flowchart LR
 
 ```text
 DeutschIQ/
-├── backend/
-│   ├── app/api/endpoints/   # FastAPI routes
-│   ├── app/bot/             # Telegram bot and reminders
-│   ├── app/models/          # SQLAlchemy models
-│   ├── app/services/        # diagnostics and learning logic
-│   ├── init_db.py
-│   └── seed_30_day_plan.py
-├── frontend/mini-app/       # React Telegram Mini App
-└── docker-compose.yml       # PostgreSQL and Redis
+в”њв”Ђв”Ђ backend/
+в”‚   в”њв”Ђв”Ђ app/api/endpoints/   # FastAPI routes
+в”‚   в”њв”Ђв”Ђ app/bot/             # Telegram bot and reminders
+в”‚   в”њв”Ђв”Ђ app/models/          # SQLAlchemy models
+в”‚   в”њв”Ђв”Ђ app/services/        # diagnostics and learning logic
+в”‚   в”њв”Ђв”Ђ init_db.py
+в”‚   в””в”Ђв”Ђ seed_30_day_plan.py
+в”њв”Ђв”Ђ frontend/mini-app/       # React Telegram Mini App
+в””в”Ђв”Ђ docker-compose.yml       # PostgreSQL and Redis
 ```
 
 ## Local setup
@@ -176,3 +201,4 @@ python -m app.bot.main
 ## Security
 
 Never commit `.env`, bot tokens, API keys, production database credentials, user data, or generated virtual environments.
+
