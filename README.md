@@ -1,213 +1,172 @@
-﻿# DeutschIQ
-
-## v14 Cloud Webhook
-
-DeutschIQ can now run independently of a developer PC and ngrok. Production uses a signed Telegram webhook inside the FastAPI service, while local development keeps the existing polling workflow. The repository includes a multi-stage Docker image, Cloud Run deployment script, secret-safe configuration, health reporting, and GitHub Actions CI.
-
-- [Permanent deployment guide](docs/DEPLOYMENT.md)
-- `Dockerfile` builds the React Mini App and Python API into one container.
-- `DEPLOY-CLOUD-RUN.ps1` deploys from Windows without committing credentials.
-- Telegram webhook requests and scheduled reminder calls use separate secrets.
-- Generated environments, builds, caches and local `.env` files are excluded from Git.
-
-<!-- deutschiq-screenshots -->
-## Product Preview
-
-![DeutschIQ вЂ” adaptive German learning inside Telegram](docs/screenshots/deutschiq-cover.png)
+# DeutschIQ
 
 <p align="center">
-  <img src="docs/screenshots/01-home.png" width="230" alt="DeutschIQ personalized home screen">
-  <img src="docs/screenshots/02-diagnostic.png" width="230" alt="DeutschIQ adaptive diagnostic">
-  <img src="docs/screenshots/03-lesson.png" width="230" alt="DeutschIQ interactive lesson">
+  <img src="docs/screenshots/deutschiq-cover.png" alt="DeutschIQ — adaptive German learning inside Telegram">
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/04-plan.png" width="230" alt="DeutschIQ personalized learning plan">
-  <img src="docs/screenshots/05-analytics.png" width="230" alt="DeutschIQ mastery analytics">
-  <img src="docs/screenshots/06-ai-tutor.png" width="230" alt="DeutschIQ AI tutor">
+  <a href="https://deutschiq.onrender.com/"><strong>Live Web App</strong></a>
+  ·
+  <a href="https://t.me/DeutschIQ_bot"><strong>Open Telegram Bot</strong></a>
+  ·
+  <a href="docs/DEPLOYMENT.md"><strong>Deployment Guide</strong></a>
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/07-profile.png" width="230" alt="DeutschIQ learner profile">
+  <img alt="CI" src="https://github.com/eldeville1-hue/deutschiq-ai-learning-platform/actions/workflows/ci.yml/badge.svg">
+  <img alt="Python 3.12" src="https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white">
+  <img alt="React TypeScript" src="https://img.shields.io/badge/React-TypeScript-3178C6?logo=react&logoColor=white">
+  <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-API-009688?logo=fastapi&logoColor=white">
 </p>
 
-The interface runs as a Telegram Mini App and is optimized for mobile WebView environments. Screenshots show the actual application running inside Telegram on iOS.
+## About
 
+DeutschIQ is an AI-assisted Telegram Mini App for adaptive German learning. It combines a protected level diagnostic, a personalized 30-day curriculum, mastery-based exercises, spaced review, progress analytics, and an AI tutor in a mobile-first learning flow.
 
+The public application runs as a Docker service on Render with a signed Telegram webhook and managed PostgreSQL on Neon.
 
-## v13 Precision Design
+> The free Render instance can take up to a minute to wake after inactivity.
 
-This release replaces the previous page compositions instead of applying another cosmetic layer. Home is a learning command center, Analysis is a knowledge instrument, Profile is an identity sheet, Plan is a route map, Tutor is a conversation canvas, and Diagnostic/Lesson remain distraction-free. The serif display face is removed in favor of a bundled system sans-serif stack that renders reliably inside Telegram on Windows, iOS and Android.
+## Product preview
 
-## v12 Obsidian Editorial
+<p align="center">
+  <img src="docs/screenshots/01-home.png" width="230" alt="Personalized home screen">
+  <img src="docs/screenshots/02-diagnostic.png" width="230" alt="Adaptive German diagnostic">
+  <img src="docs/screenshots/03-lesson.png" width="230" alt="Interactive German lesson">
+</p>
 
-Every Mini App surface now has its own visual role inside one detailed design system: cinematic onboarding, an action-first dashboard cover, instrument-like analytics, a vertical learning route, a true messenger tutor, quiet account settings, fullscreen diagnostic and lesson focus modes, and a celebratory result reveal. The redesign adds complete dark/light tokens, safe-area handling, keyboard focus, small-screen tuning, staged motion and reduced-motion behavior without changing the v11 learning engine.
+<p align="center">
+  <img src="docs/screenshots/04-plan.png" width="230" alt="Personalized learning plan">
+  <img src="docs/screenshots/05-analytics.png" width="230" alt="Knowledge analytics">
+  <img src="docs/screenshots/06-ai-tutor.png" width="230" alt="AI German tutor">
+</p>
 
-## v11 Curriculum Core
+<p align="center">
+  <img src="docs/screenshots/07-profile.png" width="230" alt="Learner profile">
+  <img src="docs/screenshots/09-lesson-listening.png" width="230" alt="Listening exercise">
+  <img src="docs/screenshots/10-lesson-feedback.png" width="230" alt="Learning feedback">
+</p>
 
-The 30-day path now gives every lesson its own communicative goal, authentic error contrast and production target. Free German sentences receive structured AI feedback when OpenAI is available, with a deterministic offline fallback. Independent retrieval is used for scheduled review, curriculum validation checks all learning stages, and the bot prevents duplicate local polling processes.
+## Key features
 
-## v10 Learning Content Quality
-
-The complete 30-day roadmap is upgraded to a consistent evidence-informed sequence: explicit goal, concise rule, German listening at normal/slow speed, correct-vs-common-error contrast, retrieval pause, guided practice, independent word ordering and a productive sentence task. Content is normalized at the API boundary and validated before installation.
-
-## v9 Product Intelligence
-
-Every lesson now has a server-owned learning session. Attempts, score, pass/fail, XP and analytics are isolated to that session, preventing historical answers from corrupting a new result. The learning algorithm is extracted into tested pure functions for session scoring, confidence-weighted mastery and expanding review intervals.
-
-## v8 Adaptive Learning
-
-Lessons now use mastery gates rather than completion-by-click. Wrong answers are retried once inside the same session, the backend calculates accuracy from actual attempts, lessons require 70% to pass, XP is awarded only after demonstrated learning, and the result screen explains score, topic mastery and the next action.
-
-## v7 Better Learning
-
-This cumulative version adds a retention-first learning engine: every exercise attempt records correctness, confidence and response time; topic mastery updates after each answer; due reviews are scheduled adaptively; the 30-day plan prioritizes weak and overdue knowledge; review requires active recall; and Analytics separates retained mastery from simple lesson completion.
-
-## v6 Strong Design
-
-This cumulative build introduces the Editorial Learning OS design direction while preserving Telegram authentication, protected diagnostics, backend answer checks, personalized planning, tutor history, mistakes and review flows.
-
-- Dashboard: action-first lesson poster
-- Analytics: high-contrast knowledge instrument
-- Plan: vertical learning route
-- Tutor: focused messenger layout
-- Profile: quiet account ledger
-- Diagnostic and Lesson: fullscreen focus modes
-- Floating navigation dock, responsive safe areas and reduced-motion support
-
-## UX v2.1
-
-- Backend-driven bootstrap through `GET /api/user/state/{telegram_id}`.
-- Separate onboarding and returning-user intro screens.
-- Diagnostic route guard; retakes require `?retake=true` and are available only from Profile.
-- Backend-persisted RU/DE interface language.
-- Semantic topic labels hide internal slugs such as `haben_conjugation`.
-- Compact Overview, Analysis, Learning Plan, Tutor and Profile screens.
-- Step-based mobile lesson flow: rule, example, three exercises, result.
-- Shared visual tokens, reusable navigation styles and unique functional icons.
-
-## UI/UX v3
-
-- Permanent Telegram chat menu button opens the Mini App like BotFather's OPEN button.
-- Bot messages, progress, keyboard and help follow the user's RU/DE preference.
-- Diagnostic questions no longer reveal correctness before the final result.
-- Lesson answer comparison ignores trailing punctuation, extra spaces and letter case.
-- Retaking the diagnostic requires explicit confirmation from Profile.
-- Diagnostic results are compact, localized and show semantic topic labels.
-- Dashboard weaknesses use readable rows instead of clipped horizontal tags.
-- Unified one-shot motion system with reduced-motion accessibility support.
-
-DeutschIQ is a Telegram Mini App for personalized German learning. It combines an adaptive diagnostic test, skill analytics, a 30-day curriculum, interactive exercises, an AI tutor, gamification, referrals, and native Telegram Stars payments.
-
-## Product highlights
-
-- Adaptive A1вЂ“B2 diagnostic with immediate explanations
-- Personalized grammar and vocabulary skill analysis
-- 30-day roadmap with 30 lessons and 90 starter exercises
-- AI tutor with daily free limits and session history
-- XP, streaks, achievements, referrals, and Pro access
+- Telegram-authenticated onboarding and returning-user flow
+- Adaptive A1–B2 diagnostic without exposing answers to the client
+- Personalized 30-day roadmap with 30 lessons and 90 exercises
+- Mastery gates, retry logic, confidence tracking, and spaced review
+- Grammar, vocabulary, reading, listening, and productive activities
+- Server-side answer validation and structured feedback
+- AI tutor with backend-managed history and daily limits
+- Progress analytics, mistakes, XP, streaks, and achievements
 - Russian and German interface
-- Telegram-native navigation, sharing, reminders, and payments
+- Mobile Telegram WebView design with reduced-motion support
+- Signed webhook for permanent cloud operation
 
 ## Architecture
 
 ```mermaid
-flowchart LR
-    U[Telegram user] --> B[Aiogram bot]
-    U --> M[React Mini App]
-    B --> A[FastAPI]
-    M --> A
-    A --> P[(PostgreSQL)]
+flowchart TD
+    T[Telegram user] --> W[React Mini App]
+    T --> B[Aiogram webhook]
+    W --> A[FastAPI API]
+    B --> A
+    A --> D[(Neon PostgreSQL)]
     A --> O[OpenAI API]
 ```
 
-## Technology
-
-| Layer | Stack |
+| Layer | Technology |
 | --- | --- |
 | Mini App | React, TypeScript, Vite, React Router |
-| Backend | Python, FastAPI, SQLAlchemy, Pydantic |
-| Telegram bot | aiogram 3 |
-| Data | PostgreSQL, Redis-ready configuration |
-| AI | OpenAI-compatible tutor service |
-| Payments | Telegram Stars invoices |
+| Backend | Python 3.12, FastAPI, SQLAlchemy, Pydantic |
+| Telegram | aiogram 3, signed webhook, Web App authentication |
+| Learning | mastery scoring, adaptive review, structured diagnostics |
+| Database | PostgreSQL on Neon |
+| AI | OpenAI API with deterministic fallback |
+| Delivery | Docker, Render, GitHub Actions |
 
-## Project structure
+## Repository structure
 
 ```text
 DeutschIQ/
-в”њв”Ђв”Ђ backend/
-в”‚   в”њв”Ђв”Ђ app/api/endpoints/   # FastAPI routes
-в”‚   в”њв”Ђв”Ђ app/bot/             # Telegram bot and reminders
-в”‚   в”њв”Ђв”Ђ app/models/          # SQLAlchemy models
-в”‚   в”њв”Ђв”Ђ app/services/        # diagnostics and learning logic
-в”‚   в”њв”Ђв”Ђ init_db.py
-в”‚   в””в”Ђв”Ђ seed_30_day_plan.py
-в”њв”Ђв”Ђ frontend/mini-app/       # React Telegram Mini App
-в””в”Ђв”Ђ docker-compose.yml       # PostgreSQL and Redis
+├── backend/
+│   ├── app/api/endpoints/   # FastAPI routes
+│   ├── app/bot/             # Telegram bot and webhook
+│   ├── app/models/          # SQLAlchemy models
+│   ├── app/services/        # Learning and diagnostic logic
+│   ├── tests/
+│   ├── init_db.py
+│   └── seed_30_day_plan.py
+├── frontend/mini-app/       # React Telegram Mini App
+├── docs/screenshots/        # Product screenshots
+├── Dockerfile
+└── docker-compose.yml
 ```
 
-## Local setup
+## Local development
 
-Requirements: Python 3.11+, Node.js 20+, Docker Desktop, and an HTTPS tunnel for Telegram development.
-
-Create a root `.env` file:
-
-```env
-BOT_TOKEN=your_telegram_bot_token
-DATABASE_URL=postgresql://user:postgres@localhost:5432/deutschiq
-OPENAI_API_KEY=your_openai_key
-OPENAI_MODEL=gpt-4o-mini
-WEBAPP_URL=https://your-public-host.example
-SECRET_KEY=replace-with-a-random-secret
-```
-
-Start PostgreSQL and initialize the content:
+Requirements: Python 3.11+, Node.js 20+, Docker Desktop, and an HTTPS tunnel for Telegram testing.
 
 ```powershell
+Copy-Item .env.example .env
 docker compose up -d postgres
+
 cd backend
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 python init_db.py
 python seed_30_day_plan.py
-```
+python validate_content.py
 
-Build and run the Mini App:
-
-```powershell
 cd ..\frontend\mini-app
 npm install
 npm run build
-cd ..\..\backend
-uvicorn app.main:app --reload
 ```
 
-Run the bot in a second terminal:
+Run the API and polling bot in separate terminals:
 
 ```powershell
 cd backend
-.\venv\Scripts\Activate.ps1
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+```powershell
+cd backend
 python -m app.bot.main
 ```
 
-## Main user flow
+## Production
 
-1. Open DeutschIQ from the Telegram bot.
-2. Complete the diagnostic test.
-3. Review the level, mistakes, and skill analysis.
-4. Follow the personalized 30-day plan.
-5. Use the AI tutor for explanations and extra practice.
+- Live application: [deutschiq.onrender.com](https://deutschiq.onrender.com/)
+- Telegram entry point: [@DeutschIQ_bot](https://t.me/DeutschIQ_bot)
+- Health endpoint: [`/api/health`](https://deutschiq.onrender.com/api/health)
+- Runtime: Render Docker Web Service
+- Database: Neon pooled PostgreSQL
+- Bot transport: signed Telegram webhook
 
-## Production checklist
+Render rebuilds the service from GitHub when the production branch changes. Production credentials are stored as hosting environment variables, never in the repository.
 
-- Replace the development tunnel with permanent HTTPS hosting.
-- Configure production PostgreSQL and secrets.
-- Add payment event reconciliation and refund handling.
-- Add monitoring, analytics, privacy policy, terms, and German Impressum.
-- Run API, payment, and end-to-end tests before accepting real payments.
+## Testing
+
+```powershell
+cd backend
+python -m pytest tests -v
+
+cd ..\frontend\mini-app
+npm ci
+npm run build
+```
+
+The same checks run in GitHub Actions.
 
 ## Security
 
-Never commit `.env`, bot tokens, API keys, production database credentials, user data, or generated virtual environments.
+- Telegram `initData` is validated server-side.
+- Webhook requests use Telegram's secret-token header.
+- Diagnostic and lesson answers remain server-side.
+- Local `.env` files, tokens, API keys, database credentials, virtual environments, dependencies, and builds are excluded from Git.
+
+If a credential is exposed, revoke it immediately and replace it in the hosting environment.
+
+## Author
+
+Built as a full-stack portfolio project by [eldeville1-hue](https://github.com/eldeville1-hue), with AI-assisted development used as part of the engineering workflow.
