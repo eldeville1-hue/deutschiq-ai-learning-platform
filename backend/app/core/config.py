@@ -4,10 +4,13 @@ import re
 from dotenv import load_dotenv
 from pathlib import Path
 
-# Ищем .env – сначала в папке backend, потом на уровень выше (корень)
+# Ищем .env сначала в backend, затем в корне проекта.
+config_file = Path(__file__).resolve()
+backend_dir = config_file.parents[2]
+project_root = backend_dir.parent
 possible_paths = [
-    Path(__file__).resolve().parent.parent / ".env",      # backend/.env
-    Path(__file__).resolve().parent.parent.parent / ".env",  # корень проекта
+    backend_dir / ".env",
+    project_root / ".env",
 ]
 
 env_path = None
