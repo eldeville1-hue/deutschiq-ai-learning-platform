@@ -12,11 +12,11 @@ jobs:
       run:
         working-directory: backend
     env:
-      BOT_TOKEN: 123456:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghi
-      DATABASE_URL: sqlite:///:memory:
-      WEBAPP_URL: http://localhost:8000
-      BOT_MODE: polling
-      SECRET_KEY: ci-only-secret
+      BOT_TOKEN: "123456:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghi"
+      DATABASE_URL: "sqlite:///:memory:"
+      WEBAPP_URL: "http://localhost:8000"
+      BOT_MODE: "polling"
+      SECRET_KEY: "ci-only-secret"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
