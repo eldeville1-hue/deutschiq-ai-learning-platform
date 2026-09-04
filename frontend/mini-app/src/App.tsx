@@ -23,27 +23,46 @@ function AppRoutes() {
   const location = useLocation();
   const legalKind = ({ '/privacy': 'privacy', '/imprint': 'imprint', '/terms': 'terms' } as const)[location.pathname as '/privacy' | '/imprint' | '/terms'];
   const [telegramReady, setTelegramReady] = useState(() => hasTelegramIdentity());
-  const [bootstrapFinished, setBootstrapFinished] = useState(false);
+  const [bootstrapFinished, setBootstrapFinished] = useState(() => hasTelegramIdentity());
+
   useEffect(() => {
-    if (telegramReady) { setBootstrapFinished(true); return; }
-    let attempts = 0;
+    const webApp = (window as any).Telegram?.WebApp;
+    webApp?.ready?.();
+    webApp?.expand?.();
+
+    if (hasTelegramIdentity()) {
+      setTelegramReady(true);
+      setBootstrapFinished(true);
+      return;
+    }
+
+    // Telegram clients do not all populate WebApp data at exactly the same moment.
+    // Give the SDK enough time to finish initialization instead of rejecting the
+    // user after two seconds. Authentication is still enforced by the backend
+    // through Telegram's signed initData.
+    const startedAt = Date.now();
+    const maxWaitMs = 10_000;
     const timer = window.setInterval(() => {
-      attempts += 1;
       if (hasTelegramIdentity()) {
         setTelegramReady(true);
         setBootstrapFinished(true);
         window.clearInterval(timer);
-      } else if (attempts >= 20) {
+        return;
+      }
+
+      if (Date.now() - startedAt >= maxWaitMs) {
         setBootstrapFinished(true);
         window.clearInterval(timer);
       }
-    }, 100);
+    }, 150);
+
     return () => window.clearInterval(timer);
-  }, [telegramReady]);
+  }, []);
+
   if (legalKind) return <Suspense fallback={<main className="entry-loading"><div className="analysis-loader" /></main>}><Legal kind={legalKind} /></Suspense>;
   const authenticated = telegramReady || (import.meta.env.DEV && Boolean(import.meta.env.VITE_DEV_USER_ID));
   if (!bootstrapFinished) return <main className="entry-loading"><div className="brand-mark">D</div><div className="analysis-loader" /></main>;
-  if (!authenticated) return <main className="auth-error"><div className="brand-mark">D</div><h1>Не удалось получить данные Telegram</h1><p>Закрой Mini App и открой его снова кнопкой «Открыть DeutschIQ» в боте.</p><button className="primary-action" onClick={() => window.location.reload()}>Повторить</button></main>;
+  if (!authenticated) return <main className="auth-error"><div className="brand-mark">D</div><h1>Не удалось получить данные Telegram</h1><p>Закрой Mini App полностью и открой его снова кнопкой «Открыть DeutschIQ» в боте.</p><button className="primary-action" onClick={() => window.location.reload()}>Повторить</button></main>;
   const hasBackButton = !['/', '/dashboard', '/analytics', '/plan', '/tutor', '/profile'].includes(location.pathname);
   return (
     <div className={hasBackButton ? 'has-back-button' : undefined}>
