@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: deutschiq
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health/live
+    autoDeployTrigger: commit
+    envVars:
+      - key: BOT_MODE
+        value: webhook
+      - key: WEBAPP_URL
+        value: https://deutschiq.onrender.com
+      - key: TELEGRAM_WEBHOOK_PATH
+        value: /api/telegram/webhook
+      - key: OPENAI_MODEL
+        value: gpt-4o-mini
+      - key: DEBUG
+        value: "false"
+      - key: BOT_TOKEN
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: TELEGRAM_WEBHOOK_SECRET
+        generateValue: true
+      - key: TASK_SECRET
+        generateValue: true

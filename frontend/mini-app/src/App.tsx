@@ -17,9 +17,11 @@ const Profile = lazy(() => import('./pages/Profile').then(module => ({ default: 
 const Analytics = lazy(() => import('./pages/Analytics').then(module => ({ default: module.Analytics })));
 const Mistakes = lazy(() => import('./pages/Mistakes').then(module => ({ default: module.Mistakes })));
 const Review = lazy(() => import('./pages/Review').then(module => ({ default: module.Review })));
+const Legal = lazy(() => import('./pages/Legal').then(module => ({ default: module.Legal })));
 
 function AppRoutes() {
   const location = useLocation();
+  const legalKind = ({ '/privacy': 'privacy', '/imprint': 'imprint', '/terms': 'terms' } as const)[location.pathname as '/privacy' | '/imprint' | '/terms'];
   const [telegramReady, setTelegramReady] = useState(() => hasTelegramIdentity());
   const [bootstrapFinished, setBootstrapFinished] = useState(false);
   useEffect(() => {
@@ -38,6 +40,7 @@ function AppRoutes() {
     }, 100);
     return () => window.clearInterval(timer);
   }, [telegramReady]);
+  if (legalKind) return <Suspense fallback={<main className="entry-loading"><div className="analysis-loader" /></main>}><Legal kind={legalKind} /></Suspense>;
   const authenticated = telegramReady || (import.meta.env.DEV && Boolean(import.meta.env.VITE_DEV_USER_ID));
   if (!bootstrapFinished) return <main className="entry-loading"><div className="brand-mark">D</div><div className="analysis-loader" /></main>;
   if (!authenticated) return <main className="auth-error"><div className="brand-mark">D</div><h1>Не удалось получить данные Telegram</h1><p>Закрой Mini App и открой его снова кнопкой «Открыть DeutschIQ» в боте.</p><button className="primary-action" onClick={() => window.location.reload()}>Повторить</button></main>;

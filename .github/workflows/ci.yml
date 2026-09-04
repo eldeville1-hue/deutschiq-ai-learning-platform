@@ -26,7 +26,8 @@ jobs:
           cache-dependency-path: backend/requirements.txt
       - run: pip install -r requirements.txt
       - run: python -m unittest discover -s tests -v
-      - run: python -m compileall -q app
+      - run: alembic heads
+      - run: python -m compileall -q app migrations scripts
 
   frontend:
     runs-on: ubuntu-latest

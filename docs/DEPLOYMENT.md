@@ -1,67 +1,73 @@
-# Permanent cloud deployment
+# Deploy DeutschIQ on Render + Neon
 
-DeutschIQ supports two bot transports:
+The production application runs as one Docker web service. Docker builds the React Mini App, serves it through FastAPI, applies Alembic migrations, and registers the Telegram webhook. Your computer and ngrok are not involved after deployment.
 
-- `BOT_MODE=polling` for local development. Run the API and `python -m app.bot.main` as two processes.
-- `BOT_MODE=webhook` for production. FastAPI receives signed Telegram updates, so no permanent polling process or ngrok tunnel is required.
+## Architecture
 
-## Recommended low-cost stack
+- **Render Web Service:** FastAPI, compiled React frontend, Telegram webhook
+- **Neon:** persistent PostgreSQL database
+- **Telegram:** Mini App entry point and signed user identity
+- **OpenAI:** optional tutor responses; deterministic fallback remains available
 
-Use Google Cloud Run for the container and a managed PostgreSQL provider with a free tier (for example Neon or Supabase). Cloud Run can scale to zero, so the first request after inactivity can be slower. No provider can honestly guarantee a permanently warm, production-grade service at zero cost.
+## Required Render environment variables
 
-## Prerequisites
+Add these under **Render > deutschiq > Environment**. Never paste them into GitHub.
 
-1. A Google Cloud project with billing enabled.
-2. `gcloud` installed and authenticated.
-3. An external PostgreSQL connection string that accepts connections from Cloud Run.
-4. A fresh Telegram token from BotFather and, optionally, an OpenAI API key.
+| Key | Value |
+|---|---|
+| `BOT_TOKEN` | Fresh token from BotFather |
+| `DATABASE_URL` | Neon pooled PostgreSQL URL with `sslmode=require` |
+| `OPENAI_API_KEY` | Fresh OpenAI key, or leave empty for fallback mode |
+| `OPENAI_MODEL` | `gpt-4o-mini` |
+| `BOT_MODE` | `webhook` |
+| `WEBAPP_URL` | `https://deutschiq.onrender.com` |
+| `TELEGRAM_WEBHOOK_PATH` | `/api/telegram/webhook` |
+| `SECRET_KEY` | Long random value |
+| `TELEGRAM_WEBHOOK_SECRET` | 16-256 letters, digits, `_` or `-` |
+| `TASK_SECRET` | Random value of at least 24 characters |
+| `DEBUG` | `false` |
 
-Never commit these values. The deploy script stores them in Google Secret Manager.
+The included `render.yaml` documents the service settings. Existing Render services can continue using Dashboard-managed variables.
 
-## Deploy from Windows PowerShell
+## Deploy
 
-From the project root:
+1. Push or merge a commit into GitHub `main`.
+2. Render builds the Dockerfile automatically.
+3. `backend/start.sh` runs `alembic upgrade head` before starting Uvicorn.
+4. The API startup registers the permanent Telegram webhook and Mini App menu button.
+
+No `init_db.py`, seed script, Render shell, Google Cloud CLI, or local ngrok tunnel is required for normal updates. Content seeding remains a deliberate administrative operation and must not run on every restart.
+
+## Verify after deployment
+
+- `https://deutschiq.onrender.com/api/health/live` — process is running
+- `https://deutschiq.onrender.com/api/health` — database and migration state
+- `https://deutschiq.onrender.com/privacy` — public legal route
+
+Or run from the repository root:
 
 ```powershell
-$env:BOT_TOKEN = "NEW_TOKEN_FROM_BOTFATHER"
-$env:DATABASE_URL = "postgresql://USER:PASSWORD@HOST/DB?sslmode=require"
-$env:OPENAI_API_KEY = "OPTIONAL_OPENAI_KEY"
-
-.\DEPLOY-CLOUD-RUN.ps1 -ProjectId "your-google-project-id"
+python backend/scripts/smoke_test.py https://deutschiq.onrender.com
 ```
 
-The script builds the Docker image through Cloud Run source deployment, stores secrets, discovers the permanent HTTPS URL, and switches the service to signed webhook mode.
+Then send `/start` to [@DeutschIQ_bot](https://t.me/DeutschIQ_bot) and complete one real learning flow.
 
-After the first deployment, initialize the database once from a trusted machine using the same production `DATABASE_URL`:
+## Local development
 
-```powershell
-cd backend
-python init_db.py
-python seed_30_day_plan.py
-python validate_content.py
-```
-
-## Daily reminders
-
-The production API exposes `POST /api/tasks/daily-reminders`. It requires the `X-Task-Secret` header. Trigger it once per day with Cloud Scheduler or another scheduler. Never expose `TASK_SECRET` in source code.
-
-## Verification
+Keep your local `.env` untracked and use `BOT_MODE=polling`. From `backend`:
 
 ```powershell
-Invoke-RestMethod "https://YOUR_SERVICE_URL/api/health"
-```
-
-Expected fields include `status`, `version`, `database`, and `bot_mode: webhook`.
-
-Then open the bot in Telegram, send `/start`, and launch the Mini App. The production URL no longer depends on a running PC or ngrok.
-
-## Local development remains available
-
-Set `BOT_MODE=polling` in `.env`, then run:
-
-```powershell
+.\venv\Scripts\Activate.ps1
+alembic upgrade head
 uvicorn app.main:app --host 0.0.0.0 --port 8000
-python -m app.bot.main
 ```
 
-Webhook and polling must not run for the same Telegram bot at the same time.
+Run `python -m app.bot.main` in a second terminal. Webhook and polling must not run simultaneously for the same bot.
+
+## Rollback
+
+If a new Render deployment fails, Render continues serving the previous successful image. Fix the commit and redeploy. The v15 baseline migration has a deliberately non-destructive downgrade because it adopts databases created by earlier DeutschIQ versions.
+
+## Free-tier limitation
+
+Render's free service can sleep after inactivity, so the first bot launch may be slow. A paid always-on instance reduces cold starts; it is not required for a portfolio demonstration.
