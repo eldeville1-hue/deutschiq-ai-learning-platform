@@ -39,7 +39,8 @@ export const Profile: React.FC = () => {
       {data.subscription_status !== 'pro' && <section className="pro-section page-stagger-3"><h2>DeutschIQ Pro</h2><p>{lang === 'ru' ? 'Больше практики, полный анализ ошибок и ИИ-репетитор.' : 'Mehr Übung, vollständige Fehleranalyse und KI-Tutor.'}</p><button disabled>{lang === 'ru' ? 'Скоро' : 'Demnächst'}</button></section>}
       <section className="profile-settings page-stagger-4"><button onClick={toggleLang}><span><FaGlobe />{lang === 'ru' ? 'Язык интерфейса' : 'App-Sprache'}</span><small>{lang === 'ru' ? 'Русский' : 'Deutsch'}</small><FaChevronRight /></button><button onClick={toggleTheme}><span><FaMoon />{lang === 'ru' ? 'Оформление' : 'Darstellung'}</span><small>{theme === 'dark' ? (lang === 'ru' ? 'Тёмное' : 'Dunkel') : (lang === 'ru' ? 'Светлое' : 'Hell')}</small><FaChevronRight /></button><button disabled><span><FaBell />{lang === 'ru' ? 'Уведомления' : 'Benachrichtigungen'}</span><small>{lang === 'ru' ? 'Скоро' : 'Demnächst'}</small></button><button onClick={share}><span><FaShareAlt />{lang === 'ru' ? 'Пригласить друга' : 'Freund einladen'}</span><FaChevronRight /></button></section>
       <button className="retake-link" onClick={retake}><FaRedo /> {lang === 'ru' ? 'Пройти диагностику заново' : 'Diagnose wiederholen'}</button>
-      <small className="build-version">DeutschIQ 14.0.0 · Cloud Webhook</small>
+      <nav className="legal-links"><a href="/privacy">Datenschutz</a><a href="/imprint">Impressum</a><a href="/terms">Nutzung</a></nav>
+      <small className="build-version">DeutschIQ 15.0.0 · Production</small>
       <BottomNav />
     </main>
   );

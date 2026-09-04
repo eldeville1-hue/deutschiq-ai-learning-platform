@@ -1,6 +1,7 @@
 # backend/app/core/config.py
 import os
 import re
+import logging
 from dotenv import load_dotenv
 from pathlib import Path
 
@@ -21,9 +22,7 @@ for p in possible_paths:
 
 if env_path:
     load_dotenv(dotenv_path=env_path)
-    print(f"✅ .env загружен из {env_path}")
-else:
-    print("⚠️ .env не найден! Проверьте, что файл существует.")
+    logging.getLogger("deutschiq.config").info("Loaded local environment file: %s", env_path)
 
 class Settings:
     BOT_TOKEN = os.getenv("BOT_TOKEN")
