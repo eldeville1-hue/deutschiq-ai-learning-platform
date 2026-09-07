@@ -20,7 +20,7 @@ from app.core.logging_config import configure_logging
 
 configure_logging()
 logger = logging.getLogger("deutschiq.api")
-VERSION = "15.0.0"
+VERSION = "16.0.0"
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
