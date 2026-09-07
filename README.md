@@ -23,6 +23,8 @@
 
 DeutschIQ is an AI-assisted Telegram Mini App for adaptive German learning. It combines a protected level diagnostic, a personalized 30-day curriculum, mastery-based exercises, spaced review, progress analytics, and an AI tutor in a mobile-first learning flow.
 
+**v16 Precision Learning OS** gives every product area a distinct visual role and adds a public recruiter-friendly product view while preserving protected Telegram identity for learner data.
+
 The public application runs as a Docker service on Render with a signed Telegram webhook and managed PostgreSQL on Neon.
 
 > The free Render instance can take up to a minute to wake after inactivity.
@@ -137,6 +139,7 @@ python -m app.bot.main
 ## Production
 
 - Live application: [deutschiq.onrender.com](https://deutschiq.onrender.com/)
+- Public product view: [deutschiq.onrender.com/about](https://deutschiq.onrender.com/about)
 - Telegram entry point: [@DeutschIQ_bot](https://t.me/DeutschIQ_bot)
 - Health endpoint: [`/api/health`](https://deutschiq.onrender.com/api/health)
 - Runtime: Render Docker Web Service

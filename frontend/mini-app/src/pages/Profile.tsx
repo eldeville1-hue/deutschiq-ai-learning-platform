@@ -40,7 +40,7 @@ export const Profile: React.FC = () => {
       <section className="profile-settings page-stagger-4"><button onClick={toggleLang}><span><FaGlobe />{lang === 'ru' ? 'Язык интерфейса' : 'App-Sprache'}</span><small>{lang === 'ru' ? 'Русский' : 'Deutsch'}</small><FaChevronRight /></button><button onClick={toggleTheme}><span><FaMoon />{lang === 'ru' ? 'Оформление' : 'Darstellung'}</span><small>{theme === 'dark' ? (lang === 'ru' ? 'Тёмное' : 'Dunkel') : (lang === 'ru' ? 'Светлое' : 'Hell')}</small><FaChevronRight /></button><button disabled><span><FaBell />{lang === 'ru' ? 'Уведомления' : 'Benachrichtigungen'}</span><small>{lang === 'ru' ? 'Скоро' : 'Demnächst'}</small></button><button onClick={share}><span><FaShareAlt />{lang === 'ru' ? 'Пригласить друга' : 'Freund einladen'}</span><FaChevronRight /></button></section>
       <button className="retake-link" onClick={retake}><FaRedo /> {lang === 'ru' ? 'Пройти диагностику заново' : 'Diagnose wiederholen'}</button>
       <nav className="legal-links"><a href="/privacy">Datenschutz</a><a href="/imprint">Impressum</a><a href="/terms">Nutzung</a></nav>
-      <small className="build-version">DeutschIQ 15.0.0 · Production</small>
+      <small className="build-version">DeutschIQ 16.0.0 · Precision Learning OS</small>
       <BottomNav />
     </main>
   );

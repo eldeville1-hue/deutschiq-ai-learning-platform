@@ -18,10 +18,12 @@ const Analytics = lazy(() => import('./pages/Analytics').then(module => ({ defau
 const Mistakes = lazy(() => import('./pages/Mistakes').then(module => ({ default: module.Mistakes })));
 const Review = lazy(() => import('./pages/Review').then(module => ({ default: module.Review })));
 const Legal = lazy(() => import('./pages/Legal').then(module => ({ default: module.Legal })));
+const Portfolio = lazy(() => import('./pages/Portfolio').then(module => ({ default: module.Portfolio })));
 
 function AppRoutes() {
   const location = useLocation();
   const legalKind = ({ '/privacy': 'privacy', '/imprint': 'imprint', '/terms': 'terms' } as const)[location.pathname as '/privacy' | '/imprint' | '/terms'];
+  const portfolioRoute = location.pathname === '/about';
   const [telegramReady, setTelegramReady] = useState(() => hasTelegramIdentity());
   const [bootstrapFinished, setBootstrapFinished] = useState(() => hasTelegramIdentity());
 
@@ -60,9 +62,10 @@ function AppRoutes() {
   }, []);
 
   if (legalKind) return <Suspense fallback={<main className="entry-loading"><div className="analysis-loader" /></main>}><Legal kind={legalKind} /></Suspense>;
+  if (portfolioRoute) return <Suspense fallback={<main className="entry-loading"><div className="analysis-loader" /></main>}><Portfolio /></Suspense>;
   const authenticated = telegramReady || (import.meta.env.DEV && Boolean(import.meta.env.VITE_DEV_USER_ID));
   if (!bootstrapFinished) return <main className="entry-loading"><div className="brand-mark">D</div><div className="analysis-loader" /></main>;
-  if (!authenticated) return <main className="auth-error"><div className="brand-mark">D</div><h1>Не удалось получить данные Telegram</h1><p>Закрой Mini App полностью и открой его снова кнопкой «Открыть DeutschIQ» в боте.</p><button className="primary-action" onClick={() => window.location.reload()}>Повторить</button></main>;
+  if (!authenticated) return <Suspense fallback={<main className="entry-loading"><div className="analysis-loader" /></main>}><Portfolio /></Suspense>;
   const hasBackButton = !['/', '/dashboard', '/analytics', '/plan', '/tutor', '/profile'].includes(location.pathname);
   return (
     <div className={hasBackButton ? 'has-back-button' : undefined}>
