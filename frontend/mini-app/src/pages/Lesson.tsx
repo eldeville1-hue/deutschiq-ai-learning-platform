@@ -36,6 +36,7 @@ export const Lesson: React.FC = () => {
       .then(([lessonData, session]) => {
         setLesson(lessonData);
         setSessionId(session.session_id);
+        void api.trackEvent({ user_id: getUserId(), event_name: 'lesson_started', properties: { lesson_id: Number(id), topic: lessonData.topic } });
       })
       .catch(() => setLesson(false));
   }, [id]);
@@ -80,6 +81,7 @@ export const Lesson: React.FC = () => {
         })
         .catch(() => null);
       setOutcome(result);
+      if (result) void api.trackEvent({ user_id: getUserId(), event_name: 'lesson_completed', properties: { lesson_id: Number(id), passed: Boolean(result.passed), score: Number(result.score || 0) } });
     }
   };
   const check = async () => {
@@ -95,6 +97,7 @@ export const Lesson: React.FC = () => {
     });
     setChecked(Boolean(result.correct));
     setFeedback(result);
+    void api.trackEvent({ user_id: getUserId(), event_name: 'exercise_answered', properties: { lesson_id: Number(id), exercise_index: exerciseIndex, correct: Boolean(result.correct), confidence } });
   };
   const finish = () =>
     navigate(withUser(outcome?.passed ? "/plan" : `/lesson/${id}`), {
@@ -343,6 +346,12 @@ export const Lesson: React.FC = () => {
                       : "Fehler verstehen"}
                 </b>
                 <p>{feedback?.explanation}</p>
+                {!checked && feedback?.error_type && <div className="error-diagnosis">
+                  <small>{lang === 'ru' ? 'ТИП ОШИБКИ' : 'FEHLERTYP'}</small>
+                  <strong>{topicLabel(String(feedback.error_type), lang)}</strong>
+                  {Array.isArray(feedback.contrast) && feedback.contrast.map((line: string, index: number) => <p key={index}>{line}</p>)}
+                  <em>{lang === 'ru' ? feedback.retry_instruction : 'Nenne zuerst die Regel und bilde die Antwort dann neu.'}</em>
+                </div>}
                 {feedback?.production && (
                   <small>
                     {lang === "ru"

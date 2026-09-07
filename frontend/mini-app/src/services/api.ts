@@ -40,6 +40,11 @@ apiClient.interceptors.response.use(
 );
 
 export const api = {
+  getVersion: () => apiClient.get('/api/version').then(r => r.data),
+  trackEvent: (payload: { user_id: number; event_name: string; properties?: Record<string, string | number | boolean> }) =>
+    apiClient.post('/api/events', payload).catch(() => undefined),
+  exportUserData: (userId: number) => apiClient.get(`/api/user-data/${userId}`).then(r => r.data),
+  deleteUserData: (userId: number) => apiClient.delete(`/api/user-data/${userId}`),
   // Диагностика
   getQuestions: (lang: string = 'ru') => {
     return cachedGet(`deutschiq-questions-${lang}`, () => apiClient.get(`/api/diagnostic/questions?lang=${lang}`).then(r => r.data));

@@ -10,6 +10,8 @@ from openai import OpenAI
 from app.core.config import settings
 from app.core.telegram_auth import telegram_user_id, assert_owner
 from app.models.tutor import TutorMessage, TutorUsage
+from app.models.learning import ExerciseAttempt, TopicMastery
+from app.models.lesson import Lesson
 from datetime import date
 
 router = APIRouter(prefix="/api/tutor", tags=["tutor"])
@@ -58,6 +60,15 @@ async def ask_tutor(data: TutorRequest, db: Session = Depends(get_db), authentic
         DiagnosticResult.user_id == user.id
     ).order_by(DiagnosticResult.created_at.desc()).first()
     weak_points = list((diagnostic.weak_points or {}).keys())[:4] if diagnostic else []
+    mastery = db.query(TopicMastery).filter(TopicMastery.user_id == user.id).order_by(TopicMastery.mastery.asc()).limit(5).all()
+    recent_errors = db.query(ExerciseAttempt).filter(
+        ExerciseAttempt.user_id == user.id,
+        ExerciseAttempt.correct == False,
+    ).order_by(ExerciseAttempt.created_at.desc()).limit(4).all()
+    latest_lesson_id = recent_errors[0].lesson_id if recent_errors else None
+    latest_lesson = db.query(Lesson).filter(Lesson.id == latest_lesson_id).first() if latest_lesson_id else None
+    mastery_context = ", ".join(f"{item.topic}: {round(item.mastery)}%" for item in mastery) or "no practice data"
+    error_context = ", ".join(item.topic for item in recent_errors) or "no recent errors"
     
     # 4. Системный промпт
     system_prompt = f"""
@@ -65,6 +76,9 @@ You are DeutschIQ Tutor, a C2-level German teacher.
 User level: {level}
 Respond in: {lang}
 Known weak areas: {', '.join(weak_points) if weak_points else 'not diagnosed yet'}
+Current mastery: {mastery_context}
+Recent error topics: {error_context}
+Current lesson: {latest_lesson.topic if latest_lesson else 'not started'}
 
 Rules:
 - Explain grammar simply (max 3 sentences), give 2 examples
@@ -74,6 +88,10 @@ Rules:
 - Be encouraging and use emojis occasionally
 - Keep answers under 200 words
 - When relevant, connect the explanation to one known weak area, without repeating it in every answer
+- Never introduce grammar more than one CEFR step above the user's level
+- If the user asks for practice, ask exactly one question, wait for the answer, then give corrective feedback
+- When correcting, identify the error category, show a minimal contrast, and ask for one fresh retry
+- Do not pretend that a generated answer changes course mastery; only validated lesson attempts do
 """
     
     # 5. Собираем сообщения: системный промпт + история (если есть) + текущий вопрос

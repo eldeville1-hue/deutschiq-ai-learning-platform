@@ -42,6 +42,7 @@ No `init_db.py`, seed script, Render shell, Google Cloud CLI, or local ngrok tun
 
 - `https://deutschiq.onrender.com/api/health/live` — process is running
 - `https://deutschiq.onrender.com/api/health` — database and migration state
+- `https://deutschiq.onrender.com/api/version` — must report `17.0.0`, `learning-engine`, and the deployed commit
 - `https://deutschiq.onrender.com/privacy` — public legal route
 
 Or run from the repository root:
@@ -51,6 +52,8 @@ python backend/scripts/smoke_test.py https://deutschiq.onrender.com
 ```
 
 Then send `/start` to [@DeutschIQ_bot](https://t.me/DeutschIQ_bot) and complete one real learning flow.
+
+The Profile footer shows the same version and short commit. If it differs from GitHub `main`, the public service is stale even when Render reports a successful deploy.
 
 ## Local development
 
