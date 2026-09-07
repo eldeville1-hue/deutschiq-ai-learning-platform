@@ -24,11 +24,13 @@ function AppRoutes() {
   const location = useLocation();
   const legalKind = ({ '/privacy': 'privacy', '/imprint': 'imprint', '/terms': 'terms' } as const)[location.pathname as '/privacy' | '/imprint' | '/terms'];
   const portfolioRoute = location.pathname === '/about';
+  const outsideTelegram = !import.meta.env.DEV && (window as any).Telegram?.WebApp?.platform === 'unknown';
   const [telegramReady, setTelegramReady] = useState(() => hasTelegramIdentity());
   const [bootstrapFinished, setBootstrapFinished] = useState(() => hasTelegramIdentity());
 
   useEffect(() => {
     const webApp = (window as any).Telegram?.WebApp;
+    if (outsideTelegram) { setBootstrapFinished(true); return; }
     webApp?.ready?.();
     webApp?.expand?.();
 
@@ -59,10 +61,10 @@ function AppRoutes() {
     }, 150);
 
     return () => window.clearInterval(timer);
-  }, []);
+  }, [outsideTelegram]);
 
   if (legalKind) return <Suspense fallback={<main className="entry-loading"><div className="analysis-loader" /></main>}><Legal kind={legalKind} /></Suspense>;
-  if (portfolioRoute) return <Suspense fallback={<main className="entry-loading"><div className="analysis-loader" /></main>}><Portfolio /></Suspense>;
+  if (portfolioRoute || (outsideTelegram && location.pathname === '/')) return <Suspense fallback={<main className="entry-loading"><div className="analysis-loader" /></main>}><Portfolio /></Suspense>;
   const authenticated = telegramReady || (import.meta.env.DEV && Boolean(import.meta.env.VITE_DEV_USER_ID));
   if (!bootstrapFinished) return <main className="entry-loading"><div className="brand-mark">D</div><div className="analysis-loader" /></main>;
   if (!authenticated) return <Suspense fallback={<main className="entry-loading"><div className="analysis-loader" /></main>}><Portfolio /></Suspense>;
