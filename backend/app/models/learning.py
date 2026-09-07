@@ -27,6 +27,10 @@ class TopicMastery(Base):
     mastery = Column(Float, default=0.0, nullable=False)
     attempts = Column(Integer, default=0, nullable=False)
     correct_streak = Column(Integer, default=0, nullable=False)
+    correct_total = Column(Integer, default=0, nullable=False)
+    lapse_count = Column(Integer, default=0, nullable=False)
+    stability_days = Column(Float, default=1.0, nullable=False)
+    last_answer_at = Column(DateTime(timezone=True), nullable=True)
     next_review_at = Column(DateTime(timezone=True), nullable=True)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 

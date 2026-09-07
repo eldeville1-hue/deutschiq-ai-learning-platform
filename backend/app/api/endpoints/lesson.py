@@ -13,7 +13,8 @@ import uuid
 from app.core.telegram_auth import telegram_user_id, assert_owner
 from app.services.srs import schedule_review
 from app.models.learning import ExerciseAttempt, TopicMastery, LearningSession
-from app.services.learning_engine import mastery_update, review_interval, session_score
+from app.services.learning_engine import mastery_update, next_stability, review_interval, retention_score, session_score
+from app.services.skill_graph import skill_for
 from app.services.content_quality import normalize_lesson_content
 from app.services.production_feedback import evaluate_production
 
@@ -101,10 +102,17 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
         db.add(mastery)
     mastery.attempts = (mastery.attempts or 0) + 1
     mastery.correct_streak = (mastery.correct_streak or 0) + 1 if correct else 0
-    mastery.mastery = mastery_update(mastery.mastery or 0, correct, data.confidence)
+    mastery.mastery = mastery_update(mastery.mastery or 0, correct, data.confidence, data.response_ms)
+    mastery.correct_total = (mastery.correct_total or 0) + (1 if correct else 0)
+    mastery.lapse_count = (mastery.lapse_count or 0) + (0 if correct else 1)
+    mastery.stability_days = next_stability(mastery.stability_days or 1, correct, data.confidence)
+    mastery.last_answer_at = datetime.now()
     interval_days = review_interval(correct, mastery.correct_streak)
     mastery.next_review_at = datetime.now() + timedelta(days=interval_days)
     db.commit()
+    skill = skill_for(topic)
+    common_mistakes = lesson_content.get("common_mistakes") or []
+    error_type = None if correct else (exercise.get("error_type") or skill.pillar)
     return {
         "correct": correct,
         "correct_answer": production_feedback["corrected_answer"] if production_feedback else accepted[0],
@@ -112,8 +120,15 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
         "production_score": production_feedback["score"] if production_feedback else None,
         "feedback_source": production_feedback["source"] if production_feedback else "rules",
         "mastery": round(mastery.mastery),
+        "retention": retention_score(mastery.mastery, mastery.stability_days),
         "next_review_days": interval_days,
         "needs_support": not correct,
+        "error_type": error_type,
+        "contrast": common_mistakes[:2] if not correct else [],
+        "retry_instruction": (
+            "Сначала назови правило, затем составь ответ заново без копирования."
+            if not correct else None
+        ),
         "production": exercise.get("type") == "production",
     }
 

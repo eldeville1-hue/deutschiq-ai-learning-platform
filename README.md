@@ -23,7 +23,7 @@
 
 DeutschIQ is an AI-assisted Telegram Mini App for adaptive German learning. It combines a protected level diagnostic, a personalized 30-day curriculum, mastery-based exercises, spaced review, progress analytics, and an AI tutor in a mobile-first learning flow.
 
-**v16 Precision Learning OS** gives every product area a distinct visual role and adds a public recruiter-friendly product view while preserving protected Telegram identity for learner data.
+**v17 Learning Engine** turns the visual product into an explainable daily learning system. It models prerequisites, retention stability, lapses, confidence and response time; composes a review → learn → transfer session; and gives the AI tutor recent mastery and error context.
 
 The public application runs as a Docker service on Render with a signed Telegram webhook and managed PostgreSQL on Neon.
 
@@ -54,7 +54,10 @@ The public application runs as a Docker service on Render with a signed Telegram
 - Telegram-authenticated onboarding and returning-user flow
 - Adaptive A1–B2 diagnostic without exposing answers to the client
 - Personalized 30-day roadmap with 30 lessons and 90 exercises
-- Mastery gates, retry logic, confidence tracking, and spaced review
+- Explainable skill graph with prerequisite gates
+- Retention-aware mastery using confidence, response time, lapses, and stability
+- Adaptive daily sessions: due review → next skill → active transfer
+- Structured error diagnosis, contrast, and fresh retry
 - Grammar, vocabulary, reading, listening, and productive activities
 - Server-side answer validation and structured feedback
 - AI tutor with backend-managed history and daily limits
@@ -62,6 +65,8 @@ The public application runs as a Docker service on Render with a signed Telegram
 - Russian and German interface
 - Mobile Telegram WebView design with reduced-motion support
 - Signed webhook for permanent cloud operation
+- Privacy controls for learner-data export and deletion
+- First-party learning funnel events without storing answer text
 
 ## Architecture
 
@@ -142,6 +147,7 @@ python -m app.bot.main
 - Public product view: [deutschiq.onrender.com/about](https://deutschiq.onrender.com/about)
 - Telegram entry point: [@DeutschIQ_bot](https://t.me/DeutschIQ_bot)
 - Health endpoint: [`/api/health`](https://deutschiq.onrender.com/api/health)
+- Release endpoint: [`/api/version`](https://deutschiq.onrender.com/api/version) — confirms the deployed version and Git commit
 - Runtime: Render Docker Web Service
 - Database: Neon pooled PostgreSQL
 - Bot transport: signed Telegram webhook
@@ -167,6 +173,7 @@ The same checks run in GitHub Actions.
 - Webhook requests use Telegram's secret-token header.
 - Diagnostic and lesson answers remain server-side.
 - Local `.env` files, tokens, API keys, database credentials, virtual environments, dependencies, and builds are excluded from Git.
+- Learners can export or permanently delete their stored account data from Profile.
 
 If a credential is exposed, revoke it immediately and replace it in the hosting environment.
 

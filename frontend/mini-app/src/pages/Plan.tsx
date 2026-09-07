@@ -37,8 +37,11 @@ export const Plan: React.FC = () => {
         <div className="progress-bar"><div className="progress-bar-fill" style={{ width: `${weekLessons.length ? completed / weekLessons.length * 100 : 0}%` }} /></div>
         <div className="lesson-list">
           {visible.map((lesson, index) => {
-            const locked = dashboard.subscription_status !== 'pro' && Number(lesson.day) > 3;
-            return <button key={lesson.id} className="lesson-row" onClick={() => !locked && navigate(withUser(`/lesson/${lesson.id}`))}><span className="lesson-number">{lesson.completed ? '✓' : index + 1}</span><span><b>{topicLabel(lesson.topic, lang)}</b><small>{lesson.mastery == null ? `${lesson.estimated_time || 12} ${lang === 'ru' ? 'мин' : 'Min.'}` : `${lang === 'ru' ? 'Освоено' : 'Beherrscht'} ${lesson.mastery}%`}</small></span>{locked ? <FaLock /> : <span>›</span>}</button>;
+            const locked = Array.isArray(lesson.blocked_by) && lesson.blocked_by.length > 0;
+            const detail = locked
+              ? `${lang === 'ru' ? 'Сначала' : 'Zuerst'}: ${lesson.blocked_by.map((topic: string) => topicLabel(topic, lang)).join(', ')}`
+              : lesson.mastery == null ? `${lesson.estimated_time || 12} ${lang === 'ru' ? 'мин' : 'Min.'}` : `${lang === 'ru' ? 'Освоено' : 'Beherrscht'} ${lesson.mastery}%`;
+            return <button key={lesson.id} className="lesson-row" onClick={() => !locked && navigate(withUser(`/lesson/${lesson.id}`))}><span className="lesson-number">{lesson.completed ? '✓' : index + 1}</span><span><b>{topicLabel(lesson.topic, lang)}</b><small>{detail}</small></span>{locked ? <FaLock /> : <span>›</span>}</button>;
           })}
           {!visible.length && <p className="empty-state">{lang === 'ru' ? 'Уроки появятся после загрузки плана.' : 'Die Lektionen erscheinen nach dem Laden des Plans.'}</p>}
         </div>

@@ -9,6 +9,8 @@ from app.models.learning import TopicMastery
 import traceback
 from sqlalchemy.exc import SQLAlchemyError
 from app.core.telegram_auth import telegram_user_id, assert_owner
+from app.services.skill_graph import blocked_by
+from datetime import datetime, timezone
 
 router = APIRouter(prefix="/api/plan", tags=["plan"])
 
@@ -45,6 +47,12 @@ async def get_plan(user_id: int, db: Session = Depends(get_db), authenticated_id
             "estimated_time": lesson.estimated_time,
             "completed": lesson.id in completed_ids,
             "mastery": mastery.get(lesson.topic),
+            "blocked_by": blocked_by(lesson.topic, mastery),
+            "recommendation_reason": (
+                "review_due" if any(row.topic == lesson.topic and row.next_review_at and (row.next_review_at if row.next_review_at.tzinfo else row.next_review_at.replace(tzinfo=timezone.utc)) <= datetime.now(timezone.utc) for row in mastery_rows)
+                else "build_foundation" if mastery.get(lesson.topic) is None
+                else "improve_mastery"
+            ),
         } for index, lesson in enumerate(lessons)]
     except SQLAlchemyError:
         db.rollback()

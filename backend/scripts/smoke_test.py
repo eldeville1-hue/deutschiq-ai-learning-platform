@@ -15,9 +15,12 @@ def main() -> None:
     origin = (sys.argv[1] if len(sys.argv) > 1 else "https://deutschiq.onrender.com").rstrip("/")
     live = read_json(f"{origin}/api/health/live")
     health = read_json(f"{origin}/api/health")
+    release = read_json(f"{origin}/api/version")
     if live.get("status") != "ok" or health.get("status") != "ok":
         raise RuntimeError(f"Unhealthy deployment: {health}")
-    print(f"DeutschIQ {health.get('version')} is healthy: database={health.get('database')}, migrations={health.get('migrations')}")
+    if release.get("version") != "17.0.0" or release.get("release") != "learning-engine":
+        raise RuntimeError(f"Stale deployment: {release}")
+    print(f"DeutschIQ {release.get('version')} ({release.get('commit')}) is healthy: database={health.get('database')}, migrations={health.get('migrations')}")
 
 
 if __name__ == "__main__":

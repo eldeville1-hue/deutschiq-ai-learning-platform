@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { FaBell, FaCheck, FaChevronRight, FaGlobe, FaMedal, FaMoon, FaRedo, FaShareAlt } from 'react-icons/fa';
+import { FaBell, FaCheck, FaChevronRight, FaDownload, FaGlobe, FaMedal, FaMoon, FaRedo, FaShareAlt, FaTrash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { BottomNav } from '../components/BottomNav';
@@ -19,14 +19,29 @@ export const Profile: React.FC = () => {
   const navigate = useNavigate();
   const [data, setData] = useState<any>(null);
   const [lessons, setLessons] = useState<any[]>([]);
+  const [build, setBuild] = useState<any>({ version: '17.0.0', commit: 'local' });
   const user = getTelegramUser();
   const name = user?.first_name || (lang === 'ru' ? 'Пользователь' : 'Lernende');
-  useEffect(() => { Promise.allSettled([api.getDashboard(getUserId()), api.getPlan(getUserId())]).then(([d, p]) => { setData(d.status === 'fulfilled' ? d.value : {}); setLessons(p.status === 'fulfilled' && Array.isArray(p.value) ? p.value : []); }); }, []);
+  useEffect(() => { Promise.allSettled([api.getDashboard(getUserId()), api.getPlan(getUserId()), api.getVersion()]).then(([d, p, v]) => { setData(d.status === 'fulfilled' ? d.value : {}); setLessons(p.status === 'fulfilled' && Array.isArray(p.value) ? p.value : []); if (v.status === 'fulfilled') setBuild(v.value); }); }, []);
   const completed = useMemo(() => lessons.filter(item => item.completed).length, [lessons]);
   if (!data) return <main className="app-shell"><div className="skeleton profile-skeleton" /></main>;
   const activityCount = Math.max(completed, data.diagnostic_completed ? 1 : 0);
   const retake = () => { const ok = window.confirm(lang === 'ru' ? 'Пройти диагностику заново? Новый результат заменит текущую оценку уровня.' : 'Diagnose wiederholen? Das neue Ergebnis ersetzt deine aktuelle Einstufung.'); if (ok) navigate(withUser('/diagnostic?retake=true')); };
   const share = () => window.open(`https://t.me/share/url?url=https://t.me/DeutschIQ_bot?start=ref_${getUserId()}&text=DeutschIQ`, '_blank');
+  const exportData = async () => {
+    const payload = await api.exportUserData(getUserId());
+    const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }));
+    const link = document.createElement('a');
+    link.href = url; link.download = 'deutschiq-data.json'; link.click(); URL.revokeObjectURL(url);
+  };
+  const deleteData = async () => {
+    const phrase = lang === 'ru' ? 'УДАЛИТЬ' : 'LÖSCHEN';
+    const entered = window.prompt(lang === 'ru' ? `Это навсегда удалит прогресс. Введи ${phrase}` : `Dadurch wird dein Fortschritt endgültig gelöscht. Gib ${phrase} ein.`);
+    if (entered !== phrase) return;
+    await api.deleteUserData(getUserId());
+    localStorage.clear();
+    window.location.assign('/');
+  };
   const weekdays = lang === 'ru' ? ['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'] : ['MO','DI','MI','DO','FR','SA','SO'];
 
   return (
@@ -40,7 +55,8 @@ export const Profile: React.FC = () => {
       <section className="profile-settings page-stagger-4"><button onClick={toggleLang}><span><FaGlobe />{lang === 'ru' ? 'Язык интерфейса' : 'App-Sprache'}</span><small>{lang === 'ru' ? 'Русский' : 'Deutsch'}</small><FaChevronRight /></button><button onClick={toggleTheme}><span><FaMoon />{lang === 'ru' ? 'Оформление' : 'Darstellung'}</span><small>{theme === 'dark' ? (lang === 'ru' ? 'Тёмное' : 'Dunkel') : (lang === 'ru' ? 'Светлое' : 'Hell')}</small><FaChevronRight /></button><button disabled><span><FaBell />{lang === 'ru' ? 'Уведомления' : 'Benachrichtigungen'}</span><small>{lang === 'ru' ? 'Скоро' : 'Demnächst'}</small></button><button onClick={share}><span><FaShareAlt />{lang === 'ru' ? 'Пригласить друга' : 'Freund einladen'}</span><FaChevronRight /></button></section>
       <button className="retake-link" onClick={retake}><FaRedo /> {lang === 'ru' ? 'Пройти диагностику заново' : 'Diagnose wiederholen'}</button>
       <nav className="legal-links"><a href="/privacy">Datenschutz</a><a href="/imprint">Impressum</a><a href="/terms">Nutzung</a></nav>
-      <small className="build-version">DeutschIQ 16.0.0 · Precision Learning OS</small>
+      <section className="data-controls"><button onClick={exportData}><FaDownload />{lang === 'ru' ? 'Скачать мои данные' : 'Meine Daten herunterladen'}</button><button className="danger" onClick={deleteData}><FaTrash />{lang === 'ru' ? 'Удалить аккаунт и данные' : 'Konto und Daten löschen'}</button></section>
+      <small className="build-version">DeutschIQ {build.version} · Learning Engine · {String(build.commit || 'local').slice(0, 7)}</small>
       <BottomNav />
     </main>
   );

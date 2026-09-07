@@ -8,7 +8,7 @@ from fastapi import Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from app.api.endpoints import diagnostic, dashboard, plan, tutor, lesson, badges, mistakes, stats, referral, user_state, learning, telegram_webhook
+from app.api.endpoints import diagnostic, dashboard, plan, tutor, lesson, badges, mistakes, stats, referral, user_state, learning, telegram_webhook, events, user_data
 import os
 from app.core.config import settings
 from app.core.database import engine
@@ -20,7 +20,8 @@ from app.core.logging_config import configure_logging
 
 configure_logging()
 logger = logging.getLogger("deutschiq.api")
-VERSION = "16.0.0"
+VERSION = "17.0.0"
+BUILD_COMMIT = os.getenv("RENDER_GIT_COMMIT", os.getenv("GIT_COMMIT", "local"))[:12]
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -61,11 +62,11 @@ async def request_logging(request: Request, call_next):
 
 @app.get("/api/version")
 async def version():
-    return {"version": VERSION, "release": "production-hardening"}
+    return {"version": VERSION, "release": "learning-engine", "commit": BUILD_COMMIT}
 
 @app.get("/api/health/live")
 async def liveness():
-    return {"status": "ok", "version": VERSION}
+    return {"status": "ok", "version": VERSION, "commit": BUILD_COMMIT}
 
 @app.get("/api/health")
 async def health():
@@ -87,6 +88,7 @@ async def health():
     return {
         "status": "ok" if database == "ok" and migrations != "missing" else "degraded",
         "version": VERSION,
+        "commit": BUILD_COMMIT,
         "database": database,
         "migrations": migrations,
         "bot_mode": settings.BOT_MODE,
@@ -115,6 +117,8 @@ app.include_router(referral.router)
 app.include_router(user_state.router)
 app.include_router(learning.router)
 app.include_router(telegram_webhook.router)
+app.include_router(events.router)
+app.include_router(user_data.router)
 
 frontend_path = os.path.join(os.path.dirname(__file__), "../../frontend/mini-app/dist")
 

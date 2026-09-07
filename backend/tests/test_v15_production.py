@@ -20,10 +20,11 @@ class ProductionHardeningTests(unittest.TestCase):
     def test_single_migration_head_is_defined(self):
         versions = Path(__file__).parents[1] / "migrations" / "versions"
         revisions = list(versions.glob("*.py"))
-        self.assertEqual(len(revisions), 1)
-        source = revisions[0].read_text(encoding="utf-8")
-        self.assertIn('revision = "20260904_0001"', source)
-        self.assertIn("def upgrade()", source)
+        sources = [item.read_text(encoding="utf-8") for item in revisions]
+        self.assertTrue(any('revision = "20260904_0001"' in source for source in sources))
+        self.assertTrue(any('revision = "20260907_0002"' in source for source in sources))
+        self.assertTrue(any('down_revision = "20260904_0001"' in source for source in sources))
+        self.assertTrue(all("def upgrade()" in source for source in sources))
 
     def test_render_blueprint_has_no_secret_values(self):
         blueprint = (Path(__file__).parents[2] / "render.yaml").read_text(encoding="utf-8")
