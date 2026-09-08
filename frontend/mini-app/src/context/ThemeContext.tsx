@@ -12,10 +12,8 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>(() => {
     const saved = localStorage.getItem('deutschiq_theme') as Theme;
-    if (saved === 'dark' || saved === 'light') return saved;
-    const telegramTheme = (window as any).Telegram?.WebApp?.colorScheme;
-    if (telegramTheme === 'light' || telegramTheme === 'dark') return telegramTheme;
-    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    if (saved === 'dark') return saved;
+    return 'dark';
   });
 
   useEffect(() => {
@@ -23,9 +21,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.setItem('deutschiq_theme', theme);
   }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
-  };
+  const toggleTheme = () => setTheme('dark');
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
