@@ -73,8 +73,8 @@ async def get_dashboard(user_id: int, db: Session = Depends(get_db), authenticat
         "percentage": diag.overall_score,
         "diagnostic_score": diag.overall_score,
         "targetLevel": next_cefr(user.current_level),
-        "targetProgress": level_progress(diag.overall_score, user.current_level),
-        "level_progress": level_progress(diag.overall_score, user.current_level),
+        "targetProgress": plan_progress,
+        "level_progress": plan_progress,
         "plan_progress": plan_progress,
         "confidence": "medium",
         "stats": [
