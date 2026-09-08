@@ -81,6 +81,23 @@ export const api = {
   },
   checkLessonAnswer: (payload: { user_id: number; lesson_id: number; exercise_index: number; answer: string; session_id: string; confidence?: 'guess' | 'okay' | 'sure'; response_ms?: number }) =>
     apiClient.post('/api/lesson/check-answer', payload).then(r => r.data),
+  transcribeSpeech: (payload: { user_id: number; lesson_id: number; exercise_index: number; session_id: string; audio: Blob }) => {
+    const form = new FormData();
+    form.append('user_id', String(payload.user_id));
+    form.append('lesson_id', String(payload.lesson_id));
+    form.append('exercise_index', String(payload.exercise_index));
+    form.append('session_id', payload.session_id);
+    const extension = payload.audio.type.includes('mp4') ? 'm4a' : payload.audio.type.includes('ogg') ? 'ogg' : 'webm';
+    form.append('audio', payload.audio, `speech.${extension}`);
+    return apiClient.post('/api/speech/transcribe', form, { timeout: 25000 }).then(r => r.data);
+  },
+  transcribeTutorSpeech: (userId: number, audio: Blob) => {
+    const form = new FormData();
+    form.append('user_id', String(userId));
+    const extension = audio.type.includes('mp4') ? 'm4a' : audio.type.includes('ogg') ? 'ogg' : 'webm';
+    form.append('audio', audio, `speech.${extension}`);
+    return apiClient.post('/api/speech/tutor-transcribe', form, { timeout: 25000 }).then(r => r.data);
+  },
 
   // Learning engine
   getLearningToday: (userId: number) => apiClient.get(`/api/learning/today/${userId}`).then(r => r.data),

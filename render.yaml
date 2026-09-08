@@ -16,6 +16,12 @@ services:
         value: /api/telegram/webhook
       - key: OPENAI_MODEL
         value: gpt-4o-mini
+      - key: OPENAI_TRANSCRIBE_MODEL
+        value: gpt-4o-mini-transcribe
+      - key: SPEECH_DAILY_LIMIT
+        value: "8"
+      - key: SPEECH_MAX_BYTES
+        value: "5000000"
       - key: DEBUG
         value: "false"
       - key: BOT_TOKEN

@@ -5,6 +5,7 @@ import { api } from "../services/api";
 import { useLanguage } from "../context/LanguageContext";
 import { topicLabel } from "../i18n/topics";
 import { getUserId, withUser } from "../utils/user";
+import { VoiceRecorder } from "../components/VoiceRecorder";
 
 export const Lesson: React.FC = () => {
   const { id } = useParams();
@@ -23,6 +24,7 @@ export const Lesson: React.FC = () => {
   const [outcome, setOutcome] = useState<any>(null);
   const [sessionId, setSessionId] = useState("");
   const [usedTokens, setUsedTokens] = useState<number[]>([]);
+  const [speechResult, setSpeechResult] = useState<any>(null);
   const exercises = useMemo(
     () => (lesson?.content?.exercises || []).slice(0, 3),
     [lesson],
@@ -62,6 +64,7 @@ export const Lesson: React.FC = () => {
     setFeedback(null);
     setConfidence("okay");
     setStartedAt(Date.now());
+    setSpeechResult(null);
   };
   const next = async () => {
     if (exercise && checked === false && !retried[exerciseIndex]) {
@@ -104,6 +107,12 @@ export const Lesson: React.FC = () => {
       replace: true,
     });
   const speak = (rate = 0.9) => {
+    if (content.audio_url) {
+      const audio = new Audio(content.audio_url);
+      audio.playbackRate = rate;
+      void audio.play();
+      return;
+    }
     if (!("speechSynthesis" in window)) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(
@@ -112,6 +121,14 @@ export const Lesson: React.FC = () => {
     utterance.lang = "de-DE";
     utterance.rate = rate;
     window.speechSynthesis.speak(utterance);
+  };
+  const transcribe = async (audio: Blob) => {
+    const result = await api.transcribeSpeech({
+      user_id: getUserId(), lesson_id: Number(id), exercise_index: exerciseIndex,
+      session_id: sessionId, audio,
+    });
+    setAnswer(result.transcript || "");
+    setSpeechResult(result);
   };
   const addToken = (token: string, index: number) => {
     setUsedTokens((value) => [...value, index]);
@@ -239,6 +256,13 @@ export const Lesson: React.FC = () => {
               : ""}
           </p>
           <h1>{exercise.question}</h1>
+          {exercise.type === "listening" && (
+            <div className="listening-challenge">
+              <button type="button" onClick={() => speak(0.9)}><FaVolumeUp /> {lang === "ru" ? "Прослушать" : "Anhören"}</button>
+              <button type="button" onClick={() => speak(0.7)}><FaVolumeUp /> {lang === "ru" ? "Медленнее" : "Langsamer"}</button>
+              <small>{lang === "ru" ? "Аудио можно включить ещё раз" : "Du kannst das Audio wiederholen"}</small>
+            </div>
+          )}
           {exercise.type === "choose" && Array.isArray(exercise.options) ? (
             <div className="lesson-options">
               {exercise.options.map((option: string) => (
@@ -282,6 +306,7 @@ export const Lesson: React.FC = () => {
               </button>
             </>
           ) : (
+            <>
             <textarea
               className="lesson-answer production-answer"
               value={answer}
@@ -291,12 +316,26 @@ export const Lesson: React.FC = () => {
                   ? lang === "ru"
                     ? "Напиши свою немецкую фразу…"
                     : "Schreibe deinen eigenen Satz…"
+                  : exercise.type === "listening"
+                    ? lang === "ru" ? "Напиши, что услышал…" : "Schreibe, was du hörst…"
                   : lang === "ru"
                     ? "Введи ответ"
                     : "Antwort eingeben"
               }
               disabled={checked !== null}
             />
+            {(exercise.type === "production" || exercise.type === "repeat") && checked === null && (
+              <VoiceRecorder lang={lang} disabled={!sessionId} onAudio={transcribe} />
+            )}
+            {speechResult?.transcript && (
+              <div className="speech-result">
+                <small>{lang === "ru" ? "РАСПОЗНАНО" : "ERKANNT"}</small>
+                <strong>“{speechResult.transcript}”</strong>
+                {speechResult.match && <span>{lang === "ru" ? `Совпадение слов: ${speechResult.match.score}%` : `Wortübereinstimmung: ${speechResult.match.score}%`}</span>}
+                <em>{lang === "ru" ? "Это оценка распознанных слов, не акцента или фонетики." : "Bewertet werden erkannte Wörter, nicht Akzent oder Phonetik."}</em>
+              </div>
+            )}
+            </>
           )}
           {checked === null && exercise.stage === "guided" && (
             <div className="guided-hint">{exercise.hint}</div>

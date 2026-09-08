@@ -13,6 +13,21 @@
   --text-primary: #f4f4f1;
 }
 
+.voice-recorder { margin-top: 14px; display: grid; gap: 8px; }
+.voice-button { width: 100%; min-height: 56px; border-radius: 18px; border: 1px solid rgba(212,175,55,.42); background: rgba(212,175,55,.08); color: var(--text-primary); font: inherit; font-weight: 700; display:flex; align-items:center; justify-content:center; gap:10px; }
+.voice-button.recording { background: rgba(215,73,73,.16); border-color: rgba(215,73,73,.65); color: #ffb8b8; }
+.voice-recorder small, .voice-recorder p { margin: 0; text-align:center; color: var(--text-secondary); font-size: 12px; }
+.voice-recorder.error p { color: #ffb8b8; }
+.speech-result { margin-top: 12px; padding: 16px; border-radius: 18px; background: rgba(255,255,255,.045); border: 1px solid rgba(255,255,255,.09); display:grid; gap:6px; }
+.speech-result small { color: var(--gold); letter-spacing:.12em; }
+.speech-result strong { font-size: 17px; }
+.speech-result span { color: var(--text-secondary); }
+.speech-result em { color: var(--text-secondary); font-size: 12px; font-style:normal; }
+.listening-challenge { margin: 18px 0; padding: 18px; border-radius: 22px; background: radial-gradient(circle at 50% 0%, rgba(212,175,55,.14), rgba(255,255,255,.035)); border: 1px solid rgba(212,175,55,.25); display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.listening-challenge button { min-height:50px; border-radius:15px; border:1px solid rgba(212,175,55,.3); background:rgba(7,17,31,.7); color:var(--text-primary); font:inherit; font-weight:700; display:flex; gap:8px; align-items:center; justify-content:center; }
+.listening-challenge small { grid-column:1/-1; text-align:center; color:var(--text-secondary); }
+.message-audio { margin-top:8px; width:34px; height:34px; border-radius:50%; border:0; background:rgba(212,175,55,.14); color:var(--gold); display:grid; place-items:center; }
+
 body { font-family: var(--sans); font-weight: 450; letter-spacing: -.018em; }
 .page-header h1, .dashboard-heading h1, .analysis-title h1, .lesson-step h1,
 .lesson-hero h2, .strongest-skill h2, .streak-section h2, .result-hero h1,
