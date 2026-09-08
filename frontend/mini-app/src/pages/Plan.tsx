@@ -20,7 +20,7 @@ export const Plan: React.FC = () => {
   const weekLessons = lessons.filter(x => Number(x.week || 1) === week);
   const visible = showWeek ? weekLessons : weekLessons.slice(0, 3);
   const completed = weekLessons.filter(x => x.completed).length;
-  const weekTitle = ['word_order', 'dative_case', 'articles', 'perfekt_auxiliary'][week - 1] || 'word_order';
+  const weekTitle = weekLessons[0]?.topic || current?.topic || 'word_order';
 
   if (!dashboard) return <div className="app-shell"><div className="skeleton hero-skeleton" /></div>;
   return (

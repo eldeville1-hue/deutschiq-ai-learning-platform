@@ -28,6 +28,7 @@ const TOPICS: Record<string, Record<AppLanguage, string>> = {
   relative_clauses: { ru: 'Относительные предложения', de: 'Relativsätze' },
   konjunktiv_i: { ru: 'Косвенная речь', de: 'Indirekte Rede' },
   genitive_prepositions: { ru: 'Предлоги с Genitiv', de: 'Genitivpräpositionen' },
+  advanced_prepositions: { ru: 'Сложные предлоги', de: 'Fortgeschrittene Präpositionen' },
   idioms: { ru: 'Устойчивые выражения', de: 'Redewendungen' },
   participles: { ru: 'Причастия', de: 'Partizipien' },
   nominal_style: { ru: 'Номинальный стиль', de: 'Nominalstil' },

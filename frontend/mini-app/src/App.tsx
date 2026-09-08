@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useLayoutEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { LanguageProvider } from './context/LanguageContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -22,6 +22,9 @@ const Portfolio = lazy(() => import('./pages/Portfolio').then(module => ({ defau
 
 function AppRoutes() {
   const location = useLocation();
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [location.pathname]);
   const legalKind = ({ '/privacy': 'privacy', '/imprint': 'imprint', '/terms': 'terms' } as const)[location.pathname as '/privacy' | '/imprint' | '/terms'];
   const portfolioRoute = location.pathname === '/about';
   const outsideTelegram = !import.meta.env.DEV && (window as any).Telegram?.WebApp?.platform === 'unknown';
