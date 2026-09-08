@@ -128,6 +128,23 @@ body {
 .voice-progress > div span small, .voice-progress p { color:var(--text-secondary); font-size:.78rem; font-weight:400; margin:0; }
 .voice-progress > div .analysis-bar { grid-column:1/-1; }
 
+.diagnostic-listen {
+  width: 100%;
+  min-height: 54px;
+  margin: 18px 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid rgba(233,185,73,.34);
+  border-radius: 16px;
+  background: rgba(233,185,73,.09);
+  color: var(--amber-soft);
+  font-weight: 700;
+}
+
+.diagnostic-listen:active { transform: scale(.985); }
+
 /* Tutor: no clipped chips and no artificial empty screen. */
 .precision-tutor {
   min-height: 100dvh;
