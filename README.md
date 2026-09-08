@@ -1,8 +1,8 @@
 # DeutschIQ
 
-> v21 Learning State Integrity replaces aggregate-only placement with
-> evidence-gated CEFR calibration, aligns level progress with completed
-> learning, and numbers each personalized roadmap from the learner's first day.
+> v22 Balanced Placement turns diagnosis into a 16-item A1–B2 assessment with
+> equal evidence per difficulty band, four German listening tasks, honest skill
+> coverage, and server-side CEFR calibration.
 
 <p align="center">
   <img src="docs/screenshots/deutschiq-cover.png" alt="DeutschIQ — adaptive German learning inside Telegram">
