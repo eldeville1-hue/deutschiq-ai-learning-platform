@@ -61,5 +61,6 @@ def calculate_level_and_scores(answers: Dict[int, str], questions: List[dict]) -
         "pillars": pillar_scores,
         "weak_points": weak_points,
         "level_scores": level_scores,
+        "pillar_attempts": pillar_total,
         "assessment_ceiling": "B1" if level_total.get("B2", 0) < 4 else "B2",
     }
