@@ -1,8 +1,8 @@
 # DeutschIQ
 
-> v20 Mobile Visual QA fixes the production theme cascade, restores readable
-> contrast across every dark surface, refines mobile typography and prevents
-> the Tutor and bottom navigation from clipping content on narrow screens.
+> v21 Learning State Integrity replaces aggregate-only placement with
+> evidence-gated CEFR calibration, aligns level progress with completed
+> learning, and numbers each personalized roadmap from the learner's first day.
 
 <p align="center">
   <img src="docs/screenshots/deutschiq-cover.png" alt="DeutschIQ — adaptive German learning inside Telegram">
