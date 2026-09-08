@@ -1,5 +1,6 @@
 // frontend/mini-app/src/pages/Diagnostic.tsx
 import React, { useState, useEffect } from 'react';
+import { FaVolumeUp } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { getText } from '../i18n/translations';
@@ -35,7 +36,7 @@ export const Diagnostic: React.FC = () => {
   useEffect(() => {
     if (userId === null) return;
     api.getQuestions(lang)
-      .then(data => { setQuestions((Array.isArray(data) ? data : []).slice(0, 15)); setLoading(false); })
+      .then(data => { setQuestions(Array.isArray(data) ? data : []); setLoading(false); })
       .catch(() => setLoading(false));
   }, [userId, lang]);
 
@@ -70,6 +71,16 @@ export const Diagnostic: React.FC = () => {
     }
   };
 
+  const playListeningPrompt = () => {
+    const text = questions[current]?.audio_text;
+    if (!text || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'de-DE';
+    utterance.rate = .82;
+    window.speechSynthesis.speak(utterance);
+  };
+
   if (loading) return <main className="diagnostic-shell"><div className="skeleton diagnostic-skeleton" /></main>;
 
   if (questions.length === 0) {
@@ -98,6 +109,7 @@ export const Diagnostic: React.FC = () => {
       <section className="diagnostic-question" key={q.id}>
         <span className="difficulty-pill">{q.difficulty}</span>
         <h1>{q.text}</h1>
+        {q.pillar === 'listening' && <button type="button" className="diagnostic-listen" onClick={playListeningPrompt}><FaVolumeUp />{lang === 'ru' ? 'Прослушать ещё раз' : 'Noch einmal anhören'}</button>}
         <div className="diagnostic-options">
           {q.options.map((opt: string, index: number) => (
             <button

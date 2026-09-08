@@ -37,7 +37,14 @@ MOCK_QUESTIONS = [
     # C1
     {"id": 19, "pillar": "grammar", "difficulty": "C1", "text": "Die ______ des Problems erfordert Geduld.", "options": ["Lösung", "Analyse", "Bearbeitung", "Alle Antworten sind möglich"], "correct_answer": "Alle Antworten sind möglich", "weak_tags": ["nominal_style", "abstract_nouns"], "explanation": "Alle Optionen sind korrekt."},
     {"id": 20, "pillar": "vocabulary", "difficulty": "C1", "text": "Was bedeutet 'sich etwas in den Kopf setzen'?", "options": ["Sich etwas fest vornehmen", "Etwas vergessen", "Etwas bereuen", "Jemanden überzeugen"], "correct_answer": "Sich etwas fest vornehmen", "weak_tags": ["idioms", "advanced_expressions"], "explanation": "Sich etwas fest vornehmen."},
+    # Listening anchors — one item per assessed CEFR band.
+    {"id": 21, "pillar": "listening", "difficulty": "A1", "text": "Прослушай фразу. Куда идёт человек?", "audio_text": "Ich gehe heute in den Supermarkt.", "options": ["В супермаркет", "На вокзал", "В школу", "В больницу"], "correct_answer": "В супермаркет", "weak_tags": ["listening_everyday"], "explanation": "In den Supermarkt — в супермаркет."},
+    {"id": 22, "pillar": "listening", "difficulty": "A2", "text": "Прослушай объявление. Когда отправляется поезд?", "audio_text": "Der Zug nach Hamburg fährt um Viertel nach neun ab.", "options": ["В 8:45", "В 9:15", "В 9:30", "В 10:15"], "correct_answer": "В 9:15", "weak_tags": ["listening_time"], "explanation": "Viertel nach neun означает 9:15."},
+    {"id": 23, "pillar": "listening", "difficulty": "B1", "text": "Прослушай сообщение. Почему встречу перенесли?", "audio_text": "Weil mehrere Kollegen krank sind, findet die Besprechung erst am Donnerstag statt.", "options": ["Из-за болезни коллег", "Из-за отпуска директора", "Из-за технической ошибки", "Из-за праздника"], "correct_answer": "Из-за болезни коллег", "weak_tags": ["listening_reason"], "explanation": "Mehrere Kollegen sind krank — несколько коллег заболели."},
+    {"id": 24, "pillar": "listening", "difficulty": "B2", "text": "Прослушай высказывание. Какова позиция говорящего?", "audio_text": "Die Maßnahme ist zwar gut gemeint, dürfte das eigentliche Problem jedoch kaum lösen.", "options": ["Мера полезна и решит проблему", "Мера бессмысленна", "Намерение хорошее, но мера вряд ли решит проблему", "Проблемы не существует"], "correct_answer": "Намерение хорошее, но мера вряд ли решит проблему", "weak_tags": ["listening_attitude"], "explanation": "Gut gemeint, jedoch kaum lösen выражает сдержанный скепсис."},
 ]
+
+PLACEMENT_QUESTION_IDS = {1, 2, 3, 21, 5, 6, 8, 22, 10, 11, 13, 23, 15, 16, 17, 24}
 
 class SubmitAnswers(BaseModel):
     user_id: int
@@ -45,7 +52,10 @@ class SubmitAnswers(BaseModel):
 
 @router.get("/questions")
 async def get_questions(lang: str = "ru", authenticated_id: int = Depends(telegram_user_id)):
-    return [{key: value for key, value in question.items() if key not in ("correct_answer", "explanation", "weak_tags")} for question in MOCK_QUESTIONS]
+    return [
+        {key: value for key, value in question.items() if key not in ("correct_answer", "explanation", "weak_tags")}
+        for question in MOCK_QUESTIONS if question["id"] in PLACEMENT_QUESTION_IDS
+    ]
 
 @router.post("/submit")
 async def submit_diagnostic(data: SubmitAnswers, db: Session = Depends(get_db), authenticated_id: int = Depends(telegram_user_id)):
@@ -91,15 +101,14 @@ async def submit_diagnostic(data: SubmitAnswers, db: Session = Depends(get_db), 
         "overall_score": result["overall_score"],
         "pillars": result["pillars"],
         "skill_status": {
-            "grammar": "assessed",
-            "vocabulary": "assessed",
-            "listening": "not_assessed",
-            "pronunciation": "not_assessed",
+            pillar: "assessed" if result["pillar_attempts"].get(pillar, 0) else "not_assessed"
+            for pillar in ("grammar", "vocabulary", "listening", "pronunciation")
         },
         "confidence": "medium",
         "weak_points": result["weak_points"],
         "weak_tags": list(result["weak_points"].keys()),
         "level_scores": result["level_scores"],
+        "pillar_attempts": result["pillar_attempts"],
         "assessment_ceiling": result["assessment_ceiling"],
         "persisted": persisted,
         "mistakes": [
