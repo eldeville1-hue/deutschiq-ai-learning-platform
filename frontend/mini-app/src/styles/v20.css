@@ -1,0 +1,234 @@
+/* DeutschIQ v20 — mobile visual QA
+   The product is intentionally dark. Keep this file last in the cascade. */
+:root,
+[data-theme='dark'],
+[data-theme='light'] {
+  color-scheme: dark;
+  --ink: #f7f5ef;
+  --paper: #080b12;
+  --panel: #0e1420;
+  --panel-raised: #151e2d;
+  --text-primary: #f7f5ef;
+  --text-secondary: rgba(247, 245, 239, .72);
+  --text-muted: rgba(247, 245, 239, .48);
+  --surface: rgba(18, 27, 46, .92);
+  --surface-2: rgba(255, 255, 255, .045);
+  --line: rgba(255, 255, 255, .10);
+  --line-strong: rgba(255, 255, 255, .16);
+  --hairline: rgba(255, 255, 255, .10);
+  --display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', sans-serif;
+  --sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', 'Segoe UI', sans-serif;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  background: #070a10;
+}
+
+body {
+  color: var(--text-primary);
+  font-family: var(--sans);
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: -.012em;
+}
+
+.app-shell {
+  color: var(--text-primary);
+  padding-bottom: calc(132px + env(safe-area-inset-bottom));
+}
+
+.page-header h1,
+.dashboard-heading h1,
+.analysis-title h1,
+.home-intro h1,
+.focus-stage h2,
+.strongest-skill h2,
+.mastery-section h2,
+.voice-progress h2,
+.streak-section h2,
+.profile-passport h1,
+.achievement-section b,
+.daily-agenda h2,
+.daily-agenda strong,
+.attention-list strong,
+.error-list span,
+.lesson-row b {
+  color: var(--text-primary);
+}
+
+.page-header h1,
+.dashboard-heading h1,
+.analysis-title h1,
+.home-intro h1,
+.focus-stage h2,
+.lesson-step h1,
+.result-hero h1 {
+  font-family: var(--display);
+  font-weight: 700;
+  letter-spacing: -.045em;
+}
+
+.home-brand strong,
+.profile-masthead b,
+.profile-numbers strong {
+  color: var(--text-primary);
+}
+
+/* A gold surface always uses dark ink; dark surfaces always use light ink. */
+.precision-plan .today-focus,
+.precision-plan .today-focus h2,
+.precision-plan .today-focus .day-label,
+.precision-plan .today-focus .section-heading,
+.precision-plan .today-focus .section-heading small {
+  color: #10131a;
+}
+
+.precision-plan .lesson-row,
+.precision-plan .lesson-row b,
+.precision-plan .lesson-row small {
+  color: var(--text-primary);
+}
+
+.precision-profile .profile-masthead b {
+  color: var(--text-primary);
+}
+
+.attention-list,
+.error-list,
+.voice-progress,
+.daily-agenda,
+.precision-profile .pro-section {
+  color: var(--text-primary);
+  background-color: rgba(255, 255, 255, .025);
+}
+
+/* Voice controls retained from the former legacy stylesheet. */
+.voice-recorder { margin-top: 14px; display: grid; gap: 8px; }
+.voice-button { width: 100%; min-height: 56px; border-radius: 18px; border: 1px solid rgba(233,185,73,.42); background: rgba(233,185,73,.08); color: var(--text-primary); font: inherit; font-weight: 700; display:flex; align-items:center; justify-content:center; gap:10px; }
+.voice-button.recording { background: rgba(215,73,73,.16); border-color: rgba(215,73,73,.65); color: #ffb8b8; }
+.voice-recorder small, .voice-recorder p { margin: 0; text-align:center; color: var(--text-secondary); font-size: .78rem; }
+.voice-recorder.error p { color: #ffb8b8; }
+.speech-result { margin-top: 12px; padding: 16px; border-radius: 18px; background: rgba(255,255,255,.045); border: 1px solid rgba(255,255,255,.09); display:grid; gap:6px; }
+.speech-result small { color: var(--amber); letter-spacing:.12em; }
+.speech-result strong { color: var(--text-primary); font-size: 1rem; }
+.speech-result span, .speech-result em { color: var(--text-secondary); }
+.speech-result em { font-size: .78rem; font-style:normal; }
+.listening-challenge { margin: 18px 0; padding: 18px; border-radius: 22px; background: radial-gradient(circle at 50% 0%, rgba(233,185,73,.14), rgba(255,255,255,.035)); border: 1px solid rgba(233,185,73,.25); display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.listening-challenge button { min-height:50px; border-radius:15px; border:1px solid rgba(233,185,73,.3); background:rgba(7,17,31,.7); color:var(--text-primary); font:inherit; font-weight:700; display:flex; gap:8px; align-items:center; justify-content:center; }
+.listening-challenge small { grid-column:1/-1; text-align:center; color:var(--text-secondary); }
+.message-audio { margin-top:8px; width:34px; height:34px; border-radius:50%; border:0; background:rgba(233,185,73,.14); color:var(--amber); display:grid; place-items:center; }
+.voice-progress { padding: 22px; border: 1px solid rgba(233,185,73,.22); border-radius: 24px; background: linear-gradient(145deg,rgba(233,185,73,.09),rgba(255,255,255,.025)); display:grid; gap:18px; }
+.voice-progress header small { color:var(--amber); letter-spacing:.12em; }
+.voice-progress header h2 { margin:6px 0 0; }
+.voice-progress > div { display:grid; grid-template-columns:1fr auto; gap:8px 14px; }
+.voice-progress > div span { display:grid; gap:3px; color: var(--text-primary); font-weight:700; }
+.voice-progress > div span small, .voice-progress p { color:var(--text-secondary); font-size:.78rem; font-weight:400; margin:0; }
+.voice-progress > div .analysis-bar { grid-column:1/-1; }
+
+/* Tutor: no clipped chips and no artificial empty screen. */
+.precision-tutor {
+  min-height: 100dvh;
+  gap: 16px;
+}
+
+.precision-tutor .quick-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  overflow: visible;
+}
+
+.precision-tutor .quick-actions button {
+  min-width: 0;
+  min-height: 44px;
+  padding: 9px 11px;
+  white-space: normal;
+  line-height: 1.25;
+}
+
+.precision-tutor .quick-actions button:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+.precision-tutor .chat-empty {
+  padding: 8px 0 2px;
+}
+
+.precision-tutor .chat-messages {
+  flex: 0 1 auto;
+  min-height: 24px;
+  max-height: min(34dvh, 320px);
+}
+
+.precision-tutor .voice-recorder {
+  margin-top: auto;
+}
+
+.precision-tutor .chat-composer {
+  bottom: calc(94px + env(safe-area-inset-bottom));
+}
+
+/* The navigation floats above content without covering the last section. */
+.bottom-nav,
+[data-theme='light'] .bottom-nav {
+  left: 50%;
+  right: auto;
+  bottom: calc(10px + env(safe-area-inset-bottom));
+  width: min(calc(100% - 24px), 520px);
+  transform: translateX(-50%);
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(9, 13, 21, .94);
+  color: var(--text-primary);
+}
+
+.bottom-nav button { color: rgba(247,245,239,.48); }
+.bottom-nav button.active { color: var(--amber-soft); }
+
+@media (max-width: 430px) {
+  .app-shell {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .home-intro h1,
+  .precision-analysis .analysis-title h1,
+  .precision-plan .page-header h1 {
+    font-size: clamp(1.85rem, 8.4vw, 2.35rem);
+    line-height: 1.04;
+  }
+
+  .focus-stage {
+    min-height: 342px;
+    padding: 24px 21px 20px;
+  }
+
+  .focus-stage h2 {
+    margin-top: 62px;
+    font-size: clamp(1.8rem, 8vw, 2.3rem);
+    line-height: 1.03;
+  }
+
+  .daily-agenda { padding: 18px; }
+  .agenda-row { grid-template-columns: 22px 34px minmax(0,1fr); }
+  .agenda-row > b { display: none; }
+  .agenda-row > div small { white-space: normal; line-height: 1.3; }
+
+  .precision-plan .today-focus { min-height: 0; padding: 22px 20px; }
+  .precision-plan .today-focus h2 { font-size: 1.75rem; line-height: 1.08; }
+  .precision-plan .lesson-row { grid-template-columns: 38px minmax(0,1fr) auto; }
+
+  .precision-profile .profile-passport { grid-template-columns: auto minmax(0,1fr) auto; }
+  .precision-profile .pro-section { padding: 20px; }
+
+  .bottom-nav span { font-size: .67rem; }
+}
+
+@media (max-width: 360px) {
+  .precision-tutor .quick-actions { grid-template-columns: 1fr; }
+  .precision-tutor .quick-actions button:last-child:nth-child(odd) { grid-column: auto; }
+  .bottom-nav { width: calc(100% - 16px); }
+  .bottom-nav span { font-size: .61rem; }
+}
