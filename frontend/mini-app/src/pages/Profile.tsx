@@ -19,7 +19,7 @@ export const Profile: React.FC = () => {
   const navigate = useNavigate();
   const [data, setData] = useState<any>(null);
   const [lessons, setLessons] = useState<any[]>([]);
-  const [build, setBuild] = useState<any>({ version: '17.0.0', commit: 'local' });
+  const [build, setBuild] = useState<any>({ version: '20.0.0', commit: 'local' });
   const user = getTelegramUser();
   const name = user?.first_name || (lang === 'ru' ? 'Пользователь' : 'Lernende');
   useEffect(() => { Promise.allSettled([api.getDashboard(getUserId()), api.getPlan(getUserId()), api.getVersion()]).then(([d, p, v]) => { setData(d.status === 'fulfilled' ? d.value : {}); setLessons(p.status === 'fulfilled' && Array.isArray(p.value) ? p.value : []); if (v.status === 'fulfilled') setBuild(v.value); }); }, []);
