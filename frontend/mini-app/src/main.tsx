@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import './styles/global.css';
 import './styles/v6.css';
-import './styles/v13.css';
+import './styles/v20.css';
 
 const telegram = (window as any).Telegram?.WebApp;
 telegram?.ready();
