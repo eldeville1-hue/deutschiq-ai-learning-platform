@@ -38,9 +38,9 @@ async def get_plan(user_id: int, db: Session = Depends(get_db), authenticated_id
         }
         return [{
             "id": lesson.id,
-            "day": (lesson.content or {}).get("day", index + 1),
-            "week": (lesson.content or {}).get("week", min(index // 7 + 1, 4)),
-            "week_title": week_titles.get((lesson.content or {}).get("week", min(index // 7 + 1, 4)), "Wiederholung"),
+            "day": index + 1,
+            "week": min(index // 7 + 1, 4),
+            "week_title": week_titles.get(min(index // 7 + 1, 4), "Wiederholung"),
             "topic": lesson.topic,
             "pillar": lesson.pillar,
             "level": lesson.level,
