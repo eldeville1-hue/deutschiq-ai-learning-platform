@@ -26,7 +26,7 @@ export const Lesson: React.FC = () => {
   const [usedTokens, setUsedTokens] = useState<number[]>([]);
   const [speechResult, setSpeechResult] = useState<any>(null);
   const exercises = useMemo(
-    () => (lesson?.content?.exercises || []).slice(0, 3),
+    () => (lesson?.content?.exercises || []).slice(0, 4),
     [lesson],
   );
   const total = 4 + exercises.length;
@@ -255,7 +255,7 @@ export const Lesson: React.FC = () => {
                 : " · zweiter Versuch"
               : ""}
           </p>
-          <h1>{exercise.question}</h1>
+          <h1>{exercise.type === "repeat" ? (lang === "ru" ? "Произнеси пример вслух" : "Sprich das Beispiel laut") : exercise.question}</h1>
           {exercise.type === "listening" && (
             <div className="listening-challenge">
               <button type="button" onClick={() => speak(0.9)}><FaVolumeUp /> {lang === "ru" ? "Прослушать" : "Anhören"}</button>

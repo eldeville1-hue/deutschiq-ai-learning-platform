@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.telegram_auth import assert_owner, telegram_user_id
-from app.models.learning import LearningSession, SpeechUsage
+from app.models.learning import LearningSession, SpeechAttempt, SpeechUsage
 from app.models.lesson import Lesson
 from app.models.user import User
 from app.services.content_quality import normalize_lesson_content
@@ -91,8 +91,12 @@ async def transcribe_speech(
     filename = audio.filename or "speech.webm"
     transcript = await openai_transcript(payload, media_type, filename, target)
     usage = reserve_usage(db, user, len(payload))
-    db.commit()
     match = assess_speech_match(transcript, target) if target else None
+    modality = "listening" if exercise.get("type") == "listening" else "speaking"
+    db.add(SpeechAttempt(user_id=user.id, lesson_id=lesson.id, modality=modality,
+                         match_score=match["score"] if match else None,
+                         recognized_words=len(transcript.split())))
+    db.commit()
     return {
         "transcript": transcript,
         "match": match,
@@ -117,3 +121,22 @@ async def transcribe_tutor_message(
     usage = reserve_usage(db, user, len(payload))
     db.commit()
     return {"transcript": transcript, "remaining": max(settings.SPEECH_DAILY_LIMIT - usage.requests_used, 0)}
+
+
+@router.get("/progress/{user_id}")
+async def speech_progress(user_id: int, db: Session = Depends(get_db), authenticated_id: int = Depends(telegram_user_id)):
+    assert_owner(authenticated_id, user_id)
+    user = db.query(User).filter(User.telegram_id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    rows = db.query(SpeechAttempt).filter(SpeechAttempt.user_id == user.id).all()
+    result = {}
+    for modality in ("speaking", "listening"):
+        items = [row for row in rows if row.modality == modality]
+        scored = [row.match_score for row in items if row.match_score is not None]
+        result[modality] = {
+            "attempts": len(items),
+            "score": round(sum(scored) / len(scored)) if scored else None,
+            "status": "assessed" if scored else "not_assessed",
+        }
+    return result

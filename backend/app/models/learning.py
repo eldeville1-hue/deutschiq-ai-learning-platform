@@ -55,3 +55,14 @@ class SpeechUsage(Base):
     requests_used = Column(Integer, default=0, nullable=False)
     audio_bytes = Column(Integer, default=0, nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class SpeechAttempt(Base):
+    __tablename__ = "speech_attempts"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    lesson_id = Column(Integer, ForeignKey("lessons.id", ondelete="CASCADE"), index=True, nullable=True)
+    modality = Column(String(16), index=True, nullable=False)
+    match_score = Column(Integer, nullable=True)
+    recognized_words = Column(Integer, default=0, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

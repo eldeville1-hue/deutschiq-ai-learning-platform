@@ -98,6 +98,7 @@ export const api = {
     form.append('audio', audio, `speech.${extension}`);
     return apiClient.post('/api/speech/tutor-transcribe', form, { timeout: 25000 }).then(r => r.data);
   },
+  getSpeechProgress: (userId: number) => apiClient.get(`/api/speech/progress/${userId}`).then(r => r.data),
 
   // Learning engine
   getLearningToday: (userId: number) => apiClient.get(`/api/learning/today/${userId}`).then(r => r.data),

@@ -11,6 +11,7 @@ export const VoiceRecorder: React.FC<Props> = ({ disabled, lang, onAudio }) => {
   const recorder = useRef<MediaRecorder | null>(null);
   const stream = useRef<MediaStream | null>(null);
   const chunks = useRef<Blob[]>([]);
+  const stopTimer = useRef<number | null>(null);
   const [state, setState] = useState<"idle" | "recording" | "sending" | "error">("idle");
   const [seconds, setSeconds] = useState(0);
 
@@ -20,7 +21,10 @@ export const VoiceRecorder: React.FC<Props> = ({ disabled, lang, onAudio }) => {
     return () => window.clearInterval(timer);
   }, [state]);
 
-  useEffect(() => () => stream.current?.getTracks().forEach(track => track.stop()), []);
+  useEffect(() => () => {
+    stream.current?.getTracks().forEach(track => track.stop());
+    if (stopTimer.current) window.clearTimeout(stopTimer.current);
+  }, []);
 
   const start = async () => {
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
@@ -46,6 +50,9 @@ export const VoiceRecorder: React.FC<Props> = ({ disabled, lang, onAudio }) => {
         }
       };
       mediaRecorder.start();
+      stopTimer.current = window.setTimeout(() => {
+        if (mediaRecorder.state === "recording") mediaRecorder.stop();
+      }, 20000);
       setState("recording");
     } catch {
       setState("error");
@@ -64,7 +71,7 @@ export const VoiceRecorder: React.FC<Props> = ({ disabled, lang, onAudio }) => {
         </button>
       )}
       {state === "error" && <p>{lang === "ru" ? "Не удалось распознать речь. Можно напечатать ответ." : "Spracherkennung nicht verfügbar. Du kannst tippen."}</p>}
-      <small>{lang === "ru" ? "Мы не сохраняем аудиозапись" : "Die Audioaufnahme wird nicht gespeichert"}</small>
+      <small>{lang === "ru" ? "До 20 секунд · аудиозапись не сохраняется" : "Bis 20 Sekunden · Audio wird nicht gespeichert"}</small>
     </div>
   );
 };

@@ -1,7 +1,7 @@
 # DeutschIQ
 
-> v18 Speak & Listen adds secure German speech transcription, listening audio,
-> word-match feedback, privacy-safe recordings, and backend cost controls.
+> v19 Voice Learning Loop adds a speaking task to every lesson, privacy-safe
+> voice progress, separate speaking/listening signals, and bounded recordings.
 
 <p align="center">
   <img src="docs/screenshots/deutschiq-cover.png" alt="DeutschIQ — adaptive German learning inside Telegram">

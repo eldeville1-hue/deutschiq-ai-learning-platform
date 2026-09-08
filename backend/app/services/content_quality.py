@@ -27,6 +27,13 @@ def normalize_lesson_content(content: dict, topic: str, level: str) -> dict:
             item["accepted_answers"] = [item["answer"]]
         item.setdefault("explanation", item.get("hint") or "Сравни ответ с правилом и повтори структуру ещё раз.")
         exercises.append(item)
+    if not any(item.get("type") == "repeat" for item in exercises):
+        exercises.append({
+            "type": "repeat", "stage": "transfer",
+            "question": "Произнеси пример вслух. Система проверит распознанные слова.",
+            "answer": example, "accepted_answers": [example],
+            "explanation": "Повтори фразу ещё раз, сохраняя порядок слов и окончания.",
+        })
     value["exercises"] = exercises
     return value
 
