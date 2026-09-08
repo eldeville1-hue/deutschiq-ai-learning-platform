@@ -1,7 +1,8 @@
 # DeutschIQ
 
-> v19 Voice Learning Loop adds a speaking task to every lesson, privacy-safe
-> voice progress, separate speaking/listening signals, and bounded recordings.
+> v20 Mobile Visual QA fixes the production theme cascade, restores readable
+> contrast across every dark surface, refines mobile typography and prevents
+> the Tutor and bottom navigation from clipping content on narrow screens.
 
 <p align="center">
   <img src="docs/screenshots/deutschiq-cover.png" alt="DeutschIQ — adaptive German learning inside Telegram">
