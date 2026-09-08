@@ -99,6 +99,8 @@ async def submit_diagnostic(data: SubmitAnswers, db: Session = Depends(get_db), 
         "confidence": "medium",
         "weak_points": result["weak_points"],
         "weak_tags": list(result["weak_points"].keys()),
+        "level_scores": result["level_scores"],
+        "assessment_ceiling": result["assessment_ceiling"],
         "persisted": persisted,
         "mistakes": [
             {
