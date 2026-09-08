@@ -57,7 +57,7 @@ The public application runs as a Docker service on Render with a signed Telegram
 
 - Telegram-authenticated onboarding and returning-user flow
 - Adaptive A1–B2 diagnostic without exposing answers to the client
-- Personalized 30-day roadmap with 30 lessons and 90 exercises
+- Personalized 30-day roadmap with 10 gold-standard multimodal lessons
 - Explainable skill graph with prerequisite gates
 - Retention-aware mastery using confidence, response time, lapses, and stability
 - Adaptive daily sessions: due review → next skill → active transfer
@@ -156,7 +156,7 @@ python -m app.bot.main
 - Database: Neon pooled PostgreSQL
 - Bot transport: signed Telegram webhook
 
-Render rebuilds the service from GitHub when the production branch changes. Production credentials are stored as hosting environment variables, never in the repository.
+Render rebuilds the service from GitHub when the production branch changes. On startup it applies database migrations and idempotently synchronizes the validated curriculum. Production credentials are stored as hosting environment variables, never in the repository.
 
 ## Testing
 

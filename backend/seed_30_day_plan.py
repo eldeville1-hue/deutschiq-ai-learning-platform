@@ -10,7 +10,7 @@ CURRICULUM = [
     (3, "Вопросы с вопросительным словом", "После вопросительного слова идёт глагол, затем подлежащее.", "word_order", "Wann kommst du nach Hause?", "Составьте вопрос: wann / du / nach Hause / kommst", "Wann kommst du nach Hause?"),
     (4, "Да/нет-вопросы", "В вопросе без вопросительного слова глагол занимает первое место.", "word_order", "Lernst du heute Deutsch?", "Составьте вопрос: du / heute / Deutsch / lernst", "Lernst du heute Deutsch?"),
     (5, "Модальные глаголы", "Модальный глагол стоит на втором месте, смысловой инфинитив — в конце.", "modal_verbs", "Ich kann heute länger arbeiten.", "Составьте: ich / heute / länger / arbeiten / kann", "Ich kann heute länger arbeiten."),
-    (6, "Отделяемые приставки", "Спрягаемая часть стоит на втором месте, приставка — в конце.", "word_order", "Ich stehe jeden Tag um sieben Uhr auf.", "Составьте: ich / um sieben Uhr / aufstehe", "Ich stehe um sieben Uhr auf."),
+    (6, "Отделяемые приставки", "Спрягаемая часть стоит на втором месте, приставка — в конце.", "word_order", "Ich stehe jeden Tag um sieben Uhr auf.", "Составьте: ich / um sieben Uhr / stehe / auf", "Ich stehe um sieben Uhr auf."),
     (7, "Придаточные с weil", "В придаточном предложении с weil спрягаемый глагол стоит в конце.", "subordinate_clauses", "Ich lerne Deutsch, weil ich in Berlin lebe.", "Соедините с weil: Ich lerne Deutsch. Ich lebe in Berlin.", "Ich lerne Deutsch, weil ich in Berlin lebe."),
     # Неделя 2 — Dativ/Akkusativ
     (8, "Akkusativ: прямой объект", "Akkusativ обозначает предмет или человека, на которого направлено действие.", "dative_case", "Ich sehe den Mann.", "Вставьте артикль: Ich sehe ___ Mann.", "den"),
@@ -52,7 +52,7 @@ LESSON_DETAILS = {
     7: ("❌ Weil ich bin müde.", "✅ Weil ich müde bin.", "Объясни причину своего действия.", ["weil"]),
     8: ("❌ Ich sehe der Mann.", "✅ Ich sehe den Mann.", "Скажи, кого или что ты видишь.", ["den", "einen"]),
     9: ("❌ Ich helfe den Mann.", "✅ Ich helfe dem Mann.", "Скажи, кому ты помогаешь.", ["dem", "einem", "mir", "dir"]),
-    10: ("❌ Ich gebe das Kind dem Buch.", "✅ Ich gebe dem Kind das Buch.", "Скажи, кому и что ты даёшь.", ["gebe", "gibst", "dem"]),
+    10: ("❌ Ich gebe den Kind das Buch.", "✅ Ich gebe dem Kind das Buch.", "Скажи, кому и что ты даёшь.", ["gebe", "gibst", "dem"]),
     11: ("❌ Das Geschenk ist für meinem Bruder.", "✅ Das Geschenk ist für meinen Bruder.", "Скажи, для кого предназначена вещь.", ["für", "ohne", "durch"]),
     12: ("❌ Ich fahre mit den Bus.", "✅ Ich fahre mit dem Bus.", "Расскажи, на чём или с кем ты едешь.", ["mit", "nach", "zu"]),
     13: ("❌ Kannst du ich helfen?", "✅ Kannst du mir helfen?", "Попроси о помощи или скажи, кому помогаешь.", ["mir", "dir", "ihm", "ihr"]),
@@ -76,27 +76,58 @@ LESSON_DETAILS = {
 }
 
 
+# Первые десять уроков — эталонный маршрут: один практический результат,
+# естественные примеры и обязательные аудирование + свободная речь.
+GOLD_LESSON_EXAMPLES = {
+    1: ("Ich arbeite heute zu Hause.", "Heute koche ich für meine Freunde."),
+    2: ("Morgen fahre ich nach Hamburg.", "Nach der Arbeit treffe ich Anna."),
+    3: ("Wo wohnst du jetzt?", "Warum lernst du Deutsch?"),
+    4: ("Kommst du morgen mit?", "Hast du heute Zeit?"),
+    5: ("Wir müssen morgen früh aufstehen.", "Du kannst hier mit Karte bezahlen."),
+    6: ("Der Kurs fängt um neun Uhr an.", "Am Samstag kaufe ich im Zentrum ein."),
+    7: ("Ich bleibe zu Hause, weil ich krank bin.", "Wir fahren mit der Bahn, weil das schneller ist."),
+    8: ("Ich brauche einen Termin.", "Sie kauft die Fahrkarte online."),
+    9: ("Kannst du mir bitte helfen?", "Die Jacke gehört meiner Schwester."),
+    10: ("Ich schicke meiner Mutter eine Nachricht.", "Der Kellner bringt dem Gast die Rechnung."),
+}
+
+
 def build_content(day, topic, rule, example, question, answer):
     week = min((day - 1) // 7 + 1, 4)
     wrong, correction, communication_goal, target_patterns = LESSON_DETAILS[day]
+    examples = [example, correction.removeprefix("✅ ")]
+    if day in GOLD_LESSON_EXAMPLES:
+        examples.extend(GOLD_LESSON_EXAMPLES[day])
+    exercises = [
+        {"type": "fill", "stage": "guided", "question": question, "answer": answer, "accepted_answers": [answer], "hint": rule, "explanation": f"Правило: {rule}"},
+    ]
+    if day in GOLD_LESSON_EXAMPLES:
+        listening_answer = GOLD_LESSON_EXAMPLES[day][0]
+        exercises.extend([
+            {"type": "listening", "stage": "independent", "question": "Прослушай фразу и запиши её по-немецки.", "answer": listening_answer, "accepted_answers": [listening_answer, listening_answer.rstrip(".?!")], "hint": "Сначала улови глагол, затем восстанови остальные части.", "explanation": f"Ты услышал: {listening_answer}"},
+            {"type": "production", "stage": "transfer", "question": communication_goal, "answer": example, "model_answer": example, "accepted_answers": [example, example.rstrip(".?!")], "target_patterns": target_patterns, "hint": "Используй структуру урока, но выбери собственные детали.", "explanation": "Проверь, выполнена ли коммуникативная цель, затем сравни грамматику с моделью."},
+            {"type": "repeat", "stage": "transfer", "question": "Произнеси модель вслух, сохраняя порядок слов и окончания.", "answer": example, "accepted_answers": [example, example.rstrip(".?!")], "explanation": "Повтори фразу спокойно ещё раз и добейся полного распознавания ключевых слов."},
+        ])
+    else:
+        exercises.extend([
+            {"type": "reorder", "stage": "independent", "question": "Соберите предложение в правильном порядке.", "tokens": example.rstrip(".?!").split(), "answer": example, "accepted_answers": [example, example.rstrip(".?!")], "explanation": "Спрягаемый глагол и остальные части предложения должны занимать позиции по правилу урока."},
+            {"type": "production", "stage": "transfer", "question": communication_goal, "answer": example, "model_answer": example, "accepted_answers": [example, example.rstrip(".?!")], "target_patterns": target_patterns, "hint": "Используй структуру урока, но выбери собственные детали.", "explanation": "Проверь, выполнена ли коммуникативная цель, затем сравни грамматику с моделью."},
+        ])
     return {
         "day": day,
         "week": week,
+        "quality_version": 2 if day <= 10 else 1,
         "title": f"Tag {day}: {topic}",
         "objective": communication_goal,
         "communication_goal": communication_goal,
         "rule": rule,
-        "examples": [example, correction.removeprefix("✅ ")],
-        "audio_text": example,
+        "examples": examples,
+        "audio_text": GOLD_LESSON_EXAMPLES.get(day, (example,))[0],
         "cefr": "A2" if day <= 21 else "B1",
         "prerequisites": [] if day == 1 else [CURRICULUM[day - 2][3]],
         "common_mistakes": [wrong, correction],
         "recall_prompt": "Закрой пример и скажи правило своими словами. Затем придумай один новый элемент для своей фразы.",
-        "exercises": [
-            {"type": "fill", "stage": "guided", "question": question, "answer": answer, "accepted_answers": [answer], "hint": rule, "explanation": f"Правило: {rule}"},
-            {"type": "reorder", "stage": "independent", "question": "Соберите предложение в правильном порядке.", "tokens": example.rstrip(".?!").split(), "answer": example, "accepted_answers": [example, example.rstrip(".?!")], "explanation": "Спрягаемый глагол и остальные части предложения должны занимать позиции по правилу урока."},
-            {"type": "production", "stage": "transfer", "question": communication_goal, "answer": example, "model_answer": example, "accepted_answers": [example, example.rstrip(".?!")], "target_patterns": target_patterns, "hint": "Используй структуру урока, но выбери собственные детали.", "explanation": "Проверь, выполнена ли коммуникативная цель, затем сравни грамматику с моделью."},
-        ],
+        "exercises": exercises,
     }
 
 
@@ -125,7 +156,7 @@ def seed():
                     is_active=True,
                 ))
         db.commit()
-        print("✅ 30-дневный roadmap добавлен: 30 уроков, 90 упражнений")
+        print("✅ Roadmap синхронизирован: 30 уроков, 10 эталонных мультимодальных уроков")
     finally:
         db.close()
 

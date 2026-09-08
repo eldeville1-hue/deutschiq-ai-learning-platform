@@ -70,4 +70,16 @@ def validate_roadmap_content(content: dict) -> list[str]:
         errors.append("missing:production")
     elif not productions[0].get("target_patterns"):
         errors.append("production:missing_target_patterns")
+    if content.get("quality_version", 0) >= 2:
+        if len(content.get("examples") or []) < 3:
+            errors.append("gold:insufficient_examples")
+        kinds = {item.get("type") for item in content.get("exercises") or []}
+        for kind in ("listening", "production", "repeat"):
+            if kind not in kinds:
+                errors.append(f"gold:missing_{kind}")
+        if len(content.get("exercises") or []) < 4:
+            errors.append("gold:insufficient_exercises")
+        mistakes = content.get("common_mistakes") or []
+        if not any("❌" in item for item in mistakes) or not any("✅" in item for item in mistakes):
+            errors.append("gold:missing_contrast")
     return errors
