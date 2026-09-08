@@ -17,6 +17,7 @@ from app.services.learning_engine import mastery_update, next_stability, review_
 from app.services.skill_graph import skill_for
 from app.services.content_quality import normalize_lesson_content
 from app.services.production_feedback import evaluate_production
+from pathlib import Path
 
 router = APIRouter(prefix="/api/lesson", tags=["lesson"])
 
@@ -43,6 +44,8 @@ async def get_lesson(lesson_id: int, db: Session = Depends(get_db), authenticate
     if not lesson:
         raise HTTPException(status_code=404, detail="Урок не найден")
     public_content = copy.deepcopy(normalize_lesson_content(lesson.content or {}, lesson.topic, lesson.level))
+    audio_path = Path(__file__).resolve().parents[3] / "static" / "audio" / f"lesson_{lesson.id}.mp3"
+    public_content["audio_url"] = f"/media/audio/lesson_{lesson.id}.mp3" if audio_path.exists() else None
     for exercise in public_content.get("exercises", []):
         exercise.pop("answer", None)
         exercise.pop("accepted_answers", None)

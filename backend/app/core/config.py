@@ -30,6 +30,9 @@ class Settings:
     REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+    OPENAI_TRANSCRIBE_MODEL = os.getenv("OPENAI_TRANSCRIBE_MODEL", "gpt-4o-mini-transcribe")
+    SPEECH_DAILY_LIMIT = int(os.getenv("SPEECH_DAILY_LIMIT", "8"))
+    SPEECH_MAX_BYTES = int(os.getenv("SPEECH_MAX_BYTES", "5000000"))
     WEBAPP_URL = os.getenv("WEBAPP_URL", "http://localhost:5173")
     SECRET_KEY = os.getenv("SECRET_KEY", "change-me-in-production")
     DEBUG = os.getenv("DEBUG", "false").lower() == "true"
