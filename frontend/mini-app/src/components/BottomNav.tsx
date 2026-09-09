@@ -16,8 +16,16 @@ export const BottomNav: React.FC = () => {
     ['/tutor', FaComments, t.nav.tutor],
     ['/profile', FaUser, t.nav.profile],
   ] as const;
+  const openTab = (path: string) => {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    document.querySelector<HTMLElement>('.app-shell')?.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    navigate(withUser(path));
+  };
+
   return <nav className="bottom-nav" aria-label={t.nav.overview}>{tabs.map(([path, Icon, label]) => {
     const active = location.pathname === path;
-    return <button type="button" key={path} className={active ? 'active' : ''} aria-current={active ? 'page' : undefined} aria-label={label} onClick={() => navigate(withUser(path))}><Icon aria-hidden="true" /><span>{label}</span></button>;
+    return <button type="button" key={path} className={active ? 'active' : ''} aria-current={active ? 'page' : undefined} aria-label={label} onClick={() => openTab(path)}><Icon aria-hidden="true" /><span>{label}</span></button>;
   })}</nav>;
 };
