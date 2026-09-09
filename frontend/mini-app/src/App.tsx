@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { LanguageProvider } from './context/LanguageContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { AppBackButton } from './components/AppBackButton';
+import { BottomNav } from './components/BottomNav';
 import { hasTelegramIdentity } from './utils/user';
 import './styles/global.css';
 
@@ -88,12 +89,14 @@ function AppRoutes() {
   const authenticated = telegramReady || (import.meta.env.DEV && Boolean(import.meta.env.VITE_DEV_USER_ID));
   if (!bootstrapFinished) return <main className="entry-loading"><div className="brand-mark">D</div><div className="analysis-loader" /></main>;
   if (!authenticated) return <Suspense fallback={<main className="entry-loading"><div className="analysis-loader" /></main>}><Portfolio /></Suspense>;
-  const hasBackButton = !['/', '/dashboard', '/analytics', '/plan', '/tutor', '/profile'].includes(location.pathname);
+  const primaryRoutes = ['/dashboard', '/analytics', '/plan', '/tutor', '/profile'];
+  const hasBackButton = !['/', ...primaryRoutes].includes(location.pathname);
+  const showPrimaryNav = primaryRoutes.includes(location.pathname);
   return (
-    <div className={hasBackButton ? 'has-back-button' : undefined}>
+    <div className={`app-frame${hasBackButton ? ' has-back-button' : ''}`}>
       <AppBackButton />
       <Suspense fallback={<div className="route-skeleton"><div className="skeleton" /><div className="skeleton" /><div className="skeleton" /></div>}>
-        <Routes>
+        <Routes location={location} key={location.key}>
           <Route path="/" element={<Entry />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/diagnostic" element={<Diagnostic />} />
@@ -107,6 +110,7 @@ function AppRoutes() {
           <Route path="/review" element={<Review />} />
         </Routes>
       </Suspense>
+      {showPrimaryNav && <BottomNav />}
     </div>
   );
 }
