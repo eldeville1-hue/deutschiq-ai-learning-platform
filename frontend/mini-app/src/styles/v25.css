@@ -1,4 +1,4 @@
-/* DeutschIQ v27 — Swiss Editorial system */
+/* DeutschIQ v28 — Swiss Editorial system */
 :root {
   --ink: #f4f1e8;
   --paper: #ebe5d7;
@@ -18,7 +18,10 @@ button, input { font: inherit; }
 .app-shell { width: min(100%, 760px); min-height: 100vh; margin: 0 auto; padding: 30px 24px 132px; background: var(--graphite); overflow: hidden; }
 .app-shell::before { content:""; position: fixed; inset: 0; pointer-events:none; opacity:.18; background-image: radial-gradient(rgba(255,255,255,.18) .45px, transparent .45px); background-size:4px 4px; }
 .page-enter > section, .page-enter > header { animation: editorial-in .58s cubic-bezier(.2,.8,.2,1) both; }
-@keyframes editorial-in { from { opacity:0; transform:translateY(16px) } }
+@keyframes editorial-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 .eyebrow, [class*="kicker"], section > small, header small { color:var(--gold); font-size:11px; font-weight:800; letter-spacing:.22em; text-transform:uppercase; }
 h1,h2,h3,p { margin-top:0; }
 h1 { font-size:clamp(38px,11vw,68px); line-height:.92; letter-spacing:-.06em; }
@@ -67,7 +70,15 @@ button { color:inherit; }
 
 
 
-/* DeutschIQ v27 — stable Telegram app shell */
+/* Never let the legacy stagger system leave loaded content transparent. */
+.page-enter > .page-stagger-1,
+.page-enter > .page-stagger-2,
+.page-enter > .page-stagger-3,
+.page-enter > .page-stagger-4 {
+  opacity: 1;
+}
+
+/* DeutschIQ v28 — stable Telegram app shell */
 html,
 body,
 #root {
