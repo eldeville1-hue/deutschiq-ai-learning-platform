@@ -1,4 +1,4 @@
-/* DeutschIQ v26 — Swiss Editorial system */
+/* DeutschIQ v27 — Swiss Editorial system */
 :root {
   --ink: #f4f1e8;
   --paper: #ebe5d7;
@@ -66,21 +66,28 @@ button { color:inherit; }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;scroll-behavior:auto!important}}
 
 
-/* DeutschIQ v26 — Mobile layout repair
-   One viewport owns scrolling. This prevents Telegram from restoring a stale
-   document offset when React changes a lazy-loaded route. */
-html, body, #root {
+
+/* DeutschIQ v27 — stable Telegram app shell */
+html,
+body,
+#root {
   width: 100%;
   height: 100%;
   min-height: 0;
+  margin: 0;
   overflow: hidden;
+  background: var(--graphite);
 }
 body {
   overscroll-behavior: none;
 }
-#root > div {
-  height: 100%;
+.app-frame {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
   min-height: 0;
+  overflow: hidden;
+  background: var(--graphite);
 }
 .app-shell,
 .app-shell.compact-page {
@@ -90,70 +97,104 @@ body {
   height: 100%;
   min-height: 0;
   margin: 0 auto;
-  padding: clamp(20px, 4vw, 30px) clamp(18px, 4vw, 28px) calc(112px + env(safe-area-inset-bottom));
+  padding: 20px 18px calc(108px + env(safe-area-inset-bottom));
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
+.app-shell.page-enter {
+  animation: none;
+}
 .app-shell::-webkit-scrollbar {
   display: none;
 }
+.app-shell::before {
+  opacity: .11;
+}
 
-/* Navigation: enough room for two-line labels without covering content. */
+/* One viewport-level navigation, outside every scrolling page. */
 .bottom-nav {
+  position: absolute;
+  z-index: 100;
+  left: 50%;
   bottom: max(10px, env(safe-area-inset-bottom));
-  width: min(calc(100% - 24px), 712px);
+  width: min(calc(100% - 20px), 720px);
   height: 76px;
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 2px;
   padding: 6px;
-  border-color: rgba(244, 241, 232, .16);
-  border-radius: 22px;
-  background: rgba(10, 12, 15, .93);
-  box-shadow: 0 18px 48px rgba(0, 0, 0, .46);
+  border: 1px solid rgba(244, 241, 232, .14);
+  border-radius: 24px;
+  background: rgba(9, 12, 16, .96);
+  backdrop-filter: blur(24px) saturate(1.2);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .52);
 }
 .bottom-nav button {
   position: relative;
+  min-width: 0;
   min-height: 62px;
-  padding: 7px 3px 6px;
-  gap: 4px;
+  padding: 7px 2px 5px;
   border: 1px solid transparent;
-  border-radius: 17px;
-  line-height: 1.05;
+  border-radius: 18px;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: #7f848c;
+  font-size: 10px;
+  font-weight: 750;
+  line-height: 1.04;
+}
+.bottom-nav button svg {
+  flex: 0 0 auto;
+  font-size: 19px;
 }
 .bottom-nav button span {
   display: block;
   width: 100%;
-  max-width: 68px;
-  min-height: 21px;
+  max-width: 70px;
+  min-height: 20px;
   overflow: visible;
+  color: inherit;
   text-align: center;
-  text-overflow: clip;
   white-space: normal;
 }
 .bottom-nav button.active {
   color: var(--gold);
-  border-color: rgba(244, 197, 82, .25);
-  background: linear-gradient(145deg, rgba(244, 197, 82, .18), rgba(244, 197, 82, .07));
+  border-color: rgba(244, 197, 82, .22);
+  background: linear-gradient(145deg, rgba(244, 197, 82, .16), rgba(244, 197, 82, .05));
 }
 .bottom-nav button.active::before {
+  content: "";
+  position: absolute;
   top: 5px;
+  width: 20px;
   height: 2px;
+  border-radius: 2px;
   background: var(--gold);
 }
 
-/* Page rhythm and readable mobile scale. */
+/* Home */
 .precision-home .home-intro {
-  margin: 28px 0 20px;
+  margin: 26px 0 18px;
 }
 .precision-home .home-intro h1 {
   font-size: clamp(36px, 9vw, 52px);
   line-height: .98;
 }
 .precision-home .focus-stage {
-  min-height: 330px;
+  min-height: 320px;
+  padding: 24px;
   border: 1px solid rgba(244, 197, 82, .24);
-  background: linear-gradient(145deg, #182334, #10161f 70%);
+  border-radius: 28px;
+  background: linear-gradient(145deg, #172235, #101720 72%);
   color: var(--ink);
 }
 .precision-home .focus-stage p,
@@ -161,135 +202,249 @@ body {
   color: #a7abb2;
 }
 .precision-home .focus-stage h2 {
-  margin-top: 42px;
-  font-size: clamp(36px, 9vw, 54px);
+  margin: 38px 0 16px;
+  font-size: clamp(35px, 8.8vw, 52px);
 }
 .precision-home .focus-start {
+  border-radius: 16px;
   color: #101216;
   background: var(--gold);
 }
 
+/* Plan */
 .precision-plan.compact-page {
   display: block;
 }
+.precision-plan .page-header {
+  padding: 4px 0 20px;
+}
 .precision-plan .page-header h1 {
-  font-size: clamp(40px, 10vw, 58px);
+  font-size: clamp(38px, 9.5vw, 54px);
 }
 .precision-plan .today-focus {
-  margin-top: 0;
-  padding: 24px 0 28px;
+  margin: 0;
+  padding: 22px 0 26px;
 }
 .precision-plan .today-focus h2 {
-  margin: 22px 0;
-  font-size: clamp(32px, 8vw, 48px);
+  margin: 20px 0;
+  font-size: clamp(31px, 8vw, 46px);
 }
 .precision-plan .today-focus .primary-action {
+  min-height: 58px;
   border-radius: 16px;
 }
 .precision-plan .lesson-row {
-  min-height: 88px;
-  padding: 18px 0;
+  min-height: 84px;
+  padding: 17px 0;
 }
 
+/* Analytics */
 .precision-analysis .analysis-title h1 {
-  font-size: clamp(36px, 9vw, 52px);
+  font-size: clamp(35px, 8.8vw, 50px);
   line-height: .98;
 }
 .precision-analysis .knowledge-instrument {
-  gap: 18px;
-  padding: 22px;
+  gap: 16px;
+  padding: 21px;
+  border-radius: 22px;
 }
 .precision-analysis .instrument-level strong,
 .precision-analysis .instrument-progress strong {
-  font-size: clamp(46px, 12vw, 64px);
+  font-size: clamp(44px, 11vw, 60px);
 }
 
+/* Tutor: compact functional workspace with no overlapping controls. */
 .precision-tutor {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: grid;
+  grid-template-rows: auto auto auto auto minmax(0, 1fr) auto auto;
+  align-content: stretch;
+  gap: 11px;
 }
 .precision-tutor .page-header {
-  flex: 0 0 auto;
+  position: relative;
+  display: block;
+  padding: 0;
+}
+.precision-tutor .page-header > div {
+  min-width: 0;
+}
+.precision-tutor .eyebrow {
+  min-height: 28px;
+  padding-right: 160px;
 }
 .precision-tutor h1 {
-  max-width: 470px;
-  margin-bottom: 14px;
-  font-size: clamp(34px, 8.5vw, 50px);
-  line-height: .98;
+  max-width: none;
+  margin: 4px 0 0;
+  font-size: clamp(32px, 8vw, 46px);
+  line-height: 1;
+}
+.precision-tutor .quota {
+  position: absolute;
+  top: -2px;
+  right: 0;
+  margin: 0;
+  padding: 8px 11px;
+  border-radius: 999px;
 }
 .precision-tutor .context-strip {
-  flex: 0 0 auto;
+  min-height: 54px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  font-size: 13px;
+  line-height: 1.4;
 }
 .precision-tutor .chat-empty {
-  flex: 0 0 auto;
-  margin: 8px 0 0;
-  padding: 22px 0 10px;
+  margin: 0;
+  padding: 10px 0 4px;
+  display: flex;
+  flex-direction: column;
   align-items: center;
+  gap: 7px;
   text-align: center;
 }
+.precision-tutor .chat-empty .feature-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 15px;
+}
 .precision-tutor .chat-empty h2 {
-  margin: 16px 0 2px;
-  font-size: clamp(27px, 7vw, 34px);
+  margin: 7px 0 0;
+  font-size: 27px;
 }
 .precision-tutor .chat-empty p {
-  margin-bottom: 8px;
+  max-width: 350px;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.precision-tutor .quick-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  overflow: visible;
+  padding: 0;
+}
+.precision-tutor .quick-actions button {
+  min-width: 0;
+  padding: 11px 12px;
+  border-radius: 14px;
+  overflow-wrap: anywhere;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.25;
+}
+.precision-tutor .quick-actions button:last-child {
+  grid-column: 1 / -1;
 }
 .precision-tutor .chat-messages {
-  flex: 1 1 auto;
-  min-height: 16px;
-  overflow: visible;
+  min-height: 0;
+  padding: 2px 0;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 .precision-tutor .voice-recorder {
-  margin-top: auto;
+  width: 100%;
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+.precision-tutor .voice-button {
+  width: 100%;
+  min-height: 54px;
+  margin: 0;
+  padding: 13px 16px;
+  border: 1px solid rgba(244, 197, 82, .38);
+  border-radius: 17px;
+  background: linear-gradient(145deg, rgba(244, 197, 82, .14), rgba(244, 197, 82, .05));
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  font-weight: 800;
+}
+.precision-tutor .voice-button:disabled {
+  opacity: .45;
+  color: var(--muted);
+  background: rgba(255, 255, 255, .025);
+}
+.precision-tutor .voice-button.recording {
+  border-color: rgba(255, 113, 133, .4);
+  color: #ff7185;
+  background: rgba(255, 113, 133, .08);
+}
+.precision-tutor .voice-recorder small,
+.precision-tutor .voice-recorder p {
+  margin: 0;
+  color: var(--muted);
+  text-align: center;
+  font-size: 10.5px;
+  line-height: 1.25;
 }
 .precision-tutor .chat-composer {
-  bottom: 0;
-  flex: 0 0 auto;
+  position: static;
+  bottom: auto;
+  min-height: 58px;
+  grid-template-columns: minmax(0, 1fr) 50px;
+  border-radius: 18px;
+}
+.precision-tutor .chat-composer button {
+  border-radius: 14px;
 }
 
-.precision-profile .profile-passport,
-.precision-profile .profile-numbers,
+/* Profile */
+.precision-profile .profile-passport {
+  padding: 26px 0;
+}
 .precision-profile .streak-section,
 .precision-profile .achievement-section {
-  flex: 0 0 auto;
+  padding: 24px 0;
 }
 
 @media (max-width: 430px) {
   .app-shell,
   .app-shell.compact-page {
-    padding: 20px 17px calc(108px + env(safe-area-inset-bottom));
+    padding: 17px 15px calc(105px + env(safe-area-inset-bottom));
   }
   .bottom-nav {
-    width: calc(100% - 18px);
+    width: calc(100% - 16px);
   }
   .bottom-nav button {
     font-size: 9.5px;
   }
-  .precision-home .focus-stage {
-    min-height: 310px;
-    padding: 22px;
-  }
-  .precision-home .focus-stage h2 {
-    margin-top: 36px;
-  }
   .precision-tutor .page-header {
-    display: flex;
+    display: block;
   }
   .precision-tutor .quota {
-    margin: 0;
+    display: block;
+  }
+}
+
+@media (max-width: 360px) {
+  .precision-tutor .eyebrow {
+    padding-right: 135px;
+  }
+  .precision-tutor .quota {
+    font-size: 9.5px;
+  }
+  .bottom-nav button {
+    font-size: 9px;
   }
 }
 
 @media (max-height: 700px) {
-  .precision-tutor .page-header h1 {
-    font-size: 32px;
+  .precision-tutor {
+    gap: 8px;
+  }
+  .precision-tutor h1 {
+    font-size: 30px;
   }
   .precision-tutor .chat-empty {
-    padding-top: 10px;
+    padding: 2px 0;
   }
   .precision-tutor .chat-empty .feature-icon {
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
   }
 }
