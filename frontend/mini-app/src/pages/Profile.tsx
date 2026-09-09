@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { FaCheck, FaChevronRight, FaDownload, FaGlobe, FaMedal, FaMoon, FaRedo, FaShareAlt, FaTrash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
-import { BottomNav } from '../components/BottomNav';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { getTelegramUser, getUserId, withUser } from '../utils/user';
@@ -19,7 +18,7 @@ export const Profile: React.FC = () => {
   const navigate = useNavigate();
   const [data, setData] = useState<any>(null);
   const [lessons, setLessons] = useState<any[]>([]);
-  const [build, setBuild] = useState<any>({ version: '26.0.0', commit: 'local' });
+  const [build, setBuild] = useState<any>({ version: '27.0.0', commit: 'local' });
   const user = getTelegramUser();
   const rawName = user?.first_name || '';
   const name = /[\p{L}\p{N}]/u.test(rawName) ? rawName : (lang === 'ru' ? 'Ученик' : 'Lernende');
@@ -58,7 +57,6 @@ export const Profile: React.FC = () => {
       <nav className="legal-links"><a href="/privacy">Datenschutz</a><a href="/imprint">Impressum</a><a href="/terms">Nutzung</a></nav>
       <section className="data-controls"><button onClick={exportData}><FaDownload />{lang === 'ru' ? 'Скачать мои данные' : 'Meine Daten herunterladen'}</button><button className="danger" onClick={deleteData}><FaTrash />{lang === 'ru' ? 'Удалить аккаунт и данные' : 'Konto und Daten löschen'}</button></section>
       <small className="build-version">DeutschIQ {build.version} · Learning Engine · {String(build.commit || 'local').slice(0, 7)}</small>
-      <BottomNav />
     </main>
   );
 };

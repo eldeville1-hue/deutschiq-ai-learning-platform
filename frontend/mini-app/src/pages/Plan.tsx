@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { FaChevronDown, FaClock, FaLock, FaPlay } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
-import { BottomNav } from '../components/BottomNav';
 import { useLanguage } from '../context/LanguageContext';
 import { topicLabel } from '../i18n/topics';
 import { getUserId, withUser } from '../utils/user';
@@ -47,7 +46,6 @@ export const Plan: React.FC = () => {
         </div>
         {weekLessons.length > 3 && <button className="secondary-action" onClick={() => setShowWeek(v => !v)}>{showWeek ? (lang === 'ru' ? 'Свернуть' : 'Weniger') : (lang === 'ru' ? 'Показать всю неделю' : 'Ganze Woche anzeigen')} <FaChevronDown /></button>}
       </section>
-      <BottomNav />
     </main>
   );
 };

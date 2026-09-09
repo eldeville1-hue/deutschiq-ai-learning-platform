@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { FaArrowRight, FaBolt, FaBrain, FaClock, FaCommentDots, FaExclamation, FaFire, FaRedoAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
-import { BottomNav } from '../components/BottomNav';
 import { useLanguage } from '../context/LanguageContext';
 import { topicLabel } from '../i18n/topics';
 import { getUserId, withUser } from '../utils/user';
@@ -69,7 +68,6 @@ export const Dashboard: React.FC = () => {
         <button onClick={() => navigate(withUser('/mistakes'))}><span className="action-symbol danger"><FaExclamation /></span><span><small>{lang === 'ru' ? 'ФОКУС' : 'FOKUS'}</small><b>{topicLabel(String(weak.name), lang)}</b></span><FaArrowRight /></button>
       </section>
       <section className="session-strip page-stagger-4"><span>{lang === 'ru' ? 'Сегодня' : 'Heute'}</span><div><i className="done" /><i className="active" /><i /></div><strong>{learning?.session?.minutes || 12} {lang === 'ru' ? 'мин' : 'Min.'}</strong></section>
-      <BottomNav />
     </main>
   );
 };

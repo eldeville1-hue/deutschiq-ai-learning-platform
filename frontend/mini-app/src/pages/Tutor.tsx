@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { FaPaperPlane, FaRobot, FaVolumeUp } from 'react-icons/fa';
 import { api } from '../services/api';
-import { BottomNav } from '../components/BottomNav';
 import { useLanguage } from '../context/LanguageContext';
 import { topicLabel } from '../i18n/topics';
 import { getUserId } from '../utils/user';
@@ -48,7 +47,6 @@ export const Tutor: React.FC = () => {
       <div className="chat-messages">{messages.map((m, i) => <div key={i} className={`message ${m.role}`}>{m.content}{m.role === 'assistant' && <button className="message-audio" onClick={() => speak(m.content)} aria-label={lang === 'ru' ? 'Прослушать ответ' : 'Antwort anhören'}><FaVolumeUp /></button>}</div>)}{loading && <div className="message assistant typing">•••</div>}</div>
       <VoiceRecorder lang={lang} disabled={loading || remaining <= 0} onAudio={transcribe} />
       <div className="chat-composer"><input value={question} onChange={e => setQuestion(e.target.value)} onKeyDown={e => e.key === 'Enter' && send()} placeholder={lang === 'ru' ? 'Напиши вопрос…' : 'Schreib deine Frage…'} /><button onClick={() => send()} disabled={!question.trim() || loading}><FaPaperPlane /></button></div>
-      <BottomNav />
     </main>
   );
 };
