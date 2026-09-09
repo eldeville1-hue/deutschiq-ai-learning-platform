@@ -23,8 +23,25 @@ const Portfolio = lazy(() => import('./pages/Portfolio').then(module => ({ defau
 function AppRoutes() {
   const location = useLocation();
   useLayoutEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-  }, [location.pathname]);
+    if ('scrollRestoration' in window.history) window.history.scrollRestoration = 'manual';
+
+    const resetScroll = () => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      document.querySelectorAll<HTMLElement>('.app-shell').forEach(page => {
+        page.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      });
+    };
+
+    resetScroll();
+    const frame = window.requestAnimationFrame(resetScroll);
+    const timer = window.setTimeout(resetScroll, 160);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+    };
+  }, [location.key]);
   const legalKind = ({ '/privacy': 'privacy', '/imprint': 'imprint', '/terms': 'terms' } as const)[location.pathname as '/privacy' | '/imprint' | '/terms'];
   const portfolioRoute = location.pathname === '/about';
   const outsideTelegram = !import.meta.env.DEV && (window as any).Telegram?.WebApp?.platform === 'unknown';
