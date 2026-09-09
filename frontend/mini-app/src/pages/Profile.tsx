@@ -18,7 +18,7 @@ export const Profile: React.FC = () => {
   const navigate = useNavigate();
   const [data, setData] = useState<any>(null);
   const [lessons, setLessons] = useState<any[]>([]);
-  const [build, setBuild] = useState<any>({ version: '26.0.0', commit: 'local' });
+  const [build, setBuild] = useState<any>({ version: '27.0.0', commit: 'local' });
   const user = getTelegramUser();
   const rawName = user?.first_name || '';
   const name = /[\p{L}\p{N}]/u.test(rawName) ? rawName : (lang === 'ru' ? 'Ученик' : 'Lernende');
