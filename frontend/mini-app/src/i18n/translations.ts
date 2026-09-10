@@ -6,8 +6,8 @@ const translations = {
     nav: {
       overview: "Übersicht",
       analysis: "Analyse",
-      plan: "Lernplan",
-      tutor: "KI-Tutor",
+      plan: "Plan",
+      tutor: "Tutor",
       profile: "Profil",
     },
 
@@ -170,7 +170,7 @@ const translations = {
       overview: "Обзор",
       analysis: "Анализ",
       plan: "План",
-      tutor: "ИИ-репетитор",
+      tutor: "Репетитор",
       profile: "Профиль",
     },
 

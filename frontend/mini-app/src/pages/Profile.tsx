@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { FaCheck, FaChevronRight, FaDownload, FaGlobe, FaMedal, FaMoon, FaRedo, FaShareAlt, FaTrash } from 'react-icons/fa';
+import { FaCheck, FaChevronRight, FaDownload, FaGlobe, FaMedal, FaMoon, FaRedo, FaShareAlt, FaSun, FaTrash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
@@ -18,13 +18,12 @@ export const Profile: React.FC = () => {
   const navigate = useNavigate();
   const [data, setData] = useState<any>(null);
   const [lessons, setLessons] = useState<any[]>([]);
-  const [build, setBuild] = useState<any>({ version: '31.0.0', commit: 'local' });
   const [actionStatus, setActionStatus] = useState('');
   const user = getTelegramUser();
   const rawName = user?.first_name || '';
   const name = /[\p{L}\p{N}]/u.test(rawName) ? rawName : (lang === 'ru' ? 'Ученик' : 'Lernende');
   const initials = Array.from(name).filter(char => /[\p{L}\p{N}]/u.test(char)).slice(0, 2).join('').toUpperCase() || 'D';
-  useEffect(() => { Promise.allSettled([api.getDashboard(getUserId()), api.getPlan(getUserId()), api.getVersion()]).then(([d, p, v]) => { setData(d.status === 'fulfilled' ? d.value : {}); setLessons(p.status === 'fulfilled' && Array.isArray(p.value) ? p.value : []); if (v.status === 'fulfilled') setBuild(v.value); }); }, []);
+  useEffect(() => { Promise.allSettled([api.getDashboard(getUserId()), api.getPlan(getUserId())]).then(([d, p]) => { setData(d.status === 'fulfilled' ? d.value : {}); setLessons(p.status === 'fulfilled' && Array.isArray(p.value) ? p.value : []); }); }, []);
   const completed = useMemo(() => lessons.filter(item => item.completed).length, [lessons]);
   if (!data) return <main className="app-shell"><div className="skeleton profile-skeleton" /></main>;
   const activityCount = Math.max(completed, data.diagnostic_completed ? 1 : 0);
@@ -44,9 +43,12 @@ export const Profile: React.FC = () => {
     const phrase = lang === 'ru' ? 'УДАЛИТЬ' : 'LÖSCHEN';
     const entered = window.prompt(lang === 'ru' ? `Это навсегда удалит прогресс. Введи ${phrase}` : `Dadurch wird dein Fortschritt endgültig gelöscht. Gib ${phrase} ein.`);
     if (entered !== phrase) return;
-    await api.deleteUserData(getUserId());
-    localStorage.clear();
-    window.location.assign('/');
+    try {
+      setActionStatus(lang === 'ru' ? 'Удаляем данные…' : 'Daten werden gelöscht…');
+      await api.deleteUserData(getUserId());
+      localStorage.clear();
+      window.location.assign('/');
+    } catch { setActionStatus(lang === 'ru' ? 'Не удалось удалить данные. Попробуй позже.' : 'Daten konnten nicht gelöscht werden. Versuche es später erneut.'); }
   };
   const weekdays = lang === 'ru' ? ['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'] : ['MO','DI','MI','DO','FR','SA','SO'];
 
@@ -57,12 +59,12 @@ export const Profile: React.FC = () => {
       <section className="profile-numbers page-stagger-2"><div><strong><CountUp value={data.xp || 0} /></strong><span>XP</span></div><div><strong>{completed}</strong><span>{lang === 'ru' ? 'уроков' : 'Lektionen'}</span></div><div><strong>{activityCount}</strong><span>{lang === 'ru' ? 'активностей' : 'Aktivitäten'}</span></div></section>
       <section className="streak-section page-stagger-2"><small>{lang === 'ru' ? 'ТВОЯ СЕРИЯ' : 'DEINE SERIE'}</small><h2>{data.streak || 0} {lang === 'ru' ? 'дней' : 'Tage'}</h2><div className="week-row">{weekdays.map((day, index) => <div key={day} style={{ animationDelay: `${index * 55}ms` }}><span>{day}</span><i className={index < (data.streak || 0) ? 'active' : ''} /></div>)}</div></section>
       <section className="achievement-section page-stagger-3"><header><small>{lang === 'ru' ? 'ДОСТИЖЕНИЯ' : 'ERFOLGE'}</small><span>1 / 8</span></header><button type="button" className="achievement-card" onClick={() => navigate(withUser('/analytics'))}><FaMedal /><span><b>{lang === 'ru' ? 'Первый шаг' : 'Erster Schritt'}</b><small>{lang === 'ru' ? 'Диагностика завершена' : 'Diagnose abgeschlossen'} <FaCheck /></small></span><FaChevronRight /></button></section>
-      <section className="profile-settings page-stagger-4"><button onClick={toggleLang}><span><FaGlobe />{lang === 'ru' ? 'Язык интерфейса' : 'App-Sprache'}</span><small>{lang === 'ru' ? 'Русский' : 'Deutsch'}</small><FaChevronRight /></button><button onClick={toggleTheme}><span><FaMoon />{lang === 'ru' ? 'Оформление' : 'Darstellung'}</span><small>{theme === 'dark' ? (lang === 'ru' ? 'Тёмное' : 'Dunkel') : (lang === 'ru' ? 'Светлое' : 'Hell')}</small><FaChevronRight /></button><button onClick={share}><span><FaShareAlt />{lang === 'ru' ? 'Пригласить друга' : 'Freund einladen'}</span><FaChevronRight /></button></section>
+      <section className="profile-settings page-stagger-4"><button onClick={toggleLang}><span><FaGlobe />{lang === 'ru' ? 'Язык интерфейса' : 'App-Sprache'}</span><small>{lang === 'ru' ? 'Русский' : 'Deutsch'}</small></button><button onClick={toggleTheme}><span>{theme === 'dark' ? <FaMoon /> : <FaSun />}{lang === 'ru' ? 'Оформление' : 'Darstellung'}</span><small>{theme === 'dark' ? (lang === 'ru' ? 'Тёмное' : 'Dunkel') : (lang === 'ru' ? 'Светлое' : 'Hell')}</small></button><button onClick={share}><span><FaShareAlt />{lang === 'ru' ? 'Пригласить друга' : 'Freund einladen'}</span><FaChevronRight /></button></section>
       <button className="retake-link" onClick={retake}><FaRedo /> {lang === 'ru' ? 'Пройти диагностику заново' : 'Diagnose wiederholen'}</button>
       <nav className="legal-links"><a href="/privacy">Datenschutz</a><a href="/imprint">Impressum</a><a href="/terms">Nutzung</a></nav>
       <section className="data-controls"><button onClick={exportData}><FaDownload />{lang === 'ru' ? 'Скачать мои данные' : 'Meine Daten herunterladen'}</button><button className="danger" onClick={deleteData}><FaTrash />{lang === 'ru' ? 'Удалить аккаунт и данные' : 'Konto und Daten löschen'}</button></section>
       {actionStatus && <p className="profile-action-status" role="status">{actionStatus}</p>}
-      <small className="build-version">DeutschIQ {build.version} · Learning Engine · {String(build.commit || 'local').slice(0, 7)}</small>
+      <small className="build-version">DeutschIQ · {lang === 'ru' ? 'Персональное обучение немецкому' : 'Personalisiertes Deutschlernen'}</small>
     </main>
   );
 };

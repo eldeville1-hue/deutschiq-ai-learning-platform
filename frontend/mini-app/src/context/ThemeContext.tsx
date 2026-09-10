@@ -12,7 +12,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>(() => {
     const saved = localStorage.getItem('deutschiq_theme') as Theme;
-    if (saved === 'dark') return saved;
+    if (saved === 'dark' || saved === 'light') return saved;
     return 'dark';
   });
 
@@ -21,7 +21,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.setItem('deutschiq_theme', theme);
   }, [theme]);
 
-  const toggleTheme = () => setTheme('dark');
+  const toggleTheme = () => setTheme(current => current === 'dark' ? 'light' : 'dark');
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>

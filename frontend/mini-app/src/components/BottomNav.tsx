@@ -8,7 +8,8 @@ import { withUser } from '../utils/user';
 export const BottomNav: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const t = getText(useLanguage().lang);
+  const { lang } = useLanguage();
+  const t = getText(lang);
   const tabs = [
     ['/dashboard', FaHome, t.nav.overview],
     ['/analytics', FaChartLine, t.nav.analysis],
@@ -24,7 +25,7 @@ export const BottomNav: React.FC = () => {
     navigate(withUser(path));
   };
 
-  return <nav className="bottom-nav" aria-label={t.nav.overview}>{tabs.map(([path, Icon, label]) => {
+  return <nav className="bottom-nav" aria-label={lang === 'ru' ? 'Основная навигация' : 'Hauptnavigation'}>{tabs.map(([path, Icon, label]) => {
     const active = location.pathname === path;
     return <button type="button" key={path} className={active ? 'active' : ''} aria-current={active ? 'page' : undefined} aria-label={label} onClick={() => openTab(path)}><Icon aria-hidden="true" /><span>{label}</span></button>;
   })}</nav>;

@@ -3,11 +3,11 @@ import { getTelegramInitData, getUserId } from '../utils/user';
 
 const API_BASE = '';
 
-console.log('🔍 API_BASE =', API_BASE);
-
 const apiClient = axios.create({
   baseURL: API_BASE,
-  timeout: 4500,
+  // Render free instances can need several seconds to wake up. A short timeout
+  // made valid screens look broken before the server had a chance to answer.
+  timeout: 20000,
 });
 
 apiClient.interceptors.request.use((config) => {
@@ -33,7 +33,14 @@ const cachedGet = async <T>(key: string, request: () => Promise<T>): Promise<T> 
 
 apiClient.interceptors.response.use(
   response => response,
-  error => {
+  async error => {
+    const config = error.config as any;
+    const retryable = config?.method === 'get' && !config.__deutschiqRetried && (!error.response || error.response.status >= 500);
+    if (retryable) {
+      config.__deutschiqRetried = true;
+      await new Promise(resolve => window.setTimeout(resolve, 450));
+      return apiClient(config);
+    }
     console.error('❌ API Error:', error.response?.data || error.message);
     return Promise.reject(error);
   }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FaArrowRight, FaCheck, FaRedo } from 'react-icons/fa';
+import { FaArrowRight, FaCheck, FaRedo, FaTimes } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
@@ -15,13 +15,59 @@ export const Review: React.FC = () => {
   const [feedback, setFeedback] = useState<any>(null);
   const [startedAt, setStartedAt] = useState(Date.now());
   const [sessionId, setSessionId] = useState('');
-  useEffect(() => { api.getReviews(getUserId()).then(data => setItems(data.reviews || [])).catch(() => setItems([])); }, []);
-  if (items === null) return <main className="lesson-flow"><div className="skeleton hero-skeleton" /></main>;
-  if (!items.length) return <main className="lesson-flow review-empty"><FaCheck /><p className="eyebrow">{lang === 'ru' ? 'ПАМЯТЬ В ПОРЯДКЕ' : 'ALLES WIEDERHOLT'}</p><h1>{lang === 'ru' ? 'Сегодня повторений нет' : 'Heute ist nichts fällig'}</h1><p>{lang === 'ru' ? 'Вернись после следующего урока — DeutschIQ сам выберет нужный момент.' : 'Nach der nächsten Lektion plant DeutschIQ den richtigen Zeitpunkt.'}</p><button className="primary-action" onClick={() => navigate(withUser('/dashboard'))}>{lang === 'ru' ? 'На главную' : 'Zur Übersicht'}</button></main>;
-  if (index >= items.length) return <main className="lesson-flow review-empty"><FaCheck /><p className="eyebrow">{lang === 'ru' ? 'ПОВТОРЕНИЕ ЗАВЕРШЕНО' : 'WIEDERHOLUNG FERTIG'}</p><h1>{lang === 'ru' ? `${items.length} тем закреплено` : `${items.length} Themen gefestigt`}</h1><button className="primary-action" onClick={() => navigate(withUser('/dashboard'))}>{lang === 'ru' ? 'Продолжить' : 'Weiter'} <FaArrowRight /></button></main>;
+  const [checking, setChecking] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => { api.getReviews(getUserId()).then(data => setItems(data.reviews || [])).catch(() => { setItems([]); setError(lang === 'ru' ? 'Не удалось загрузить повторения.' : 'Wiederholungen konnten nicht geladen werden.'); }); }, [lang]);
+
+  const leave = () => navigate(withUser('/dashboard'));
+  if (items === null) return <main className="lesson-flow rc-review"><div className="skeleton rc-hero-skeleton" /></main>;
+  if (!items.length) return <main className="lesson-flow rc-review rc-review-state"><span className="rc-state-icon"><FaCheck /></span><p>{lang === 'ru' ? 'ПОВТОРЕНИЕ' : 'WIEDERHOLUNG'}</p><h1>{error ? (lang === 'ru' ? 'Не удалось открыть сессию' : 'Sitzung konnte nicht geöffnet werden') : (lang === 'ru' ? 'На сегодня всё' : 'Für heute ist alles erledigt')}</h1><span>{error || (lang === 'ru' ? 'Новые карточки появятся после следующего урока — в нужный момент.' : 'Neue Karten erscheinen nach der nächsten Lektion — zum richtigen Zeitpunkt.')}</span><button type="button" className="rc-primary" onClick={leave}>{lang === 'ru' ? 'Вернуться на обзор' : 'Zur Übersicht'}</button></main>;
+  if (index >= items.length) return <main className="lesson-flow rc-review rc-review-state"><span className="rc-state-icon success"><FaCheck /></span><p>{lang === 'ru' ? 'ГОТОВО' : 'FERTIG'}</p><h1>{lang === 'ru' ? 'Память укреплена' : 'Erinnerung gefestigt'}</h1><span>{lang === 'ru' ? `${items.length} тем повторено. Следующая дата рассчитана по твоим ответам.` : `${items.length} Themen wiederholt. Der nächste Termin wurde aus deinen Antworten berechnet.`}</span><button type="button" className="rc-primary" onClick={leave}>{lang === 'ru' ? 'Продолжить' : 'Weiter'} <FaArrowRight /></button></main>;
+
   const item = items[index];
-  const ensureSession = async () => sessionId || (await api.startLesson({user_id:getUserId(), lesson_id:item.lesson_id})).session_id;
-  const check = async () => { if (!answer.trim()) return; const activeSession = await ensureSession(); setSessionId(activeSession); setFeedback(await api.checkLessonAnswer({ user_id:getUserId(), lesson_id:item.lesson_id, exercise_index:item.exercise_index, answer, session_id:activeSession, confidence:'okay', response_ms:Date.now()-startedAt })); };
-  const next = () => { setIndex(value => value + 1); setAnswer(''); setFeedback(null); setSessionId(''); setStartedAt(Date.now()); };
-  return <main className="lesson-flow review-page"><header><span>{index + 1} {lang === 'ru' ? 'из' : 'von'} {items.length}</span><div className="progress-bar"><div className="progress-bar-fill" style={{width:`${(index + 1) / items.length * 100}%`}} /></div></header><section className="review-card"><div className="retrieval-label"><FaRedo /><span>{lang === 'ru' ? 'Вспомни без подсказки' : 'Ohne Hinweis erinnern'}</span></div><p className="eyebrow">{topicLabel(item.topic, lang)} · {lang === 'ru' ? `освоено ${item.mastery}%` : `${item.mastery}% beherrscht`}</p><h1>{item.question}</h1>{item.type === 'choose' && item.options?.length ? <div className="lesson-options">{item.options.map((option:string) => <button key={option} className={answer === option ? 'active' : ''} onClick={() => setAnswer(option)}>{option}</button>)}</div> : <input className="lesson-answer" value={answer} onChange={event => setAnswer(event.target.value)} placeholder={lang === 'ru' ? 'Ответ по памяти' : 'Antwort aus dem Gedächtnis'} />}{!feedback ? <button className="primary-action" onClick={check}>{lang === 'ru' ? 'Проверить память' : 'Erinnerung prüfen'}</button> : <div className={`review-reveal ${feedback.correct ? 'correct' : 'wrong'}`}><small>{feedback.correct ? (lang === 'ru' ? 'Вспомнил правильно' : 'Richtig erinnert') : (lang === 'ru' ? 'Повторим снова завтра' : 'Morgen noch einmal')}</small><strong>{feedback.correct_answer}</strong><p>{feedback.explanation}</p><button className="primary-action" onClick={next}>{lang === 'ru' ? 'Дальше' : 'Weiter'} <FaArrowRight /></button></div>}</section></main>;
+  const ensureSession = async () => {
+    if (sessionId) return sessionId;
+    const session = await api.startLesson({ user_id: getUserId(), lesson_id: item.lesson_id });
+    setSessionId(session.session_id);
+    return session.session_id;
+  };
+  const check = async () => {
+    if (!answer.trim() || checking) return;
+    setChecking(true);
+    setError('');
+    try {
+      const activeSession = await ensureSession();
+      const result = await api.checkLessonAnswer({ user_id: getUserId(), lesson_id: item.lesson_id, exercise_index: item.exercise_index, answer, session_id: activeSession, confidence: 'okay', response_ms: Date.now() - startedAt });
+      setFeedback(result);
+    } catch {
+      setError(lang === 'ru' ? 'Ответ не отправился. Проверь соединение и повтори.' : 'Die Antwort wurde nicht gesendet. Prüfe die Verbindung und versuche es erneut.');
+    } finally { setChecking(false); }
+  };
+  const next = () => { setIndex(value => value + 1); setAnswer(''); setFeedback(null); setSessionId(''); setError(''); setStartedAt(Date.now()); };
+  const progress = ((index + (feedback ? 1 : 0)) / items.length) * 100;
+
+  return (
+    <main className="lesson-flow rc-review page-enter">
+      <header className="rc-review-top"><button type="button" onClick={leave} aria-label={lang === 'ru' ? 'Закрыть повторение' : 'Wiederholung schließen'}><FaTimes /></button><div><span>{lang === 'ru' ? 'ПОВТОРЕНИЕ' : 'WIEDERHOLUNG'}</span><small>{index + 1} / {items.length}</small></div></header>
+      <div className="rc-review-progress"><i style={{ width: `${progress}%` }} /></div>
+
+      <section className="rc-review-question">
+        <div className="rc-retrieval-label"><FaRedo /><span>{lang === 'ru' ? 'Вспомни без подсказки' : 'Erinnere dich ohne Hinweis'}</span></div>
+        <p>{topicLabel(item.topic, lang)}</p>
+        <h1>{item.question}</h1>
+
+        {!feedback && (item.type === 'choose' && item.options?.length
+          ? <div className="rc-review-options">{item.options.map((option: string) => <button type="button" key={option} className={answer === option ? 'selected' : ''} onClick={() => setAnswer(option)}><span>{option}</span>{answer === option && <FaCheck />}</button>)}</div>
+          : <label className="rc-review-input"><span>{lang === 'ru' ? 'Твой ответ' : 'Deine Antwort'}</span><input value={answer} onChange={event => setAnswer(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') void check(); }} placeholder={lang === 'ru' ? 'Напиши по памяти…' : 'Aus dem Gedächtnis…'} /></label>)}
+
+        {error && <div className="rc-notice error"><span>{error}</span></div>}
+
+        {!feedback
+          ? <button type="button" className="rc-primary" disabled={!answer.trim() || checking} onClick={check}>{checking ? (lang === 'ru' ? 'Проверяем…' : 'Wird geprüft…') : (lang === 'ru' ? 'Проверить ответ' : 'Antwort prüfen')}</button>
+          : <div className={`rc-review-feedback ${feedback.correct ? 'correct' : 'wrong'}`}><header><span>{feedback.correct ? <FaCheck /> : <FaRedo />}</span><strong>{feedback.correct ? (lang === 'ru' ? 'Верно' : 'Richtig') : (lang === 'ru' ? 'Закрепим ещё раз' : 'Noch einmal festigen')}</strong></header><div><small>{lang === 'ru' ? 'ПРАВИЛЬНЫЙ ОТВЕТ' : 'RICHTIGE ANTWORT'}</small><strong>{feedback.correct_answer}</strong><p>{feedback.explanation}</p></div><button type="button" className="rc-primary" onClick={next}>{index + 1 === items.length ? (lang === 'ru' ? 'Завершить' : 'Abschließen') : (lang === 'ru' ? 'Следующая карточка' : 'Nächste Karte')} <FaArrowRight /></button></div>}
+      </section>
+      <p className="rc-review-note">{lang === 'ru' ? 'Ответ влияет на дату следующего повторения.' : 'Deine Antwort bestimmt den nächsten Wiederholungstermin.'}</p>
+    </main>
+  );
 };
