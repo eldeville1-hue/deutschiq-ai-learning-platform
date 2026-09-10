@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FaArrowRight, FaBolt, FaBrain, FaClock, FaCommentDots, FaExclamation, FaFire, FaRedoAlt } from 'react-icons/fa';
+import { FaArrowRight, FaBolt, FaBrain, FaClock, FaCommentDots, FaExclamation, FaFire, FaPlay, FaRedoAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
@@ -37,37 +37,33 @@ export const Dashboard: React.FC = () => {
   const startLesson = () => navigate(selectedLesson?.id ? withUser(`/lesson/${selectedLesson.id}`) : withUser('/plan'));
   const phases = Array.isArray(learning?.session?.phases) ? learning.session.phases : [];
 
+  const minutes = learning?.session?.minutes || selectedLesson?.minutes || 12;
   return (
-    <main className="app-shell dashboard-page precision-home page-enter">
-      <header className="home-masthead page-stagger-1">
-        <div className="home-brand"><span>D</span><div><small>{greeting}</small><strong>DeutschIQ</strong></div></div>
-        <div className="home-streak"><FaFire /><b>{data.streak || 0}</b></div>
+    <main className="app-shell v29-home page-enter">
+      <header className="v29-topbar">
+        <div className="v29-identity"><span className="v29-logo">D</span><div><small>{greeting}</small><strong>DeutschIQ</strong></div></div>
+        <div className="v29-stats"><span><b>{data.level || 'A1'}</b>{data.xp || 0} XP</span><span><FaFire /><b>{data.streak || 0}</b></span></div>
       </header>
-      <section className="home-intro page-stagger-1"><h1>{lang === 'ru' ? 'Что изучаем сегодня?' : 'Was lernen wir heute?'}</h1><div><span>{data.level || 'A1'}</span><span>{data.xp || 0} XP</span></div></section>
-      <section className="focus-stage page-stagger-2">
-        <div className="focus-orbit" aria-hidden="true"><span>01</span></div>
-        <div className="focus-kicker"><FaBolt />{lang === 'ru' ? 'ПЕРСОНАЛЬНЫЙ ФОКУС' : 'PERSÖNLICHER FOKUS'}</div>
+      <section className="v29-heading"><span>{lang === 'ru' ? 'ТВОЙ СЛЕДУЮЩИЙ ШАГ' : 'DEIN NÄCHSTER SCHRITT'}</span><h1>{lang === 'ru' ? 'Сегодня учимся уверенно' : 'Heute sicherer werden'}</h1></section>
+      <section className="v29-focus-card">
+        <div className="v29-focus-label"><span><FaBolt />{lang === 'ru' ? 'Персональный урок' : 'Persönliche Lektion'}</span><b>01</b></div>
         <h2>{topicLabel(topic, lang)}</h2>
-        <p>{selectedLesson?.reason === 'review_due'
-          ? (lang === 'ru' ? 'Пора восстановить эту тему, пока знание не начало забываться.' : 'Zeit, dieses Thema zu festigen, bevor es verblasst.')
-          : (lang === 'ru' ? 'Выбрано по твоим ответам: это самый полезный доступный шаг сейчас.' : 'Aus deinen Antworten gewählt: jetzt der sinnvollste nächste Schritt.')}</p>
-        <div className="focus-meta"><span><FaClock />{learning?.session?.minutes || selectedLesson?.minutes || 12} {lang === 'ru' ? 'мин' : 'Min.'}</span><span><FaBrain />{learning?.due_count || 0} {lang === 'ru' ? 'повторить' : 'wiederholen'}</span></div>
-        <button className="focus-start" onClick={startLesson}><span>{lang === 'ru' ? 'Начать занятие' : 'Training starten'}</span><FaArrowRight /></button>
+        <p>{selectedLesson?.reason === 'review_due' ? (lang === 'ru' ? 'Короткое повторение поможет закрепить тему.' : 'Eine kurze Wiederholung festigt das Thema.') : (lang === 'ru' ? 'Урок выбран по твоему уровню и последним ошибкам.' : 'Nach deinem Niveau und deinen letzten Fehlern gewählt.')}</p>
+        <div className="v29-focus-meta"><span><FaClock />{minutes} {lang === 'ru' ? 'мин' : 'Min.'}</span><span><FaBrain />{learning?.due_count || 0} {lang === 'ru' ? 'повторить' : 'fällig'}</span></div>
+        <button className="v29-primary" onClick={startLesson}><span><FaPlay />{lang === 'ru' ? 'Начать урок' : 'Lektion starten'}</span><FaArrowRight /></button>
       </section>
-      {phases.length > 0 && <section className="daily-agenda page-stagger-3">
-        <header><div><small>{lang === 'ru' ? 'ТВОЯ СЕССИЯ' : 'DEINE SESSION'}</small><h2>{lang === 'ru' ? 'План на сегодня' : 'Plan für heute'}</h2></div><b>{learning.session.minutes} {lang === 'ru' ? 'мин' : 'Min.'}</b></header>
-        {phases.map((phase: any, index: number) => <div className="agenda-row" key={`${phase.kind}-${index}`}>
-          <span>{String(index + 1).padStart(2, '0')}</span>
+      {phases.length > 0 && <section className="v29-agenda">
+        <header><div><span>{lang === 'ru' ? 'СЕГОДНЯ' : 'HEUTE'}</span><h2>{lang === 'ru' ? 'План занятия' : 'Dein Lernplan'}</h2></div><b>{minutes} {lang === 'ru' ? 'мин' : 'Min.'}</b></header>
+        <div className="v29-agenda-list">{phases.slice(0, 3).map((phase: any, index: number) => <div className="v29-agenda-row" key={`${phase.kind}-${index}`}>
           <i>{phase.kind === 'review' ? <FaRedoAlt /> : phase.kind === 'transfer' ? <FaCommentDots /> : <FaBrain />}</i>
-          <div><strong>{phase.kind === 'review' ? (lang === 'ru' ? `Повторить ${phase.count} тем` : `${phase.count} Themen wiederholen`) : phase.kind === 'transfer' ? (lang === 'ru' ? 'Применить в своей фразе' : 'Im eigenen Satz anwenden') : topicLabel(phase.topic || topic, lang)}</strong><small>{phase.kind === 'review' ? (lang === 'ru' ? 'Срок повторения уже подошёл' : 'Die Wiederholung ist fällig') : phase.kind === 'transfer' ? (lang === 'ru' ? 'Перенос знания в речь' : 'Transfer in die Sprache') : (lang === 'ru' ? 'Новый материал и практика' : 'Neuer Stoff und Übung')}</small></div>
-          <b>{phase.minutes} {lang === 'ru' ? 'мин' : 'Min.'}</b>
-        </div>)}
+          <div><strong>{phase.kind === 'review' ? (lang === 'ru' ? `Повторить ${phase.count} тем` : `${phase.count} Themen wiederholen`) : phase.kind === 'transfer' ? (lang === 'ru' ? 'Применить в своей фразе' : 'Im eigenen Satz anwenden') : topicLabel(phase.topic || topic, lang)}</strong><small>{phase.kind === 'transfer' ? (lang === 'ru' ? 'Практика речи' : 'Sprechpraxis') : (lang === 'ru' ? 'Изучение и практика' : 'Lernen und üben')}</small></div>
+          <span>{phase.minutes} {lang === 'ru' ? 'мин' : 'Min.'}</span>
+        </div>)}</div>
       </section>}
-      <section className="home-actions page-stagger-3">
-        <button onClick={() => navigate(withUser('/review'))}><span className="action-symbol"><FaRedoAlt /></span><span><small>{lang === 'ru' ? 'ПАМЯТЬ' : 'GEDÄCHTNIS'}</small><b>{learning?.due_count || 0} {lang === 'ru' ? 'к повторению' : 'fällig'}</b></span><FaArrowRight /></button>
-        <button onClick={() => navigate(withUser('/mistakes'))}><span className="action-symbol danger"><FaExclamation /></span><span><small>{lang === 'ru' ? 'ФОКУС' : 'FOKUS'}</small><b>{topicLabel(String(weak.name), lang)}</b></span><FaArrowRight /></button>
+      <section className="v29-shortcuts">
+        <button onClick={() => navigate(withUser('/review'))}><span className="v29-shortcut-icon"><FaRedoAlt /></span><span><small>{lang === 'ru' ? 'ПОВТОРЕНИЕ' : 'WIEDERHOLUNG'}</small><b>{learning?.due_count || 0} {lang === 'ru' ? 'тем ждут' : 'Themen warten'}</b></span></button>
+        <button onClick={() => navigate(withUser('/mistakes'))}><span className="v29-shortcut-icon danger"><FaExclamation /></span><span><small>{lang === 'ru' ? 'СЛАБОЕ МЕСТО' : 'DEIN FOKUS'}</small><b>{topicLabel(String(weak.name), lang)}</b></span></button>
       </section>
-      <section className="session-strip page-stagger-4"><span>{lang === 'ru' ? 'Сегодня' : 'Heute'}</span><div><i className="done" /><i className="active" /><i /></div><strong>{learning?.session?.minutes || 12} {lang === 'ru' ? 'мин' : 'Min.'}</strong></section>
     </main>
   );
 };
