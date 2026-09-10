@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { FaArrowRight, FaBrain, FaClock, FaExclamationCircle, FaFire, FaPlay, FaRedoAlt } from 'react-icons/fa';
+import { FaArrowRight, FaBrain, FaExclamationCircle, FaFire, FaPlay, FaRedoAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
 import { topicLabel } from '../i18n/topics';
 import { getUserId, withUser } from '../utils/user';
+import { BrandMark } from '../components/BrandMark';
 
 export const Dashboard: React.FC = () => {
   const { lang } = useLanguage();
@@ -42,8 +43,6 @@ export const Dashboard: React.FC = () => {
   const selectedLesson = learning?.next_lesson || lesson;
   const topic = selectedLesson?.topic || data.weaknesses?.[0]?.name || 'haben_conjugation';
   const weak = data.weaknesses?.[0];
-  const minutes = learning?.session?.minutes || selectedLesson?.estimated_time || selectedLesson?.minutes || 12;
-  const phaseCount = Array.isArray(learning?.session?.phases) ? learning.session.phases.length : 1;
   const hour = new Date().getHours();
   const greeting = lang === 'ru'
     ? (hour < 12 ? 'Доброе утро' : hour < 18 ? 'Добрый день' : 'Добрый вечер')
@@ -53,7 +52,7 @@ export const Dashboard: React.FC = () => {
   return (
     <main className="app-shell rc-page rc-home page-enter">
       <header className="rc-home-bar">
-        <div className="rc-identity"><span>D</span><div><small>{greeting}</small><strong>DeutschIQ</strong></div></div>
+        <div className="rc-identity"><BrandMark label="DeutschIQ" /><div><small>{greeting}</small><strong>DeutschIQ</strong></div></div>
         <div className="rc-home-stats"><span><b>{data.level || 'A1'}</b><small>{data.xp || 0} XP</small></span><span><FaFire /><b>{data.streak || 0}</b></span></div>
       </header>
 
@@ -61,33 +60,27 @@ export const Dashboard: React.FC = () => {
 
       <header className="rc-page-title rc-home-title">
         <p>{lang === 'ru' ? 'СЕГОДНЯ' : 'HEUTE'}</p>
-        <h1>{lang === 'ru' ? 'Один ясный следующий шаг' : 'Ein klarer nächster Schritt'}</h1>
+        <h1>{lang === 'ru' ? 'Твой урок' : 'Deine Lektion'}</h1>
       </header>
 
       <section className="rc-focus-card">
-        <header><span><FaBrain /> {lang === 'ru' ? 'ЗАДАНИЕ НА СЕГОДНЯ' : 'HEUTIGE AUFGABE'}</span><b>{data.level || selectedLesson?.level || 'A1'}</b></header>
+        <header><span><FaBrain /> {lang === 'ru' ? 'ГЛАВНАЯ ТЕМА' : 'DEIN THEMA'}</span><b>{data.level || selectedLesson?.level || 'A1'}</b></header>
         <h2>{topicLabel(topic, lang)}</h2>
         <p>{selectedLesson?.reason === 'review_due'
-          ? (lang === 'ru' ? 'Эта тема готова к повторению — сейчас лучший момент её закрепить.' : 'Dieses Thema ist bereit zur Wiederholung — jetzt ist der richtige Moment.')
-          : (lang === 'ru' ? 'Выбрано по твоему уровню, ошибкам и прогрессу.' : 'Ausgewählt nach Niveau, Fehlern und Fortschritt.')}</p>
-        <div className="rc-focus-meta"><span><FaClock /> {minutes} {lang === 'ru' ? 'мин' : 'Min.'}</span><span>{phaseCount} {lang === 'ru' ? 'этапа' : 'Schritte'}</span></div>
-        <button type="button" className="rc-primary" onClick={startLesson}><span><FaPlay /> {selectedLesson?.id ? (lang === 'ru' ? 'Начать урок' : 'Lektion starten') : (lang === 'ru' ? 'Открыть план' : 'Plan öffnen')}</span><FaArrowRight /></button>
-      </section>
-
-      <section className="rc-today-summary">
-        <div><small>{lang === 'ru' ? 'ПЛАН НА СЕГОДНЯ' : 'HEUTIGER PLAN'}</small><strong>{minutes} {lang === 'ru' ? 'минут для результата' : 'Minuten bis zum Ziel'}</strong></div>
-        <button type="button" onClick={() => navigate(withUser('/plan'))}>{lang === 'ru' ? 'Посмотреть план' : 'Plan ansehen'} <FaArrowRight /></button>
+          ? (lang === 'ru' ? 'Пора закрепить эту тему.' : 'Zeit, dieses Thema zu festigen.')
+          : (lang === 'ru' ? 'Выбрано по твоему прогрессу.' : 'Passend zu deinem Fortschritt.')}</p>
+        <button type="button" className="rc-primary" onClick={startLesson}><span><FaPlay /> {selectedLesson?.id ? (lang === 'ru' ? 'Начать' : 'Starten') : (lang === 'ru' ? 'Открыть план' : 'Plan öffnen')}</span><FaArrowRight /></button>
       </section>
 
       <section className="rc-home-actions" aria-label={lang === 'ru' ? 'Дополнительные действия' : 'Weitere Aktionen'}>
         <button type="button" onClick={() => navigate(withUser('/review'))}>
           <span className="rc-action-icon"><FaRedoAlt /></span>
-          <span><small>{lang === 'ru' ? 'ПОВТОРЕНИЕ' : 'WIEDERHOLUNG'}</small><strong>{learning?.due_count ? `${learning.due_count} ${lang === 'ru' ? 'тем ждут' : 'Themen warten'}` : (lang === 'ru' ? 'На сегодня всё' : 'Für heute erledigt')}</strong></span>
+          <span><small>{lang === 'ru' ? 'ПОВТОРИТЬ' : 'WIEDERHOLEN'}</small><strong>{learning?.due_count ? `${learning.due_count} ${lang === 'ru' ? 'темы' : 'Themen'}` : (lang === 'ru' ? 'Всё готово' : 'Alles erledigt')}</strong></span>
           <FaArrowRight />
         </button>
         <button type="button" onClick={() => navigate(withUser('/mistakes'))} disabled={!weak}>
           <span className="rc-action-icon danger"><FaExclamationCircle /></span>
-          <span><small>{lang === 'ru' ? 'РАЗБОР ОШИБОК' : 'FEHLERANALYSE'}</small><strong>{weak ? topicLabel(String(weak.name), lang) : (lang === 'ru' ? 'Ошибок пока нет' : 'Noch keine Fehler')}</strong></span>
+          <span><small>{lang === 'ru' ? 'ОШИБКИ' : 'FEHLER'}</small><strong>{weak ? topicLabel(String(weak.name), lang) : (lang === 'ru' ? 'Ошибок нет' : 'Keine Fehler')}</strong></span>
           <FaArrowRight />
         </button>
       </section>

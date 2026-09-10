@@ -102,6 +102,12 @@ async def cmd_subscribe(message: Message):
         lang = user_language(db.query(User).filter(User.telegram_id == message.from_user.id).first())
     finally:
         db.close()
+    if settings.BETA_FREE_ACCESS:
+        await message.answer(
+            "Alle Funktionen sind während der Beta kostenlos geöffnet." if lang == "de"
+            else "Во время бета-теста все функции доступны бесплатно."
+        )
+        return
     prices = [LabeledPrice(label="30 Tage Pro" if lang == "de" else "30 дней Pro", amount=700)]
     await message.answer_invoice(
         title="DeutschIQ Pro",
@@ -129,12 +135,12 @@ async def cmd_help(message: Message):
         "So verwendest du DeutschIQ\n\n1. Starte die Diagnose.\n"
         "2. Öffne deinen persönlichen Lernplan.\n3. Mache täglich eine kurze Lektion.\n"
         "4. Stelle dem KI-Tutor deine Fragen.\n\n"
-        "Befehle:\n/start — App öffnen\n/help — Hilfe\n/subscribe — Pro aktivieren"
+        "Befehle:\n/start — App öffnen\n/help — Hilfe"
         if lang == "de" else
         "Как пользоваться DeutschIQ\n\n1. Пройди диагностику уровня.\n"
         "2. Открой персональный план.\n3. Выполняй один короткий урок ежедневно.\n"
         "4. Задавай вопросы ИИ-репетитору.\n\n"
-        "Команды:\n/start — открыть приложение\n/help — помощь\n/subscribe — оформить Pro"
+        "Команды:\n/start — открыть приложение\n/help — помощь"
     )
     await message.answer(
         help_text,

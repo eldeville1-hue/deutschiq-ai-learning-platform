@@ -2,12 +2,13 @@ import React, { useEffect, useRef, useState } from "react";
 import { FaMicrophone, FaStop } from "react-icons/fa";
 
 type Props = {
+  compact?: boolean;
   disabled?: boolean;
   lang: "ru" | "de";
   onAudio: (blob: Blob) => Promise<void>;
 };
 
-export const VoiceRecorder: React.FC<Props> = ({ disabled, lang, onAudio }) => {
+export const VoiceRecorder: React.FC<Props> = ({ compact = false, disabled, lang, onAudio }) => {
   const recorder = useRef<MediaRecorder | null>(null);
   const stream = useRef<MediaStream | null>(null);
   const chunks = useRef<Blob[]>([]);
@@ -67,11 +68,11 @@ export const VoiceRecorder: React.FC<Props> = ({ disabled, lang, onAudio }) => {
         <button type="button" onClick={stop} className="voice-button recording"><FaStop /> {seconds}s</button>
       ) : (
         <button type="button" onClick={start} disabled={disabled || state === "sending"} className="voice-button">
-          <FaMicrophone /> {state === "sending" ? (lang === "ru" ? "Распознаём…" : "Wird erkannt…") : (lang === "ru" ? "Ответить голосом" : "Mit Stimme antworten")}
+          <FaMicrophone /> {state === "sending" ? (lang === "ru" ? "Распознаём…" : "Wird erkannt…") : compact ? (lang === "ru" ? "Голосом" : "Sprechen") : (lang === "ru" ? "Ответить голосом" : "Mit Stimme antworten")}
         </button>
       )}
       {state === "error" && <p>{lang === "ru" ? "Не удалось распознать речь. Можно напечатать ответ." : "Spracherkennung nicht verfügbar. Du kannst tippen."}</p>}
-      <small>{lang === "ru" ? "До 20 секунд · аудиозапись не сохраняется" : "Bis 20 Sekunden · Audio wird nicht gespeichert"}</small>
+      {!compact && <small>{lang === "ru" ? "До 20 секунд · аудиозапись не сохраняется" : "Bis 20 Sekunden · Audio wird nicht gespeichert"}</small>}
     </div>
   );
 };

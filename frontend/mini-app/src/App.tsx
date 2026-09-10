@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { LanguageProvider } from './context/LanguageContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { AppBackButton } from './components/AppBackButton';
+import { BrandMark } from './components/BrandMark';
 import { BottomNav } from './components/BottomNav';
 import { hasTelegramIdentity } from './utils/user';
 import './styles/global.css';
@@ -87,7 +88,7 @@ function AppRoutes() {
   if (legalKind) return <Suspense fallback={<main className="entry-loading"><div className="analysis-loader" /></main>}><Legal kind={legalKind} /></Suspense>;
   if (portfolioRoute || (outsideTelegram && location.pathname === '/')) return <Suspense fallback={<main className="entry-loading"><div className="analysis-loader" /></main>}><Portfolio /></Suspense>;
   const authenticated = telegramReady || (import.meta.env.DEV && Boolean(import.meta.env.VITE_DEV_USER_ID));
-  if (!bootstrapFinished) return <main className="entry-loading"><div className="brand-mark">D</div><div className="analysis-loader" /></main>;
+  if (!bootstrapFinished) return <main className="entry-loading"><BrandMark label="DeutschIQ" /><div className="analysis-loader" /></main>;
   if (!authenticated) return <Suspense fallback={<main className="entry-loading"><div className="analysis-loader" /></main>}><Portfolio /></Suspense>;
   const primaryRoutes = ['/dashboard', '/analytics', '/plan', '/tutor', '/profile'];
   const hasBackButton = !['/', ...primaryRoutes].includes(location.pathname);

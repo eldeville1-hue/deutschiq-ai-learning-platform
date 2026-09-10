@@ -17,7 +17,7 @@ export const Portfolio: React.FC = () => (
         <h1>Немецкий, который<br/><em>помнит твои ошибки.</em></h1>
         <p className="portfolio-lead">Адаптивная диагностика, персональный 30-дневный маршрут и ИИ‑репетитор — в одном Telegram-приложении.</p>
         <div className="portfolio-actions"><a className="launch-primary" href={telegramUrl} target="_blank" rel="noreferrer"><FaTelegramPlane /> Открыть DeutschIQ <FaArrowRight /></a><a href={githubUrl} target="_blank" rel="noreferrer"><FaGithub /> Посмотреть код</a></div>
-        <div className="portfolio-proof"><span><b>30</b> уроков</span><span><b>90</b> заданий</span><span><b>A1—B2</b> траектория</span></div>
+        <div className="portfolio-proof"><span><b>30</b> уроков</span><span><b>120</b> заданий</span><span><b>A1—B2</b> траектория</span></div>
       </div>
       <div className="hero-device" aria-label="DeutschIQ mobile application preview">
         <div className="device-glow"/><div className="phone-frame"><span className="phone-island"/><img src="/portfolio/01-home.png" alt="DeutschIQ personalized home screen" /></div>

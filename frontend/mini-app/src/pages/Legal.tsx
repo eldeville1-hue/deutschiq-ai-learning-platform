@@ -17,7 +17,7 @@ const pages: Record<LegalKind, { title: string; intro: string; sections: Array<[
   terms: { title: 'Nutzungsbedingungen', intro: 'Mit der Nutzung von DeutschIQ gelten die folgenden Bedingungen.', sections: [
     ['Lernhilfe', 'DeutschIQ ist eine Lernhilfe und garantiert kein bestimmtes Sprachniveau, Prüfungsergebnis oder fehlerfreie KI-Antworten.'],
     ['Zulässige Nutzung', 'Die Anwendung darf nicht missbräuchlich, automatisiert überlastend oder zur Verarbeitung rechtswidriger Inhalte genutzt werden.'],
-    ['Pro-Zugang', 'Ein über Telegram Stars gekaufter Pro-Zugang gilt 30 Tage ab erfolgreicher Zahlung. Der aktuelle Status und das Enddatum werden im Profil angezeigt.'],
+    ['Beta-Zugang', 'Während der Testphase sind alle Lernfunktionen kostenlos verfügbar. Es werden derzeit keine Zahlungen angeboten.'],
     ['Verfügbarkeit', 'Der Dienst kann für Wartung oder notwendige Produktänderungen vorübergehend eingeschränkt sein.'],
   ]},
 };

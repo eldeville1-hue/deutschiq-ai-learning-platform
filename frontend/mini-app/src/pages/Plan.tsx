@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { FaCheck, FaChevronDown, FaClock, FaLock, FaPlay } from 'react-icons/fa';
+import { FaCheck, FaChevronDown, FaLock, FaPlay } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
@@ -40,17 +40,17 @@ export const Plan: React.FC = () => {
   return (
     <main className="app-shell rc-page rc-plan page-enter">
       <header className="rc-page-title">
-        <p>{lang === 'ru' ? 'МАРШРУТ' : 'LERNROUTE'}</p>
+        <p>{lang === 'ru' ? 'ПЛАН' : 'PLAN'}</p>
         <h1>{dashboard.level || 'A1'} <span>→</span> {dashboard.targetLevel || 'A2'}</h1>
-        <span>{lang === 'ru' ? `${routeCompleted} из ${lessons.length || 30} шагов завершено` : `${routeCompleted} von ${lessons.length || 30} Schritten abgeschlossen`}</span>
+        <span>{lang === 'ru' ? `${routeCompleted} из ${lessons.length || 30} тем освоено` : `${routeCompleted} von ${lessons.length || 30} Themen gelernt`}</span>
       </header>
 
       {loadError && <div className="rc-notice error"><span>{lang === 'ru' ? 'Не удалось полностью обновить маршрут' : 'Die Route konnte nicht vollständig aktualisiert werden'}</span><button type="button" onClick={load}>{lang === 'ru' ? 'Обновить' : 'Aktualisieren'}</button></div>}
 
       <section className="rc-plan-now">
-        <header><span>{lang === 'ru' ? 'ЗАДАНИЕ НА СЕГОДНЯ' : 'HEUTIGE AUFGABE'}</span><small><FaClock /> {current?.estimated_time || 12} {lang === 'ru' ? 'мин' : 'Min.'}</small></header>
-        <div><small>{lang === 'ru' ? `ШАГ ${current?.day || 1} ПЕРСОНАЛЬНОГО МАРШРУТА` : `SCHRITT ${current?.day || 1} DEINER ROUTE`}</small><h2>{topicLabel(current?.topic || 'word_order', lang)}</h2></div>
-        <button type="button" className="rc-primary" disabled={!current?.id} onClick={() => current?.id && navigate(withUser(`/lesson/${current.id}`))}><span><FaPlay /> {current?.id ? (lang === 'ru' ? 'Продолжить обучение' : 'Weiterlernen') : (lang === 'ru' ? 'Маршрут загружается' : 'Route wird geladen')}</span></button>
+        <header><span>{lang === 'ru' ? 'СЛЕДУЮЩИЙ УРОК' : 'NÄCHSTE LEKTION'}</span></header>
+        <div><small>{lang === 'ru' ? 'РЕКОМЕНДОВАНО' : 'EMPFOHLEN'}</small><h2>{topicLabel(current?.topic || 'word_order', lang)}</h2></div>
+        <button type="button" className="rc-primary" disabled={!current?.id} onClick={() => current?.id && navigate(withUser(`/lesson/${current.id}`))}><span><FaPlay /> {current?.id ? (lang === 'ru' ? 'Начать' : 'Starten') : (lang === 'ru' ? 'Загрузка…' : 'Laden…')}</span></button>
       </section>
 
       <section className="rc-week-progress">
@@ -70,7 +70,7 @@ export const Plan: React.FC = () => {
               : locked
                 ? (lang === 'ru' ? 'Сначала заверши предыдущий этап' : 'Zuerst die vorherige Etappe abschließen')
                 : lesson.mastery == null
-                  ? `${lesson.estimated_time || 12} ${lang === 'ru' ? 'мин' : 'Min.'}`
+                  ? (lang === 'ru' ? 'Доступно' : 'Bereit')
                   : `${lang === 'ru' ? 'Освоено' : 'Beherrscht'} ${lesson.mastery}%`;
             return <button type="button" key={lesson.id || index} className={`rc-route-row${active ? ' active' : ''}${lesson.completed ? ' complete' : ''}`} disabled={locked} onClick={() => !locked && lesson.id && navigate(withUser(`/lesson/${lesson.id}`))}>
               <span className="rc-route-marker">{lesson.completed ? <FaCheck /> : locked ? <FaLock /> : index + 1}</span>

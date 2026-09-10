@@ -22,6 +22,10 @@ services:
         value: "8"
       - key: SPEECH_MAX_BYTES
         value: "5000000"
+      - key: BETA_FREE_ACCESS
+        value: "true"
+      - key: BETA_TUTOR_DAILY_LIMIT
+        value: "25"
       - key: DEBUG
         value: "false"
       - key: BOT_TOKEN

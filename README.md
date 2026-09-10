@@ -64,7 +64,7 @@ The public application runs as a Docker service on Render with a signed Telegram
 - Structured error diagnosis, contrast, and fresh retry
 - Grammar, vocabulary, reading, listening, and productive activities
 - Server-side answer validation and structured feedback
-- AI tutor with backend-managed history and daily limits
+- AI tutor with backend-managed history and a generous beta safety limit
 - Progress analytics, mistakes, XP, streaks, and achievements
 - Russian and German interface
 - Mobile Telegram WebView design with reduced-motion support
@@ -179,8 +179,8 @@ Test on a real phone inside Telegram, not only in a desktop browser:
 2. **Daily challenge:** start today's lesson and complete rule, listening, independent answer, and spoken/typed transfer. An internal curriculum number such as `Tag 23` must never be shown.
 3. **Review:** make one lesson error, make its review due, then verify `/review` presents one recall card at a time and reschedules it after the answer.
 4. **Plan:** confirm the personalized route contains 30 steps, week progress changes after a passed lesson, and blocked prerequisites cannot be opened.
-5. **Tutor:** Free has three answers per day; Pro has no practical daily limit. Provider failure must fall back to the local tutor instead of leaving a dead button.
-6. **Monthly Pro:** from Profile, open the Telegram Stars invoice using the Pro button. Verify successful payment changes the profile to Pro and exposes the paid-through date; use a Telegram test bot/account for payment QA.
+5. **Tutor:** all beta users receive the same access. Provider failure must fall back to the local tutor instead of leaving a dead button.
+6. **Beta access:** confirm Profile shows free beta access and `/subscribe` does not open an invoice while `BETA_FREE_ACCESS=true`.
 7. **Account controls:** switch RU/DE and light/dark themes, export data, and test deletion only with a disposable account.
 
 The curriculum seed is idempotent and contains 30 daily challenges with at least 120 validated exercises. Render synchronizes it on every deployment.

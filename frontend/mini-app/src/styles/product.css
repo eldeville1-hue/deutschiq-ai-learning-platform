@@ -460,3 +460,67 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }
+
+/* Clarity pass — quiet brand, readable reports, and native-feeling lesson controls. */
+.dq-brand-mark { width: 48px; height: 48px; display: inline-grid; place-items: center; flex: 0 0 auto; color: var(--dq-text); }
+.dq-brand-mark svg { width: 100%; height: 100%; overflow: visible; }
+.dq-brand-ring, .dq-brand-accent, .dq-brand-tail { fill: none; stroke-linecap: round; }
+.dq-brand-ring { stroke: currentColor; stroke-width: 9; }
+.dq-brand-accent { stroke: var(--dq-gold); stroke-width: 9; }
+.dq-brand-tail { stroke: currentColor; stroke-width: 7; }
+.dq-brand-dot { fill: #ff654f; }
+.entry-loading .dq-brand-mark, .auth-error .dq-brand-mark { width: 66px; height: 66px; filter: drop-shadow(0 10px 22px rgba(244,191,85,.12)); }
+.diagnostic-welcome .welcome-brand { width: 78px; height: 78px; filter: drop-shadow(0 12px 26px rgba(244,191,85,.14)); }
+.rc-identity > .dq-brand-mark { width: 41px; height: 41px; padding: 4px; border: 1px solid rgba(244,191,85,.2); border-radius: 13px; background: linear-gradient(145deg,#182231,#101620); }
+.rc-returning > header .dq-brand-mark { width: 44px; height: 44px; padding: 4px; }
+.rc-focus-card h2 { margin-top: 22px; }
+.rc-focus-card > p { margin-bottom: 20px; }
+.rc-home-actions { margin-top: 2px; }
+.rc-skill-visual { display: block; padding: 4px 15px 15px; }
+.rc-skill-grid { display: grid; gap: 0; }
+.rc-skill-tile { min-height: 66px; padding: 13px 0; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 9px; border-bottom: 1px solid var(--dq-border); border-radius: 0; background: transparent; }
+.rc-skill-tile:last-child { border-bottom: 0; }
+.rc-skill-tile > span { color: var(--dq-text); font-size: 13px; font-weight: 750; }
+.rc-skill-tile > b { display: flex; align-items: center; gap: 5px; color: var(--dq-blue); font-size: 13px; }
+.rc-skill-tile > b svg { font-size: 11px; }
+.rc-skill-tile .rc-meter { height: 5px; }
+.rc-skill-tile.locked { background: transparent; }
+.rc-insight-grid { grid-template-columns: 1fr; }
+.app-shell.precision-tutor { grid-template-rows: auto minmax(0,1fr) auto; gap: 10px; }
+.precision-tutor .chat-empty { align-self: start; justify-items: start; width: 100%; padding: 22px 0 0; text-align: left; }
+.precision-tutor .chat-empty h2 { margin-top: 8px; font-size: 22px; }
+.precision-tutor .quick-actions { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 7px; margin-top: 12px; }
+.precision-tutor .quick-actions button, .precision-tutor .quick-actions button:last-child { width: auto; min-height: 44px; justify-content: center; padding: 0 6px; border-radius: 13px; color: var(--dq-text); font-size: 12px; font-weight: 700; text-align: center; }
+.precision-tutor .voice-button { min-height: 40px; padding: 0 9px; color: var(--dq-gold-soft); font-size: 12px; }
+.precision-tutor .chat-composer input { font-size: 14px; }
+.precision-lesson .lesson-step { gap: 14px; padding-top: 18px; }
+.precision-lesson .lesson-step .eyebrow { font-size: 11px; }
+.precision-lesson .lesson-objective { font-size: 14px; }
+.precision-lesson .audio-controls, .precision-lesson .listening-challenge { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.precision-lesson .audio-controls button, .precision-lesson .listening-challenge button { min-height: 50px; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 10px; border: 1px solid var(--dq-border-strong); border-radius: 14px; background: var(--dq-surface); color: var(--dq-text); font-size: 13px; font-weight: 700; }
+.precision-lesson .audio-controls button svg, .precision-lesson .listening-challenge button svg { color: var(--dq-blue); }
+.precision-lesson .mistake-contrast { display: grid; gap: 9px; }
+.precision-lesson .mistake-contrast > div { min-height: 52px; display: flex; align-items: center; padding: 13px 15px; border: 1px solid var(--dq-border); border-radius: 14px; background: var(--dq-surface); font-size: 14px; line-height: 1.45; }
+.precision-lesson .mistake-contrast > .bad { border-color: rgba(255,120,133,.23); }
+.precision-lesson .mistake-contrast > .good { border-color: rgba(99,215,170,.23); }
+.precision-lesson .reorder-answer { min-height: 58px; padding: 16px; border: 1px dashed var(--dq-border-strong); border-radius: 15px; color: var(--dq-muted); font-size: 14px; line-height: 1.5; }
+.precision-lesson .word-tokens { display: flex; flex-wrap: wrap; gap: 8px; }
+.precision-lesson .word-tokens button { min-height: 42px; padding: 0 13px; font-size: 14px; }
+.precision-lesson .clear-answer { width: max-content; min-height: 38px; padding: 0 10px; border: 0; background: transparent; color: var(--dq-muted); font-size: 13px; }
+.precision-lesson .confidence-check { display: grid; gap: 9px; padding: 12px; }
+.precision-lesson .confidence-check > small { color: var(--dq-muted); font-size: 12px; }
+.precision-lesson .confidence-check > div { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; }
+.precision-lesson .confidence-check button { min-height: 38px; border: 1px solid var(--dq-border); border-radius: 10px; background: transparent; color: var(--dq-muted); font-size: 12px; }
+.precision-lesson .confidence-check button.active { border-color: rgba(130,174,248,.45); background: rgba(130,174,248,.1); color: var(--dq-text); }
+.precision-lesson .primary-action:disabled { filter: saturate(.35); opacity: .48; box-shadow: none; }
+.precision-lesson .answer-feedback { padding: 14px; border: 1px solid currentColor; background: var(--dq-surface); }
+.precision-lesson .answer-feedback b { color: var(--dq-text); }
+.precision-lesson .answer-feedback p { font-size: 13px; line-height: 1.45; }
+.precision-lesson .error-diagnosis { padding: 10px 12px; }
+.precision-lesson .lesson-check-error { padding: 11px 13px; border: 1px solid rgba(255,120,133,.25); border-radius: 12px; background: rgba(255,120,133,.07); color: var(--dq-red); font-size: 13px; }
+.mistake-cards .answer-line > span { display: grid; gap: 3px; }
+.mistake-cards .answer-line small { color: var(--dq-muted); font-size: 10px; font-weight: 800; letter-spacing: .1em; }
+@media (max-width: 360px) {
+  .precision-tutor .quick-actions { grid-template-columns: 1fr 1fr; }
+  .precision-tutor .quick-actions button:last-child { grid-column: 1 / -1; }
+}

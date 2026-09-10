@@ -33,6 +33,8 @@ class Settings:
     OPENAI_TRANSCRIBE_MODEL = os.getenv("OPENAI_TRANSCRIBE_MODEL", "gpt-4o-mini-transcribe")
     SPEECH_DAILY_LIMIT = int(os.getenv("SPEECH_DAILY_LIMIT", "8"))
     SPEECH_MAX_BYTES = int(os.getenv("SPEECH_MAX_BYTES", "5000000"))
+    BETA_FREE_ACCESS = os.getenv("BETA_FREE_ACCESS", "true").lower() == "true"
+    BETA_TUTOR_DAILY_LIMIT = int(os.getenv("BETA_TUTOR_DAILY_LIMIT", "25"))
     WEBAPP_URL = os.getenv("WEBAPP_URL", "http://localhost:5173")
     SECRET_KEY = os.getenv("SECRET_KEY", "change-me-in-production")
     DEBUG = os.getenv("DEBUG", "false").lower() == "true"

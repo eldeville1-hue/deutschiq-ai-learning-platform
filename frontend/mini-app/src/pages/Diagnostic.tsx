@@ -31,7 +31,7 @@ export const Diagnostic: React.FC = () => {
       }
       setUserId(resolvedId);
     }).catch(() => setUserId(resolvedId));
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     if (userId === null) return;

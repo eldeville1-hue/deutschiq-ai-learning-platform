@@ -22,7 +22,7 @@ export const Review: React.FC = () => {
 
   const leave = () => navigate(withUser('/dashboard'));
   if (items === null) return <main className="lesson-flow rc-review"><div className="skeleton rc-hero-skeleton" /></main>;
-  if (!items.length) return <main className="lesson-flow rc-review rc-review-state"><span className="rc-state-icon"><FaCheck /></span><p>{lang === 'ru' ? 'ПОВТОРЕНИЕ' : 'WIEDERHOLUNG'}</p><h1>{error ? (lang === 'ru' ? 'Не удалось открыть сессию' : 'Sitzung konnte nicht geöffnet werden') : (lang === 'ru' ? 'На сегодня всё' : 'Für heute ist alles erledigt')}</h1><span>{error || (lang === 'ru' ? 'Новые карточки появятся после следующего урока — в нужный момент.' : 'Neue Karten erscheinen nach der nächsten Lektion — zum richtigen Zeitpunkt.')}</span><button type="button" className="rc-primary" onClick={leave}>{lang === 'ru' ? 'Вернуться на обзор' : 'Zur Übersicht'}</button></main>;
+  if (!items.length) return <main className="lesson-flow rc-review rc-review-state"><span className="rc-state-icon"><FaCheck /></span><p>{lang === 'ru' ? 'ПОВТОРЕНИЕ' : 'WIEDERHOLUNG'}</p><h1>{error ? (lang === 'ru' ? 'Не удалось загрузить' : 'Laden fehlgeschlagen') : (lang === 'ru' ? 'На сегодня всё' : 'Für heute erledigt')}</h1><span>{error || (lang === 'ru' ? 'Новые карточки появятся после урока.' : 'Neue Karten erscheinen nach der Lektion.')}</span><button type="button" className="rc-primary" onClick={leave}>{lang === 'ru' ? 'На главную' : 'Zur Übersicht'}</button></main>;
   if (index >= items.length) return <main className="lesson-flow rc-review rc-review-state"><span className="rc-state-icon success"><FaCheck /></span><p>{lang === 'ru' ? 'ГОТОВО' : 'FERTIG'}</p><h1>{lang === 'ru' ? 'Память укреплена' : 'Erinnerung gefestigt'}</h1><span>{lang === 'ru' ? `${items.length} тем повторено. Следующая дата рассчитана по твоим ответам.` : `${items.length} Themen wiederholt. Der nächste Termin wurde aus deinen Antworten berechnet.`}</span><button type="button" className="rc-primary" onClick={leave}>{lang === 'ru' ? 'Продолжить' : 'Weiter'} <FaArrowRight /></button></main>;
 
   const item = items[index];
@@ -53,7 +53,7 @@ export const Review: React.FC = () => {
       <div className="rc-review-progress"><i style={{ width: `${progress}%` }} /></div>
 
       <section className="rc-review-question">
-        <div className="rc-retrieval-label"><FaRedo /><span>{lang === 'ru' ? 'Вспомни без подсказки' : 'Erinnere dich ohne Hinweis'}</span></div>
+        <div className="rc-retrieval-label"><FaRedo /><span>{lang === 'ru' ? 'Вспомни' : 'Erinnere dich'}</span></div>
         <p>{topicLabel(item.topic, lang)}</p>
         <h1>{item.question}</h1>
 
@@ -64,10 +64,9 @@ export const Review: React.FC = () => {
         {error && <div className="rc-notice error"><span>{error}</span></div>}
 
         {!feedback
-          ? <button type="button" className="rc-primary" disabled={!answer.trim() || checking} onClick={check}>{checking ? (lang === 'ru' ? 'Проверяем…' : 'Wird geprüft…') : (lang === 'ru' ? 'Проверить ответ' : 'Antwort prüfen')}</button>
+          ? <button type="button" className="rc-primary" disabled={!answer.trim() || checking} onClick={check}>{checking ? (lang === 'ru' ? 'Проверяем…' : 'Wird geprüft…') : (lang === 'ru' ? 'Проверить' : 'Prüfen')}</button>
           : <div className={`rc-review-feedback ${feedback.correct ? 'correct' : 'wrong'}`}><header><span>{feedback.correct ? <FaCheck /> : <FaRedo />}</span><strong>{feedback.correct ? (lang === 'ru' ? 'Верно' : 'Richtig') : (lang === 'ru' ? 'Закрепим ещё раз' : 'Noch einmal festigen')}</strong></header><div><small>{lang === 'ru' ? 'ПРАВИЛЬНЫЙ ОТВЕТ' : 'RICHTIGE ANTWORT'}</small><strong>{feedback.correct_answer}</strong><p>{feedback.explanation}</p></div><button type="button" className="rc-primary" onClick={next}>{index + 1 === items.length ? (lang === 'ru' ? 'Завершить' : 'Abschließen') : (lang === 'ru' ? 'Следующая карточка' : 'Nächste Karte')} <FaArrowRight /></button></div>}
       </section>
-      <p className="rc-review-note">{lang === 'ru' ? 'Ответ влияет на дату следующего повторения.' : 'Deine Antwort bestimmt den nächsten Wiederholungstermin.'}</p>
     </main>
   );
 };

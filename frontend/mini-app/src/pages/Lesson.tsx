@@ -27,6 +27,8 @@ export const Lesson: React.FC = () => {
   const [sessionId, setSessionId] = useState("");
   const [usedTokens, setUsedTokens] = useState<number[]>([]);
   const [speechResult, setSpeechResult] = useState<any>(null);
+  const [checking, setChecking] = useState(false);
+  const [checkError, setCheckError] = useState('');
   const exercises = useMemo(
     () => (lesson?.content?.exercises || []).slice(0, 4),
     [lesson],
@@ -67,6 +69,7 @@ export const Lesson: React.FC = () => {
     setConfidence("okay");
     setStartedAt(Date.now());
     setSpeechResult(null);
+    setCheckError('');
   };
   const next = async () => {
     if (exercise && checked === false && !retried[exerciseIndex]) {
@@ -90,19 +93,15 @@ export const Lesson: React.FC = () => {
     }
   };
   const check = async () => {
-    if (!answer.trim() || !sessionId) return;
-    const result = await api.checkLessonAnswer({
-      user_id: getUserId(),
-      lesson_id: Number(id),
-      exercise_index: exerciseIndex,
-      answer,
-      session_id: sessionId,
-      confidence,
-      response_ms: Date.now() - startedAt,
-    });
-    setChecked(Boolean(result.correct));
-    setFeedback(result);
-    void api.trackEvent({ user_id: getUserId(), event_name: 'exercise_answered', properties: { lesson_id: Number(id), exercise_index: exerciseIndex, correct: Boolean(result.correct), confidence } });
+    if (!answer.trim() || !sessionId || checking) return;
+    setChecking(true); setCheckError('');
+    try {
+      const result = await api.checkLessonAnswer({ user_id: getUserId(), lesson_id: Number(id), exercise_index: exerciseIndex, answer, session_id: sessionId, confidence, response_ms: Date.now() - startedAt });
+      setChecked(Boolean(result.correct)); setFeedback(result);
+      void api.trackEvent({ user_id: getUserId(), event_name: 'exercise_answered', properties: { lesson_id: Number(id), exercise_index: exerciseIndex, correct: Boolean(result.correct), confidence } });
+    } catch {
+      setCheckError(lang === 'ru' ? 'Не удалось проверить. Попробуй ещё раз.' : 'Prüfung fehlgeschlagen. Versuche es erneut.');
+    } finally { setChecking(false); }
   };
   const finish = () =>
     navigate(withUser(outcome?.passed ? "/plan" : `/lesson/${id}`), {
@@ -152,14 +151,14 @@ export const Lesson: React.FC = () => {
       {step === 0 && (
         <section className="lesson-step">
           <p className="eyebrow">
-            {lang === "ru" ? "ЗАДАНИЕ НА СЕГОДНЯ" : "HEUTIGE AUFGABE"} ·{" "}
+            {lang === "ru" ? "ТЕМА" : "THEMA"} ·{" "}
             {content.cefr || lesson.level}
           </p>
           <h1>{cleanTitle(topicLabel(content.title || lesson.topic, lang))}</h1>
           <div className="lesson-objective">{content.objective}</div>
           <div className="rule-card">{content.rule}</div>
           <button className="primary-action" onClick={next}>
-            {lang === "ru" ? "Показать пример" : "Beispiel ansehen"}{" "}
+            {lang === "ru" ? "Посмотреть пример" : "Beispiel ansehen"}{" "}
             <FaArrowRight />
           </button>
         </section>
@@ -167,26 +166,26 @@ export const Lesson: React.FC = () => {
       {step === 1 && (
         <section className="lesson-step">
           <p className="eyebrow">
-            {lang === "ru" ? "СЛУШАЙ И ЗАМЕЧАЙ" : "HÖREN UND ERKENNEN"}
+            {lang === "ru" ? "ПРИМЕР" : "BEISPIEL"}
           </p>
           <h1>
             {lang === "ru"
-              ? "Сначала услышь структуру"
-              : "Höre zuerst die Struktur"}
+              ? "Послушай фразу"
+              : "Höre den Satz"}
           </h1>
           <div className="example-sentence">
             {content.examples?.[0] || "Heute lerne ich Deutsch."}
           </div>
           <div className="audio-controls">
             <button onClick={() => speak(0.9)}>
-              <FaVolumeUp /> {lang === "ru" ? "Обычная скорость" : "Normal"}
+              <FaVolumeUp /> {lang === "ru" ? "Обычно" : "Normal"}
             </button>
             <button onClick={() => speak(0.65)}>
               <FaVolumeUp /> {lang === "ru" ? "Медленно" : "Langsam"}
             </button>
           </div>
           <button className="primary-action" onClick={next}>
-            {lang === "ru" ? "Понять ошибку" : "Fehler verstehen"}{" "}
+            {lang === "ru" ? "Дальше" : "Weiter"}{" "}
             <FaArrowRight />
           </button>
         </section>
@@ -194,9 +193,9 @@ export const Lesson: React.FC = () => {
       {step === 2 && (
         <section className="lesson-step">
           <p className="eyebrow">
-            {lang === "ru" ? "НЕ ПУТАЙ" : "NICHT VERWECHSELN"}
+            {lang === "ru" ? "СРАВНИ" : "VERGLEICHEN"}
           </p>
-          <h1>{lang === "ru" ? "Типичная ошибка" : "Typischer Fehler"}</h1>
+          <h1>{lang === "ru" ? "Найди разницу" : "Erkenne den Unterschied"}</h1>
           <div className="mistake-contrast">
             {(content.common_mistakes || []).map(
               (item: string, index: number) => (
@@ -210,7 +209,7 @@ export const Lesson: React.FC = () => {
             )}
           </div>
           <button className="primary-action" onClick={next}>
-            {lang === "ru" ? "Я вижу разницу" : "Ich sehe den Unterschied"}{" "}
+            {lang === "ru" ? "Понятно" : "Verstanden"}{" "}
             <FaArrowRight />
           </button>
         </section>
@@ -218,20 +217,15 @@ export const Lesson: React.FC = () => {
       {step === 3 && (
         <section className="lesson-step retrieval-gate">
           <p className="eyebrow">
-            {lang === "ru" ? "ПЕРЕД ПРАКТИКОЙ" : "VOR DER ÜBUNG"}
+            {lang === "ru" ? "ВСПОМНИ" : "ERINNERN"}
           </p>
           <h1>
           {lang === "ru"
             ? content.recall_prompt || "Закрой пример и вспомни правило своими словами"
             : "Erinnere dich an die Regel mit eigenen Worten"}
           </h1>
-          <p>
-            {lang === "ru"
-              ? "Этот короткий момент воспроизведения помогает запомнить лучше, чем повторное чтение."
-              : "Aktives Erinnern wirkt stärker als erneutes Lesen."}
-          </p>
           <button className="primary-action" onClick={next}>
-            {lang === "ru" ? "Готов к заданиям" : "Bereit für Aufgaben"}{" "}
+            {lang === "ru" ? "К заданиям" : "Zu den Aufgaben"}{" "}
             <FaArrowRight />
           </button>
         </section>
@@ -241,15 +235,15 @@ export const Lesson: React.FC = () => {
           <p className="eyebrow">
             {exercise.stage === "guided"
               ? lang === "ru"
-                ? "С ПОДДЕРЖКОЙ"
+                ? "С ПОДСКАЗКОЙ"
                 : "MIT HILFE"
               : exercise.stage === "transfer"
                 ? lang === "ru"
                   ? "ТВОЯ ФРАЗА"
                   : "DEIN SATZ"
                 : lang === "ru"
-                  ? "БЕЗ ПОДСКАЗКИ"
-                  : "OHNE HILFE"}{" "}
+                  ? "САМОСТОЯТЕЛЬНО"
+                  : "SELBSTSTÄNDIG"}{" "}
             · {exerciseIndex + 1}/{exercises.length}
             {retried[exerciseIndex]
               ? lang === "ru"
@@ -257,12 +251,12 @@ export const Lesson: React.FC = () => {
                 : " · zweiter Versuch"
               : ""}
           </p>
-          <h1>{exercise.type === "repeat" ? (lang === "ru" ? "Произнеси пример вслух" : "Sprich das Beispiel laut") : exercise.question}</h1>
+          <h1>{exercise.type === "repeat" ? (lang === "ru" ? "Повтори фразу" : "Sprich den Satz nach") : exercise.question}</h1>
+          {exercise.type === "repeat" && <div className="example-sentence">{content.audio_text || content.examples?.[0]}</div>}
           {exercise.type === "listening" && (
             <div className="listening-challenge">
               <button type="button" onClick={() => speak(0.9)}><FaVolumeUp /> {lang === "ru" ? "Прослушать" : "Anhören"}</button>
               <button type="button" onClick={() => speak(0.7)}><FaVolumeUp /> {lang === "ru" ? "Медленнее" : "Langsamer"}</button>
-              <small>{lang === "ru" ? "Аудио можно включить ещё раз" : "Du kannst das Audio wiederholen"}</small>
             </div>
           )}
           {exercise.type === "choose" && Array.isArray(exercise.options) ? (
@@ -345,33 +339,33 @@ export const Lesson: React.FC = () => {
           {checked === null && (
             <div className="confidence-check">
               <small>
-                {lang === "ru" ? "Насколько ты уверен?" : "Wie sicher bist du?"}
+                {lang === "ru" ? "Как было?" : "Wie war es?"}
               </small>
               <div>
                 <button
                   className={confidence === "guess" ? "active" : ""}
                   onClick={() => setConfidence("guess")}
                 >
-                  {lang === "ru" ? "Угадываю" : "Geraten"}
+                  {lang === "ru" ? "Сложно" : "Schwer"}
                 </button>
                 <button
                   className={confidence === "okay" ? "active" : ""}
                   onClick={() => setConfidence("okay")}
                 >
-                  {lang === "ru" ? "Не совсем" : "Nicht ganz"}
+                  {lang === "ru" ? "Нормально" : "Okay"}
                 </button>
                 <button
                   className={confidence === "sure" ? "active" : ""}
                   onClick={() => setConfidence("sure")}
                 >
-                  {lang === "ru" ? "Уверен" : "Sicher"}
+                  {lang === "ru" ? "Легко" : "Leicht"}
                 </button>
               </div>
             </div>
           )}
           {checked === null ? (
-            <button className="primary-action" onClick={check}>
-              {lang === "ru" ? "Проверить" : "Prüfen"}
+            <button className="primary-action" onClick={check} disabled={!answer.trim() || !sessionId || checking}>
+              {checking ? (lang === 'ru' ? 'Проверяем…' : 'Wird geprüft…') : (lang === "ru" ? "Проверить" : "Prüfen")}
             </button>
           ) : (
             <div className={`answer-feedback ${checked ? "correct" : "wrong"}`}>
@@ -380,16 +374,15 @@ export const Lesson: React.FC = () => {
                 <b>
                   {checked
                     ? lang === "ru"
-                      ? `Верно · освоено ${feedback?.mastery || 0}%`
-                      : `Richtig · ${feedback?.mastery || 0}% beherrscht`
+                      ? "Верно"
+                      : "Richtig"
                     : lang === "ru"
-                      ? "Разберём ошибку"
-                      : "Fehler verstehen"}
+                      ? "Попробуй ещё раз"
+                      : "Noch einmal"}
                 </b>
                 <p>{feedback?.explanation}</p>
                 {!checked && feedback?.error_type && <div className="error-diagnosis">
-                  <small>{lang === 'ru' ? 'ТИП ОШИБКИ' : 'FEHLERTYP'}</small>
-                  <strong>{topicLabel(String(feedback.error_type), lang)}</strong>
+                  <small>{lang === 'ru' ? 'ПОДСКАЗКА' : 'HINWEIS'}</small>
                   {Array.isArray(feedback.contrast) && feedback.contrast.map((line: string, index: number) => <p key={index}>{line}</p>)}
                   <em>{lang === 'ru' ? feedback.retry_instruction : 'Nenne zuerst die Regel und bilde die Antwort dann neu.'}</em>
                 </div>}
@@ -403,8 +396,8 @@ export const Lesson: React.FC = () => {
                 {!checked && !retried[exerciseIndex] && (
                   <small>
                     {lang === "ru"
-                      ? "Сейчас попробуешь ещё раз без подсказки."
-                      : "Du versuchst es gleich noch einmal ohne Hinweis."}
+                      ? "Исправь ответ и попробуй снова."
+                      : "Korrigiere die Antwort und versuche es erneut."}
                   </small>
                 )}
               </div>
@@ -413,6 +406,7 @@ export const Lesson: React.FC = () => {
               </button>
             </div>
           )}
+          {checkError && <div className="lesson-check-error" role="alert">{checkError}</div>}
         </section>
       )}
       {step >= total && (

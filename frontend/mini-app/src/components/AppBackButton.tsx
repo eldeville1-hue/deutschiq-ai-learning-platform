@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { FaArrowLeft } from 'react-icons/fa';
@@ -11,22 +11,24 @@ export function AppBackButton() {
   const { lang } = useLanguage();
   const visible = !ROOT_ROUTES.has(location.pathname);
 
-  const goBack = () => {
+  const webApp = (window as any).Telegram?.WebApp;
+  const usesTelegramBack = Boolean(webApp?.BackButton && webApp?.platform !== 'unknown');
+  const goBack = useCallback(() => {
     if (window.history.length > 1) navigate(-1);
     else navigate('/dashboard');
-  };
+  }, [navigate]);
 
   useEffect(() => {
-    const backButton = (window as any).Telegram?.WebApp?.BackButton;
-    if (!visible || !backButton) return;
+    const backButton = webApp?.BackButton;
+    if (!visible || !usesTelegramBack || !backButton) return;
     backButton.show();
     backButton.onClick(goBack);
     return () => {
       backButton.offClick?.(goBack);
       backButton.hide();
     };
-  }, [location.pathname, location.search, visible]);
+  }, [goBack, usesTelegramBack, visible, webApp]);
 
-  if (!visible) return null;
+  if (!visible || usesTelegramBack) return null;
   return <button className="app-back-button" type="button" onClick={goBack} aria-label={lang === 'ru' ? 'Назад' : 'Zurück'}><FaArrowLeft aria-hidden="true" /></button>;
 }
