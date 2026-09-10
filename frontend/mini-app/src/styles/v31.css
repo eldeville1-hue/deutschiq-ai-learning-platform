@@ -1,0 +1,268 @@
+/* v31 — functional phone layout. Keep this last: it repairs legacy fixed-height flex shrink. */
+:root {
+  --v31-bg: #090d14;
+  --v31-card: #111824;
+  --v31-card-2: #151d2a;
+  --v31-line: rgba(238, 241, 246, .11);
+  --v31-text: #f5f3ed;
+  --v31-muted: #969eab;
+  --v31-gold: #f4bf55;
+  --v31-gold-2: #ffd77c;
+}
+
+html, body, #root { background: var(--v31-bg); }
+.app-frame { height: 100dvh; overflow: hidden; }
+.app-shell,
+.app-shell.compact-page,
+.v30-page {
+  box-sizing: border-box !important;
+  width: min(100%, 480px) !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  margin: 0 auto !important;
+  padding: 18px 18px calc(92px + env(safe-area-inset-bottom)) !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  scrollbar-width: none;
+}
+.app-shell::-webkit-scrollbar { display: none; }
+.app-shell > header,
+.app-shell > section,
+.app-shell > nav,
+.app-shell > .v30-status,
+.app-shell > .v31-status,
+.app-shell > .chat-messages,
+.app-shell > .chat-composer,
+.app-shell > .voice-recorder { flex: 0 0 auto; }
+
+button, a { -webkit-tap-highlight-color: transparent; }
+button { touch-action: manipulation; }
+button:focus-visible, a:focus-visible, input:focus-visible {
+  outline: 2px solid var(--v31-gold-2);
+  outline-offset: 2px;
+}
+button:disabled { cursor: not-allowed; opacity: .46; }
+
+/* One compact, persistent navigation for every primary route. */
+.bottom-nav {
+  position: absolute !important;
+  left: 50% !important;
+  bottom: max(8px, env(safe-area-inset-bottom)) !important;
+  z-index: 100 !important;
+  width: min(calc(100% - 18px), 462px) !important;
+  height: 68px !important;
+  transform: translateX(-50%) !important;
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 2px !important;
+  padding: 5px !important;
+  border: 1px solid rgba(255,255,255,.12) !important;
+  border-radius: 22px !important;
+  background: rgba(10, 15, 23, .96) !important;
+  box-shadow: 0 14px 38px rgba(0,0,0,.42) !important;
+}
+.bottom-nav button {
+  min-width: 0 !important;
+  min-height: 56px !important;
+  padding: 5px 1px !important;
+  gap: 4px !important;
+  border: 1px solid transparent !important;
+  border-radius: 16px !important;
+  background: transparent !important;
+  color: #7e8795 !important;
+}
+.bottom-nav button.active {
+  border-color: rgba(244,191,85,.22) !important;
+  background: rgba(244,191,85,.11) !important;
+  color: var(--v31-gold-2) !important;
+}
+.bottom-nav button.active::before { top: 4px !important; width: 18px !important; }
+.bottom-nav svg { font-size: 17px !important; }
+.bottom-nav span {
+  width: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  font-size: 10px !important;
+  line-height: 1.08 !important;
+  text-overflow: ellipsis !important;
+}
+
+.v31-status {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--v31-line);
+  border-radius: 14px;
+  background: var(--v31-card);
+  color: var(--v31-muted);
+  font-size: 12px;
+}
+.v31-status.error { border-color: rgba(255,114,125,.28); color: #ff9ba4; }
+.v31-status button { min-height: 34px; padding: 0 11px; border: 0; background: rgba(255,255,255,.08); color: var(--v31-text); }
+
+/* Overview */
+.v29-home { display: flex !important; flex-direction: column !important; gap: 16px !important; }
+.v29-home > * { flex-shrink: 0 !important; }
+.v29-topbar { padding-bottom: 14px; border-bottom: 1px solid var(--v31-line); }
+.v29-heading { padding-top: 4px !important; gap: 6px !important; }
+.v29-heading h1 { max-width: 310px !important; font-size: clamp(28px, 8vw, 34px) !important; line-height: 1.06 !important; }
+.v29-focus-card {
+  min-height: 0 !important;
+  height: auto !important;
+  padding: 20px !important;
+  overflow: hidden !important;
+  border-radius: 23px !important;
+}
+.v29-focus-card h2 { margin: 26px 0 10px !important; font-size: clamp(25px, 7vw, 31px) !important; line-height: 1.08 !important; }
+.v29-focus-card > p { margin: 0 !important; font-size: 14px !important; line-height: 1.48 !important; }
+.v29-focus-meta { margin: 17px 0 15px !important; }
+.v29-primary { min-height: 52px !important; }
+.v29-agenda { padding: 17px !important; }
+.v29-agenda-row { min-height: 62px; }
+.v29-shortcuts { gap: 9px !important; }
+.v29-shortcuts button { min-height: 82px !important; padding: 14px !important; }
+
+/* Plan */
+.v30-plan { display: flex !important; flex-direction: column !important; gap: 16px !important; }
+.v30-plan > * { flex-shrink: 0 !important; }
+.v30-plan .page-header { padding-bottom: 0 !important; }
+.v30-plan .page-header h1 { font-size: 31px !important; }
+.v30-plan .today-focus {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  padding: 19px !important;
+  overflow: hidden !important;
+}
+.v30-plan .today-focus h2 {
+  display: block !important;
+  max-width: none !important;
+  margin: 11px 0 17px !important;
+  overflow: visible !important;
+  font-size: 23px !important;
+  line-height: 1.16 !important;
+}
+.v30-plan > section:last-of-type { display: grid !important; gap: 11px !important; }
+.v30-plan .section-heading > span { min-width: 0; line-height: 1.35; }
+.v30-plan .lesson-list { margin-top: 0 !important; }
+.v30-plan .lesson-row { min-height: 76px !important; padding: 12px !important; }
+.v30-plan .lesson-row b {
+  display: -webkit-box !important;
+  overflow: hidden !important;
+  font-size: 14px !important;
+  line-height: 1.3 !important;
+  white-space: normal !important;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.v30-plan .lesson-row:disabled { opacity: .62; }
+.v30-plan .primary-action:disabled { color: #6b7078 !important; background: #252b34 !important; }
+
+/* Analytics */
+.v30-analytics { display: flex !important; flex-direction: column !important; gap: 14px !important; }
+.v30-analytics > * { flex-shrink: 0 !important; }
+.v30-analytics .analysis-title { display: block !important; padding: 0 0 4px !important; }
+.v30-analytics .analysis-title h1 { max-width: none !important; margin-top: 7px !important; font-size: 30px !important; line-height: 1.08 !important; }
+.v30-analytics .knowledge-instrument { padding: 17px !important; }
+.v30-analytics .strongest-skill,
+.v30-analytics .mastery-section,
+.v30-analytics .voice-progress,
+.v30-analytics .attention-list,
+.v30-analytics .error-list { padding: 16px !important; }
+.v30-analytics .mastery-section header small { display: block; margin-top: 5px; line-height: 1.4; }
+.v30-analytics .error-list > button { cursor: pointer; }
+
+/* Tutor */
+.v30-tutor {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+}
+.v30-tutor > * { flex-shrink: 0 !important; }
+.v30-tutor .page-header { display: grid !important; grid-template-columns: minmax(0,1fr) auto !important; gap: 10px !important; }
+.v30-tutor .page-header h1 { max-width: 255px !important; font-size: 28px !important; line-height: 1.08 !important; }
+.v30-tutor .quota { position: static !important; align-self: start !important; margin: 0 !important; }
+.v30-tutor .context-strip { height: auto !important; min-height: 48px !important; }
+.v30-tutor .chat-empty { padding: 14px 4px 6px !important; }
+.v30-tutor .chat-empty h2 { font-size: 21px !important; }
+.v30-tutor .chat-empty p { max-width: 310px; font-size: 13px !important; line-height: 1.4 !important; }
+.v30-tutor .quick-actions {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 8px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+.v30-tutor .quick-actions button,
+.v30-tutor .quick-actions button:last-child {
+  min-width: 0 !important;
+  min-height: 46px !important;
+  padding: 10px !important;
+  border-radius: 14px !important;
+  white-space: normal !important;
+  text-align: center !important;
+  line-height: 1.25 !important;
+}
+.v30-tutor .quick-actions button:last-child { grid-column: 1 / -1 !important; }
+.v30-tutor .quick-actions button:disabled { opacity: .44 !important; }
+.v30-tutor .chat-messages {
+  min-height: 0 !important;
+  max-height: none !important;
+  padding: 2px 0 !important;
+  overflow: visible !important;
+}
+.v30-tutor .message { max-width: 90% !important; overflow-wrap: anywhere; }
+.v30-tutor .message-audio { min-width: 34px; min-height: 34px; margin-left: 5px; border: 0; background: transparent; }
+.v30-tutor .voice-recorder { margin-top: 2px !important; }
+.v30-tutor .chat-composer {
+  position: sticky !important;
+  bottom: 0 !important;
+  z-index: 5 !important;
+  margin-top: 2px !important;
+  box-shadow: 0 -10px 24px rgba(9,13,20,.72) !important;
+}
+.v30-tutor .chat-composer button:disabled { background: #303640 !important; color: #767d88 !important; }
+
+/* Profile */
+.v30-profile { display: flex !important; flex-direction: column !important; gap: 14px !important; }
+.v30-profile > * { flex-shrink: 0 !important; }
+.v30-profile .profile-passport { min-height: 72px !important; }
+.v30-profile .profile-numbers,
+.v30-profile .streak-section,
+.v30-profile .achievement-section,
+.v30-profile .profile-settings { border-radius: 18px !important; }
+.v30-profile .achievement-card {
+  width: 100%;
+  min-height: 64px;
+  display: grid;
+  grid-template-columns: auto minmax(0,1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 0;
+  border-radius: 15px;
+  background: rgba(244,191,85,.08);
+  color: var(--v31-text);
+  text-align: left;
+}
+.v30-profile .achievement-card > svg:first-child { color: var(--v31-gold); font-size: 22px; }
+.v30-profile .achievement-card > span { min-width: 0; display: grid; gap: 3px; }
+.v30-profile .achievement-card b { font-size: 14px; }
+.v30-profile .achievement-card small { color: #63d7aa; font-size: 12px; }
+.profile-action-status { margin: -4px 0 0; color: var(--v31-muted); text-align: center; font-size: 12px; }
+
+@media (max-width: 360px) {
+  .app-shell, .app-shell.compact-page, .v30-page { padding-left: 15px !important; padding-right: 15px !important; }
+  .v29-stats > span:first-child { display: none; }
+  .v29-shortcuts { grid-template-columns: 1fr !important; }
+  .v30-tutor .page-header h1 { font-size: 25px !important; }
+  .bottom-nav span { font-size: 9px !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; }
+}

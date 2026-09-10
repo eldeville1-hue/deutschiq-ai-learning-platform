@@ -12,12 +12,17 @@ export const Dashboard: React.FC = () => {
   const [data, setData] = useState<any>(null);
   const [lesson, setLesson] = useState<any>(null);
   const [learning, setLearning] = useState<any>(null);
+  const [loadError, setLoadError] = useState(false);
   const userId = getUserId();
 
   useEffect(() => {
     void api.trackEvent({ user_id: userId, event_name: 'dashboard_viewed' });
     Promise.allSettled([api.getDashboard(userId), api.getPlan(userId), api.getLearningToday(userId)]).then(([dashboard, plan, today]) => {
       if (dashboard.status === 'fulfilled') setData(dashboard.value);
+      else {
+        setData({ level: 'A1', targetLevel: 'A2', xp: 0, streak: 0, weaknesses: [] });
+        setLoadError(true);
+      }
       if (plan.status === 'fulfilled') {
         const items = Array.isArray(plan.value) ? plan.value : [];
         setLesson(items.find((item: any) => !item.completed) || items[0]);
@@ -44,13 +49,14 @@ export const Dashboard: React.FC = () => {
         <div className="v29-identity"><span className="v29-logo">D</span><div><small>{greeting}</small><strong>DeutschIQ</strong></div></div>
         <div className="v29-stats"><span><b>{data.level || 'A1'}</b>{data.xp || 0} XP</span><span><FaFire /><b>{data.streak || 0}</b></span></div>
       </header>
+      {loadError && <div className="v31-status error"><span>{lang === 'ru' ? 'Не удалось обновить данные' : 'Daten konnten nicht aktualisiert werden'}</span><button type="button" onClick={() => window.location.reload()}>{lang === 'ru' ? 'Повторить' : 'Erneut laden'}</button></div>}
       <section className="v29-heading"><span>{lang === 'ru' ? 'ТВОЙ СЛЕДУЮЩИЙ ШАГ' : 'DEIN NÄCHSTER SCHRITT'}</span><h1>{lang === 'ru' ? 'Сегодня учимся уверенно' : 'Heute sicherer werden'}</h1></section>
       <section className="v29-focus-card">
         <div className="v29-focus-label"><span><FaBolt />{lang === 'ru' ? 'Персональный урок' : 'Persönliche Lektion'}</span><b>01</b></div>
         <h2>{topicLabel(topic, lang)}</h2>
         <p>{selectedLesson?.reason === 'review_due' ? (lang === 'ru' ? 'Короткое повторение поможет закрепить тему.' : 'Eine kurze Wiederholung festigt das Thema.') : (lang === 'ru' ? 'Урок выбран по твоему уровню и последним ошибкам.' : 'Nach deinem Niveau und deinen letzten Fehlern gewählt.')}</p>
         <div className="v29-focus-meta"><span><FaClock />{minutes} {lang === 'ru' ? 'мин' : 'Min.'}</span><span><FaBrain />{learning?.due_count || 0} {lang === 'ru' ? 'повторить' : 'fällig'}</span></div>
-        <button className="v29-primary" onClick={startLesson}><span><FaPlay />{lang === 'ru' ? 'Начать урок' : 'Lektion starten'}</span><FaArrowRight /></button>
+        <button type="button" className="v29-primary" onClick={startLesson}><span><FaPlay />{lang === 'ru' ? 'Начать урок' : 'Lektion starten'}</span><FaArrowRight /></button>
       </section>
       {phases.length > 0 && <section className="v29-agenda">
         <header><div><span>{lang === 'ru' ? 'СЕГОДНЯ' : 'HEUTE'}</span><h2>{lang === 'ru' ? 'План занятия' : 'Dein Lernplan'}</h2></div><b>{minutes} {lang === 'ru' ? 'мин' : 'Min.'}</b></header>
@@ -61,8 +67,8 @@ export const Dashboard: React.FC = () => {
         </div>)}</div>
       </section>}
       <section className="v29-shortcuts">
-        <button onClick={() => navigate(withUser('/review'))}><span className="v29-shortcut-icon"><FaRedoAlt /></span><span><small>{lang === 'ru' ? 'ПОВТОРЕНИЕ' : 'WIEDERHOLUNG'}</small><b>{learning?.due_count || 0} {lang === 'ru' ? 'тем ждут' : 'Themen warten'}</b></span></button>
-        <button onClick={() => navigate(withUser('/mistakes'))}><span className="v29-shortcut-icon danger"><FaExclamation /></span><span><small>{lang === 'ru' ? 'СЛАБОЕ МЕСТО' : 'DEIN FOKUS'}</small><b>{topicLabel(String(weak.name), lang)}</b></span></button>
+        <button type="button" onClick={() => navigate(withUser('/review'))}><span className="v29-shortcut-icon"><FaRedoAlt /></span><span><small>{lang === 'ru' ? 'ПОВТОРЕНИЕ' : 'WIEDERHOLUNG'}</small><b>{learning?.due_count || 0} {lang === 'ru' ? 'тем ждут' : 'Themen warten'}</b></span></button>
+        <button type="button" onClick={() => navigate(withUser('/mistakes'))}><span className="v29-shortcut-icon danger"><FaExclamation /></span><span><small>{lang === 'ru' ? 'СЛАБОЕ МЕСТО' : 'DEIN FOKUS'}</small><b>{topicLabel(String(weak.name), lang)}</b></span></button>
       </section>
     </main>
   );
