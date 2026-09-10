@@ -19,12 +19,16 @@ interface RadarChartProps {
   };
   maxValue?: number;
   label?: string;
+  height?: number;
+  compact?: boolean;
 }
 
 export const RadarChart: React.FC<RadarChartProps> = ({
   data,
   maxValue = 10,
   label = 'Оценка',
+  height = 220,
+  compact = false,
 }) => {
   const chartData = {
     labels: data.labels,
@@ -32,10 +36,10 @@ export const RadarChart: React.FC<RadarChartProps> = ({
       {
         label: label,
         data: data.values,
-        backgroundColor: 'rgba(251, 191, 36, 0.15)',
-        borderColor: '#FBBF24',
+        backgroundColor: compact ? 'rgba(130, 174, 248, 0.16)' : 'rgba(251, 191, 36, 0.15)',
+        borderColor: compact ? '#82AEF8' : '#FBBF24',
         borderWidth: 2,
-        pointBackgroundColor: '#FBBF24',
+        pointBackgroundColor: compact ? '#82AEF8' : '#FBBF24',
         pointBorderColor: '#FFFFFF',
         pointHoverBackgroundColor: '#FFFFFF',
         pointHoverBorderColor: '#FBBF24',
@@ -52,6 +56,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({
           stepSize: 2,
           color: 'rgba(255,255,255,0.4)',
           backdropColor: 'transparent',
+          display: !compact,
         },
         grid: {
           color: 'rgba(255,255,255,0.06)',
@@ -62,7 +67,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({
         pointLabels: {
           color: 'rgba(255,255,255,0.7)',
           font: {
-            size: 11,
+            size: compact ? 9 : 11,
             weight: '500' as any,
           },
         },
@@ -80,13 +85,13 @@ export const RadarChart: React.FC<RadarChartProps> = ({
         borderWidth: 1,
       },
     },
+    animation: { duration: 500 },
     maintainAspectRatio: false,
   };
 
   return (
-    <div style={{ width: '100%', height: '220px', position: 'relative' }}>
+    <div style={{ width: '100%', height: `${height}px`, position: 'relative' }}>
       <Radar data={chartData} options={options} />
     </div>
   );
 };
-
