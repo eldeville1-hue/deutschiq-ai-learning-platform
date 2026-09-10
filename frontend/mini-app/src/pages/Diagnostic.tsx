@@ -6,6 +6,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { getText } from '../i18n/translations';
 import { api } from '../services/api';
 import { getUserId, withUser } from '../utils/user';
+import './Diagnostic.css';
 
 export const Diagnostic: React.FC = () => {
   const navigate = useNavigate();
