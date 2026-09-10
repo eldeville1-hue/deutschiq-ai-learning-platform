@@ -70,6 +70,9 @@ async def cmd_start(message: Message):
         db.commit()
     lang = user_language(user)
     db.close()
+    if (message.text or "").strip().lower().endswith(" subscribe"):
+        await cmd_subscribe(message)
+        return
     await bot.set_chat_menu_button(
         chat_id=message.chat.id,
         menu_button=MenuButtonWebApp(
@@ -94,15 +97,20 @@ async def cmd_start(message: Message):
 
 @dp.message(Command("subscribe"))
 async def cmd_subscribe(message: Message):
-    prices = [LabeledPrice(label="1 месяц Pro-доступа", amount=700)]
+    db = SessionLocal()
+    try:
+        lang = user_language(db.query(User).filter(User.telegram_id == message.from_user.id).first())
+    finally:
+        db.close()
+    prices = [LabeledPrice(label="30 Tage Pro" if lang == "de" else "30 дней Pro", amount=700)]
     await message.answer_invoice(
         title="DeutschIQ Pro",
-        description="Полный доступ к диагностике, плану, ИИ-репетитору и всем урокам",
+        description=("30 Tage unbegrenzter KI-Tutor und alle Pro-Funktionen" if lang == "de" else "30 дней безлимитного ИИ-репетитора и всех Pro-функций"),
         payload=f"sub_{message.from_user.id}_monthly",
         provider_token="",
         currency="XTR",
         prices=prices,
-        start_parameter="deutschiq_sub"
+        start_parameter="deutschiq_pro_30"
     )
 
 @dp.message(Command("help"))

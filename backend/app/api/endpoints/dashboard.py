@@ -8,6 +8,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.core.telegram_auth import telegram_user_id, assert_owner
 from app.models.progress import UserProgress
 from app.models.lesson import Lesson
+from app.services.subscription import subscription_payload
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
@@ -34,6 +35,7 @@ async def get_dashboard(user_id: int, db: Session = Depends(get_db), authenticat
         "stats": [],
         "weaknesses": [],
         "subscription_status": "free",
+        "subscription_end_date": None,
         "database_available": False,
         "diagnostic_completed": False,
     }
@@ -60,7 +62,7 @@ async def get_dashboard(user_id: int, db: Session = Depends(get_db), authenticat
                 {"label": "listening", "value": 0, "has_data": False},
             ],
             "weaknesses": [],
-            "subscription_status": user.subscription_status,
+            **subscription_payload(user),
             "database_available": True,
             "diagnostic_completed": False,
         }
@@ -84,7 +86,7 @@ async def get_dashboard(user_id: int, db: Session = Depends(get_db), authenticat
             {"label": "listening", "value": 0, "has_data": False},
         ],
         "weaknesses": [{"name": k, "percent": v * 10} for k, v in diag.weak_points.items()][:3] if diag.weak_points else [],
-        "subscription_status": user.subscription_status,
+        **subscription_payload(user),
         "xp": user.xp or 0,
         "streak": user.streak or 0,
         "database_available": True,

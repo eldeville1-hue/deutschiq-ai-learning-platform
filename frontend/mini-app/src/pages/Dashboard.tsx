@@ -65,7 +65,7 @@ export const Dashboard: React.FC = () => {
       </header>
 
       <section className="rc-focus-card">
-        <header><span><FaBrain /> {lang === 'ru' ? 'ПЕРСОНАЛЬНЫЙ УРОК' : 'PERSÖNLICHE LEKTION'}</span><b>{String(selectedLesson?.day || 1).padStart(2, '0')}</b></header>
+        <header><span><FaBrain /> {lang === 'ru' ? 'ЗАДАНИЕ НА СЕГОДНЯ' : 'HEUTIGE AUFGABE'}</span><b>{data.level || selectedLesson?.level || 'A1'}</b></header>
         <h2>{topicLabel(topic, lang)}</h2>
         <p>{selectedLesson?.reason === 'review_due'
           ? (lang === 'ru' ? 'Эта тема готова к повторению — сейчас лучший момент её закрепить.' : 'Dieses Thema ist bereit zur Wiederholung — jetzt ist der richtige Moment.')

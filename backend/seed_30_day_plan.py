@@ -95,29 +95,26 @@ GOLD_LESSON_EXAMPLES = {
 def build_content(day, topic, rule, example, question, answer):
     week = min((day - 1) // 7 + 1, 4)
     wrong, correction, communication_goal, target_patterns = LESSON_DETAILS[day]
-    examples = [example, correction.removeprefix("✅ ")]
+    solved_prompt = question.split(":", 1)[-1].strip().replace("___", answer)
+    examples = list(dict.fromkeys([example, correction.removeprefix("✅ "), solved_prompt]))
+    if len(set(examples)) < 3:
+        examples.append(f"Das Zielmuster lautet: {answer}.")
+    if len(set(examples)) < 3:
+        examples.append(f"Ich übe heute dieses Muster: {answer}.")
     if day in GOLD_LESSON_EXAMPLES:
         examples.extend(GOLD_LESSON_EXAMPLES[day])
+    listening_answer = GOLD_LESSON_EXAMPLES.get(day, (example,))[0]
     exercises = [
         {"type": "fill", "stage": "guided", "question": question, "answer": answer, "accepted_answers": [answer], "hint": rule, "explanation": f"Правило: {rule}"},
+        {"type": "listening", "stage": "independent", "question": "Прослушай фразу и запиши её по-немецки.", "answer": listening_answer, "accepted_answers": [listening_answer, listening_answer.rstrip(".?!")], "hint": "Сначала улови глагол, затем восстанови остальные части.", "explanation": f"Ты услышал: {listening_answer}"},
+        {"type": "production", "stage": "transfer", "question": communication_goal, "answer": example, "model_answer": example, "accepted_answers": [example, example.rstrip(".?!")], "target_patterns": target_patterns, "hint": "Используй структуру урока, но выбери собственные детали.", "explanation": "Проверь, выполнена ли коммуникативная цель, затем сравни грамматику с моделью."},
+        {"type": "repeat", "stage": "transfer", "question": "Произнеси модель вслух, сохраняя порядок слов и окончания.", "answer": example, "accepted_answers": [example, example.rstrip(".?!")], "explanation": "Повтори фразу спокойно ещё раз и добейся полного распознавания ключевых слов."},
     ]
-    if day in GOLD_LESSON_EXAMPLES:
-        listening_answer = GOLD_LESSON_EXAMPLES[day][0]
-        exercises.extend([
-            {"type": "listening", "stage": "independent", "question": "Прослушай фразу и запиши её по-немецки.", "answer": listening_answer, "accepted_answers": [listening_answer, listening_answer.rstrip(".?!")], "hint": "Сначала улови глагол, затем восстанови остальные части.", "explanation": f"Ты услышал: {listening_answer}"},
-            {"type": "production", "stage": "transfer", "question": communication_goal, "answer": example, "model_answer": example, "accepted_answers": [example, example.rstrip(".?!")], "target_patterns": target_patterns, "hint": "Используй структуру урока, но выбери собственные детали.", "explanation": "Проверь, выполнена ли коммуникативная цель, затем сравни грамматику с моделью."},
-            {"type": "repeat", "stage": "transfer", "question": "Произнеси модель вслух, сохраняя порядок слов и окончания.", "answer": example, "accepted_answers": [example, example.rstrip(".?!")], "explanation": "Повтори фразу спокойно ещё раз и добейся полного распознавания ключевых слов."},
-        ])
-    else:
-        exercises.extend([
-            {"type": "reorder", "stage": "independent", "question": "Соберите предложение в правильном порядке.", "tokens": example.rstrip(".?!").split(), "answer": example, "accepted_answers": [example, example.rstrip(".?!")], "explanation": "Спрягаемый глагол и остальные части предложения должны занимать позиции по правилу урока."},
-            {"type": "production", "stage": "transfer", "question": communication_goal, "answer": example, "model_answer": example, "accepted_answers": [example, example.rstrip(".?!")], "target_patterns": target_patterns, "hint": "Используй структуру урока, но выбери собственные детали.", "explanation": "Проверь, выполнена ли коммуникативная цель, затем сравни грамматику с моделью."},
-        ])
     return {
         "day": day,
         "week": week,
-        "quality_version": 2 if day <= 10 else 1,
-        "title": f"Tag {day}: {topic}",
+        "quality_version": 2,
+        "title": topic,
         "objective": communication_goal,
         "communication_goal": communication_goal,
         "rule": rule,

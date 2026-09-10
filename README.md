@@ -171,6 +171,20 @@ npm run build
 
 The same checks run in GitHub Actions.
 
+### Product acceptance test
+
+Test on a real phone inside Telegram, not only in a desktop browser:
+
+1. **New learner:** `/start` → diagnosis → result → Overview. The next visit must open the returning screen, never diagnosis again.
+2. **Daily challenge:** start today's lesson and complete rule, listening, independent answer, and spoken/typed transfer. An internal curriculum number such as `Tag 23` must never be shown.
+3. **Review:** make one lesson error, make its review due, then verify `/review` presents one recall card at a time and reschedules it after the answer.
+4. **Plan:** confirm the personalized route contains 30 steps, week progress changes after a passed lesson, and blocked prerequisites cannot be opened.
+5. **Tutor:** Free has three answers per day; Pro has no practical daily limit. Provider failure must fall back to the local tutor instead of leaving a dead button.
+6. **Monthly Pro:** from Profile, open the Telegram Stars invoice using the Pro button. Verify successful payment changes the profile to Pro and exposes the paid-through date; use a Telegram test bot/account for payment QA.
+7. **Account controls:** switch RU/DE and light/dark themes, export data, and test deletion only with a disposable account.
+
+The curriculum seed is idempotent and contains 30 daily challenges with at least 120 validated exercises. Render synchronizes it on every deployment.
+
 ## Security
 
 - Telegram `initData` is validated server-side.

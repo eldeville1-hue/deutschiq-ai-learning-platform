@@ -7,6 +7,8 @@ import { topicLabel } from "../i18n/topics";
 import { getUserId, withUser } from "../utils/user";
 import { VoiceRecorder } from "../components/VoiceRecorder";
 
+export const cleanTitle = (value: string) => value.replace(/^(?:tag|day|день)\s*\d+\s*[:·—-]\s*/i, "").trim();
+
 export const Lesson: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -135,7 +137,7 @@ export const Lesson: React.FC = () => {
     setAnswer((value) => `${value}${value ? " " : ""}${token}`);
   };
   return (
-    <main className="lesson-flow precision-lesson fade-up">
+    <main className="lesson-flow precision-lesson rc-lesson fade-up">
       <header>
         <span>
           {Math.min(step + 1, total)} {lang === "ru" ? "из" : "von"} {total}
@@ -150,10 +152,10 @@ export const Lesson: React.FC = () => {
       {step === 0 && (
         <section className="lesson-step">
           <p className="eyebrow">
-            {lang === "ru" ? "ЦЕЛЬ УРОКА" : "LERNZIEL"} ·{" "}
+            {lang === "ru" ? "ЗАДАНИЕ НА СЕГОДНЯ" : "HEUTIGE AUFGABE"} ·{" "}
             {content.cefr || lesson.level}
           </p>
-          <h1>{topicLabel(content.title || lesson.topic, lang)}</h1>
+          <h1>{cleanTitle(topicLabel(content.title || lesson.topic, lang))}</h1>
           <div className="lesson-objective">{content.objective}</div>
           <div className="rule-card">{content.rule}</div>
           <button className="primary-action" onClick={next}>

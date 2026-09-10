@@ -14,6 +14,7 @@ from app.models.learning import ExerciseAttempt, TopicMastery
 from app.models.lesson import Lesson
 from app.services.tutor_fallback import fallback_answer
 from datetime import date
+from app.services.subscription import has_active_pro
 
 router = APIRouter(prefix="/api/tutor", tags=["tutor"])
 
@@ -51,7 +52,7 @@ async def ask_tutor(data: TutorRequest, db: Session = Depends(get_db), authentic
         usage = TutorUsage(user_id=user.id, usage_date=today, questions_used=0)
         db.add(usage)
         db.flush()
-    daily_limit = 999 if user.subscription_status == "pro" else 3
+    daily_limit = 999 if has_active_pro(user) else 3
     if usage.questions_used >= daily_limit:
         raise HTTPException(status_code=429, detail="Daily tutor limit reached")
     
@@ -131,6 +132,7 @@ async def tutor_state(user_id: int, db: Session = Depends(get_db), authenticated
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     usage = db.query(TutorUsage).filter(TutorUsage.user_id == user.id, TutorUsage.usage_date == date.today()).first()
-    limit = 999 if user.subscription_status == "pro" else 3
+    pro = has_active_pro(user)
+    limit = 999 if pro else 3
     history = db.query(TutorMessage).filter(TutorMessage.user_id == user.id).order_by(TutorMessage.created_at.desc()).limit(30).all()
-    return {"remaining": max(0, limit - (usage.questions_used if usage else 0)), "messages": [{"role": item.role, "content": item.content} for item in reversed(history)]}
+    return {"remaining": max(0, limit - (usage.questions_used if usage else 0)), "limit": limit, "is_pro": pro, "messages": [{"role": item.role, "content": item.content} for item in reversed(history)]}

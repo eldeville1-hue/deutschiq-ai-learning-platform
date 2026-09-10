@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { FaCheck, FaChevronRight, FaDownload, FaGlobe, FaMedal, FaMoon, FaRedo, FaShareAlt, FaSun, FaTrash } from 'react-icons/fa';
+import { FaCheck, FaChevronRight, FaCrown, FaDownload, FaGlobe, FaMedal, FaMoon, FaRedo, FaShareAlt, FaSun, FaTrash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
@@ -29,6 +29,12 @@ export const Profile: React.FC = () => {
   const activityCount = Math.max(completed, data.diagnostic_completed ? 1 : 0);
   const retake = () => { const ok = window.confirm(lang === 'ru' ? 'Пройти диагностику заново? Новый результат заменит текущую оценку уровня.' : 'Diagnose wiederholen? Das neue Ergebnis ersetzt deine aktuelle Einstufung.'); if (ok) navigate(withUser('/diagnostic?retake=true')); };
   const share = () => window.open(`https://t.me/share/url?url=https://t.me/DeutschIQ_bot?start=ref_${getUserId()}&text=DeutschIQ`, '_blank');
+  const subscribe = () => {
+    const webApp = (window as any).Telegram?.WebApp;
+    const url = 'https://t.me/DeutschIQ_bot?start=subscribe';
+    if (webApp?.openTelegramLink) webApp.openTelegramLink(url);
+    else window.open(url, '_blank');
+  };
   const exportData = async () => {
     try {
       setActionStatus(lang === 'ru' ? 'Подготавливаем файл…' : 'Datei wird vorbereitet…');
@@ -51,12 +57,15 @@ export const Profile: React.FC = () => {
     } catch { setActionStatus(lang === 'ru' ? 'Не удалось удалить данные. Попробуй позже.' : 'Daten konnten nicht gelöscht werden. Versuche es später erneut.'); }
   };
   const weekdays = lang === 'ru' ? ['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'] : ['MO','DI','MI','DO','FR','SA','SO'];
+  const isPro = data.subscription_status === 'pro';
+  const paidUntil = data.subscription_end_date ? new Intl.DateTimeFormat(lang === 'ru' ? 'ru-RU' : 'de-DE', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(data.subscription_end_date)) : '';
 
   return (
     <main className="app-shell profile-page precision-profile v30-page v30-profile page-enter">
       <header className="profile-masthead page-stagger-1"><span>{lang === 'ru' ? 'ПРОФИЛЬ' : 'PROFIL'}</span><b>DeutschIQ</b></header>
       <section className="profile-passport page-stagger-1"><div className="avatar">{initials}</div><div><small>{lang === 'ru' ? 'УЧЕНИК' : 'LERNENDE'}</small><h1>{name}</h1><p>{lang === 'ru' ? 'Немецкий каждый день' : 'Deutsch jeden Tag'}</p></div><strong>{data.level || 'A1'}</strong></section>
       <section className="profile-numbers page-stagger-2"><div><strong><CountUp value={data.xp || 0} /></strong><span>XP</span></div><div><strong>{completed}</strong><span>{lang === 'ru' ? 'уроков' : 'Lektionen'}</span></div><div><strong>{activityCount}</strong><span>{lang === 'ru' ? 'активностей' : 'Aktivitäten'}</span></div></section>
+      <section className={`subscription-card ${isPro ? 'active' : ''}`}><header><span><FaCrown /> {isPro ? 'DEUTSCHIQ PRO' : (lang === 'ru' ? 'ТВОЙ ТАРИФ' : 'DEIN TARIF')}</span><b>{isPro ? 'PRO' : 'FREE'}</b></header><h2>{isPro ? (lang === 'ru' ? 'Полный доступ активен' : 'Voller Zugriff aktiv') : (lang === 'ru' ? 'Учись без дневных ограничений' : 'Lerne ohne Tageslimit')}</h2><p>{isPro ? (paidUntil ? (lang === 'ru' ? `Оплачено до ${paidUntil}` : `Bezahlt bis ${paidUntil}`) : (lang === 'ru' ? 'Все функции доступны' : 'Alle Funktionen verfügbar')) : (lang === 'ru' ? 'Безлимитный ИИ‑репетитор, полный 30‑дневный маршрут и расширенный разбор ошибок.' : 'Unbegrenzter KI‑Tutor, vollständiger 30‑Tage‑Plan und erweiterte Fehleranalyse.')}</p>{!isPro && <button type="button" onClick={subscribe}>{lang === 'ru' ? 'Открыть Pro на месяц' : 'Pro für einen Monat öffnen'} <FaChevronRight /></button>}</section>
       <section className="streak-section page-stagger-2"><small>{lang === 'ru' ? 'ТВОЯ СЕРИЯ' : 'DEINE SERIE'}</small><h2>{data.streak || 0} {lang === 'ru' ? 'дней' : 'Tage'}</h2><div className="week-row">{weekdays.map((day, index) => <div key={day} style={{ animationDelay: `${index * 55}ms` }}><span>{day}</span><i className={index < (data.streak || 0) ? 'active' : ''} /></div>)}</div></section>
       <section className="achievement-section page-stagger-3"><header><small>{lang === 'ru' ? 'ДОСТИЖЕНИЯ' : 'ERFOLGE'}</small><span>1 / 8</span></header><button type="button" className="achievement-card" onClick={() => navigate(withUser('/analytics'))}><FaMedal /><span><b>{lang === 'ru' ? 'Первый шаг' : 'Erster Schritt'}</b><small>{lang === 'ru' ? 'Диагностика завершена' : 'Diagnose abgeschlossen'} <FaCheck /></small></span><FaChevronRight /></button></section>
       <section className="profile-settings page-stagger-4"><button onClick={toggleLang}><span><FaGlobe />{lang === 'ru' ? 'Язык интерфейса' : 'App-Sprache'}</span><small>{lang === 'ru' ? 'Русский' : 'Deutsch'}</small></button><button onClick={toggleTheme}><span>{theme === 'dark' ? <FaMoon /> : <FaSun />}{lang === 'ru' ? 'Оформление' : 'Darstellung'}</span><small>{theme === 'dark' ? (lang === 'ru' ? 'Тёмное' : 'Dunkel') : (lang === 'ru' ? 'Светлое' : 'Hell')}</small></button><button onClick={share}><span><FaShareAlt />{lang === 'ru' ? 'Пригласить друга' : 'Freund einladen'}</span><FaChevronRight /></button></section>

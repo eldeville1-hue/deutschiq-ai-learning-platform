@@ -2,11 +2,11 @@ import React from 'react';
 
 type LegalKind = 'privacy' | 'imprint' | 'terms';
 const pages: Record<LegalKind, { title: string; intro: string; sections: Array<[string, string]> }> = {
-  privacy: { title: 'Datenschutzerklärung', intro: 'Diese Seite erklärt transparent, welche Daten die DeutschIQ Portfolio-Demo verarbeitet.', sections: [
+  privacy: { title: 'Datenschutzerklärung', intro: 'Diese Seite erklärt transparent, welche Daten die DeutschIQ Lernanwendung verarbeitet.', sections: [
     ['Verarbeitete Daten', 'Telegram-Nutzer-ID und Profilbasisdaten, Lernfortschritt, Diagnoseantworten, Fehler, Tutor-Nachrichten und technische Protokolle.'],
     ['Zweck', 'Die Daten werden verwendet, um den Lernstand zu speichern, personalisierte Übungen bereitzustellen und den Dienst sicher zu betreiben.'],
     ['Dienste', 'Die Anwendung nutzt Telegram, Render, Neon PostgreSQL und optional die OpenAI API. Bei Tutor-Anfragen wird der eingegebene Text an den KI-Dienst übermittelt.'],
-    ['Speicherung und Löschung', 'Daten bleiben gespeichert, solange die Demo genutzt wird. Löschanfragen können über das unten verlinkte GitHub-Profil gestellt werden.'],
+    ['Speicherung und Löschung', 'Daten bleiben gespeichert, solange DeutschIQ genutzt wird. Export und dauerhafte Löschung sind direkt im Profil verfügbar.'],
     ['Sicherheit', 'Zugangsdaten werden als Server-Secrets gespeichert und nicht an den Browser ausgeliefert. Bitte keine sensiblen persönlichen Daten in den Tutor eingeben.'],
   ]},
   imprint: { title: 'Impressum', intro: 'DeutschIQ ist derzeit ein nicht-kommerzielles Portfolio- und Lernprojekt.', sections: [
@@ -14,10 +14,11 @@ const pages: Record<LegalKind, { title: string; intro: string; sections: Array<[
     ['Kontakt', 'Kontakt und Projektanfragen erfolgen derzeit über das öffentliche GitHub-Profil eldeville1-hue.'],
     ['Hinweis', 'Vor einem kommerziellen Betrieb müssen vollständige Anbieterangaben, eine ladungsfähige Anschrift und weitere rechtlich erforderliche Informationen ergänzt werden.'],
   ]},
-  terms: { title: 'Nutzungsbedingungen', intro: 'Mit der Nutzung der Demo gelten die folgenden einfachen Bedingungen.', sections: [
+  terms: { title: 'Nutzungsbedingungen', intro: 'Mit der Nutzung von DeutschIQ gelten die folgenden Bedingungen.', sections: [
     ['Lernhilfe', 'DeutschIQ ist eine Lernhilfe und garantiert kein bestimmtes Sprachniveau, Prüfungsergebnis oder fehlerfreie KI-Antworten.'],
     ['Zulässige Nutzung', 'Die Anwendung darf nicht missbräuchlich, automatisiert überlastend oder zur Verarbeitung rechtswidriger Inhalte genutzt werden.'],
-    ['Verfügbarkeit', 'Als Portfolio-Demo kann der Dienst zeitweise nicht verfügbar sein oder geändert werden.'],
+    ['Pro-Zugang', 'Ein über Telegram Stars gekaufter Pro-Zugang gilt 30 Tage ab erfolgreicher Zahlung. Der aktuelle Status und das Enddatum werden im Profil angezeigt.'],
+    ['Verfügbarkeit', 'Der Dienst kann für Wartung oder notwendige Produktänderungen vorübergehend eingeschränkt sein.'],
   ]},
 };
 

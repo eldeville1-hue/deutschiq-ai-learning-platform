@@ -31,7 +31,7 @@ class ContentQualityTests(unittest.TestCase):
         self.assertTrue(content["common_mistakes"])
         self.assertEqual([], validate_lesson_content(content))
 
-    def test_first_ten_lessons_are_gold_multimodal_lessons(self):
+    def test_complete_roadmap_has_30_multimodal_daily_challenges(self):
         source = Path(__file__).resolve().parents[1] / "seed_30_day_plan.py"
         tree = ast.parse(source.read_text(encoding="utf-8"))
         namespace = {}
@@ -42,7 +42,9 @@ class ContentQualityTests(unittest.TestCase):
             if isinstance(node, ast.FunctionDef) and node.name == "build_content":
                 exec(compile(ast.Module(body=[node], type_ignores=[]), str(source), "exec"), namespace)
 
-        for row in namespace["CURRICULUM"][:10]:
+        self.assertEqual(len(namespace["CURRICULUM"]), 30)
+        total_exercises = 0
+        for row in namespace["CURRICULUM"]:
             day, topic, rule, _, example, question, answer = row
             content = namespace["build_content"](day, topic, rule, example, question, answer)
             self.assertEqual(content["quality_version"], 2)
@@ -50,6 +52,9 @@ class ContentQualityTests(unittest.TestCase):
             kinds = {item["type"] for item in content["exercises"]}
             self.assertTrue({"listening", "production", "repeat"}.issubset(kinds))
             self.assertGreaterEqual(len(set(content["examples"])), 3)
+            self.assertFalse(content["title"].lower().startswith("tag "))
+            total_exercises += len(content["exercises"])
+        self.assertGreaterEqual(total_exercises, 120)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { FaPaperPlane, FaRobot, FaVolumeUp } from 'react-icons/fa';
+import { FaGraduationCap, FaPaperPlane, FaRobot, FaVolumeUp } from 'react-icons/fa';
 import { api } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
 import { topicLabel } from '../i18n/topics';
@@ -15,6 +15,7 @@ export const Tutor: React.FC = () => {
   const [question, setQuestion] = useState('');
   const [loading, setLoading] = useState(false);
   const [remaining, setRemaining] = useState(0);
+  const [isPro, setIsPro] = useState(false);
   const [ready, setReady] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [sendError, setSendError] = useState('');
@@ -26,6 +27,7 @@ export const Tutor: React.FC = () => {
         setContext(dashboard);
         setMessages(Array.isArray(tutor.messages) ? tutor.messages : []);
         setRemaining(Number(tutor.remaining || 0));
+        setIsPro(Boolean(tutor.pro || tutor.is_pro));
         setLoadError(false);
       })
       .catch(() => setLoadError(true))
@@ -46,7 +48,9 @@ export const Tutor: React.FC = () => {
     }
     finally { setLoading(false); }
   };
-  const quick = lang === 'ru' ? ['Объясни мою ошибку', 'Дай упражнение', 'Объясни правило'] : ['Erkläre meinen Fehler', 'Gib mir eine Übung', 'Erkläre die Regel'];
+  const quick = lang === 'ru'
+    ? [{ title: 'Разобрать ошибку', prompt: 'Объясни мою последнюю ошибку и дай пример' }, { title: 'Мини-тест', prompt: 'Дай мне одно упражнение по теме дня' }, { title: 'Объяснить правило', prompt: 'Объясни правило сегодняшней темы простыми словами' }]
+    : [{ title: 'Fehler klären', prompt: 'Erkläre meinen letzten Fehler und gib ein Beispiel' }, { title: 'Mini-Test', prompt: 'Gib mir eine Aufgabe zum heutigen Thema' }, { title: 'Regel erklären', prompt: 'Erkläre die heutige Regel einfach' }];
   const topics = (context.weaknesses || []).slice(0, 2).map((w: any) => topicLabel(String(w.name), lang)).join(' · ');
   const transcribe = async (audio: Blob) => {
     const result = await api.transcribeTutorSpeech(userId, audio);
@@ -62,17 +66,20 @@ export const Tutor: React.FC = () => {
   };
   return (
     <main className="app-shell tutor-page precision-tutor v30-page v30-tutor page-enter">
-      <header className="page-header"><div><p className="eyebrow">{lang === 'ru' ? 'ИИ-репетитор' : 'KI-Tutor'}</p><h1>{lang === 'ru' ? 'Разберём немецкий вместе' : 'Lass uns Deutsch üben'}</h1></div><span className="quota">{remaining} {lang === 'ru' ? 'из 3 доступно' : 'von 3 verfügbar'}</span></header>
+      <header className="page-header"><div><p className="eyebrow">{lang === 'ru' ? 'ИИ-РЕПЕТИТОР' : 'KI-TUTOR'}</p><h1>{lang === 'ru' ? 'Учебный чат' : 'Lernchat'}</h1></div><span className="quota">{isPro ? 'PRO' : `${remaining}/3`}</span></header>
       {!ready && <div className="rc-notice"><span>{lang === 'ru' ? 'Подготавливаем репетитора…' : 'Tutor wird vorbereitet…'}</span></div>}
       {loadError && <div className="rc-notice error"><span>{lang === 'ru' ? 'Не удалось загрузить историю' : 'Verlauf konnte nicht geladen werden'}</span><button type="button" onClick={loadTutor}>{lang === 'ru' ? 'Повторить' : 'Erneut laden'}</button></div>}
-      <div className="context-strip"><FaRobot /><span>{lang === 'ru' ? `Уровень ${context.level || 'A1'} · Сегодня: ${topics || 'артикли'}` : `Niveau ${context.level || 'A1'} · Heute: ${topics || 'Artikel'}`}</span></div>
-      {!messages.length && <div className="chat-empty"><span className="feature-icon"><FaRobot /></span><h2>{lang === 'ru' ? 'С чего начнём?' : 'Womit fangen wir an?'}</h2><p>{lang === 'ru' ? 'Я учитываю твой уровень и последние ошибки.' : 'Ich berücksichtige dein Niveau und deine letzten Fehler.'}</p></div>}
-      <div className="quick-actions">{quick.map(x => <button type="button" key={x} disabled={!ready || loading || remaining <= 0} onClick={() => send(x)}>{x}</button>)}</div>
-      <div className="chat-messages" aria-live="polite">{messages.map((m, i) => <div key={i} className={`message ${m.role}`}>{m.content}{m.role === 'assistant' && <button type="button" className="message-audio" onClick={() => speak(m.content)} aria-label={lang === 'ru' ? 'Прослушать ответ' : 'Antwort anhören'}><FaVolumeUp /></button>}</div>)}{loading && <div className="message assistant typing">•••</div>}<div ref={conversationEnd} /></div>
-      <VoiceRecorder lang={lang} disabled={loading || remaining <= 0} onAudio={transcribe} />
-      {remaining <= 0 && ready && <p className="v30-limit">{lang === 'ru' ? 'Лимит ответов на сегодня использован.' : 'Dein Tageslimit ist erreicht.'}</p>}
-      {sendError && <div className="rc-notice error"><span>{sendError}</span><button type="button" disabled={loading || remaining <= 0} onClick={() => send()}>{lang === 'ru' ? 'Повторить' : 'Erneut senden'}</button></div>}
-      <div className="chat-composer"><input aria-label={lang === 'ru' ? 'Вопрос репетитору' : 'Frage an den Tutor'} value={question} onChange={e => setQuestion(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); send(); } }} placeholder={lang === 'ru' ? 'Напиши вопрос…' : 'Schreib deine Frage…'} /><button type="button" aria-label={lang === 'ru' ? 'Отправить' : 'Senden'} onClick={() => send()} disabled={!ready || remaining <= 0 || !question.trim() || loading}><FaPaperPlane /></button></div>
+      <div className="context-strip"><FaGraduationCap /><span>{lang === 'ru' ? `Уровень ${context.level || 'A1'} · Фокус: ${topics || 'тема дня'}` : `Niveau ${context.level || 'A1'} · Fokus: ${topics || 'Tagesthema'}`}</span></div>
+      <section className={`tutor-workspace${messages.length ? ' has-messages' : ''}`}>
+        {!messages.length && <div className="chat-empty"><span className="feature-icon"><FaRobot /></span><h2>{lang === 'ru' ? 'Что разберём?' : 'Was möchtest du klären?'}</h2><p>{lang === 'ru' ? 'Выбери цель или задай свой вопрос. Ответ будет связан с твоим уровнем.' : 'Wähle ein Ziel oder stelle deine eigene Frage.'}</p><div className="quick-actions">{quick.map(item => <button type="button" key={item.title} disabled={!ready || loading || remaining <= 0} onClick={() => send(item.prompt)}>{item.title}<span>→</span></button>)}</div></div>}
+        <div className="chat-messages" aria-live="polite">{messages.map((m, i) => <div key={i} className={`message ${m.role}`}>{m.content}{m.role === 'assistant' && <button type="button" className="message-audio" onClick={() => speak(m.content)} aria-label={lang === 'ru' ? 'Прослушать ответ' : 'Antwort anhören'}><FaVolumeUp /></button>}</div>)}{loading && <div className="message assistant typing">•••</div>}<div ref={conversationEnd} /></div>
+      </section>
+      <section className="tutor-dock">
+        {remaining <= 0 && ready && <p className="v30-limit">{lang === 'ru' ? 'Бесплатные ответы закончились. Pro снимает дневной лимит.' : 'Die kostenlosen Antworten sind aufgebraucht. Pro entfernt das Tageslimit.'}</p>}
+        {sendError && <div className="rc-notice error"><span>{sendError}</span><button type="button" disabled={loading || remaining <= 0} onClick={() => send()}>{lang === 'ru' ? 'Повторить' : 'Erneut senden'}</button></div>}
+        <div className="chat-composer"><input aria-label={lang === 'ru' ? 'Вопрос репетитору' : 'Frage an den Tutor'} value={question} onChange={e => setQuestion(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); send(); } }} placeholder={lang === 'ru' ? 'Спроси о немецком…' : 'Frage auf Deutsch…'} /><button type="button" aria-label={lang === 'ru' ? 'Отправить' : 'Senden'} onClick={() => send()} disabled={!ready || remaining <= 0 || !question.trim() || loading}><FaPaperPlane /></button></div>
+        <VoiceRecorder lang={lang} disabled={loading || remaining <= 0} onAudio={transcribe} />
+      </section>
     </main>
   );
 };

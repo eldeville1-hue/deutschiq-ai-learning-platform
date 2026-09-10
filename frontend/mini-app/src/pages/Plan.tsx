@@ -32,6 +32,7 @@ export const Plan: React.FC = () => {
   const completed = weekLessons.filter(item => item.completed).length;
   const total = weekLessons.length || 7;
   const progress = Math.round((completed / total) * 100);
+  const routeCompleted = lessons.filter(item => item.completed).length;
   const weekdays = lang === 'ru' ? ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС'] : ['MO', 'DI', 'MI', 'DO', 'FR', 'SA', 'SO'];
 
   if (!dashboard) return <main className="app-shell rc-page"><div className="skeleton rc-hero-skeleton" /></main>;
@@ -41,25 +42,25 @@ export const Plan: React.FC = () => {
       <header className="rc-page-title">
         <p>{lang === 'ru' ? 'МАРШРУТ' : 'LERNROUTE'}</p>
         <h1>{dashboard.level || 'A1'} <span>→</span> {dashboard.targetLevel || 'A2'}</h1>
-        <span>{lang === 'ru' ? 'Твой путь по дням и темам' : 'Dein Weg nach Tagen und Themen'}</span>
+        <span>{lang === 'ru' ? `${routeCompleted} из ${lessons.length || 30} шагов завершено` : `${routeCompleted} von ${lessons.length || 30} Schritten abgeschlossen`}</span>
       </header>
 
       {loadError && <div className="rc-notice error"><span>{lang === 'ru' ? 'Не удалось полностью обновить маршрут' : 'Die Route konnte nicht vollständig aktualisiert werden'}</span><button type="button" onClick={load}>{lang === 'ru' ? 'Обновить' : 'Aktualisieren'}</button></div>}
 
       <section className="rc-plan-now">
-        <header><span>{lang === 'ru' ? 'СЕЙЧАС' : 'JETZT'}</span><small><FaClock /> {current?.estimated_time || 12} {lang === 'ru' ? 'мин' : 'Min.'}</small></header>
-        <div><small>{lang === 'ru' ? `День ${current?.day || 1}` : `Tag ${current?.day || 1}`}</small><h2>{topicLabel(current?.topic || 'word_order', lang)}</h2></div>
+        <header><span>{lang === 'ru' ? 'ЗАДАНИЕ НА СЕГОДНЯ' : 'HEUTIGE AUFGABE'}</span><small><FaClock /> {current?.estimated_time || 12} {lang === 'ru' ? 'мин' : 'Min.'}</small></header>
+        <div><small>{lang === 'ru' ? `ШАГ ${current?.day || 1} ПЕРСОНАЛЬНОГО МАРШРУТА` : `SCHRITT ${current?.day || 1} DEINER ROUTE`}</small><h2>{topicLabel(current?.topic || 'word_order', lang)}</h2></div>
         <button type="button" className="rc-primary" disabled={!current?.id} onClick={() => current?.id && navigate(withUser(`/lesson/${current.id}`))}><span><FaPlay /> {current?.id ? (lang === 'ru' ? 'Продолжить обучение' : 'Weiterlernen') : (lang === 'ru' ? 'Маршрут загружается' : 'Route wird geladen')}</span></button>
       </section>
 
       <section className="rc-week-progress">
-        <header><div><small>{lang === 'ru' ? `НЕДЕЛЯ ${week}` : `WOCHE ${week}`}</small><h2>{lang === 'ru' ? 'Ритм недели' : 'Wochenrhythmus'}</h2></div><strong>{completed}/{total}</strong></header>
+        <header><div><small>{lang === 'ru' ? `НЕДЕЛЯ ${week}` : `WOCHE ${week}`}</small><h2>{lang === 'ru' ? 'Календарь занятий' : 'Lernkalender'}</h2></div><strong>{completed}/{total}</strong></header>
         <div className="rc-week-days">{weekdays.map((day, index) => <div key={day} className={index < completed ? 'done' : index === completed ? 'current' : ''}><span>{day}</span><i>{index < completed ? <FaCheck /> : index + 1}</i></div>)}</div>
         <div className="rc-meter"><i style={{ width: `${progress}%` }} /></div>
       </section>
 
       <section className="rc-route">
-        <header><div><small>{lang === 'ru' ? 'ЭТАПЫ' : 'ETAPPEN'}</small><h2>{lang === 'ru' ? 'План этой недели' : 'Plan dieser Woche'}</h2></div><span>{progress}%</span></header>
+        <header><div><small>{lang === 'ru' ? 'МАРШРУТ' : 'ROUTE'}</small><h2>{lang === 'ru' ? 'Следующие навыки' : 'Nächste Fähigkeiten'}</h2></div><span>{progress}%</span></header>
         <div className="rc-route-list">
           {visible.map((lesson, index) => {
             const locked = Array.isArray(lesson.blocked_by) && lesson.blocked_by.length > 0;

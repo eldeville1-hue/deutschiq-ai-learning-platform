@@ -380,6 +380,75 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .profile-action-status { margin: -4px 0 0; color: var(--dq-muted); text-align: center; font-size: 10px; }
 .precision-profile .build-version { margin: 0; color: #596372; text-align: center; font-size: 9px; }
 
+/* Returning entry uses the exact same tokens and card language as the product. */
+.returning-intro.rc-returning {
+  width: min(100%, 480px); height: 100%; min-height: 0; margin: 0 auto;
+  padding: 24px 20px calc(28px + env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; align-items: stretch; justify-content: center; gap: 22px;
+  overflow: hidden; text-align: left; color: var(--dq-text);
+  background: radial-gradient(circle at 50% 5%, rgba(130,174,248,.09), transparent 31%);
+}
+.rc-returning > header { display: grid; grid-template-columns: 44px 1fr auto; align-items: center; gap: 11px; }
+.rc-returning > header .brand-mark { width: 44px; height: 44px; border-radius: 14px; background: linear-gradient(145deg, var(--dq-gold-soft), var(--dq-gold)); color: #11151c; }
+.rc-returning > header > span { font-size: 14px; font-weight: 850; }
+.rc-returning > header > b { min-width: 42px; height: 34px; display: grid; place-items: center; border: 1px solid rgba(244,191,85,.25); border-radius: 12px; color: var(--dq-gold-soft); font-size: 12px; }
+.rc-return-copy { display: grid; gap: 10px; margin: 22px 0 4px; }
+.rc-return-copy p { margin: 0; color: var(--dq-blue); font-size: 10px; font-weight: 850; letter-spacing: .16em; }
+.rc-return-copy h1 { max-width: 380px; margin: 0; font-size: clamp(31px, 9vw, 40px); line-height: 1.02; letter-spacing: -.055em; }
+.rc-return-copy > span { max-width: 350px; color: var(--dq-muted); font-size: 13px; line-height: 1.5; }
+.rc-returning .return-lesson { max-width: none; margin: 0; padding: 19px; display: grid; gap: 10px; border: 1px solid rgba(130,174,248,.18); border-radius: 21px; background: linear-gradient(145deg, #151f2e, #101721); box-shadow: var(--dq-shadow); }
+.rc-returning .return-lesson > small { color: var(--dq-blue); font-size: 9px; font-weight: 850; letter-spacing: .14em; }
+.rc-returning .return-lesson > b { font-size: 20px; line-height: 1.2; }
+.rc-returning .return-lesson > div { display: flex; gap: 16px; margin-top: 3px; color: #aab2bf; font-size: 11px; }
+.rc-returning .return-lesson > div span { display: flex; align-items: center; gap: 6px; color: #aab2bf; }
+.rc-returning .return-lesson svg { color: var(--dq-gold); }
+.rc-returning > .rc-primary { max-width: none; margin: 0; }
+
+/* Lesson is a focused mobile workspace; internal curriculum IDs never become UI hierarchy. */
+.lesson-flow.precision-lesson { width: min(100%,480px); height: 100%; min-height: 0; margin: 0 auto; padding: 58px 18px calc(22px + env(safe-area-inset-bottom)); overflow: hidden; color: var(--dq-text); background: radial-gradient(circle at 50% 0, rgba(130,174,248,.08), transparent 30%); }
+.precision-lesson > header { flex: 0 0 auto; min-height: 38px; display: grid; grid-template-columns: auto minmax(0,1fr); color: var(--dq-muted); font-size: 10px; }
+.precision-lesson > header .progress-bar { height: 5px; border-radius: 99px; background: rgba(255,255,255,.08); }
+.precision-lesson > header .progress-bar-fill { background: linear-gradient(90deg,var(--dq-blue),#a9c7ff); }
+.precision-lesson .lesson-step { min-height: 0; flex: 1; justify-content: flex-start; gap: 16px; padding: 24px 0 0; overflow-y: auto; scrollbar-width: none; }
+.precision-lesson .lesson-step::-webkit-scrollbar { display: none; }
+.precision-lesson .lesson-step .eyebrow { margin: 0; color: var(--dq-blue); font-size: 9px; font-weight: 850; letter-spacing: .15em; }
+.precision-lesson .lesson-step h1 { margin: 0; color: var(--dq-text); font-size: clamp(25px,7vw,32px); line-height: 1.15; letter-spacing: -.04em; }
+.precision-lesson .lesson-objective { color: var(--dq-muted); font-size: 13px; line-height: 1.5; }
+.precision-lesson .rule-card, .precision-lesson .example-sentence, .precision-lesson .retrieval-gate > p { padding: 17px; border: 1px solid var(--dq-border); border-radius: 17px; background: var(--dq-surface); color: var(--dq-text); font-size: 13px; line-height: 1.55; }
+.precision-lesson .primary-action { width: 100%; min-height: 52px; margin-top: auto; flex: 0 0 auto; border: 0; border-radius: 15px; background: linear-gradient(135deg,var(--dq-gold-soft),var(--dq-gold)); color: #11151c; font-size: 14px; font-weight: 850; }
+.precision-lesson .lesson-options { display: grid; gap: 9px; }
+.precision-lesson .lesson-options button, .precision-lesson .word-tokens button { min-height: 48px; border: 1px solid var(--dq-border); border-radius: 14px; background: var(--dq-surface); color: var(--dq-text); }
+.precision-lesson .lesson-options button.active { border-color: var(--dq-blue); background: rgba(130,174,248,.1); }
+.precision-lesson .lesson-answer { min-height: 112px; padding: 14px; border: 1px solid var(--dq-border-strong); border-radius: 16px; background: var(--dq-surface); color: var(--dq-text); resize: none; }
+.precision-lesson .confidence-check { padding: 13px; border: 1px solid var(--dq-border); border-radius: 15px; background: rgba(255,255,255,.02); }
+
+/* Tutor is a real chat viewport with one starter state and one composer dock. */
+.app-shell.precision-tutor { display: grid; grid-template-rows: auto auto minmax(0,1fr) auto; gap: 11px; overflow: hidden; padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
+.precision-tutor .page-header h1 { font-size: 25px; }
+.precision-tutor .tutor-workspace { min-height: 0; overflow: hidden; display: grid; }
+.precision-tutor .chat-empty { align-self: center; padding: 8px 2px; }
+.precision-tutor .quick-actions { width: 100%; display: grid; grid-template-columns: 1fr; gap: 7px; margin-top: 12px; }
+.precision-tutor .quick-actions button, .precision-tutor .quick-actions button:last-child { width: 100%; min-height: 43px; display: flex; align-items: center; justify-content: space-between; padding: 0 13px; border-radius: 13px; text-align: left; }
+.precision-tutor .quick-actions button span { color: var(--dq-gold); }
+.precision-tutor .chat-messages { height: 100%; min-height: 0; overflow-y: auto; padding: 5px 1px 12px; scrollbar-width: none; }
+.precision-tutor .chat-messages::-webkit-scrollbar { display: none; }
+.precision-tutor .tutor-workspace:not(.has-messages) .chat-messages { display: none; }
+.precision-tutor .tutor-dock { display: grid; gap: 6px; padding-top: 9px; border-top: 1px solid var(--dq-border); background: var(--dq-bg); }
+.precision-tutor .chat-composer { position: static; order: 1; min-height: 52px; box-shadow: none; }
+.precision-tutor .voice-recorder { order: 2; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.precision-tutor .voice-button { width: auto; min-height: 34px; padding: 0 10px; border: 0; background: transparent; font-size: 10px; }
+.precision-tutor .voice-recorder small { flex: 1; text-align: right; font-size: 8px; }
+
+.precision-profile .subscription-card { display: grid; gap: 10px; padding: 17px; border: 1px solid rgba(130,174,248,.18); border-radius: 18px; background: radial-gradient(circle at 100% 0,rgba(130,174,248,.13),transparent 44%),var(--dq-surface); }
+.precision-profile .subscription-card.active { border-color: rgba(244,191,85,.22); background: radial-gradient(circle at 100% 0,rgba(244,191,85,.13),transparent 44%),var(--dq-surface); }
+.subscription-card > header { display: flex; align-items: center; justify-content: space-between; color: var(--dq-blue); font-size: 9px; font-weight: 850; letter-spacing: .12em; }
+.subscription-card.active > header { color: var(--dq-gold); }
+.subscription-card > header span { display: flex; align-items: center; gap: 7px; }
+.subscription-card > header b { padding: 5px 8px; border-radius: 8px; background: rgba(130,174,248,.1); }
+.subscription-card h2 { margin: 2px 0 0; font-size: 18px; }
+.subscription-card p { margin: 0; color: var(--dq-muted); font-size: 11px; line-height: 1.48; }
+.subscription-card > button { min-height: 43px; display: flex; align-items: center; justify-content: space-between; padding: 0 13px; border: 0; border-radius: 12px; background: var(--dq-gold); color: #11151c; font-size: 11px; font-weight: 850; }
+
 @media (max-width: 360px) {
   .app-shell, .app-shell.compact-page, .rc-page, .lesson-flow.rc-review { padding-left: 15px; padding-right: 15px; }
   .bottom-nav span { font-size: 9px; }
