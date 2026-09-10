@@ -12,8 +12,9 @@ export const Plan: React.FC = () => {
   const [lessons, setLessons] = useState<any[]>([]);
   const [dashboard, setDashboard] = useState<any>(null);
   const [showWeek, setShowWeek] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const userId = getUserId();
-  useEffect(() => { Promise.all([api.getPlan(userId), api.getDashboard(userId)]).then(([p, d]) => { setLessons(Array.isArray(p) ? p : []); setDashboard(d); }).catch(() => setDashboard({ level: 'A1', targetLevel: 'A2' })); }, [userId]);
+  useEffect(() => { Promise.all([api.getPlan(userId), api.getDashboard(userId)]).then(([p, d]) => { setLessons(Array.isArray(p) ? p : []); setDashboard(d); setLoadError(false); }).catch(() => { setDashboard({ level: 'A1', targetLevel: 'A2' }); setLoadError(true); }); }, [userId]);
   const current = useMemo(() => lessons.find(x => !x.completed) || lessons[0], [lessons]);
   const week = Number(current?.week || 1);
   const weekLessons = lessons.filter(x => Number(x.week || 1) === week);
@@ -23,8 +24,9 @@ export const Plan: React.FC = () => {
 
   if (!dashboard) return <div className="app-shell"><div className="skeleton hero-skeleton" /></div>;
   return (
-    <main className="app-shell compact-page plan-page precision-plan page-enter">
+    <main className="app-shell compact-page plan-page precision-plan v30-page v30-plan page-enter">
       <header className="page-header"><div><p className="eyebrow">{lang === 'ru' ? 'Твой план' : 'Dein Lernplan'}</p><h1>{dashboard.level || 'A1'} → {dashboard.targetLevel || 'A2'}</h1></div></header>
+      {loadError && <div className="v30-status error"><span>{lang === 'ru' ? 'Не удалось обновить план' : 'Plan konnte nicht aktualisiert werden'}</span><button onClick={() => window.location.reload()}>{lang === 'ru' ? 'Повторить' : 'Erneut laden'}</button></div>}
       <section className="today-focus">
         <div className="section-heading"><span>{lang === 'ru' ? 'Сегодня' : 'Heute'}</span><small><FaClock /> {current?.estimated_time || 12} {lang === 'ru' ? 'мин' : 'Min.'}</small></div>
         <span className="day-label">{lang === 'ru' ? 'День' : 'Tag'} {current?.day || 1}</span>

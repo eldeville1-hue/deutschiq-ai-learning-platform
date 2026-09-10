@@ -28,7 +28,7 @@ export const Analytics: React.FC = () => {
   const missing = stats.filter((s: any) => !s.hasData);
   const errors = (data.weaknesses || []).slice(0, 3);
   return (
-    <main className="app-shell analytics-page precision-analysis page-enter">
+    <main className="app-shell analytics-page precision-analysis v30-page v30-analytics page-enter">
       <header className="analysis-title page-stagger-1"><p>{lang === 'ru' ? 'АНАЛИЗ' : 'ANALYSE'}</p><h1>{lang === 'ru' ? 'Твоя картина знаний' : 'Dein Wissensprofil'}</h1></header>
       <section className="knowledge-instrument page-stagger-2">
         <div className="instrument-level"><small>{lang === 'ru' ? 'ТЕКУЩИЙ УРОВЕНЬ' : 'AKTUELLES NIVEAU'}</small><strong>{data.level || 'A1'}</strong></div>

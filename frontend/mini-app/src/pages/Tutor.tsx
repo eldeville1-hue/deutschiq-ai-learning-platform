@@ -15,7 +15,9 @@ export const Tutor: React.FC = () => {
   const [question, setQuestion] = useState('');
   const [loading, setLoading] = useState(false);
   const [remaining, setRemaining] = useState(0);
-  useEffect(() => { Promise.all([api.getDashboard(userId), api.getTutorState(userId)]).then(([dashboard, tutor]) => { setContext(dashboard); setMessages(Array.isArray(tutor.messages) ? tutor.messages : []); setRemaining(Number(tutor.remaining || 0)); }).catch(() => undefined); }, [userId]);
+  const [ready, setReady] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  useEffect(() => { Promise.all([api.getDashboard(userId), api.getTutorState(userId)]).then(([dashboard, tutor]) => { setContext(dashboard); setMessages(Array.isArray(tutor.messages) ? tutor.messages : []); setRemaining(Number(tutor.remaining || 0)); setLoadError(false); }).catch(() => setLoadError(true)).finally(() => setReady(true)); }, [userId]);
   const send = async (text = question) => {
     if (!text.trim() || loading || remaining <= 0) return;
     const next = [...messages, { role: 'user' as const, content: text.trim() }];
@@ -39,13 +41,16 @@ export const Tutor: React.FC = () => {
     window.speechSynthesis.speak(utterance);
   };
   return (
-    <main className="app-shell tutor-page precision-tutor page-enter">
+    <main className="app-shell tutor-page precision-tutor v30-page v30-tutor page-enter">
       <header className="page-header"><div><p className="eyebrow">{lang === 'ru' ? 'ИИ-репетитор' : 'KI-Tutor'}</p><h1>{lang === 'ru' ? 'Разберём немецкий вместе' : 'Lass uns Deutsch üben'}</h1></div><span className="quota">{remaining} {lang === 'ru' ? 'из 3 доступно' : 'von 3 verfügbar'}</span></header>
+      {!ready && <div className="v30-status"><span>{lang === 'ru' ? 'Подготавливаем репетитора…' : 'Tutor wird vorbereitet…'}</span></div>}
+      {loadError && <div className="v30-status error"><span>{lang === 'ru' ? 'Не удалось загрузить историю' : 'Verlauf konnte nicht geladen werden'}</span><button onClick={() => window.location.reload()}>{lang === 'ru' ? 'Повторить' : 'Erneut laden'}</button></div>}
       <div className="context-strip"><FaRobot /><span>{lang === 'ru' ? `Уровень ${context.level || 'A1'} · Сегодня: ${topics || 'артикли'}` : `Niveau ${context.level || 'A1'} · Heute: ${topics || 'Artikel'}`}</span></div>
       {!messages.length && <div className="chat-empty"><span className="feature-icon"><FaRobot /></span><h2>{lang === 'ru' ? 'С чего начнём?' : 'Womit fangen wir an?'}</h2><p>{lang === 'ru' ? 'Я учитываю твой уровень и последние ошибки.' : 'Ich berücksichtige dein Niveau und deine letzten Fehler.'}</p></div>}
       <div className="quick-actions">{quick.map(x => <button key={x} onClick={() => send(x)}>{x}</button>)}</div>
       <div className="chat-messages">{messages.map((m, i) => <div key={i} className={`message ${m.role}`}>{m.content}{m.role === 'assistant' && <button className="message-audio" onClick={() => speak(m.content)} aria-label={lang === 'ru' ? 'Прослушать ответ' : 'Antwort anhören'}><FaVolumeUp /></button>}</div>)}{loading && <div className="message assistant typing">•••</div>}</div>
       <VoiceRecorder lang={lang} disabled={loading || remaining <= 0} onAudio={transcribe} />
+      {remaining <= 0 && ready && <p className="v30-limit">{lang === 'ru' ? 'Лимит ответов на сегодня использован.' : 'Dein Tageslimit ist erreicht.'}</p>}
       <div className="chat-composer"><input value={question} onChange={e => setQuestion(e.target.value)} onKeyDown={e => e.key === 'Enter' && send()} placeholder={lang === 'ru' ? 'Напиши вопрос…' : 'Schreib deine Frage…'} /><button onClick={() => send()} disabled={!question.trim() || loading}><FaPaperPlane /></button></div>
     </main>
   );

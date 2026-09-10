@@ -18,7 +18,7 @@ export const Profile: React.FC = () => {
   const navigate = useNavigate();
   const [data, setData] = useState<any>(null);
   const [lessons, setLessons] = useState<any[]>([]);
-  const [build, setBuild] = useState<any>({ version: '29.0.0', commit: 'local' });
+  const [build, setBuild] = useState<any>({ version: '30.0.0', commit: 'local' });
   const user = getTelegramUser();
   const rawName = user?.first_name || '';
   const name = /[\p{L}\p{N}]/u.test(rawName) ? rawName : (lang === 'ru' ? 'Ученик' : 'Lernende');
@@ -46,7 +46,7 @@ export const Profile: React.FC = () => {
   const weekdays = lang === 'ru' ? ['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'] : ['MO','DI','MI','DO','FR','SA','SO'];
 
   return (
-    <main className="app-shell profile-page precision-profile page-enter">
+    <main className="app-shell profile-page precision-profile v30-page v30-profile page-enter">
       <header className="profile-masthead page-stagger-1"><span>{lang === 'ru' ? 'ПРОФИЛЬ' : 'PROFIL'}</span><b>DeutschIQ</b></header>
       <section className="profile-passport page-stagger-1"><div className="avatar">{initials}</div><div><small>{lang === 'ru' ? 'УЧЕНИК' : 'LERNENDE'}</small><h1>{name}</h1><p>{lang === 'ru' ? 'Немецкий каждый день' : 'Deutsch jeden Tag'}</p></div><strong>{data.level || 'A1'}</strong></section>
       <section className="profile-numbers page-stagger-2"><div><strong><CountUp value={data.xp || 0} /></strong><span>XP</span></div><div><strong>{completed}</strong><span>{lang === 'ru' ? 'уроков' : 'Lektionen'}</span></div><div><strong>{activityCount}</strong><span>{lang === 'ru' ? 'активностей' : 'Aktivitäten'}</span></div></section>
