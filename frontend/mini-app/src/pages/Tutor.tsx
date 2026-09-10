@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { FaPaperPlane, FaRobot, FaVolumeUp } from 'react-icons/fa';
 import { api } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
@@ -17,13 +17,21 @@ export const Tutor: React.FC = () => {
   const [remaining, setRemaining] = useState(0);
   const [ready, setReady] = useState(false);
   const [loadError, setLoadError] = useState(false);
+  const [sendError, setSendError] = useState('');
+  const conversationEnd = useRef<HTMLDivElement>(null);
   useEffect(() => { Promise.all([api.getDashboard(userId), api.getTutorState(userId)]).then(([dashboard, tutor]) => { setContext(dashboard); setMessages(Array.isArray(tutor.messages) ? tutor.messages : []); setRemaining(Number(tutor.remaining || 0)); setLoadError(false); }).catch(() => setLoadError(true)).finally(() => setReady(true)); }, [userId]);
+  useEffect(() => { conversationEnd.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, [messages, loading]);
   const send = async (text = question) => {
     if (!text.trim() || loading || remaining <= 0) return;
     const next = [...messages, { role: 'user' as const, content: text.trim() }];
-    setMessages(next); setQuestion(''); setLoading(true);
-    try { const result = await api.askTutor({ user_id: userId, question: text.trim() }); setMessages([...next, { role: 'assistant', content: result.answer || result.response || String(result) }]); setRemaining(Number(result.remaining ?? Math.max(0, remaining - 1))); }
-    catch { setMessages([...next, { role: 'assistant', content: lang === 'ru' ? 'Не удалось получить ответ. Попробуй ещё раз.' : 'Die Antwort konnte nicht geladen werden. Versuche es noch einmal.' }]); }
+    setMessages(next); setQuestion(''); setLoading(true); setSendError('');
+    try { const result = await api.askTutor({ user_id: userId, question: text.trim(), history: messages.slice(-10) }); setMessages([...next, { role: 'assistant', content: result.answer || result.response || String(result) }]); setRemaining(Number(result.remaining ?? Math.max(0, remaining - 1))); }
+    catch (error: any) {
+      const limited = error?.response?.status === 429;
+      const message = limited ? (lang === 'ru' ? 'Лимит ответов на сегодня использован.' : 'Dein Tageslimit ist erreicht.') : (lang === 'ru' ? 'Связь прервалась. Вопрос сохранён — нажми «Повторить».' : 'Die Verbindung wurde unterbrochen. Tippe auf „Erneut senden“.');
+      setMessages(next); setQuestion(text.trim()); setSendError(message);
+      if (limited) setRemaining(0);
+    }
     finally { setLoading(false); }
   };
   const quick = lang === 'ru' ? ['Объясни мою ошибку', 'Дай упражнение', 'Объясни правило'] : ['Erkläre meinen Fehler', 'Gib mir eine Übung', 'Erkläre die Regel'];
@@ -47,11 +55,12 @@ export const Tutor: React.FC = () => {
       {loadError && <div className="v30-status error"><span>{lang === 'ru' ? 'Не удалось загрузить историю' : 'Verlauf konnte nicht geladen werden'}</span><button onClick={() => window.location.reload()}>{lang === 'ru' ? 'Повторить' : 'Erneut laden'}</button></div>}
       <div className="context-strip"><FaRobot /><span>{lang === 'ru' ? `Уровень ${context.level || 'A1'} · Сегодня: ${topics || 'артикли'}` : `Niveau ${context.level || 'A1'} · Heute: ${topics || 'Artikel'}`}</span></div>
       {!messages.length && <div className="chat-empty"><span className="feature-icon"><FaRobot /></span><h2>{lang === 'ru' ? 'С чего начнём?' : 'Womit fangen wir an?'}</h2><p>{lang === 'ru' ? 'Я учитываю твой уровень и последние ошибки.' : 'Ich berücksichtige dein Niveau und deine letzten Fehler.'}</p></div>}
-      <div className="quick-actions">{quick.map(x => <button key={x} onClick={() => send(x)}>{x}</button>)}</div>
-      <div className="chat-messages">{messages.map((m, i) => <div key={i} className={`message ${m.role}`}>{m.content}{m.role === 'assistant' && <button className="message-audio" onClick={() => speak(m.content)} aria-label={lang === 'ru' ? 'Прослушать ответ' : 'Antwort anhören'}><FaVolumeUp /></button>}</div>)}{loading && <div className="message assistant typing">•••</div>}</div>
+      <div className="quick-actions">{quick.map(x => <button type="button" key={x} disabled={!ready || loading || remaining <= 0} onClick={() => send(x)}>{x}</button>)}</div>
+      <div className="chat-messages" aria-live="polite">{messages.map((m, i) => <div key={i} className={`message ${m.role}`}>{m.content}{m.role === 'assistant' && <button type="button" className="message-audio" onClick={() => speak(m.content)} aria-label={lang === 'ru' ? 'Прослушать ответ' : 'Antwort anhören'}><FaVolumeUp /></button>}</div>)}{loading && <div className="message assistant typing">•••</div>}<div ref={conversationEnd} /></div>
       <VoiceRecorder lang={lang} disabled={loading || remaining <= 0} onAudio={transcribe} />
       {remaining <= 0 && ready && <p className="v30-limit">{lang === 'ru' ? 'Лимит ответов на сегодня использован.' : 'Dein Tageslimit ist erreicht.'}</p>}
-      <div className="chat-composer"><input value={question} onChange={e => setQuestion(e.target.value)} onKeyDown={e => e.key === 'Enter' && send()} placeholder={lang === 'ru' ? 'Напиши вопрос…' : 'Schreib deine Frage…'} /><button onClick={() => send()} disabled={!question.trim() || loading}><FaPaperPlane /></button></div>
+      {sendError && <div className="v31-status error"><span>{sendError}</span><button type="button" disabled={loading || remaining <= 0} onClick={() => send()}>{lang === 'ru' ? 'Повторить' : 'Erneut senden'}</button></div>}
+      <div className="chat-composer"><input aria-label={lang === 'ru' ? 'Вопрос репетитору' : 'Frage an den Tutor'} value={question} onChange={e => setQuestion(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); send(); } }} placeholder={lang === 'ru' ? 'Напиши вопрос…' : 'Schreib deine Frage…'} /><button type="button" aria-label={lang === 'ru' ? 'Отправить' : 'Senden'} onClick={() => send()} disabled={!ready || remaining <= 0 || !question.trim() || loading}><FaPaperPlane /></button></div>
     </main>
   );
 };

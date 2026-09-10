@@ -31,7 +31,7 @@ export const Plan: React.FC = () => {
         <div className="section-heading"><span>{lang === 'ru' ? 'Сегодня' : 'Heute'}</span><small><FaClock /> {current?.estimated_time || 12} {lang === 'ru' ? 'мин' : 'Min.'}</small></div>
         <span className="day-label">{lang === 'ru' ? 'День' : 'Tag'} {current?.day || 1}</span>
         <h2>{topicLabel(current?.topic || 'word_order', lang)}</h2>
-        <button className="primary-action" onClick={() => current?.id && navigate(withUser(`/lesson/${current.id}`))}><FaPlay /> {lang === 'ru' ? 'Начать' : 'Starten'}</button>
+        <button type="button" className="primary-action" disabled={!current?.id} onClick={() => current?.id && navigate(withUser(`/lesson/${current.id}`))}><FaPlay /> {current?.id ? (lang === 'ru' ? 'Начать' : 'Starten') : (lang === 'ru' ? 'План ещё загружается' : 'Plan wird geladen')}</button>
       </section>
       <section>
         <div className="section-heading"><span>{lang === 'ru' ? `Неделя ${week}` : `Woche ${week}`} · {topicLabel(weekTitle, lang)}</span><small>{completed}/{weekLessons.length || 7}</small></div>
@@ -42,7 +42,7 @@ export const Plan: React.FC = () => {
             const detail = locked
               ? `${lang === 'ru' ? 'Сначала' : 'Zuerst'}: ${lesson.blocked_by.map((topic: string) => topicLabel(topic, lang)).join(', ')}`
               : lesson.mastery == null ? `${lesson.estimated_time || 12} ${lang === 'ru' ? 'мин' : 'Min.'}` : `${lang === 'ru' ? 'Освоено' : 'Beherrscht'} ${lesson.mastery}%`;
-            return <button key={lesson.id} className="lesson-row" onClick={() => !locked && navigate(withUser(`/lesson/${lesson.id}`))}><span className="lesson-number">{lesson.completed ? '✓' : index + 1}</span><span><b>{topicLabel(lesson.topic, lang)}</b><small>{detail}</small></span>{locked ? <FaLock /> : <span>›</span>}</button>;
+            return <button type="button" key={lesson.id} className="lesson-row" disabled={locked} aria-label={`${topicLabel(lesson.topic, lang)}${locked ? ` — ${lang === 'ru' ? 'заблокировано' : 'gesperrt'}` : ''}`} onClick={() => !locked && navigate(withUser(`/lesson/${lesson.id}`))}><span className="lesson-number">{lesson.completed ? '✓' : index + 1}</span><span><b>{topicLabel(lesson.topic, lang)}</b><small>{detail}</small></span>{locked ? <FaLock /> : <span>›</span>}</button>;
           })}
           {!visible.length && <p className="empty-state">{lang === 'ru' ? 'Уроки появятся после загрузки плана.' : 'Die Lektionen erscheinen nach dem Laden des Plans.'}</p>}
         </div>

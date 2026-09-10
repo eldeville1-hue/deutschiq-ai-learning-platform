@@ -12,9 +12,17 @@ from app.core.telegram_auth import telegram_user_id, assert_owner
 from app.models.tutor import TutorMessage, TutorUsage
 from app.models.learning import ExerciseAttempt, TopicMastery
 from app.models.lesson import Lesson
+from app.services.tutor_fallback import fallback_answer
 from datetime import date
 
 router = APIRouter(prefix="/api/tutor", tags=["tutor"])
+
+def save_exchange(db: Session, user_id: int, question: str, answer: str, usage: "TutorUsage", daily_limit: int, mode: str):
+    db.add(TutorMessage(user_id=user_id, role="user", content=question))
+    db.add(TutorMessage(user_id=user_id, role="assistant", content=answer))
+    usage.questions_used += 1
+    db.commit()
+    return {"answer": answer, "remaining": max(0, daily_limit - usage.questions_used), "mode": mode}
 
 # Инициализация OpenAI
 client = None
@@ -47,13 +55,7 @@ async def ask_tutor(data: TutorRequest, db: Session = Depends(get_db), authentic
     if usage.questions_used >= daily_limit:
         raise HTTPException(status_code=429, detail="Daily tutor limit reached")
     
-    # 2. Если нет OpenAI ключа – вернуть заглушку
-    if not client:
-        return {
-            "answer": "🔑 OpenAI API ключ не настроен. Добавьте OPENAI_API_KEY в .env."
-        }
-    
-    # 3. Получить уровень и язык пользователя
+    # 2. Получить уровень и язык пользователя
     level = user.current_level or "A1"
     lang = user.language_code or "ru"
     diagnostic = db.query(DiagnosticResult).filter(
@@ -69,6 +71,12 @@ async def ask_tutor(data: TutorRequest, db: Session = Depends(get_db), authentic
     latest_lesson = db.query(Lesson).filter(Lesson.id == latest_lesson_id).first() if latest_lesson_id else None
     mastery_context = ", ".join(f"{item.topic}: {round(item.mastery)}%" for item in mastery) or "no practice data"
     error_context = ", ".join(item.topic for item in recent_errors) or "no recent errors"
+    fallback_topics = [item.topic for item in recent_errors] + weak_points + [item.topic for item in mastery]
+
+    # A provider outage or exhausted credit must not turn the tutor into a dead button.
+    if not client:
+        answer = fallback_answer(data.question, lang, level, fallback_topics)
+        return save_exchange(db, user.id, data.question, answer, usage, daily_limit, "local")
     
     # 4. Системный промпт
     system_prompt = f"""
@@ -109,15 +117,12 @@ Rules:
             max_tokens=400
         )
         answer = response.choices[0].message.content
-        db.add(TutorMessage(user_id=user.id, role="user", content=data.question))
-        db.add(TutorMessage(user_id=user.id, role="assistant", content=answer))
-        usage.questions_used += 1
-        db.commit()
-        return {"answer": answer, "remaining": max(0, daily_limit - usage.questions_used)}
+        return save_exchange(db, user.id, data.question, answer, usage, daily_limit, "ai")
         
     except Exception as e:
-        print(f"❌ OpenAI error: {e}")
-        raise HTTPException(status_code=500, detail=f"Ошибка AI: {str(e)}")
+        print(f"❌ OpenAI error, using local tutor: {e}")
+        answer = fallback_answer(data.question, lang, level, fallback_topics)
+        return save_exchange(db, user.id, data.question, answer, usage, daily_limit, "local")
 
 @router.get("/state/{user_id}")
 async def tutor_state(user_id: int, db: Session = Depends(get_db), authenticated_id: int = Depends(telegram_user_id)):
