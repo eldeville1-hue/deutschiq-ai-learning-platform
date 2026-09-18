@@ -2,6 +2,7 @@
 from app.core.database import SessionLocal
 from app.models.lesson import Lesson
 from app.models.learning import ExerciseAttempt, TopicMastery
+from app.models.user import User  # noqa: F401 - registers users for FK resolution
 
 
 CURRICULUM = [
