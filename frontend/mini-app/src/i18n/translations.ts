@@ -1,4 +1,4 @@
-type Language = 'de' | 'ru';
+import type { AppLanguage } from './language';
 
 const translations = {
   de: {
@@ -324,4 +324,17 @@ const translations = {
   },
 };
 
-export const getText = (lang: Language) => translations[lang];
+const english = {
+  nav: { overview: 'Overview', analysis: 'Analysis', plan: 'Plan', tutor: 'Tutor', profile: 'Profile' },
+  diagnostic: {
+    title: 'Placement test',
+    question: 'Question {current} of {total}',
+    finish: 'See my result',
+    loading: 'Loading questions…',
+    noQuestions: 'Questions are unavailable. Please try again.',
+    submit: 'See results',
+  },
+  common: { loading: 'Loading…', error: 'Error', back: 'Back', continue: 'Continue', save: 'Save', cancel: 'Cancel' },
+};
+
+export const getText = (lang: AppLanguage) => lang === 'en' ? english : translations[lang];

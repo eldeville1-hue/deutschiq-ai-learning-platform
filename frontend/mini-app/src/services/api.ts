@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { getTelegramInitData, getUserId } from '../utils/user';
+import type { AppLanguage } from '../i18n/language';
 
 const API_BASE = '';
 
@@ -53,10 +54,10 @@ export const api = {
   exportUserData: (userId: number) => apiClient.get(`/api/user-data/${userId}`).then(r => r.data),
   deleteUserData: (userId: number) => apiClient.delete(`/api/user-data/${userId}`),
   // Диагностика
-  getQuestions: (lang: string = 'ru') => {
+  getQuestions: (lang: AppLanguage = 'en') => {
     return cachedGet(`deutschiq-questions-${lang}`, () => apiClient.get(`/api/diagnostic/questions?lang=${lang}`).then(r => r.data));
   },
-  submitDiagnostic: (payload: { user_id: number; answers: Record<number, string> }) => {
+  submitDiagnostic: (payload: { user_id: number; answers: Record<number, string>; language: AppLanguage }) => {
     return apiClient.post('/api/diagnostic/submit', payload).then(r => r.data);
   },
 
@@ -65,7 +66,7 @@ export const api = {
     return apiClient.get(`/api/dashboard/${userId}`).then(r => r.data);
   },
   getUserState: (userId: number) => apiClient.get(`/api/user/state/${userId}`).then(r => r.data),
-  updateLanguage: (userId: number, language: 'ru' | 'de') =>
+  updateLanguage: (userId: number, language: AppLanguage) =>
     apiClient.put('/api/user/language', { user_id: userId, language }).then(r => r.data),
 
   // Ошибки
@@ -74,19 +75,19 @@ export const api = {
   },
 
   // План
-  getPlan: (userId: number) => {
-    return apiClient.get(`/api/plan/${userId}`).then(r => r.data);
+  getPlan: (userId: number, lang?: AppLanguage) => {
+    return apiClient.get(`/api/plan/${userId}${lang ? `?lang=${lang}` : ''}`).then(r => r.data);
   },
 
   // Уроки
-  getLesson: (lessonId: number) => {
-    return apiClient.get(`/api/lesson/${lessonId}`).then(r => r.data);
+  getLesson: (lessonId: number, lang: AppLanguage) => {
+    return apiClient.get(`/api/lesson/${lessonId}?lang=${lang}`).then(r => r.data);
   },
   startLesson: (payload: { user_id: number; lesson_id: number }) => apiClient.post('/api/lesson/start', payload).then(r => r.data),
   completeLesson: (payload: { user_id: number; lesson_id: number; session_id: string }) => {
     return apiClient.post('/api/lesson/complete', payload).then(r => r.data);
   },
-  checkLessonAnswer: (payload: { user_id: number; lesson_id: number; exercise_index: number; answer: string; session_id: string; confidence?: 'guess' | 'okay' | 'sure'; response_ms?: number }) =>
+  checkLessonAnswer: (payload: { user_id: number; lesson_id: number; exercise_index: number; answer: string; session_id: string; language: AppLanguage; confidence?: 'guess' | 'okay' | 'sure'; response_ms?: number }) =>
     apiClient.post('/api/lesson/check-answer', payload).then(r => r.data),
   transcribeSpeech: (payload: { user_id: number; lesson_id: number; exercise_index: number; session_id: string; audio: Blob }) => {
     const form = new FormData();
@@ -108,11 +109,11 @@ export const api = {
   getSpeechProgress: (userId: number) => apiClient.get(`/api/speech/progress/${userId}`).then(r => r.data),
 
   // Learning engine
-  getLearningToday: (userId: number) => apiClient.get(`/api/learning/today/${userId}`).then(r => r.data),
-  getReviews: (userId: number) => apiClient.get(`/api/learning/reviews/${userId}`).then(r => r.data),
+  getLearningToday: (userId: number, lang: AppLanguage) => apiClient.get(`/api/learning/today/${userId}?lang=${lang}`).then(r => r.data),
+  getReviews: (userId: number, lang: AppLanguage) => apiClient.get(`/api/learning/reviews/${userId}?lang=${lang}`).then(r => r.data),
 
   // AI-тьютор
-  askTutor: (payload: { user_id: number; question: string; history?: any[] }) => {
+  askTutor: (payload: { user_id: number; question: string; language: AppLanguage; history?: any[] }) => {
     return apiClient.post('/api/tutor/ask', payload).then(r => r.data);
   },
   getTutorState: (userId: number) => apiClient.get(`/api/tutor/state/${userId}`).then(r => r.data),

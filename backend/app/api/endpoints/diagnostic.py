@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Dict
+from copy import deepcopy
 from app.core.database import get_db
 from app.models.user import User
 from app.models.diagnostic import DiagnosticResult, DiagnosticMistake
@@ -46,21 +47,72 @@ MOCK_QUESTIONS = [
 
 PLACEMENT_QUESTION_IDS = {1, 2, 3, 21, 5, 6, 8, 22, 10, 11, 13, 23, 15, 16, 17, 24}
 
+DIAGNOSTIC_COPY = {
+    "de": {
+        1: {"explanation": "Bei ich lautet die Form habe."}, 2: {"explanation": "Auto ist sächlich: das Auto."},
+        3: {"text": "Wie heißt 'apple' auf Deutsch?", "explanation": "Apple heißt auf Deutsch Apfel."},
+        5: {"explanation": "Bewegungsverben bilden das Perfekt meist mit sein."}, 6: {"explanation": "Der maskuline Dativartikel ist dem."},
+        8: {"explanation": "Am Flughafen können Pass, Karte und Ticket nötig sein."}, 10: {"explanation": "Präsens Passiv: wird + Partizip II."},
+        11: {"explanation": "Ob leitet eine indirekte Ja-Nein-Frage ein."},
+        13: {"options": ["Mehr Gehalt", "Weniger Gehalt", "Eine Prämie", "Eine Kündigung"], "correct_answer": "Mehr Gehalt", "explanation": "Eine Gehaltserhöhung bedeutet mehr Gehalt."},
+        15: {"explanation": "In der indirekten Rede steht hier Konjunktiv I: habe."}, 16: {"explanation": "Alle drei Präpositionen können hier mit Genitiv stehen."},
+        17: {"options": ["Etwas ungeprüft kaufen", "Sehr günstig kaufen", "Erfolgreich handeln", "Den Verkäufer täuschen"], "correct_answer": "Etwas ungeprüft kaufen", "explanation": "Die Redewendung bedeutet, etwas ungeprüft zu kaufen."},
+        21: {"text": "Höre zu. Wohin geht die Person?", "options": ["In den Supermarkt", "Zum Bahnhof", "In die Schule", "Ins Krankenhaus"], "correct_answer": "In den Supermarkt", "explanation": "Die Person geht in den Supermarkt."},
+        22: {"text": "Höre zu. Wann fährt der Zug?", "options": ["Um 8:45", "Um 9:15", "Um 9:30", "Um 10:15"], "correct_answer": "Um 9:15", "explanation": "Viertel nach neun ist 9:15 Uhr."},
+        23: {"text": "Höre zu. Warum wurde die Besprechung verschoben?", "options": ["Kollegen sind krank", "Der Chef hat Urlaub", "Es gibt einen technischen Fehler", "Es ist ein Feiertag"], "correct_answer": "Kollegen sind krank", "explanation": "Mehrere Kollegen sind krank."},
+        24: {"text": "Höre zu. Welche Haltung hat die Person?", "options": ["Die Maßnahme löst das Problem", "Die Maßnahme ist sinnlos", "Die Absicht ist gut, die Wirkung aber fraglich", "Es gibt kein Problem"], "correct_answer": "Die Absicht ist gut, die Wirkung aber fraglich", "explanation": "Gut gemeint, aber kaum wirksam drückt Skepsis aus."},
+    },
+    "en": {
+        1: {"explanation": "With ich, the correct form is habe."}, 2: {"explanation": "Auto is neuter: das Auto."},
+        3: {"text": "What is 'apple' in German?", "explanation": "The German word for apple is Apfel."},
+        5: {"explanation": "Movement verbs usually form the perfect tense with sein."}, 6: {"explanation": "The masculine dative article is dem."},
+        8: {"explanation": "A passport, card and ticket may all be needed at an airport."}, 10: {"explanation": "Present passive: wird + past participle."},
+        11: {"explanation": "Ob introduces an indirect yes-or-no question."},
+        13: {"options": ["A pay rise", "A pay cut", "A bonus", "A dismissal"], "correct_answer": "A pay rise", "explanation": "Gehaltserhöhung means a pay rise."},
+        15: {"explanation": "Reported speech uses Konjunktiv I here: habe."}, 16: {"explanation": "All three prepositions can take the genitive here."},
+        17: {"options": ["Buy something without checking it", "Buy something cheaply", "Make a successful purchase", "Deceive the seller"], "correct_answer": "Buy something without checking it", "explanation": "The idiom means buying something without checking it first."},
+        21: {"text": "Listen. Where is the person going?", "options": ["To the supermarket", "To the station", "To school", "To hospital"], "correct_answer": "To the supermarket", "explanation": "The person is going to the supermarket."},
+        22: {"text": "Listen. When does the train leave?", "options": ["At 8:45", "At 9:15", "At 9:30", "At 10:15"], "correct_answer": "At 9:15", "explanation": "Viertel nach neun means 9:15."},
+        23: {"text": "Listen. Why was the meeting postponed?", "options": ["Some colleagues are ill", "The manager is on holiday", "There is a technical error", "It is a public holiday"], "correct_answer": "Some colleagues are ill", "explanation": "Several colleagues are ill."},
+        24: {"text": "Listen. What is the speaker's view?", "options": ["The measure will solve the problem", "The measure is pointless", "The intention is good but the effect is doubtful", "There is no problem"], "correct_answer": "The intention is good but the effect is doubtful", "explanation": "Good intentions but little effect expresses scepticism."},
+    },
+}
+
+def normalize_language(value: str | None) -> str:
+    code = (value or "en").lower().split("-")[0]
+    return code if code in ("de", "en", "ru") else "en"
+
+def localized_questions(language: str) -> list[dict]:
+    lang = normalize_language(language)
+    questions = deepcopy(MOCK_QUESTIONS)
+    if lang == "ru":
+        return questions
+    overrides = DIAGNOSTIC_COPY[lang]
+    generic = "Review this rule and try once more." if lang == "en" else "Wiederhole diese Regel und versuche es noch einmal."
+    for question in questions:
+        question.update(overrides.get(question["id"], {}))
+        if question["id"] not in overrides:
+            question["explanation"] = generic
+    return questions
+
 class SubmitAnswers(BaseModel):
     user_id: int
     answers: Dict[int, str]
+    language: str = "en"
 
 @router.get("/questions")
-async def get_questions(lang: str = "ru", authenticated_id: int = Depends(telegram_user_id)):
+async def get_questions(lang: str = "en", authenticated_id: int = Depends(telegram_user_id)):
+    questions = localized_questions(lang)
     return [
         {key: value for key, value in question.items() if key not in ("correct_answer", "explanation", "weak_tags")}
-        for question in MOCK_QUESTIONS if question["id"] in PLACEMENT_QUESTION_IDS
+        for question in questions if question["id"] in PLACEMENT_QUESTION_IDS
     ]
 
 @router.post("/submit")
 async def submit_diagnostic(data: SubmitAnswers, db: Session = Depends(get_db), authenticated_id: int = Depends(telegram_user_id)):
     assert_owner(authenticated_id, data.user_id)
-    result = calculate_level_and_scores(data.answers, MOCK_QUESTIONS)
+    questions = localized_questions(data.language)
+    result = calculate_level_and_scores(data.answers, questions)
     persisted = False
     try:
         user = db.query(User).filter(User.telegram_id == data.user_id).first()
@@ -79,7 +131,7 @@ async def submit_diagnostic(data: SubmitAnswers, db: Session = Depends(get_db), 
         )
         db.add(diag)
         db.flush()
-        for question in MOCK_QUESTIONS:
+        for question in questions:
             if question["id"] in data.answers and data.answers.get(question["id"]) != question["correct_answer"]:
                 db.add(DiagnosticMistake(
                     diagnostic_id=diag.id,
@@ -119,7 +171,7 @@ async def submit_diagnostic(data: SubmitAnswers, db: Session = Depends(get_db), 
                 "correct_answer": question["correct_answer"],
                 "explanation": question.get("explanation", ""),
             }
-            for question in MOCK_QUESTIONS
+            for question in questions
             if question["id"] in data.answers and data.answers.get(question["id"]) != question["correct_answer"]
         ],
     }

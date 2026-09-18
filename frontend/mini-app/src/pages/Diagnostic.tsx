@@ -7,6 +7,7 @@ import { getText } from '../i18n/translations';
 import { api } from '../services/api';
 import { getUserId, withUser } from '../utils/user';
 import './Diagnostic.css';
+import { tr } from '../i18n/language';
 
 export const Diagnostic: React.FC = () => {
   const navigate = useNavigate();
@@ -46,11 +47,11 @@ export const Diagnostic: React.FC = () => {
     setSubmitting(true);
     setSubmitError('');
     try {
-      const result = await api.submitDiagnostic({ user_id: userId, answers: finalAnswers });
+      const result = await api.submitDiagnostic({ user_id: userId, answers: finalAnswers, language: lang });
       sessionStorage.setItem(`deutschiq-result-${userId}`, JSON.stringify(result));
       navigate(withUser('/result'), { replace: true, state: { result } });
     } catch {
-      setSubmitError(lang === 'de' ? 'Die Auswertung konnte nicht geladen werden. Bitte versuche es erneut.' : 'Не удалось отправить тест. Проверьте соединение и попробуйте ещё раз.');
+      setSubmitError(tr(lang, 'Не удалось отправить тест. Проверь соединение и попробуй ещё раз.', 'Die Auswertung konnte nicht geladen werden. Bitte versuche es erneut.', 'Could not submit the test. Check your connection and try again.'));
       setSubmitting(false);
       setAnswerLocked(false);
     }
@@ -110,7 +111,7 @@ export const Diagnostic: React.FC = () => {
       <section className="diagnostic-question" key={q.id}>
         <span className="difficulty-pill">{q.difficulty}</span>
         <h1>{q.text}</h1>
-        {q.pillar === 'listening' && <button type="button" className="diagnostic-listen" onClick={playListeningPrompt}><FaVolumeUp />{lang === 'ru' ? 'Прослушать ещё раз' : 'Noch einmal anhören'}</button>}
+        {q.pillar === 'listening' && <button type="button" className="diagnostic-listen" onClick={playListeningPrompt}><FaVolumeUp />{tr(lang, 'Прослушать ещё раз', 'Noch einmal anhören', 'Listen again')}</button>}
         <div className="diagnostic-options">
           {q.options.map((opt: string, index: number) => (
             <button
@@ -128,7 +129,7 @@ export const Diagnostic: React.FC = () => {
       {submitting && (
         <div className="diagnostic-evaluating">
           <div className="analysis-loader" aria-hidden="true" />
-          <p>{lang === 'de' ? 'Deine Antworten werden ausgewertet…' : 'Анализируем ваши ответы…'}</p>
+          <p>{tr(lang, 'Анализируем твои ответы…', 'Deine Antworten werden ausgewertet…', 'Analysing your answers…')}</p>
         </div>
       )}
 
@@ -136,7 +137,7 @@ export const Diagnostic: React.FC = () => {
 
       {current === questions.length - 1 && (
         <button onClick={() => submitTest(answers)} disabled={submitting} className="primary-action diagnostic-finish">
-          {submitting ? (lang === 'de' ? 'Wird ausgewertet…' : 'Анализируем…') : t.diagnostic.finish}
+          {submitting ? tr(lang, 'Анализируем…', 'Wird ausgewertet…', 'Analysing…') : t.diagnostic.finish}
         </button>
       )}
     </main>

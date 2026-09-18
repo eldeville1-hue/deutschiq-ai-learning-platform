@@ -6,6 +6,7 @@ import { useLanguage } from "../context/LanguageContext";
 import { topicLabel } from "../i18n/topics";
 import { getUserId, withUser } from "../utils/user";
 import { VoiceRecorder } from "../components/VoiceRecorder";
+import { tr } from "../i18n/language";
 
 export const cleanTitle = (value: string) => value.replace(/^(?:tag|day|день)\s*\d+\s*[:·—-]\s*/i, "").trim();
 
@@ -36,7 +37,7 @@ export const Lesson: React.FC = () => {
   const total = 4 + exercises.length;
   useEffect(() => {
     Promise.all([
-      api.getLesson(Number(id)),
+      api.getLesson(Number(id), lang),
       api.startLesson({ user_id: getUserId(), lesson_id: Number(id) }),
     ])
       .then(([lessonData, session]) => {
@@ -45,7 +46,7 @@ export const Lesson: React.FC = () => {
         void api.trackEvent({ user_id: getUserId(), event_name: 'lesson_started', properties: { lesson_id: Number(id), topic: lessonData.topic } });
       })
       .catch(() => setLesson(false));
-  }, [id]);
+  }, [id, lang]);
   if (lesson === null)
     return (
       <div className="app-shell">
@@ -55,7 +56,7 @@ export const Lesson: React.FC = () => {
   if (!lesson)
     return (
       <div className="app-shell empty-state">
-        {lang === "ru" ? "Урок не найден" : "Lektion nicht gefunden"}
+        {tr(lang, "Урок не найден", "Lektion nicht gefunden", "Lesson not found")}
       </div>
     );
   const content = lesson.content || {};
@@ -96,11 +97,11 @@ export const Lesson: React.FC = () => {
     if (!answer.trim() || !sessionId || checking) return;
     setChecking(true); setCheckError('');
     try {
-      const result = await api.checkLessonAnswer({ user_id: getUserId(), lesson_id: Number(id), exercise_index: exerciseIndex, answer, session_id: sessionId, confidence, response_ms: Date.now() - startedAt });
+      const result = await api.checkLessonAnswer({ user_id: getUserId(), lesson_id: Number(id), exercise_index: exerciseIndex, answer, session_id: sessionId, language: lang, confidence, response_ms: Date.now() - startedAt });
       setChecked(Boolean(result.correct)); setFeedback(result);
       void api.trackEvent({ user_id: getUserId(), event_name: 'exercise_answered', properties: { lesson_id: Number(id), exercise_index: exerciseIndex, correct: Boolean(result.correct), confidence } });
     } catch {
-      setCheckError(lang === 'ru' ? 'Не удалось проверить. Попробуй ещё раз.' : 'Prüfung fehlgeschlagen. Versuche es erneut.');
+      setCheckError(tr(lang, 'Не удалось проверить. Попробуй ещё раз.', 'Prüfung fehlgeschlagen. Versuche es erneut.', 'Could not check your answer. Try again.'));
     } finally { setChecking(false); }
   };
   const finish = () =>
@@ -139,7 +140,7 @@ export const Lesson: React.FC = () => {
     <main className="lesson-flow precision-lesson rc-lesson fade-up">
       <header>
         <span>
-          {Math.min(step + 1, total)} {lang === "ru" ? "из" : "von"} {total}
+          {Math.min(step + 1, total)} {tr(lang, "из", "von", "of")} {total}
         </span>
         <div className="progress-bar">
           <div
@@ -151,14 +152,14 @@ export const Lesson: React.FC = () => {
       {step === 0 && (
         <section className="lesson-step">
           <p className="eyebrow">
-            {lang === "ru" ? "ТЕМА" : "THEMA"} ·{" "}
+            {tr(lang, "ТЕМА", "THEMA", "TOPIC")} ·{" "}
             {content.cefr || lesson.level}
           </p>
           <h1>{cleanTitle(topicLabel(content.title || lesson.topic, lang))}</h1>
           <div className="lesson-objective">{content.objective}</div>
           <div className="rule-card">{content.rule}</div>
           <button className="primary-action" onClick={next}>
-            {lang === "ru" ? "Посмотреть пример" : "Beispiel ansehen"}{" "}
+            {tr(lang, "Посмотреть пример", "Beispiel ansehen", "See an example")}{" "}
             <FaArrowRight />
           </button>
         </section>
@@ -166,26 +167,24 @@ export const Lesson: React.FC = () => {
       {step === 1 && (
         <section className="lesson-step">
           <p className="eyebrow">
-            {lang === "ru" ? "ПРИМЕР" : "BEISPIEL"}
+            {tr(lang, "ПРИМЕР", "BEISPIEL", "EXAMPLE")}
           </p>
           <h1>
-            {lang === "ru"
-              ? "Послушай фразу"
-              : "Höre den Satz"}
+            {tr(lang, "Послушай фразу", "Höre den Satz", "Listen to the sentence")}
           </h1>
           <div className="example-sentence">
             {content.examples?.[0] || "Heute lerne ich Deutsch."}
           </div>
           <div className="audio-controls">
             <button onClick={() => speak(0.9)}>
-              <FaVolumeUp /> {lang === "ru" ? "Обычно" : "Normal"}
+              <FaVolumeUp /> {tr(lang, "Обычно", "Normal", "Normal")}
             </button>
             <button onClick={() => speak(0.65)}>
-              <FaVolumeUp /> {lang === "ru" ? "Медленно" : "Langsam"}
+              <FaVolumeUp /> {tr(lang, "Медленно", "Langsam", "Slow")}
             </button>
           </div>
           <button className="primary-action" onClick={next}>
-            {lang === "ru" ? "Дальше" : "Weiter"}{" "}
+            {tr(lang, "Дальше", "Weiter", "Continue")}{" "}
             <FaArrowRight />
           </button>
         </section>
@@ -193,9 +192,9 @@ export const Lesson: React.FC = () => {
       {step === 2 && (
         <section className="lesson-step">
           <p className="eyebrow">
-            {lang === "ru" ? "СРАВНИ" : "VERGLEICHEN"}
+            {tr(lang, "СРАВНИ", "VERGLEICHEN", "COMPARE")}
           </p>
-          <h1>{lang === "ru" ? "Найди разницу" : "Erkenne den Unterschied"}</h1>
+          <h1>{tr(lang, "Найди разницу", "Erkenne den Unterschied", "Spot the difference")}</h1>
           <div className="mistake-contrast">
             {(content.common_mistakes || []).map(
               (item: string, index: number) => (
@@ -209,7 +208,7 @@ export const Lesson: React.FC = () => {
             )}
           </div>
           <button className="primary-action" onClick={next}>
-            {lang === "ru" ? "Понятно" : "Verstanden"}{" "}
+            {tr(lang, "Понятно", "Verstanden", "Got it")}{" "}
             <FaArrowRight />
           </button>
         </section>
@@ -217,15 +216,13 @@ export const Lesson: React.FC = () => {
       {step === 3 && (
         <section className="lesson-step retrieval-gate">
           <p className="eyebrow">
-            {lang === "ru" ? "ВСПОМНИ" : "ERINNERN"}
+            {tr(lang, "ВСПОМНИ", "ERINNERN", "RECALL")}
           </p>
           <h1>
-          {lang === "ru"
-            ? content.recall_prompt || "Закрой пример и вспомни правило своими словами"
-            : "Erinnere dich an die Regel mit eigenen Worten"}
+          {content.recall_prompt || tr(lang, "Закрой пример и вспомни правило своими словами", "Erinnere dich an die Regel mit eigenen Worten", "Hide the example and recall the rule in your own words")}
           </h1>
           <button className="primary-action" onClick={next}>
-            {lang === "ru" ? "К заданиям" : "Zu den Aufgaben"}{" "}
+            {tr(lang, "К заданиям", "Zu den Aufgaben", "Start exercises")}{" "}
             <FaArrowRight />
           </button>
         </section>
@@ -234,29 +231,21 @@ export const Lesson: React.FC = () => {
         <section className="lesson-step">
           <p className="eyebrow">
             {exercise.stage === "guided"
-              ? lang === "ru"
-                ? "С ПОДСКАЗКОЙ"
-                : "MIT HILFE"
+              ? tr(lang, "С ПОДСКАЗКОЙ", "MIT HILFE", "GUIDED")
               : exercise.stage === "transfer"
-                ? lang === "ru"
-                  ? "ТВОЯ ФРАЗА"
-                  : "DEIN SATZ"
-                : lang === "ru"
-                  ? "САМОСТОЯТЕЛЬНО"
-                  : "SELBSTSTÄNDIG"}{" "}
+                ? tr(lang, "ТВОЯ ФРАЗА", "DEIN SATZ", "YOUR SENTENCE")
+                : tr(lang, "САМОСТОЯТЕЛЬНО", "SELBSTSTÄNDIG", "INDEPENDENT")}{" "}
             · {exerciseIndex + 1}/{exercises.length}
             {retried[exerciseIndex]
-              ? lang === "ru"
-                ? " · вторая попытка"
-                : " · zweiter Versuch"
+              ? tr(lang, " · вторая попытка", " · zweiter Versuch", " · second attempt")
               : ""}
           </p>
-          <h1>{exercise.type === "repeat" ? (lang === "ru" ? "Повтори фразу" : "Sprich den Satz nach") : exercise.question}</h1>
+          <h1>{exercise.type === "repeat" ? tr(lang, "Повтори фразу", "Sprich den Satz nach", "Repeat the sentence") : exercise.question}</h1>
           {exercise.type === "repeat" && <div className="example-sentence">{content.audio_text || content.examples?.[0]}</div>}
           {exercise.type === "listening" && (
             <div className="listening-challenge">
-              <button type="button" onClick={() => speak(0.9)}><FaVolumeUp /> {lang === "ru" ? "Прослушать" : "Anhören"}</button>
-              <button type="button" onClick={() => speak(0.7)}><FaVolumeUp /> {lang === "ru" ? "Медленнее" : "Langsamer"}</button>
+              <button type="button" onClick={() => speak(0.9)}><FaVolumeUp /> {tr(lang, "Прослушать", "Anhören", "Listen")}</button>
+              <button type="button" onClick={() => speak(0.7)}><FaVolumeUp /> {tr(lang, "Медленнее", "Langsamer", "Slower")}</button>
             </div>
           )}
           {exercise.type === "choose" && Array.isArray(exercise.options) ? (
@@ -275,9 +264,7 @@ export const Lesson: React.FC = () => {
             <>
               <div className="reorder-answer">
                 {answer ||
-                  (lang === "ru"
-                    ? "Нажимай слова по порядку"
-                    : "Wörter antippen")}
+                  tr(lang, "Нажимай слова по порядку", "Wörter antippen", "Tap the words in order")}
               </div>
               <div className="word-tokens">
                 {(exercise.tokens || []).map((token: string, index: number) => (
@@ -298,7 +285,7 @@ export const Lesson: React.FC = () => {
                   }}
                 disabled={checked !== null}
               >
-                {lang === "ru" ? "Сбросить" : "Löschen"}
+                {tr(lang, "Сбросить", "Löschen", "Clear")}
               </button>
             </>
           ) : (
@@ -309,14 +296,10 @@ export const Lesson: React.FC = () => {
               onChange={(e) => setAnswer(e.target.value)}
               placeholder={
                 exercise.type === "production"
-                  ? lang === "ru"
-                    ? "Напиши свою немецкую фразу…"
-                    : "Schreibe deinen eigenen Satz…"
+                  ? tr(lang, "Напиши свою немецкую фразу…", "Schreibe deinen eigenen Satz…", "Write your own German sentence…")
                   : exercise.type === "listening"
-                    ? lang === "ru" ? "Напиши, что услышал…" : "Schreibe, was du hörst…"
-                  : lang === "ru"
-                    ? "Введи ответ"
-                    : "Antwort eingeben"
+                    ? tr(lang, "Напиши, что услышал…", "Schreibe, was du hörst…", "Type what you hear…")
+                  : tr(lang, "Введи ответ", "Antwort eingeben", "Enter your answer")
               }
               disabled={checked !== null}
             />
@@ -325,10 +308,10 @@ export const Lesson: React.FC = () => {
             )}
             {speechResult?.transcript && (
               <div className="speech-result">
-                <small>{lang === "ru" ? "РАСПОЗНАНО" : "ERKANNT"}</small>
+                <small>{tr(lang, "РАСПОЗНАНО", "ERKANNT", "RECOGNISED")}</small>
                 <strong>“{speechResult.transcript}”</strong>
-                {speechResult.match && <span>{lang === "ru" ? `Совпадение слов: ${speechResult.match.score}%` : `Wortübereinstimmung: ${speechResult.match.score}%`}</span>}
-                <em>{lang === "ru" ? "Это оценка распознанных слов, не акцента или фонетики." : "Bewertet werden erkannte Wörter, nicht Akzent oder Phonetik."}</em>
+                {speechResult.match && <span>{tr(lang, `Совпадение слов: ${speechResult.match.score}%`, `Wortübereinstimmung: ${speechResult.match.score}%`, `Word match: ${speechResult.match.score}%`)}</span>}
+                <em>{tr(lang, "Это оценка распознанных слов, не акцента или фонетики.", "Bewertet werden erkannte Wörter, nicht Akzent oder Phonetik.", "This measures recognised words, not accent or phonetics.")}</em>
               </div>
             )}
             </>
@@ -339,33 +322,33 @@ export const Lesson: React.FC = () => {
           {checked === null && (
             <div className="confidence-check">
               <small>
-                {lang === "ru" ? "Как было?" : "Wie war es?"}
+                {tr(lang, "Как было?", "Wie war es?", "How did it feel?")}
               </small>
               <div>
                 <button
                   className={confidence === "guess" ? "active" : ""}
                   onClick={() => setConfidence("guess")}
                 >
-                  {lang === "ru" ? "Сложно" : "Schwer"}
+                  {tr(lang, "Сложно", "Schwer", "Hard")}
                 </button>
                 <button
                   className={confidence === "okay" ? "active" : ""}
                   onClick={() => setConfidence("okay")}
                 >
-                  {lang === "ru" ? "Нормально" : "Okay"}
+                  {tr(lang, "Нормально", "Okay", "Okay")}
                 </button>
                 <button
                   className={confidence === "sure" ? "active" : ""}
                   onClick={() => setConfidence("sure")}
                 >
-                  {lang === "ru" ? "Легко" : "Leicht"}
+                  {tr(lang, "Легко", "Leicht", "Easy")}
                 </button>
               </div>
             </div>
           )}
           {checked === null ? (
             <button className="primary-action" onClick={check} disabled={!answer.trim() || !sessionId || checking}>
-              {checking ? (lang === 'ru' ? 'Проверяем…' : 'Wird geprüft…') : (lang === "ru" ? "Проверить" : "Prüfen")}
+              {checking ? tr(lang, 'Проверяем…', 'Wird geprüft…', 'Checking…') : tr(lang, "Проверить", "Prüfen", "Check")}
             </button>
           ) : (
             <div className={`answer-feedback ${checked ? "correct" : "wrong"}`}>
@@ -373,31 +356,26 @@ export const Lesson: React.FC = () => {
               <div>
                 <b>
                   {checked
-                    ? lang === "ru"
-                      ? "Верно"
-                      : "Richtig"
-                    : lang === "ru"
-                      ? "Попробуй ещё раз"
-                      : "Noch einmal"}
+                    ? tr(lang, "Верно", "Richtig", "Correct")
+                    : tr(lang, "Попробуй ещё раз", "Noch einmal", "Try again")}
                 </b>
                 <p>{feedback?.explanation}</p>
                 {!checked && feedback?.error_type && <div className="error-diagnosis">
-                  <small>{lang === 'ru' ? 'ПОДСКАЗКА' : 'HINWEIS'}</small>
+                  <small>{tr(lang, 'ПОДСКАЗКА', 'HINWEIS', 'TIP')}</small>
                   {Array.isArray(feedback.contrast) && feedback.contrast.map((line: string, index: number) => <p key={index}>{line}</p>)}
-                  <em>{lang === 'ru' ? feedback.retry_instruction : 'Nenne zuerst die Regel und bilde die Antwort dann neu.'}</em>
+                  <em>{feedback.retry_instruction || tr(lang, 'Сначала назови правило, затем составь ответ заново.', 'Nenne zuerst die Regel und bilde die Antwort dann neu.', 'State the rule first, then build the answer again.')}</em>
                 </div>}
                 {feedback?.production && (
                   <small>
-                    {lang === "ru"
-                      ? `${feedback.production_score != null ? `Оценка фразы: ${feedback.production_score}% · ` : ""}Исправленная модель: ${feedback.correct_answer}`
-                      : `${feedback.production_score != null ? `Satzbewertung: ${feedback.production_score}% · ` : ""}Korrigiertes Modell: ${feedback.correct_answer}`}
+                    {tr(lang,
+                      `${feedback.production_score != null ? `Оценка фразы: ${feedback.production_score}% · ` : ""}Исправленный вариант: ${feedback.correct_answer}`,
+                      `${feedback.production_score != null ? `Satzbewertung: ${feedback.production_score}% · ` : ""}Korrigiertes Modell: ${feedback.correct_answer}`,
+                      `${feedback.production_score != null ? `Sentence score: ${feedback.production_score}% · ` : ""}Corrected model: ${feedback.correct_answer}`)}
                   </small>
                 )}
                 {!checked && !retried[exerciseIndex] && (
                   <small>
-                    {lang === "ru"
-                      ? "Исправь ответ и попробуй снова."
-                      : "Korrigiere die Antwort und versuche es erneut."}
+                    {tr(lang, "Исправь ответ и попробуй снова.", "Korrigiere die Antwort und versuche es erneut.", "Correct your answer and try again.")}
                   </small>
                 )}
               </div>
@@ -418,41 +396,29 @@ export const Lesson: React.FC = () => {
           </span>
           <p className="eyebrow">
             {outcome?.passed === false
-              ? lang === "ru"
-                ? "НУЖНО ЕЩЁ ЗАКРЕПИТЬ"
-                : "NOCH EINMAL FESTIGEN"
-              : lang === "ru"
-                ? "УРОК ОСВОЕН"
-                : "LEKTION GESCHAFFT"}
+              ? tr(lang, "НУЖНО ЕЩЁ ЗАКРЕПИТЬ", "NOCH EINMAL FESTIGEN", "MORE PRACTICE NEEDED")
+              : tr(lang, "УРОК ОСВОЕН", "LEKTION GESCHAFFT", "LESSON COMPLETE")}
           </p>
           <h1>{outcome ? `${outcome.score}%` : "…"}</h1>
           <div className="lesson-score">
             <span>
-              {lang === "ru" ? "Освоение темы" : "Themenkenntnis"}
+              {tr(lang, "Освоение темы", "Themenkenntnis", "Topic mastery")}
               <b>{outcome?.mastery || 0}%</b>
             </span>
             <span>
-              {lang === "ru" ? "Получено" : "Erhalten"}
+              {tr(lang, "Получено", "Erhalten", "Earned")}
               <b>+{outcome?.xp_gained || 0} XP</b>
             </span>
           </div>
           <p>
             {outcome?.passed === false
-              ? lang === "ru"
-                ? "Урок не отмечен завершённым: повтори задания и достигни 70%."
-                : "Die Lektion bleibt offen. Wiederhole sie und erreiche 70%."
-              : lang === "ru"
-                ? "Результат рассчитан по твоим реальным ответам."
-                : "Das Ergebnis basiert auf deinen echten Antworten."}
+              ? tr(lang, "Урок не завершён: повтори задания и набери 70%.", "Die Lektion bleibt offen. Wiederhole sie und erreiche 70%.", "The lesson remains open. Repeat it and reach 70%.")
+              : tr(lang, "Результат рассчитан по твоим реальным ответам.", "Das Ergebnis basiert auf deinen echten Antworten.", "Your result is based on your actual answers.")}
           </p>
           <button className="primary-action" onClick={finish}>
             {outcome?.passed === false
-              ? lang === "ru"
-                ? "Повторить урок"
-                : "Lektion wiederholen"
-              : lang === "ru"
-                ? "Вернуться к плану"
-                : "Zurück zum Lernplan"}{" "}
+              ? tr(lang, "Повторить урок", "Lektion wiederholen", "Repeat lesson")
+              : tr(lang, "Вернуться к плану", "Zurück zum Lernplan", "Back to plan")}{" "}
             <FaArrowRight />
           </button>
         </section>

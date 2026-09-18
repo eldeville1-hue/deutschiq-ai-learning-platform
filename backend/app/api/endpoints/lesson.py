@@ -16,6 +16,7 @@ from app.models.learning import ExerciseAttempt, TopicMastery, LearningSession
 from app.services.learning_engine import mastery_update, next_stability, review_interval, retention_score, session_score
 from app.services.skill_graph import skill_for
 from app.services.content_quality import normalize_lesson_content
+from app.services.content_i18n import localize_lesson_content, normalize_language
 from app.services.production_feedback import evaluate_production
 from pathlib import Path
 
@@ -39,11 +40,11 @@ async def start_lesson(data: StartLessonRequest, db: Session = Depends(get_db), 
 
 # Получить урок
 @router.get("/{lesson_id}")
-async def get_lesson(lesson_id: int, db: Session = Depends(get_db), authenticated_id: int = Depends(telegram_user_id)):
+async def get_lesson(lesson_id: int, lang: str = "en", db: Session = Depends(get_db), authenticated_id: int = Depends(telegram_user_id)):
     lesson = db.query(Lesson).filter(Lesson.id == lesson_id).first()
     if not lesson:
         raise HTTPException(status_code=404, detail="Урок не найден")
-    public_content = copy.deepcopy(normalize_lesson_content(lesson.content or {}, lesson.topic, lesson.level))
+    public_content = localize_lesson_content(normalize_lesson_content(lesson.content or {}, lesson.topic, lesson.level), lang)
     audio_path = Path(__file__).resolve().parents[3] / "static" / "audio" / f"lesson_{lesson.id}.mp3"
     public_content["audio_url"] = f"/media/audio/lesson_{lesson.id}.mp3" if audio_path.exists() else None
     for exercise in public_content.get("exercises", []):
@@ -70,6 +71,7 @@ class CheckAnswerRequest(BaseModel):
     confidence: str | None = None
     response_ms: int | None = None
     session_id: str
+    language: str = "en"
 
 def normalize_answer(value: str) -> str:
     value = re.sub(r"[.!?;,]+$", "", value.strip().lower())
@@ -79,7 +81,7 @@ def normalize_answer(value: str) -> str:
 async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), authenticated_id: int = Depends(telegram_user_id)):
     assert_owner(authenticated_id, data.user_id)
     lesson = db.query(Lesson).filter(Lesson.id == data.lesson_id).first()
-    lesson_content = normalize_lesson_content(lesson.content or {}, lesson.topic, lesson.level) if lesson else {}
+    lesson_content = localize_lesson_content(normalize_lesson_content(lesson.content or {}, lesson.topic, lesson.level), data.language) if lesson else {}
     exercises = lesson_content.get("exercises", [])
     if data.exercise_index < 0 or data.exercise_index >= len(exercises):
         raise HTTPException(status_code=404, detail="Exercise not found")
@@ -87,7 +89,7 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
     accepted = exercise.get("accepted_answers") or [exercise.get("answer", "")]
     production_feedback = None
     if exercise.get("type") == "production":
-        production_feedback = await evaluate_production(data.answer, exercise, lesson_content)
+        production_feedback = await evaluate_production(data.answer, exercise, lesson_content, data.language)
         correct = production_feedback["correct"]
     else:
         correct = normalize_answer(data.answer) in {normalize_answer(str(item)) for item in accepted}
@@ -129,7 +131,7 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
         "error_type": error_type,
         "contrast": common_mistakes[:2] if not correct else [],
         "retry_instruction": (
-            "Сначала назови правило, затем составь ответ заново без копирования."
+            ({"ru": "Сначала назови правило, затем составь ответ заново без копирования.", "de": "Nenne zuerst die Regel und bilde dann den Satz neu.", "en": "State the rule first, then rebuild the sentence without copying."}[normalize_language(data.language)])
             if not correct else None
         ),
         "production": exercise.get("type") == "production",

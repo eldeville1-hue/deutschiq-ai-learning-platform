@@ -2,6 +2,7 @@ import { useCallback, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { FaArrowLeft } from 'react-icons/fa';
+import { tr } from '../i18n/language';
 
 const ROOT_ROUTES = new Set(['/', '/dashboard', '/analytics', '/plan', '/tutor', '/profile']);
 
@@ -30,5 +31,5 @@ export function AppBackButton() {
   }, [goBack, usesTelegramBack, visible, webApp]);
 
   if (!visible || usesTelegramBack) return null;
-  return <button className="app-back-button" type="button" onClick={goBack} aria-label={lang === 'ru' ? 'Назад' : 'Zurück'}><FaArrowLeft aria-hidden="true" /></button>;
+  return <button className="app-back-button" type="button" onClick={goBack} aria-label={tr(lang, 'Назад', 'Zurück', 'Back')}><FaArrowLeft aria-hidden="true" /></button>;
 }

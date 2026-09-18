@@ -15,6 +15,13 @@ from app.core.single_instance import acquire_bot_lock
 
 _start_cooldowns: dict[int, datetime] = {}
 
+def normalize_language(value: str | None) -> str:
+    code = (value or "en").lower().split("-")[0]
+    return code if code in ("ru", "de", "en") else "en"
+
+def tr(lang: str, ru: str, de: str, en: str) -> str:
+    return {"ru": ru, "de": de, "en": en}[normalize_language(lang)]
+
 def build_web_app_url(user_id: int, route: str = "") -> str:
     parts = urlsplit(settings.WEBAPP_URL)
     query = dict(parse_qsl(parts.query, keep_blank_values=True))
@@ -22,16 +29,12 @@ def build_web_app_url(user_id: int, route: str = "") -> str:
     return urlunsplit((parts.scheme, parts.netloc, path, urlencode(query), parts.fragment))
 
 def main_keyboard(user_id: int, lang: str = "ru") -> ReplyKeyboardMarkup:
-    if lang == "de":
-        open_text, progress_text, plan_text, diagnostic_text, help_text, placeholder = (
-            "🇩🇪 DeutschIQ öffnen", "📊 Mein Fortschritt", "🗓 Mein Lernplan",
-            "📝 Diagnose", "❓ Hilfe", "Aktion auswählen",
-        )
-    else:
-        open_text, progress_text, plan_text, diagnostic_text, help_text, placeholder = (
-            "🇩🇪 Открыть DeutschIQ", "📊 Мой прогресс", "🗓 Мой план",
-            "📝 Диагностика", "❓ Помощь", "Выберите действие",
-        )
+    open_text = tr(lang, "🇩🇪 Открыть DeutschIQ", "🇩🇪 DeutschIQ öffnen", "🇩🇪 Open DeutschIQ")
+    progress_text = tr(lang, "📊 Мой прогресс", "📊 Mein Fortschritt", "📊 My progress")
+    plan_text = tr(lang, "🗓 Мой план", "🗓 Mein Lernplan", "🗓 My plan")
+    diagnostic_text = tr(lang, "📝 Диагностика", "📝 Diagnose", "📝 Placement test")
+    help_text = tr(lang, "❓ Помощь", "❓ Hilfe", "❓ Help")
+    placeholder = tr(lang, "Выберите действие", "Aktion auswählen", "Choose an action")
     return ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text=open_text, web_app=WebAppInfo(url=build_web_app_url(user_id)))],
@@ -43,7 +46,7 @@ def main_keyboard(user_id: int, lang: str = "ru") -> ReplyKeyboardMarkup:
     )
 
 def user_language(user: User | None) -> str:
-    return user.language_code if user and user.language_code in ("ru", "de") else "ru"
+    return normalize_language(user.language_code if user else None)
 
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=settings.BOT_TOKEN)
@@ -65,7 +68,7 @@ async def cmd_start(message: Message):
     db = SessionLocal()
     user = db.query(User).filter(User.telegram_id == user_id).first()
     if not user:
-        user = User(telegram_id=user_id)
+        user = User(telegram_id=user_id, language_code=normalize_language(message.from_user.language_code))
         db.add(user)
         db.commit()
     lang = user_language(user)
@@ -76,24 +79,18 @@ async def cmd_start(message: Message):
     await bot.set_chat_menu_button(
         chat_id=message.chat.id,
         menu_button=MenuButtonWebApp(
-            text="DeutschIQ öffnen" if lang == "de" else "Открыть DeutschIQ",
+            text=tr(lang, "Открыть DeutschIQ", "DeutschIQ öffnen", "Open DeutschIQ"),
             web_app=WebAppInfo(url=build_web_app_url(user_id)),
         ),
     )
-    start_text = (
-        "Willkommen bei DeutschIQ!\n\nÖffne die App, bestimme dein Niveau "
-        "und erhalte deinen persönlichen Lernplan."
-        if lang == "de" else
-        "Добро пожаловать в DeutschIQ!\n\nОткрой приложение, определи свой уровень "
-        "и получи персональный план обучения."
-    )
+    start_text = tr(lang, "Добро пожаловать в DeutschIQ!\n\nОпредели уровень и начни персональный план.", "Willkommen bei DeutschIQ!\n\nBestimme dein Niveau und starte deinen persönlichen Lernplan.", "Welcome to DeutschIQ!\n\nFind your level and start your personal learning plan.")
     await message.answer(
         start_text,
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="DeutschIQ öffnen" if lang == "de" else "Открыть DeutschIQ", web_app=WebAppInfo(url=build_web_app_url(user_id)))]
+            [InlineKeyboardButton(text=tr(lang, "Открыть DeutschIQ", "DeutschIQ öffnen", "Open DeutschIQ"), web_app=WebAppInfo(url=build_web_app_url(user_id)))]
         ])
     )
-    await message.answer("Schnellmenü:" if lang == "de" else "Быстрое меню:", reply_markup=main_keyboard(user_id, lang))
+    await message.answer(tr(lang, "Меню:", "Menü:", "Menu:"), reply_markup=main_keyboard(user_id, lang))
 
 @dp.message(Command("subscribe"))
 async def cmd_subscribe(message: Message):
@@ -104,14 +101,13 @@ async def cmd_subscribe(message: Message):
         db.close()
     if settings.BETA_FREE_ACCESS:
         await message.answer(
-            "Alle Funktionen sind während der Beta kostenlos geöffnet." if lang == "de"
-            else "Во время бета-теста все функции доступны бесплатно."
+            tr(lang, "Во время тестирования все функции бесплатны.", "Während der Testphase sind alle Funktionen kostenlos.", "All features are free during testing.")
         )
         return
-    prices = [LabeledPrice(label="30 Tage Pro" if lang == "de" else "30 дней Pro", amount=700)]
+    prices = [LabeledPrice(label=tr(lang, "30 дней Pro", "30 Tage Pro", "30 days of Pro"), amount=700)]
     await message.answer_invoice(
         title="DeutschIQ Pro",
-        description=("30 Tage unbegrenzter KI-Tutor und alle Pro-Funktionen" if lang == "de" else "30 дней безлимитного ИИ-репетитора и всех Pro-функций"),
+        description=tr(lang, "30 дней Pro", "30 Tage Pro", "30 days of Pro"),
         payload=f"sub_{message.from_user.id}_monthly",
         provider_token="",
         currency="XTR",
@@ -127,21 +123,11 @@ async def cmd_help(message: Message):
     db.close()
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(
-            text="DeutschIQ öffnen" if lang == "de" else "Открыть DeutschIQ",
+            text=tr(lang, "Открыть DeutschIQ", "DeutschIQ öffnen", "Open DeutschIQ"),
             web_app=WebAppInfo(url=build_web_app_url(message.from_user.id)),
         )]
     ])
-    help_text = (
-        "So verwendest du DeutschIQ\n\n1. Starte die Diagnose.\n"
-        "2. Öffne deinen persönlichen Lernplan.\n3. Mache täglich eine kurze Lektion.\n"
-        "4. Stelle dem KI-Tutor deine Fragen.\n\n"
-        "Befehle:\n/start — App öffnen\n/help — Hilfe"
-        if lang == "de" else
-        "Как пользоваться DeutschIQ\n\n1. Пройди диагностику уровня.\n"
-        "2. Открой персональный план.\n3. Выполняй один короткий урок ежедневно.\n"
-        "4. Задавай вопросы ИИ-репетитору.\n\n"
-        "Команды:\n/start — открыть приложение\n/help — помощь"
-    )
+    help_text = tr(lang, "1. Пройди диагностику.\n2. Открой план.\n3. Выполняй один урок в день.\n4. Задавай вопросы репетитору.", "1. Starte die Diagnose.\n2. Öffne den Plan.\n3. Mache täglich eine Lektion.\n4. Frage den Tutor.", "1. Take the placement test.\n2. Open your plan.\n3. Complete one lesson a day.\n4. Ask the tutor.")
     await message.answer(
         help_text,
         reply_markup=keyboard,
@@ -150,25 +136,20 @@ async def cmd_help(message: Message):
 @dp.message(Command("profile"))
 @dp.message(F.text == "📊 Мой прогресс")
 @dp.message(F.text == "📊 Mein Fortschritt")
+@dp.message(F.text == "📊 My progress")
 async def cmd_profile(message: Message):
     db = SessionLocal()
     try:
         user = db.query(User).filter(User.telegram_id == message.from_user.id).first()
         if not user:
-            await message.answer("Сначала пройди диагностику в DeutschIQ.", reply_markup=main_keyboard(message.from_user.id))
+            await message.answer("Open DeutschIQ and take the placement test first.", reply_markup=main_keyboard(message.from_user.id, "en"))
             return
         lang = user_language(user)
-        tariff = ("Pro" if user.subscription_status == "pro" else ("Kostenlos" if lang == "de" else "Бесплатный"))
-        text = (
-            f"Dein Fortschritt\n\nNiveau: {user.current_level}\nXP: {user.xp or 0}\n"
-            f"Serie: {user.streak or 0} Tage\nTarif: {tariff}"
-            if lang == "de" else
-            f"Твой прогресс\n\nУровень: {user.current_level}\nОпыт: {user.xp or 0} XP\n"
-            f"Серия: {user.streak or 0} дней\nТариф: {tariff}"
-        )
+        tariff = "Pro" if user.subscription_status == "pro" else tr(lang, "Бесплатно", "Kostenlos", "Free")
+        text = tr(lang, f"Твой прогресс\n\nУровень: {user.current_level}\nXP: {user.xp or 0}\nСерия: {user.streak or 0}\nТариф: {tariff}", f"Dein Fortschritt\n\nNiveau: {user.current_level}\nXP: {user.xp or 0}\nSerie: {user.streak or 0}\nTarif: {tariff}", f"Your progress\n\nLevel: {user.current_level}\nXP: {user.xp or 0}\nStreak: {user.streak or 0}\nPlan: {tariff}")
         await message.answer(text, reply_markup=InlineKeyboardMarkup(inline_keyboard=[[
             InlineKeyboardButton(
-                text="Analyse öffnen" if lang == "de" else "Открыть подробный анализ",
+                text=tr(lang, "Открыть анализ", "Analyse öffnen", "Open analysis"),
                 web_app=WebAppInfo(url=build_web_app_url(message.from_user.id, "/analytics")),
             )
         ]]))
@@ -177,12 +158,14 @@ async def cmd_profile(message: Message):
 
 @dp.message(Command("plan"))
 async def cmd_plan(message: Message):
-    await message.answer("🗓 Твой персональный 30-дневный план:", reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Открыть план", web_app=WebAppInfo(url=build_web_app_url(message.from_user.id, "/plan")))]
+    db = SessionLocal(); user = db.query(User).filter(User.telegram_id == message.from_user.id).first(); lang = user_language(user); db.close()
+    await message.answer(tr(lang, "Твой учебный план:", "Dein Lernplan:", "Your learning plan:"), reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=tr(lang, "Открыть план", "Plan öffnen", "Open plan"), web_app=WebAppInfo(url=build_web_app_url(message.from_user.id, "/plan")))]
     ]))
 
 @dp.message(F.text == "❓ Помощь")
 @dp.message(F.text == "❓ Hilfe")
+@dp.message(F.text == "❓ Help")
 async def help_button(message: Message):
     await cmd_help(message)
 
@@ -195,15 +178,13 @@ async def successful_payment(message: Message):
     user_id = message.from_user.id
     db = SessionLocal()
     user = db.query(User).filter(User.telegram_id == user_id).first()
+    lang = user_language(user)
     if user:
         user.subscription_status = "pro"
         user.subscription_end_date = datetime.now() + timedelta(days=30)
         db.commit()
     db.close()
-    await message.answer(
-        "✅ Оплата успешна! Ваш Pro-план активен.\n"
-        "Возвращайтесь в Mini App, чтобы начать уроки."
-    )
+    await message.answer(tr(lang, "Оплата прошла. Pro активирован.", "Zahlung erfolgreich. Pro ist aktiv.", "Payment successful. Pro is active."))
 
 @dp.message(lambda m: m.web_app_data is not None)
 async def handle_web_app_data(message: Message):

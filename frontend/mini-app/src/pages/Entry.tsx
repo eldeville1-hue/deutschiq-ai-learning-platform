@@ -6,8 +6,10 @@ import { DiagnosticWelcome } from './DiagnosticWelcome';
 import { ReturningIntro } from './ReturningIntro';
 import { Navigate } from 'react-router-dom';
 import { BrandMark } from '../components/BrandMark';
+import type { AppLanguage } from '../i18n/language';
+import { normalizeLanguage, tr } from '../i18n/language';
 
-type UserState = { diagnostic_completed: boolean; language: 'ru' | 'de'; level: string };
+type UserState = { exists?: boolean; diagnostic_completed: boolean; language: AppLanguage; level: string };
 
 export const Entry: React.FC = () => {
   const { lang, setLanguage } = useLanguage();
@@ -19,14 +21,14 @@ export const Entry: React.FC = () => {
     setFailed(false);
     setState(null);
     api.getUserState(userId).then((value) => {
-      const remoteLanguage = value.language === 'de' ? 'de' : 'ru';
-      setLanguage(remoteLanguage, false);
-      setState(value);
+      const selectedLanguage = value.exists === false ? lang : normalizeLanguage(value.language);
+      setLanguage(selectedLanguage, value.exists === false);
+      setState({ ...value, language: selectedLanguage });
     }).catch(() => setFailed(true));
-  }, [setLanguage, userId]);
+  }, [lang, setLanguage, userId]);
   useEffect(() => { loadState(); }, [loadState]);
 
-  if (failed) return <main className="auth-error"><BrandMark label="DeutschIQ" /><h1>{lang === 'ru' ? 'Не удалось загрузить профиль' : 'Profil konnte nicht geladen werden'}</h1><p>{lang === 'ru' ? 'Проверь соединение и попробуй ещё раз.' : 'Prüfe deine Verbindung und versuche es erneut.'}</p><button className="primary-action" onClick={loadState}>{lang === 'ru' ? 'Повторить' : 'Erneut versuchen'}</button></main>;
+  if (failed) return <main className="auth-error"><BrandMark label="DeutschIQ" /><h1>{tr(lang, 'Не удалось загрузить профиль', 'Profil konnte nicht geladen werden', 'Could not load your profile')}</h1><p>{tr(lang, 'Проверь соединение и попробуй ещё раз.', 'Prüfe deine Verbindung und versuche es erneut.', 'Check your connection and try again.')}</p><button className="primary-action" onClick={loadState}>{tr(lang, 'Повторить', 'Erneut versuchen', 'Try again')}</button></main>;
   if (!state) return <main className="entry-loading"><BrandMark label="DeutschIQ" /><div className="analysis-loader" /></main>;
   if (!state.diagnostic_completed) return <DiagnosticWelcome />;
   const introKey = `deutschiq-intro-${userId}-${new Date().toISOString().slice(0, 10)}`;

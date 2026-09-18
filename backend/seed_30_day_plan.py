@@ -1,6 +1,7 @@
 """Добавляет/обновляет оригинальный 30-дневный roadmap DeutschIQ."""
 from app.core.database import SessionLocal
 from app.models.lesson import Lesson
+from app.models.learning import ExerciseAttempt, TopicMastery
 
 
 CURRICULUM = [
@@ -131,10 +132,15 @@ def build_content(day, topic, rule, example, question, answer):
 def seed():
     db = SessionLocal()
     try:
+        existing_lessons = db.query(Lesson).all()
         for day, topic, rule, tag, example, question, answer in CURRICULUM:
             content = build_content(day, topic, rule, example, question, answer)
-            existing = db.query(Lesson).filter(Lesson.topic == topic).first()
+            existing = next((item for item in existing_lessons if isinstance(item.content, dict) and item.content.get("day") == day), None)
+            if not existing:
+                existing = next((item for item in existing_lessons if item.topic == topic), None)
             if existing:
+                # Topic is a stable skill id; display titles live in localized content.
+                existing.topic = tag
                 existing.level = "A2" if day <= 21 else "B1"
                 existing.pillar = "grammar"
                 existing.weak_point_tags = [tag]
@@ -145,13 +151,42 @@ def seed():
                 db.add(Lesson(
                     level="A2" if day <= 21 else "B1",
                     pillar="grammar",
-                    topic=topic,
+                    topic=tag,
                     weak_point_tags=[tag],
                     content=content,
                     xp_reward=50,
                     estimated_time=15,
                     is_active=True,
                 ))
+        # Preserve existing learning data while moving from translated titles to
+        # stable skill ids. Multiple daily lessons may intentionally share a skill.
+        legacy_to_skill = {topic: tag for _day, topic, _rule, tag, _example, _question, _answer in CURRICULUM}
+        user_ids = {row.user_id for row in db.query(TopicMastery).all()}
+        for user_id in user_ids:
+            rows = db.query(TopicMastery).filter(TopicMastery.user_id == user_id).all()
+            for skill in set(legacy_to_skill.values()):
+                related = [row for row in rows if row.topic == skill or legacy_to_skill.get(row.topic) == skill]
+                if not related:
+                    continue
+                target = next((row for row in related if row.topic == skill), related[0])
+                for row in related:
+                    if row is target:
+                        continue
+                    target.mastery = max(target.mastery or 0, row.mastery or 0)
+                    target.attempts = (target.attempts or 0) + (row.attempts or 0)
+                    target.correct_total = (target.correct_total or 0) + (row.correct_total or 0)
+                    target.lapse_count = (target.lapse_count or 0) + (row.lapse_count or 0)
+                    target.correct_streak = max(target.correct_streak or 0, row.correct_streak or 0)
+                    target.stability_days = max(target.stability_days or 1, row.stability_days or 1)
+                    if row.last_answer_at and (not target.last_answer_at or row.last_answer_at > target.last_answer_at):
+                        target.last_answer_at = row.last_answer_at
+                    if row.next_review_at and (not target.next_review_at or row.next_review_at < target.next_review_at):
+                        target.next_review_at = row.next_review_at
+                    db.delete(row)
+                db.flush()
+                target.topic = skill
+        for old_topic, skill in legacy_to_skill.items():
+            db.query(ExerciseAttempt).filter(ExerciseAttempt.topic == old_topic).update({"topic": skill}, synchronize_session=False)
         db.commit()
         print("✅ Roadmap синхронизирован: 30 уроков, 10 эталонных мультимодальных уроков")
     finally:

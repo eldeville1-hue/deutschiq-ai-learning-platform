@@ -11,11 +11,14 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.core.telegram_auth import telegram_user_id, assert_owner
 from app.services.skill_graph import blocked_by
 from datetime import datetime, timezone
+from app.services.content_i18n import localize_lesson_content
+from app.services.content_i18n import normalize_language
+from app.services.content_quality import normalize_lesson_content
 
 router = APIRouter(prefix="/api/plan", tags=["plan"])
 
 @router.get("/{user_id}")
-async def get_plan(user_id: int, db: Session = Depends(get_db), authenticated_id: int = Depends(telegram_user_id)):
+async def get_plan(user_id: int, lang: str | None = None, db: Session = Depends(get_db), authenticated_id: int = Depends(telegram_user_id)):
     assert_owner(authenticated_id, user_id)
     try:
         user = db.query(User).filter(User.telegram_id == user_id).first()
@@ -36,12 +39,14 @@ async def get_plan(user_id: int, db: Session = Depends(get_db), authenticated_id
             3: "Der, Die, Das",
             4: "Perfekt",
         }
+        language = normalize_language(lang or user.language_code)
         return [{
             "id": lesson.id,
-            "day": index + 1,
-            "week": min(index // 7 + 1, 4),
-            "week_title": week_titles.get(min(index // 7 + 1, 4), "Wiederholung"),
+            "day": (lesson.content or {}).get("day", index + 1),
+            "week": (lesson.content or {}).get("week", min(index // 7 + 1, 4)),
+            "week_title": week_titles.get((lesson.content or {}).get("week", min(index // 7 + 1, 4)), "Wiederholung"),
             "topic": lesson.topic,
+            "title": localize_lesson_content(normalize_lesson_content(lesson.content or {}, lesson.topic, lesson.level), language).get("title", lesson.topic),
             "pillar": lesson.pillar,
             "level": lesson.level,
             "estimated_time": lesson.estimated_time,

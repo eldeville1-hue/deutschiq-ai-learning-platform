@@ -40,6 +40,36 @@ button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 button:focus-visible, a:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--dq-gold-soft); outline-offset: 2px; }
 button:disabled { cursor: not-allowed; opacity: .45; }
 
+.language-picker {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  width: 100%;
+  padding: 4px;
+  border: 1px solid var(--dq-border);
+  border-radius: 14px;
+  background: rgba(255,255,255,.025);
+}
+.language-picker button {
+  min-height: 40px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--dq-muted);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+}
+.language-picker button.active {
+  background: var(--dq-surface-strong);
+  color: var(--dq-gold-soft);
+  box-shadow: inset 0 0 0 1px rgba(244,191,85,.24);
+}
+.language-picker.compact { max-width: 250px; margin-inline: auto; }
+.profile-language { display: grid; gap: 10px; padding: 14px; border-bottom: 1px solid var(--dq-border); }
+.profile-language > strong { color: var(--dq-text); font-size: 12px; }
+.profile-language .language-picker { max-width: none; margin: 0; }
+
 .app-frame { position: relative; width: 100%; height: 100dvh; min-height: 0; overflow: hidden; background: radial-gradient(circle at 50% -10%, #172235 0, var(--dq-bg) 34%); }
 [data-theme="light"] .app-frame { background: radial-gradient(circle at 50% -10%, #fff8e7 0, var(--dq-bg) 36%); }
 .app-shell, .app-shell.compact-page, .rc-page {

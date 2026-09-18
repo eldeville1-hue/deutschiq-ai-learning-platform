@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { topicLabel } from '../i18n/topics';
 import { getUserId, withUser } from '../utils/user';
+import { tr } from '../i18n/language';
 
 export const Result: React.FC = () => {
   const location = useLocation();
@@ -16,22 +17,22 @@ export const Result: React.FC = () => {
     if (state) return setData(state);
     try { setData(JSON.parse(sessionStorage.getItem(`deutschiq-result-${getUserId()}`) || 'null')); } catch { setData(null); }
   }, [location]);
-  if (!data) return <main className="app-shell empty-state">{lang === 'ru' ? 'Результат не найден' : 'Ergebnis nicht gefunden'}</main>;
+  if (!data) return <main className="app-shell empty-state">{tr(lang, 'Результат не найден', 'Ergebnis nicht gefunden', 'Result not found')}</main>;
   const mistakes = Array.isArray(data.mistakes) ? data.mistakes : [];
   const visible = showAll ? mistakes : mistakes.slice(0, 3);
   const pillars = [
-    ['grammar', lang === 'ru' ? 'Грамматика' : 'Grammatik'],
-    ['vocabulary', lang === 'ru' ? 'Словарный запас' : 'Wortschatz'],
-    ['listening', lang === 'ru' ? 'Аудирование' : 'Hörverstehen'],
-    ['pronunciation', lang === 'ru' ? 'Произношение' : 'Aussprache'],
+    ['grammar', topicLabel('grammar', lang)],
+    ['vocabulary', topicLabel('vocabulary', lang)],
+    ['listening', topicLabel('listening', lang)],
+    ['pronunciation', topicLabel('pronunciation', lang)],
   ];
   const percent = (value: any) => Math.round(Number(value || 0) * (Number(value || 0) <= 10 ? 10 : 1));
   return (
     <main className="app-shell result-page page-enter">
-      <header className="result-hero"><span className="result-icon"><FaCheck /></span><p className="eyebrow">{lang === 'ru' ? 'Предварительная оценка' : 'Vorläufige Einstufung'}</p><h1>{data.level || 'A1'}</h1><strong>{Math.round(data.overall_score || 0)}%</strong><p>{lang === 'ru' ? 'Уровень подтверждён по сложности ответов. Навыки речи и аудирования уточнят его во время занятий.' : 'Das Niveau basiert auf der Schwierigkeit deiner Antworten. Sprechen und Hören präzisieren es im Training.'}</p></header>
-      <section className="result-skills">{pillars.map(([key, label]) => { const assessed = data.skill_status?.[key] !== 'not_assessed'; return <div key={key}><span>{label}</span><b>{assessed ? `${percent(data.pillars?.[key])}%` : (lang === 'ru' ? 'Не проверено' : 'Nicht geprüft')}</b>{assessed && <div className="progress-bar"><div className="progress-bar-fill progress-fill" style={{ width: `${percent(data.pillars?.[key])}%` }} /></div>}</div>; })}</section>
-      <section><div className="section-heading"><span>{lang === 'ru' ? `Ошибки диагностики · ${mistakes.length}` : `Fehler in der Diagnose · ${mistakes.length}`}</span></div><div className="result-mistakes">{visible.map((mistake: any, index: number) => <div key={index}><span>{index + 1}</span><p>{topicLabel(String(mistake.tag || mistake.weak_tag || mistake.topic || mistake.question || 'grammar'), lang)}</p></div>)}</div>{mistakes.length > 3 && <button className="secondary-action" onClick={() => setShowAll(v => !v)}>{showAll ? (lang === 'ru' ? 'Скрыть' : 'Weniger anzeigen') : (lang === 'ru' ? 'Показать все ошибки' : 'Alle Fehler anzeigen')} <FaChevronDown /></button>}</section>
-      <section className="next-step"><p className="eyebrow">{lang === 'ru' ? 'Следующий шаг' : 'Nächster Schritt'}</p><h2>{lang === 'ru' ? 'Исправим три главные слабые темы' : 'Wir trainieren deine drei wichtigsten Lücken'}</h2><button className="primary-action" onClick={() => navigate(withUser('/plan'))}>{lang === 'ru' ? 'Открыть мой план' : 'Meinen Lernplan öffnen'} <FaArrowRight /></button></section>
+      <header className="result-hero"><span className="result-icon"><FaCheck /></span><p className="eyebrow">{tr(lang, 'Предварительная оценка', 'Vorläufige Einstufung', 'Initial assessment')}</p><h1>{data.level || 'A1'}</h1><strong>{Math.round(data.overall_score || 0)}%</strong><p>{tr(lang, 'Уровень определён по сложности ответов. Говорение и аудирование уточнят его во время занятий.', 'Das Niveau basiert auf der Schwierigkeit deiner Antworten. Sprechen und Hören präzisieren es im Training.', 'Your level is based on answer difficulty. Speaking and listening practice will refine it.')}</p></header>
+      <section className="result-skills">{pillars.map(([key, label]) => { const assessed = data.skill_status?.[key] !== 'not_assessed'; return <div key={key}><span>{label}</span><b>{assessed ? `${percent(data.pillars?.[key])}%` : tr(lang, 'Не проверено', 'Nicht geprüft', 'Not assessed')}</b>{assessed && <div className="progress-bar"><div className="progress-bar-fill progress-fill" style={{ width: `${percent(data.pillars?.[key])}%` }} /></div>}</div>; })}</section>
+      <section><div className="section-heading"><span>{tr(lang, `Ошибки диагностики · ${mistakes.length}`, `Fehler in der Diagnose · ${mistakes.length}`, `Placement mistakes · ${mistakes.length}`)}</span></div><div className="result-mistakes">{visible.map((mistake: any, index: number) => <div key={index}><span>{index + 1}</span><p>{topicLabel(String(mistake.tag || mistake.weak_tag || mistake.topic || mistake.question || 'grammar'), lang)}</p></div>)}</div>{mistakes.length > 3 && <button className="secondary-action" onClick={() => setShowAll(v => !v)}>{showAll ? tr(lang, 'Скрыть', 'Weniger anzeigen', 'Show less') : tr(lang, 'Показать все ошибки', 'Alle Fehler anzeigen', 'Show all mistakes')} <FaChevronDown /></button>}</section>
+      <section className="next-step"><p className="eyebrow">{tr(lang, 'Следующий шаг', 'Nächster Schritt', 'Next step')}</p><h2>{tr(lang, 'Исправим три главные слабые темы', 'Wir trainieren deine drei wichtigsten Lücken', 'Train your three weakest areas')}</h2><button className="primary-action" onClick={() => navigate(withUser('/plan'))}>{tr(lang, 'Открыть мой план', 'Meinen Lernplan öffnen', 'Open my plan')} <FaArrowRight /></button></section>
     </main>
   );
 };

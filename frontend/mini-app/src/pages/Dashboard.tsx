@@ -6,6 +6,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { topicLabel } from '../i18n/topics';
 import { getUserId, withUser } from '../utils/user';
 import { BrandMark } from '../components/BrandMark';
+import { tr } from '../i18n/language';
 
 export const Dashboard: React.FC = () => {
   const { lang } = useLanguage();
@@ -20,8 +21,8 @@ export const Dashboard: React.FC = () => {
     void api.trackEvent({ user_id: userId, event_name: 'dashboard_viewed' });
     const [dashboard, plan, today] = await Promise.allSettled([
       api.getDashboard(userId),
-      api.getPlan(userId),
-      api.getLearningToday(userId),
+      api.getPlan(userId, lang),
+      api.getLearningToday(userId, lang),
     ]);
     if (dashboard.status === 'fulfilled') {
       setData(dashboard.value);
@@ -35,7 +36,7 @@ export const Dashboard: React.FC = () => {
       setLesson(items.find((item: any) => !item.completed) || items[0]);
     }
     setLearning(today.status === 'fulfilled' ? today.value : null);
-  }, [userId]);
+  }, [lang, userId]);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -44,9 +45,11 @@ export const Dashboard: React.FC = () => {
   const topic = selectedLesson?.topic || data.weaknesses?.[0]?.name || 'haben_conjugation';
   const weak = data.weaknesses?.[0];
   const hour = new Date().getHours();
-  const greeting = lang === 'ru'
-    ? (hour < 12 ? 'Доброе утро' : hour < 18 ? 'Добрый день' : 'Добрый вечер')
-    : (hour < 12 ? 'Guten Morgen' : hour < 18 ? 'Guten Tag' : 'Guten Abend');
+  const greeting = hour < 12
+    ? tr(lang, 'Доброе утро', 'Guten Morgen', 'Good morning')
+    : hour < 18
+      ? tr(lang, 'Добрый день', 'Guten Tag', 'Good afternoon')
+      : tr(lang, 'Добрый вечер', 'Guten Abend', 'Good evening');
   const startLesson = () => navigate(selectedLesson?.id ? withUser(`/lesson/${selectedLesson.id}`) : withUser('/plan'));
 
   return (
@@ -56,31 +59,31 @@ export const Dashboard: React.FC = () => {
         <div className="rc-home-stats"><span><b>{data.level || 'A1'}</b><small>{data.xp || 0} XP</small></span><span><FaFire /><b>{data.streak || 0}</b></span></div>
       </header>
 
-      {loadError && <div className="rc-notice error"><span>{lang === 'ru' ? 'Показываем сохранённые данные' : 'Gespeicherte Daten werden angezeigt'}</span><button type="button" onClick={load}>{lang === 'ru' ? 'Обновить' : 'Aktualisieren'}</button></div>}
+      {loadError && <div className="rc-notice error"><span>{tr(lang, 'Показываем сохранённые данные', 'Gespeicherte Daten werden angezeigt', 'Showing saved data')}</span><button type="button" onClick={load}>{tr(lang, 'Обновить', 'Aktualisieren', 'Refresh')}</button></div>}
 
       <header className="rc-page-title rc-home-title">
-        <p>{lang === 'ru' ? 'СЕГОДНЯ' : 'HEUTE'}</p>
-        <h1>{lang === 'ru' ? 'Твой урок' : 'Deine Lektion'}</h1>
+        <p>{tr(lang, 'СЕГОДНЯ', 'HEUTE', 'TODAY')}</p>
+        <h1>{tr(lang, 'Твой урок', 'Deine Lektion', 'Your lesson')}</h1>
       </header>
 
       <section className="rc-focus-card">
-        <header><span><FaBrain /> {lang === 'ru' ? 'ГЛАВНАЯ ТЕМА' : 'DEIN THEMA'}</span><b>{data.level || selectedLesson?.level || 'A1'}</b></header>
-        <h2>{topicLabel(topic, lang)}</h2>
+        <header><span><FaBrain /> {tr(lang, 'ГЛАВНАЯ ТЕМА', 'DEIN THEMA', 'YOUR FOCUS')}</span><b>{data.level || selectedLesson?.level || 'A1'}</b></header>
+        <h2>{selectedLesson?.title || topicLabel(topic, lang)}</h2>
         <p>{selectedLesson?.reason === 'review_due'
-          ? (lang === 'ru' ? 'Пора закрепить эту тему.' : 'Zeit, dieses Thema zu festigen.')
-          : (lang === 'ru' ? 'Выбрано по твоему прогрессу.' : 'Passend zu deinem Fortschritt.')}</p>
-        <button type="button" className="rc-primary" onClick={startLesson}><span><FaPlay /> {selectedLesson?.id ? (lang === 'ru' ? 'Начать' : 'Starten') : (lang === 'ru' ? 'Открыть план' : 'Plan öffnen')}</span><FaArrowRight /></button>
+          ? tr(lang, 'Пора закрепить эту тему.', 'Zeit, dieses Thema zu festigen.', 'Time to strengthen this skill.')
+          : tr(lang, 'Выбрано по твоему прогрессу.', 'Passend zu deinem Fortschritt.', 'Selected from your progress.')}</p>
+        <button type="button" className="rc-primary" onClick={startLesson}><span><FaPlay /> {selectedLesson?.id ? tr(lang, 'Начать', 'Starten', 'Start') : tr(lang, 'Открыть план', 'Plan öffnen', 'Open plan')}</span><FaArrowRight /></button>
       </section>
 
-      <section className="rc-home-actions" aria-label={lang === 'ru' ? 'Дополнительные действия' : 'Weitere Aktionen'}>
+      <section className="rc-home-actions" aria-label={tr(lang, 'Дополнительные действия', 'Weitere Aktionen', 'More actions')}>
         <button type="button" onClick={() => navigate(withUser('/review'))}>
           <span className="rc-action-icon"><FaRedoAlt /></span>
-          <span><small>{lang === 'ru' ? 'ПОВТОРИТЬ' : 'WIEDERHOLEN'}</small><strong>{learning?.due_count ? `${learning.due_count} ${lang === 'ru' ? 'темы' : 'Themen'}` : (lang === 'ru' ? 'Всё готово' : 'Alles erledigt')}</strong></span>
+          <span><small>{tr(lang, 'ПОВТОРИТЬ', 'WIEDERHOLEN', 'REVIEW')}</small><strong>{learning?.due_count ? `${learning.due_count} ${tr(lang, 'темы', 'Themen', 'topics')}` : tr(lang, 'Всё готово', 'Alles erledigt', 'All done')}</strong></span>
           <FaArrowRight />
         </button>
         <button type="button" onClick={() => navigate(withUser('/mistakes'))} disabled={!weak}>
           <span className="rc-action-icon danger"><FaExclamationCircle /></span>
-          <span><small>{lang === 'ru' ? 'ОШИБКИ' : 'FEHLER'}</small><strong>{weak ? topicLabel(String(weak.name), lang) : (lang === 'ru' ? 'Ошибок нет' : 'Keine Fehler')}</strong></span>
+          <span><small>{tr(lang, 'ОШИБКИ', 'FEHLER', 'MISTAKES')}</small><strong>{weak ? topicLabel(String(weak.name), lang) : tr(lang, 'Ошибок нет', 'Keine Fehler', 'No mistakes')}</strong></span>
           <FaArrowRight />
         </button>
       </section>

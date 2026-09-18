@@ -15,6 +15,7 @@ from app.models.lesson import Lesson
 from app.services.tutor_fallback import fallback_answer
 from datetime import date
 from app.services.subscription import has_active_pro
+from app.services.content_i18n import normalize_language
 
 router = APIRouter(prefix="/api/tutor", tags=["tutor"])
 
@@ -38,6 +39,7 @@ class TutorRequest(BaseModel):
     user_id: int
     question: str
     history: Optional[List[dict]] = None   # <-- НОВОЕ ПОЛЕ
+    language: str = "en"
 
 @router.post("/ask")
 async def ask_tutor(data: TutorRequest, db: Session = Depends(get_db), authenticated_id: int = Depends(telegram_user_id)):
@@ -58,7 +60,7 @@ async def ask_tutor(data: TutorRequest, db: Session = Depends(get_db), authentic
     
     # 2. Получить уровень и язык пользователя
     level = user.current_level or "A1"
-    lang = user.language_code or "ru"
+    lang = normalize_language(data.language or user.language_code)
     diagnostic = db.query(DiagnosticResult).filter(
         DiagnosticResult.user_id == user.id
     ).order_by(DiagnosticResult.created_at.desc()).first()
@@ -83,7 +85,7 @@ async def ask_tutor(data: TutorRequest, db: Session = Depends(get_db), authentic
     system_prompt = f"""
 You are DeutschIQ Tutor, a C2-level German teacher.
 User level: {level}
-Respond in: {lang}
+Respond only in: { {'ru': 'Russian', 'de': 'German', 'en': 'English'}[lang] }
 Known weak areas: {', '.join(weak_points) if weak_points else 'not diagnosed yet'}
 Current mastery: {mastery_context}
 Recent error topics: {error_context}

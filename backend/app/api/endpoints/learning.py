@@ -11,6 +11,7 @@ from app.services.learning_engine import retention_score
 from app.services.plan import generate_plan
 from app.services.skill_graph import blocked_by, skill_for
 from app.services.content_quality import normalize_lesson_content
+from app.services.content_i18n import localize_lesson_content, normalize_language
 
 router = APIRouter(prefix="/api/learning", tags=["learning"])
 
@@ -24,7 +25,7 @@ def _days_overdue(review_at, now: datetime) -> float:
 
 
 @router.get("/today/{user_id}")
-async def today(user_id: int, db: Session = Depends(get_db), authenticated_id: int = Depends(telegram_user_id)):
+async def today(user_id: int, lang: str | None = None, db: Session = Depends(get_db), authenticated_id: int = Depends(telegram_user_id)):
     assert_owner(authenticated_id, user_id)
     user = db.query(User).filter(User.telegram_id == user_id).first()
     if not user:
@@ -39,6 +40,8 @@ async def today(user_id: int, db: Session = Depends(get_db), authenticated_id: i
     mastery_map = {item.topic: item.mastery for item in mastery}
     plan = generate_plan(db, user.id, limit=10)
     next_lesson = next((item for item in plan if not blocked_by(item.topic, mastery_map)), plan[0] if plan else None)
+    language = normalize_language(lang or user.language_code)
+    next_content = localize_lesson_content(normalize_lesson_content(next_lesson.content or {}, next_lesson.topic, next_lesson.level), language) if next_lesson else {}
     due_count = len(due)
     review_count = min(5, due_count)
     phases = []
@@ -51,6 +54,7 @@ async def today(user_id: int, db: Session = Depends(get_db), authenticated_id: i
             "minutes": next_lesson.estimated_time or 12,
             "lesson_id": next_lesson.id,
             "topic": next_lesson.topic,
+            "title": next_content.get("title", next_lesson.topic),
             "reason": "weakest_ready_skill" if mastery else "first_step",
             "prerequisites": list(skill_for(next_lesson.topic).prerequisites),
         })
@@ -83,7 +87,7 @@ async def today(user_id: int, db: Session = Depends(get_db), authenticated_id: i
 
 
 @router.get("/reviews/{user_id}")
-async def reviews(user_id: int, db: Session = Depends(get_db), authenticated_id: int = Depends(telegram_user_id)):
+async def reviews(user_id: int, lang: str | None = None, db: Session = Depends(get_db), authenticated_id: int = Depends(telegram_user_id)):
     assert_owner(authenticated_id, user_id)
     user = db.query(User).filter(User.telegram_id == user_id).first()
     if not user:
@@ -93,7 +97,7 @@ async def reviews(user_id: int, db: Session = Depends(get_db), authenticated_id:
     result = []
     for row in rows:
         lesson = db.query(Lesson).filter(Lesson.topic == row.topic, Lesson.is_active == True).first()
-        content = normalize_lesson_content(lesson.content or {}, lesson.topic, lesson.level) if lesson else {}
+        content = localize_lesson_content(normalize_lesson_content(lesson.content or {}, lesson.topic, lesson.level), normalize_language(lang or user.language_code)) if lesson else {}
         exercises = content.get("exercises", [])
         if lesson and exercises:
             # Повторение проверяет самостоятельное извлечение, а не этап с подсказкой.

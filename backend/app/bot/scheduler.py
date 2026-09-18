@@ -16,12 +16,15 @@ async def send_daily_reminders(bot: Bot):
         ).all()
         for user in users:
             try:
+                lang = user.language_code if user.language_code in ("ru", "de", "en") else "en"
+                text = {
+                    "ru": "Твой короткий урок готов. Открой DeutschIQ, когда будет удобно.",
+                    "de": "Deine kurze Lektion ist bereit. Öffne DeutschIQ, wenn es für dich passt.",
+                    "en": "Your short lesson is ready. Open DeutschIQ when it suits you.",
+                }[lang]
                 await bot.send_message(
                     user.telegram_id,
-                    "🇩🇪 Доброе утро! 🌅\n\n"
-                    "Не забудь пройти сегодняшний урок в DeutschIQ!\n"
-                    "Каждый день приближает тебя к цели 🎯\n\n"
-                    "👉 Открой бота и нажми 'Открыть DeutschIQ'"
+                    text,
                 )
                 sent += 1
                 await asyncio.sleep(0.1)

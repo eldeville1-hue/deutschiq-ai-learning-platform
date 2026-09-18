@@ -7,7 +7,7 @@ def _words(value: str) -> list[str]:
     return re.findall(r"[a-zäöüß]+", value.lower())
 
 
-def local_feedback(answer: str, exercise: dict, rule: str) -> dict[str, Any]:
+def local_feedback(answer: str, exercise: dict, rule: str, lang: str = "en") -> dict[str, Any]:
     words = _words(answer)
     patterns = [str(item).lower() for item in exercise.get("target_patterns", [])]
     pattern_hits = sum(1 for item in patterns if item in answer.lower())
@@ -15,14 +15,16 @@ def local_feedback(answer: str, exercise: dict, rule: str) -> dict[str, Any]:
     has_enough_language = len(words) >= 4
     score = min(100, (45 if has_enough_language else 20) + (35 if pattern_hits else 0) + (20 if has_capital_start else 0))
     passed = has_enough_language and score >= 70
+    language = lang if lang in ("ru", "de", "en") else "en"
     if passed:
-        feedback = "Фраза выполняет задачу. Сравни её с моделью и произнеси вслух один раз."
+        feedback = {"ru": "Задача выполнена. Сравни с моделью и произнеси фразу вслух.", "de": "Aufgabe erfüllt. Vergleiche mit dem Modell und sprich den Satz laut.", "en": "Task completed. Compare with the model and say the sentence aloud."}[language]
     elif not has_enough_language:
-        feedback = "Ответ слишком короткий. Напиши полное немецкое предложение минимум из четырёх слов."
+        feedback = {"ru": "Ответ слишком короткий. Напиши полное немецкое предложение минимум из четырёх слов.", "de": "Die Antwort ist zu kurz. Schreibe einen vollständigen deutschen Satz mit mindestens vier Wörtern.", "en": "The answer is too short. Write a complete German sentence of at least four words."}[language]
     elif patterns:
-        feedback = f"Используй целевую структуру урока: {', '.join(patterns[:3])}. Правило: {rule}"
+        lead = {"ru": "Используй структуру", "de": "Nutze die Struktur", "en": "Use the target structure"}[language]
+        feedback = f"{lead}: {', '.join(patterns[:3])}. {rule}"
     else:
-        feedback = f"Проверь структуру предложения. Правило: {rule}"
+        feedback = {"ru": f"Проверь структуру предложения. {rule}", "de": f"Prüfe die Satzstruktur. {rule}", "en": f"Check the sentence structure. {rule}"}[language]
     return {
         "correct": passed,
         "score": score,
@@ -32,7 +34,7 @@ def local_feedback(answer: str, exercise: dict, rule: str) -> dict[str, Any]:
     }
 
 
-def _ai_feedback(answer: str, exercise: dict, lesson_content: dict) -> dict[str, Any]:
+def _ai_feedback(answer: str, exercise: dict, lesson_content: dict, lang: str) -> dict[str, Any]:
     from openai import OpenAI
     from app.core.config import settings
 
@@ -55,10 +57,10 @@ def _ai_feedback(answer: str, exercise: dict, lesson_content: dict) -> dict[str,
             {
                 "role": "system",
                 "content": (
-                    "Ты проверяешь одну немецкую фразу ученика. Оцени выполнение задания, грамматику "
-                    "и понятность на указанном CEFR. Не требуй совпадения с моделью. Верни только JSON: "
-                    '{"correct":bool,"score":0-100,"feedback":"кратко по-русски",'
-                    '"corrected_answer":"исправленная немецкая фраза"}.'
+                    "Evaluate one German learner sentence for task completion, grammar and clarity at the given CEFR. "
+                    f"Write feedback in { {'ru':'Russian','de':'German','en':'English'}.get(lang, 'English') }. Do not require an exact model match. Return JSON only: "
+                    '{"correct":bool,"score":0-100,"feedback":"brief feedback",'
+                    '"corrected_answer":"corrected German sentence"}.'
                 ),
             },
             {"role": "user", "content": json.dumps(prompt, ensure_ascii=False)},
@@ -69,21 +71,21 @@ def _ai_feedback(answer: str, exercise: dict, lesson_content: dict) -> dict[str,
     return {
         "correct": bool(result.get("correct")) and score >= 70,
         "score": score,
-        "feedback": str(result.get("feedback") or "Проверь предложение ещё раз."),
+        "feedback": str(result.get("feedback") or {"ru": "Проверь предложение ещё раз.", "de": "Prüfe den Satz noch einmal.", "en": "Check the sentence once more."}.get(lang, "Check the sentence once more.")),
         "corrected_answer": str(result.get("corrected_answer") or exercise.get("answer", "")),
         "source": "ai",
     }
 
 
-async def evaluate_production(answer: str, exercise: dict, lesson_content: dict) -> dict[str, Any]:
+async def evaluate_production(answer: str, exercise: dict, lesson_content: dict, lang: str = "en") -> dict[str, Any]:
     from app.core.config import settings
 
-    fallback = local_feedback(answer, exercise, lesson_content.get("rule", ""))
+    fallback = local_feedback(answer, exercise, lesson_content.get("rule", ""), lang)
     if not settings.OPENAI_API_KEY:
         return fallback
     try:
         return await asyncio.wait_for(
-            asyncio.to_thread(_ai_feedback, answer, exercise, lesson_content),
+            asyncio.to_thread(_ai_feedback, answer, exercise, lesson_content, lang),
             timeout=10,
         )
     except Exception:

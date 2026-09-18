@@ -8,7 +8,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     telegram_id = Column(BigInteger, unique=True, nullable=False)  # <-- исправлено!
-    language_code = Column(String(2), default='ru')
+    language_code = Column(String(2), default='en')
     current_level = Column(String(3), default='A1')
     target_level = Column(String(3), default='B1')
     subscription_status = Column(String(20), default='free')   # free, pro, premium
