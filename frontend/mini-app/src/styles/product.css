@@ -562,6 +562,12 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .precision-lesson .answer-feedback { padding: 14px; border: 1px solid currentColor; background: var(--dq-surface); }
 .precision-lesson .answer-feedback b { color: var(--dq-text); }
 .precision-lesson .answer-feedback p { font-size: 13px; line-height: 1.45; }
+.precision-lesson .corrected-model { display: grid; gap: 5px; margin-top: 10px; padding: 10px 12px; border: 1px solid rgba(99,215,170,.22); border-radius: 12px; background: rgba(99,215,170,.06); }
+.precision-lesson .corrected-model small { color: var(--dq-muted); font-size: 9px; font-weight: 850; letter-spacing: .1em; }
+.precision-lesson .corrected-model strong { color: var(--dq-text); font-size: 13px; line-height: 1.4; }
+.precision-lesson .session-summary { width: 100%; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 7px; }
+.precision-lesson .session-summary span { min-width: 0; min-height: 68px; display: grid; align-content: center; gap: 4px; padding: 9px 6px; border: 1px solid var(--dq-border); border-radius: 13px; background: var(--dq-surface); color: var(--dq-muted); font-size: 10px; line-height: 1.25; text-align: center; }
+.precision-lesson .session-summary b { color: var(--dq-text); font-size: 18px; }
 .precision-lesson .error-diagnosis { padding: 10px 12px; }
 .precision-lesson .lesson-check-error { padding: 11px 13px; border: 1px solid rgba(255,120,133,.25); border-radius: 12px; background: rgba(255,120,133,.07); color: var(--dq-red); font-size: 13px; }
 .mistake-cards .answer-line > span { display: grid; gap: 3px; }

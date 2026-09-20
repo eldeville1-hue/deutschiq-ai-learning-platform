@@ -4,6 +4,23 @@ def session_score(correct_values: list[bool]) -> int:
     return round(sum(1 for value in correct_values if value) / len(correct_values) * 100)
 
 
+def summarize_attempts(attempts) -> dict:
+    """Score the latest answer per exercise and expose the value of corrected retries."""
+    first = {}
+    latest = {}
+    for attempt in attempts:
+        index = int(attempt.exercise_index)
+        first.setdefault(index, bool(attempt.correct))
+        latest[index] = bool(attempt.correct)
+    return {
+        "score": session_score(list(latest.values())),
+        "first_try_correct": sum(1 for value in first.values() if value),
+        "corrected_retries": sum(1 for index, value in latest.items() if value and not first[index]),
+        "needs_review": sum(1 for value in latest.values() if not value),
+        "exercise_count": len(latest),
+    }
+
+
 def mastery_update(
     current: float,
     correct: bool,

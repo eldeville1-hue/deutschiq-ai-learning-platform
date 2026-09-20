@@ -1,6 +1,6 @@
 import unittest
 from types import SimpleNamespace
-from app.services.learning_engine import mastery_update, next_stability, retention_score, review_interval, session_score
+from app.services.learning_engine import mastery_update, next_stability, retention_score, review_interval, session_score, summarize_attempts
 from app.services.skill_graph import blocked_by, prerequisites_met
 from app.services.learning_route import lesson_blockers, select_recommended_lesson
 
@@ -9,6 +9,18 @@ class LearningEngineTests(unittest.TestCase):
     def test_score_uses_only_given_session(self):
         self.assertEqual(session_score([True, False, True]), 67)
         self.assertEqual(session_score([]), 0)
+
+    def test_corrected_retry_counts_as_learning_not_a_permanent_failure(self):
+        attempts = [
+            SimpleNamespace(exercise_index=0, correct=False),
+            SimpleNamespace(exercise_index=0, correct=True),
+            SimpleNamespace(exercise_index=1, correct=True),
+        ]
+        summary = summarize_attempts(attempts)
+        self.assertEqual(100, summary["score"])
+        self.assertEqual(1, summary["first_try_correct"])
+        self.assertEqual(1, summary["corrected_retries"])
+        self.assertEqual(0, summary["needs_review"])
 
     def test_mastery_is_bounded_and_confidence_weighted(self):
         self.assertEqual(mastery_update(95, True, "sure"), 100)

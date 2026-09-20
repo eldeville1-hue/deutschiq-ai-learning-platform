@@ -13,7 +13,7 @@ import uuid
 from app.core.telegram_auth import telegram_user_id, assert_owner
 from app.services.srs import schedule_review
 from app.models.learning import ExerciseAttempt, TopicMastery, LearningSession
-from app.services.learning_engine import mastery_update, next_stability, review_interval, retention_score, session_score
+from app.services.learning_engine import mastery_update, next_stability, review_interval, retention_score, summarize_attempts
 from app.services.skill_graph import skill_for
 from app.services.content_quality import normalize_lesson_content
 from app.services.content_i18n import localize_lesson_content, normalize_language
@@ -172,7 +172,8 @@ async def complete_lesson(data: CompleteLessonRequest, db: Session = Depends(get
         ExerciseAttempt.lesson_id == data.lesson_id,
         ExerciseAttempt.session_id == session.id,
     ).all()
-    accuracy = session_score([item.correct for item in attempts])
+    summary = summarize_attempts(attempts)
+    accuracy = summary["score"]
     passed = accuracy >= 70
     topic_mastery = db.query(TopicMastery).filter(TopicMastery.user_id == user.id, TopicMastery.topic == lesson.topic).first()
     mastery_value = round(topic_mastery.mastery) if topic_mastery else 0
@@ -214,4 +215,19 @@ async def complete_lesson(data: CompleteLessonRequest, db: Session = Depends(get
     db.commit()
     if passed:
         schedule_review(db, user.id, lesson.id)
-    return {"status": "passed" if passed else "practice_needed", "passed": passed, "score": accuracy, "mastery": mastery_value, "xp_gained": lesson.xp_reward if first_completion else 0, "already_completed": bool(progress.completed and not first_completion), "streak": user.streak or 0}
+    duration_seconds = max(0, round((session.completed_at.replace(tzinfo=None) - session.started_at.replace(tzinfo=None)).total_seconds())) if session.started_at else 0
+    return {
+        "status": "passed" if passed else "practice_needed",
+        "passed": passed,
+        "score": accuracy,
+        "mastery": mastery_value,
+        "xp_gained": lesson.xp_reward if first_completion else 0,
+        "already_completed": bool(progress.completed and not first_completion),
+        "streak": user.streak or 0,
+        "first_try_correct": summary["first_try_correct"],
+        "corrected_retries": summary["corrected_retries"],
+        "needs_review": summary["needs_review"],
+        "exercise_count": summary["exercise_count"],
+        "duration_seconds": duration_seconds,
+        "next_action": "plan" if passed else "retry",
+    }

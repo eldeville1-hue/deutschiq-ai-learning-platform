@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { FaArrowRight, FaCheck, FaTimes, FaVolumeUp } from "react-icons/fa";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../services/api";
@@ -30,6 +30,9 @@ export const Lesson: React.FC = () => {
   const [speechResult, setSpeechResult] = useState<any>(null);
   const [checking, setChecking] = useState(false);
   const [checkError, setCheckError] = useState('');
+  const completedRef = useRef(false);
+  const openedAtRef = useRef(Date.now());
+  const stepRef = useRef(0);
   const exercises = useMemo(
     () => (lesson?.content?.exercises || []).slice(0, 4),
     [lesson],
@@ -48,6 +51,16 @@ export const Lesson: React.FC = () => {
       })
       .catch(() => setLesson(false));
   }, [id, lang]);
+  useEffect(() => {
+    if (!lesson || !sessionId) return;
+    const stage = step === 0 ? 'learn' : step === 1 ? 'model' : step >= total ? 'result' : exercises[step - introSteps]?.stage || 'practice';
+    void api.trackEvent({ user_id: getUserId(), event_name: 'lesson_stage_viewed', properties: { lesson_id: Number(id), stage, step } });
+  }, [exercises, id, lesson, sessionId, step, total]);
+  useEffect(() => { stepRef.current = step; }, [step]);
+  useEffect(() => () => {
+    if (!sessionId || completedRef.current) return;
+    void api.trackEvent({ user_id: getUserId(), event_name: 'lesson_abandoned', properties: { lesson_id: Number(id), step: stepRef.current, duration_seconds: Math.round((Date.now() - openedAtRef.current) / 1000) } });
+  }, [id, sessionId]);
   if (lesson === null)
     return (
       <div className="app-shell">
@@ -75,6 +88,7 @@ export const Lesson: React.FC = () => {
   };
   const next = async () => {
     if (exercise && checked === false && !retried[exerciseIndex]) {
+      void api.trackEvent({ user_id: getUserId(), event_name: 'exercise_retried', properties: { lesson_id: Number(id), exercise_index: exerciseIndex } });
       setRetried((value) => ({ ...value, [exerciseIndex]: true }));
       resetAnswer();
       return;
@@ -91,7 +105,11 @@ export const Lesson: React.FC = () => {
         })
         .catch(() => null);
       setOutcome(result);
-      if (result) void api.trackEvent({ user_id: getUserId(), event_name: 'lesson_completed', properties: { lesson_id: Number(id), passed: Boolean(result.passed), score: Number(result.score || 0) } });
+      if (result) {
+        completedRef.current = true;
+        void api.trackEvent({ user_id: getUserId(), event_name: 'lesson_completed', properties: { lesson_id: Number(id), passed: Boolean(result.passed), score: Number(result.score || 0) } });
+        void api.trackEvent({ user_id: getUserId(), event_name: 'session_finished', properties: { lesson_id: Number(id), duration_seconds: Number(result.duration_seconds || 0), corrected_retries: Number(result.corrected_retries || 0), needs_review: Number(result.needs_review || 0) } });
+      }
     }
   };
   const check = async () => {
@@ -153,7 +171,7 @@ export const Lesson: React.FC = () => {
       {step === 0 && (
         <section className="lesson-step">
           <p className="eyebrow">
-            {tr(lang, "ТЕМА", "THEMA", "TOPIC")} ·{" "}
+            {tr(lang, "НОВЫЙ НАВЫК", "NEUES LERNZIEL", "NEW SKILL")} ·{" "}
             {content.cefr || lesson.level}
           </p>
           <h1>{cleanTitle(topicLabel(content.title || lesson.topic, lang))}</h1>
@@ -330,6 +348,12 @@ export const Lesson: React.FC = () => {
                     : tr(lang, "Попробуй ещё раз", "Noch einmal", "Try again")}
                 </b>
                 <p>{feedback?.explanation}</p>
+                {!checked && feedback?.correct_answer && (
+                  <div className="corrected-model">
+                    <small>{tr(lang, 'ПРАВИЛЬНАЯ МОДЕЛЬ', 'RICHTIGES MODELL', 'CORRECT MODEL')}</small>
+                    <strong>{feedback.correct_answer}</strong>
+                  </div>
+                )}
                 {!checked && feedback?.error_type && <div className="error-diagnosis">
                   <small>{tr(lang, 'ПОДСКАЗКА', 'HINWEIS', 'TIP')}</small>
                   {Array.isArray(feedback.contrast) && feedback.contrast.map((line: string, index: number) => <p key={index}>{line}</p>)}
@@ -380,6 +404,13 @@ export const Lesson: React.FC = () => {
               <b>+{outcome?.xp_gained || 0} XP</b>
             </span>
           </div>
+          {outcome && (
+            <div className="session-summary">
+              <span><b>{outcome.first_try_correct || 0}</b>{tr(lang, 'С первой попытки', 'Sofort richtig', 'Correct first try')}</span>
+              <span><b>{outcome.corrected_retries || 0}</b>{tr(lang, 'Исправлено', 'Verbessert', 'Corrected')}</span>
+              <span><b>{outcome.needs_review || 0}</b>{tr(lang, 'На повтор', 'Zum Wiederholen', 'To review')}</span>
+            </div>
+          )}
           <p>
             {outcome?.passed === false
               ? tr(lang, "Урок не завершён: повтори задания и набери 70%.", "Die Lektion bleibt offen. Wiederhole sie und erreiche 70%.", "The lesson remains open. Repeat it and reach 70%.")

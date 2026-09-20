@@ -50,7 +50,13 @@ export const Dashboard: React.FC = () => {
     : hour < 18
       ? tr(lang, 'Добрый день', 'Guten Tag', 'Good afternoon')
       : tr(lang, 'Добрый вечер', 'Guten Abend', 'Good evening');
-  const startLesson = () => navigate(selectedLesson?.id ? withUser(`/lesson/${selectedLesson.id}`) : withUser('/plan'));
+  const startLesson = () => {
+    if (!selectedLesson?.id) return navigate(withUser('/plan'));
+    const target = learning?.due_count
+      ? `/review?nextLesson=${selectedLesson.id}`
+      : `/lesson/${selectedLesson.id}`;
+    navigate(withUser(target));
+  };
 
   return (
     <main className="app-shell rc-page rc-home page-enter">
@@ -72,7 +78,7 @@ export const Dashboard: React.FC = () => {
         <p>{selectedLesson?.reason === 'review_due'
           ? tr(lang, 'Пора закрепить эту тему.', 'Zeit, dieses Thema zu festigen.', 'Time to strengthen this skill.')
           : tr(lang, 'Выбрано по твоему прогрессу.', 'Passend zu deinem Fortschritt.', 'Selected from your progress.')}</p>
-        <button type="button" className="rc-primary" onClick={startLesson}><span><FaPlay /> {selectedLesson?.id ? tr(lang, 'Начать', 'Starten', 'Start') : tr(lang, 'Открыть план', 'Plan öffnen', 'Open plan')}</span><FaArrowRight /></button>
+        <button type="button" className="rc-primary" onClick={startLesson}><span><FaPlay /> {selectedLesson?.id ? (learning?.due_count ? tr(lang, 'Начать с повторения', 'Mit Wiederholung starten', 'Start with review') : tr(lang, 'Начать', 'Starten', 'Start')) : tr(lang, 'Открыть план', 'Plan öffnen', 'Open plan')}</span><FaArrowRight /></button>
       </section>
 
       <section className="rc-home-actions" aria-label={tr(lang, 'Дополнительные действия', 'Weitere Aktionen', 'More actions')}>

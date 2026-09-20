@@ -113,8 +113,8 @@ export const api = {
     }),
 
   // Ошибки
-  getMistakes: (userId: number) => {
-    return apiClient.get(`/api/mistakes/${userId}`).then(r => r.data);
+  getMistakes: (userId: number, lang: AppLanguage) => {
+    return apiClient.get(`/api/mistakes/${userId}?lang=${lang}`).then(r => r.data);
   },
 
   // План

@@ -12,7 +12,8 @@ router = APIRouter(prefix="/api/events", tags=["events"])
 ALLOWED_EVENTS = {
     "dashboard_viewed", "lesson_started", "exercise_answered",
     "lesson_completed", "review_started", "tutor_opened",
-    "beta_feedback",
+    "review_completed", "exercise_retried", "lesson_stage_viewed", "lesson_abandoned",
+    "session_finished", "beta_feedback",
 }
 
 

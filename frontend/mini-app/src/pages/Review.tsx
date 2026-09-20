@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { FaArrowRight, FaCheck, FaRedo, FaTimes } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
 import { topicLabel } from '../i18n/topics';
@@ -10,6 +10,7 @@ import { tr } from '../i18n/language';
 export const Review: React.FC = () => {
   const { lang } = useLanguage();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [items, setItems] = useState<any[] | null>(null);
   const [index, setIndex] = useState(0);
   const [answer, setAnswer] = useState('');
@@ -21,10 +22,12 @@ export const Review: React.FC = () => {
 
   useEffect(() => { void api.trackEvent({ user_id: getUserId(), event_name: 'review_started' }); api.getReviews(getUserId(), lang).then(data => setItems(data.reviews || [])).catch(() => { setItems([]); setError(tr(lang, 'Не удалось загрузить повторения.', 'Wiederholungen konnten nicht geladen werden.', 'Could not load reviews.')); }); }, [lang]);
 
+  const nextLesson = Number(searchParams.get('nextLesson') || 0);
   const leave = () => navigate(withUser('/dashboard'));
+  const continueSession = () => navigate(withUser(nextLesson ? `/lesson/${nextLesson}` : '/dashboard'));
   if (items === null) return <main className="lesson-flow rc-review"><div className="skeleton rc-hero-skeleton" /></main>;
-  if (!items.length) return <main className="lesson-flow rc-review rc-review-state"><span className="rc-state-icon"><FaCheck /></span><p>{tr(lang, 'ПОВТОРЕНИЕ', 'WIEDERHOLUNG', 'REVIEW')}</p><h1>{error ? tr(lang, 'Не удалось загрузить', 'Laden fehlgeschlagen', 'Could not load') : tr(lang, 'На сегодня всё', 'Für heute erledigt', 'All done for today')}</h1><span>{error || tr(lang, 'Новые карточки появятся после урока.', 'Neue Karten erscheinen nach der Lektion.', 'New cards appear after a lesson.')}</span><button type="button" className="rc-primary" onClick={leave}>{tr(lang, 'На главную', 'Zur Übersicht', 'Back to overview')}</button></main>;
-  if (index >= items.length) return <main className="lesson-flow rc-review rc-review-state"><span className="rc-state-icon success"><FaCheck /></span><p>{tr(lang, 'ГОТОВО', 'FERTIG', 'DONE')}</p><h1>{tr(lang, 'Память укреплена', 'Erinnerung gefestigt', 'Memory strengthened')}</h1><span>{tr(lang, `${items.length} тем повторено. Следующая дата рассчитана по твоим ответам.`, `${items.length} Themen wiederholt. Der nächste Termin wurde aus deinen Antworten berechnet.`, `${items.length} topics reviewed. Your next review date is based on your answers.`)}</span><button type="button" className="rc-primary" onClick={leave}>{tr(lang, 'Продолжить', 'Weiter', 'Continue')} <FaArrowRight /></button></main>;
+  if (!items.length) return <main className="lesson-flow rc-review rc-review-state"><span className="rc-state-icon"><FaCheck /></span><p>{tr(lang, 'ПОВТОРЕНИЕ', 'WIEDERHOLUNG', 'REVIEW')}</p><h1>{error ? tr(lang, 'Не удалось загрузить', 'Laden fehlgeschlagen', 'Could not load') : tr(lang, 'На сегодня всё', 'Für heute erledigt', 'All done for today')}</h1><span>{error || tr(lang, 'Новые карточки появятся после урока.', 'Neue Karten erscheinen nach der Lektion.', 'New cards appear after a lesson.')}</span><button type="button" className="rc-primary" onClick={error ? leave : continueSession}>{nextLesson && !error ? tr(lang, 'Перейти к новому навыку', 'Zum neuen Lernziel', 'Continue to new skill') : tr(lang, 'На главную', 'Zur Übersicht', 'Back to overview')}</button></main>;
+  if (index >= items.length) return <main className="lesson-flow rc-review rc-review-state"><span className="rc-state-icon success"><FaCheck /></span><p>{tr(lang, 'ГОТОВО', 'FERTIG', 'DONE')}</p><h1>{tr(lang, 'Память укреплена', 'Erinnerung gefestigt', 'Memory strengthened')}</h1><span>{tr(lang, `${items.length} тем повторено.`, `${items.length} Themen wiederholt.`, `${items.length} topics reviewed.`)}</span><button type="button" className="rc-primary" onClick={() => { void api.trackEvent({ user_id: getUserId(), event_name: 'review_completed', properties: { count: items.length } }); continueSession(); }}>{nextLesson ? tr(lang, 'Новый навык', 'Neues Lernziel', 'New skill') : tr(lang, 'Продолжить', 'Weiter', 'Continue')} <FaArrowRight /></button></main>;
 
   const item = items[index];
   const ensureSession = async () => {

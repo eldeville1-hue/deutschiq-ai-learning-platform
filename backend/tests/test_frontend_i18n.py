@@ -42,6 +42,15 @@ class FrontendInternationalizationTests(unittest.TestCase):
         self.assertIn("META_COPY", context)
         self.assertIn('<html lang="en">', index)
 
+    def test_daily_session_connects_review_to_the_next_lesson(self):
+        dashboard = self.read("pages/Dashboard.tsx")
+        review = self.read("pages/Review.tsx")
+        lesson = self.read("pages/Lesson.tsx")
+        self.assertIn("/review?nextLesson=", dashboard)
+        self.assertIn("useSearchParams", review)
+        self.assertIn("exercise_retried", lesson)
+        self.assertIn("corrected_retries", lesson)
+
 
 if __name__ == "__main__":
     unittest.main()
