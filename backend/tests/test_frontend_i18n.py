@@ -59,6 +59,13 @@ class FrontendInternationalizationTests(unittest.TestCase):
         self.assertIn("const readCache", api)
         self.assertIn("const writeCache", api)
 
+    def test_lesson_supports_context_listening_dialogue_and_error_repair(self):
+        lesson = self.read("pages/Lesson.tsx")
+        self.assertIn('"listening_choice"', lesson)
+        self.assertIn('"dialogue"', lesson)
+        self.assertIn('"error_repair"', lesson)
+        self.assertIn("slice(0, 5)", lesson)
+
 
 if __name__ == "__main__":
     unittest.main()

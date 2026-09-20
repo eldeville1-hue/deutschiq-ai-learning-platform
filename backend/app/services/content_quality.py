@@ -1,4 +1,7 @@
-ALLOWED_EXERCISE_TYPES = {"choose", "fill", "translate", "reorder", "listening", "production", "recall", "repeat"}
+ALLOWED_EXERCISE_TYPES = {
+    "choose", "fill", "translate", "reorder", "listening", "production", "recall", "repeat",
+    "error_repair", "transform", "context_choice", "listening_choice", "dialogue",
+}
 
 
 def normalize_lesson_content(content: dict, topic: str, level: str) -> dict:
@@ -65,7 +68,7 @@ def validate_roadmap_content(content: dict) -> list[str]:
     for stage in ("guided", "independent", "transfer"):
         if stage not in stages:
             errors.append(f"missing_stage:{stage}")
-    productions = [item for item in content.get("exercises") or [] if item.get("type") == "production"]
+    productions = [item for item in content.get("exercises") or [] if item.get("type") in {"production", "dialogue"}]
     if not productions:
         errors.append("missing:production")
     elif not productions[0].get("target_patterns"):
@@ -74,9 +77,12 @@ def validate_roadmap_content(content: dict) -> list[str]:
         if len(content.get("examples") or []) < 3:
             errors.append("gold:insufficient_examples")
         kinds = {item.get("type") for item in content.get("exercises") or []}
-        for kind in ("listening", "production", "repeat"):
-            if kind not in kinds:
-                errors.append(f"gold:missing_{kind}")
+        if not kinds.intersection({"listening", "listening_choice"}):
+            errors.append("gold:missing_listening")
+        if not kinds.intersection({"production", "dialogue"}):
+            errors.append("gold:missing_production")
+        if "repeat" not in kinds:
+            errors.append("gold:missing_repeat")
         if len(content.get("exercises") or []) < 4:
             errors.append("gold:insufficient_exercises")
         mistakes = content.get("common_mistakes") or []

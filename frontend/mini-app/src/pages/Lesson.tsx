@@ -34,7 +34,7 @@ export const Lesson: React.FC = () => {
   const openedAtRef = useRef(Date.now());
   const stepRef = useRef(0);
   const exercises = useMemo(
-    () => (lesson?.content?.exercises || []).slice(0, 4),
+    () => (lesson?.content?.exercises || []).slice(0, 5),
     [lesson],
   );
   const introSteps = 2;
@@ -118,7 +118,7 @@ export const Lesson: React.FC = () => {
     try {
       const result = await api.checkLessonAnswer({ user_id: getUserId(), lesson_id: Number(id), exercise_index: exerciseIndex, answer, session_id: sessionId, language: lang, confidence, response_ms: Date.now() - startedAt });
       setChecked(Boolean(result.correct)); setFeedback(result);
-      void api.trackEvent({ user_id: getUserId(), event_name: 'exercise_answered', properties: { lesson_id: Number(id), exercise_index: exerciseIndex, correct: Boolean(result.correct), confidence } });
+      void api.trackEvent({ user_id: getUserId(), event_name: 'exercise_answered', properties: { lesson_id: Number(id), exercise_index: exerciseIndex, correct: Boolean(result.correct), confidence, misconception: String(result.error_type || '') } });
     } catch {
       setCheckError(tr(lang, 'Не удалось проверить. Попробуй ещё раз.', 'Prüfung fehlgeschlagen. Versuche es erneut.', 'Could not check your answer. Try again.'));
     } finally { setChecking(false); }
@@ -230,13 +230,13 @@ export const Lesson: React.FC = () => {
           </p>
           <h1>{exercise.type === "repeat" ? tr(lang, "Повтори фразу", "Sprich den Satz nach", "Repeat the sentence") : exercise.question}</h1>
           {exercise.type === "repeat" && <div className="example-sentence">{content.audio_text || content.examples?.[0]}</div>}
-          {exercise.type === "listening" && (
+          {(exercise.type === "listening" || exercise.type === "listening_choice") && (
             <div className="listening-challenge">
               <button type="button" onClick={() => speak(0.9)}><FaVolumeUp /> {tr(lang, "Прослушать", "Anhören", "Listen")}</button>
               <button type="button" onClick={() => speak(0.7)}><FaVolumeUp /> {tr(lang, "Медленнее", "Langsamer", "Slower")}</button>
             </div>
           )}
-          {exercise.type === "choose" && Array.isArray(exercise.options) ? (
+          {Array.isArray(exercise.options) && exercise.options.length > 0 ? (
             <div className="lesson-options">
               {exercise.options.map((option: string) => (
                 <button
@@ -283,15 +283,17 @@ export const Lesson: React.FC = () => {
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
               placeholder={
-                exercise.type === "production"
+                exercise.type === "production" || exercise.type === "dialogue"
                   ? tr(lang, "Напиши свою немецкую фразу…", "Schreibe deinen eigenen Satz…", "Write your own German sentence…")
-                  : exercise.type === "listening"
+                  : exercise.type === "listening" || exercise.type === "listening_choice"
                     ? tr(lang, "Напиши, что услышал…", "Schreibe, was du hörst…", "Type what you hear…")
-                  : tr(lang, "Введи ответ", "Antwort eingeben", "Enter your answer")
+                    : exercise.type === "error_repair"
+                      ? tr(lang, "Напиши исправленную фразу…", "Schreibe den korrigierten Satz…", "Write the corrected sentence…")
+                    : tr(lang, "Введи ответ", "Antwort eingeben", "Enter your answer")
               }
               disabled={checked !== null}
             />
-            {(exercise.type === "production" || exercise.type === "repeat") && checked === null && (
+            {(exercise.type === "production" || exercise.type === "dialogue" || exercise.type === "repeat") && checked === null && (
               <VoiceRecorder lang={lang} disabled={!sessionId} onAudio={transcribe} />
             )}
             {speechResult?.transcript && (

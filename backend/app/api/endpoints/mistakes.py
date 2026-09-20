@@ -59,6 +59,7 @@ async def get_mistakes(user_id: int, lang: str | None = None, db: Session = Depe
             "user_answer": attempt.answer,
             "correct_answer": accepted[0] if accepted else "",
             "explanation": exercise.get("explanation", ""),
+            "misconception": exercise.get("misconception"),
             "lesson_id": lesson.id,
         })
     return {

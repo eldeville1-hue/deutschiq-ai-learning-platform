@@ -1,6 +1,7 @@
 import unittest
 
 from app.services.production_feedback import local_feedback
+from app.services.misconception_feedback import misconception_feedback
 
 
 class ProductionFeedbackTests(unittest.TestCase):
@@ -20,6 +21,15 @@ class ProductionFeedbackTests(unittest.TestCase):
             "Das Verb steht auf Position zwei.",
         )
         self.assertFalse(result["correct"])
+
+    def test_misconception_feedback_is_specific_and_localized(self):
+        self.assertIn("глагол", misconception_feedback("verb_not_final", "ru"))
+        self.assertIn("Verb", misconception_feedback("verb_not_final", "de"))
+        self.assertIn("verb", misconception_feedback("verb_not_final", "en"))
+        self.assertNotEqual(
+            misconception_feedback("verb_not_final", "en"),
+            misconception_feedback("case_ending", "en"),
+        )
 
 
 if __name__ == "__main__":

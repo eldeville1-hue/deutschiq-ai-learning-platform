@@ -1,4 +1,5 @@
 import ast
+import re
 import unittest
 from pathlib import Path
 from app.services.content_quality import normalize_lesson_content, validate_lesson_content, validate_roadmap_content
@@ -70,8 +71,14 @@ class ContentQualityTests(unittest.TestCase):
             self.assertEqual([], validate_roadmap_content(content), f"day {row[0]}")
             self.assertEqual("B1", content["track"])
             self.assertEqual("B1", content["cefr"])
-            self.assertEqual(4, len(content["exercises"]))
+            self.assertEqual(5, len(content["exercises"]))
+            self.assertEqual("notice_build_use_reflect", content["learning_method"])
             guided_types.add(content["exercises"][0]["type"])
+            self.assertTrue(all(exercise.get("misconception") for exercise in content["exercises"]))
+            self.assertEqual(
+                {"context_choice", "dialogue", "listening_choice", "repeat"},
+                {exercise["type"] for exercise in content["exercises"][1:]},
+            )
             for language in ("ru", "de", "en"):
                 localized = localize_lesson_content(content, language)
                 self.assertTrue(localized["title"])
@@ -79,7 +86,15 @@ class ContentQualityTests(unittest.TestCase):
                 self.assertTrue(localized["objective"])
                 self.assertNotIn("i18n", localized)
                 self.assertTrue(all("i18n" not in exercise for exercise in localized["exercises"]))
-        self.assertEqual({"choose", "fill", "reorder"}, guided_types)
+                if language != "ru":
+                    visible = " ".join([
+                        localized["title"], localized["rule"], localized["objective"],
+                        *(exercise.get("question", "") for exercise in localized["exercises"]),
+                        *(exercise.get("hint", "") for exercise in localized["exercises"]),
+                        *(exercise.get("explanation", "") for exercise in localized["exercises"]),
+                    ])
+                    self.assertIsNone(re.search(r"[А-Яа-яЁё]", visible), f"Cyrillic leaked into {language} day {row[0]}")
+        self.assertEqual({"error_repair", "transform"}, guided_types)
 
 
 if __name__ == "__main__":

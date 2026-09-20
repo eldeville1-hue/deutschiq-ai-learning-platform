@@ -27,6 +27,37 @@ B1_CURRICULUM = [
     (54, 4, "b1_final", "mixed", "B1-Abschlussaufgabe", "B1-Abschlussaufgabe", "B1 final task", "Объедини мнение, причину, пример и вывод в связный ответ.", "Verbinde Meinung, Grund, Beispiel und Schluss in einer zusammenhängenden Antwort.", "Combine an opinion, reason, example and conclusion in one coherent response.", "Ist das Leben in einer Großstadt besser?", "Ist das Leben in einer Großstadt besser?", "Is life in a large city better?", "Meiner Meinung nach bietet eine Großstadt viele Chancen, obwohl sie oft laut ist. Deshalb kommt es auf die eigenen Ziele an.", "Дай связный ответ уровня B1.", "Gib eine zusammenhängende Antwort auf B1-Niveau.", "Give a coherent B1-level response."),
 ]
 
+B1_TASKS = {
+    "subordinate_clauses": ("Obwohl es regnet, wir gehen spazieren.", "Друг предлагает прогулку, хотя идёт дождь. Ответь с obwohl.", "Ein Freund schlägt trotz Regen einen Spaziergang vor. Antworte mit obwohl.", "A friend suggests a walk although it is raining. Reply with obwohl.", "Gegensatz", ["Grund", "Bedingung"], "verb_not_final"),
+    "temporal_clauses": ("Wenn ich klein war, wohnte ich in Köln.", "Ты рассказываешь коллеге об одном периоде детства.", "Du erzählst einem Kollegen von einer einmaligen Zeit in deiner Kindheit.", "You are telling a colleague about one period in your childhood.", "einmalige Vergangenheit", ["Wiederholung", "Bedingung"], "wrong_connector"),
+    "indirect_questions": ("Ich weiß nicht, ob kommt der Zug pünktlich.", "Вежливо спроси сотрудника вокзала о поезде.", "Frage einen Bahnmitarbeiter höflich nach dem Zug.", "Politely ask a station employee about the train.", "indirekte Ja/Nein-Frage", ["direkte Frage", "Begründung"], "verb_not_final"),
+    "purpose_clauses": ("Ich lerne viel, um ich die Prüfung bestehe.", "Объясни другу, зачем ты много занимаешься.", "Erkläre einem Freund, warum du viel lernst.", "Explain to a friend why you study a lot.", "Ziel bei gleichem Subjekt", ["Grund", "Gegensatz"], "wrong_connector"),
+    "relative_clauses": ("Das ist der Mann, den ich helfe.", "Представь коллегу, которому ты часто помогаешь.", "Stelle den Kollegen vor, dem du oft hilfst.", "Introduce the colleague whom you often help.", "Person im Dativ", ["Person im Akkusativ", "Ort"], "relative_case"),
+    "double_connectors": ("Sie spricht nicht nur Deutsch, aber auch Englisch.", "Представь кандидата с двумя языковыми навыками.", "Stelle eine Bewerberin mit zwei Sprachkenntnissen vor.", "Introduce an applicant with two language skills.", "zwei Ergänzungen", ["Alternative", "Einschränkung"], "wrong_connector"),
+    "passive_voice": ("Die Straße hat repariert.", "Сообщи жителям о текущих дорожных работах.", "Informiere Anwohner über aktuelle Straßenarbeiten.", "Inform residents about current roadworks.", "Vorgang ohne Handelnden", ["Zustand", "Vermutung"], "passive_auxiliary"),
+    "passive_past": ("Das Haus wird 1990 gebaut.", "Расскажи посетителю об истории здания.", "Erzähle einem Besucher von der Geschichte des Gebäudes.", "Tell a visitor about the building's history.", "vergangener Vorgang", ["aktueller Vorgang", "zukünftiger Plan"], "passive_auxiliary"),
+    "modal_past": ("Früher muss ich jeden Tag trainieren.", "Расскажи о прежней обязанности.", "Erzähle von einer früheren Pflicht.", "Talk about an obligation you had in the past.", "frühere Pflicht", ["heutige Pflicht", "Erlaubnis"], "modal_form"),
+    "konjunktiv_ii": ("Du sollst früher schlafen gehen.", "Друг постоянно устает. Дай ему мягкий совет.", "Ein Freund ist ständig müde. Gib einen freundlichen Rat.", "A friend is constantly tired. Give gentle advice.", "höflicher Rat", ["strenger Befehl", "Bericht"], "modal_form"),
+    "lassen": ("Ich lasse der Friseur meine Haare schneiden.", "Объясни, какую услугу ты заказываешь в салоне.", "Erkläre, welche Dienstleistung du im Salon machen lässt.", "Explain which service you have done at the salon.", "Dienstleistung veranlassen", ["Erlaubnis geben", "selbst handeln"], "case_ending"),
+    "subjective_modals": ("Er muss sehr reich sein, sagt man.", "Передай непроверенный слух, не утверждая его как факт.", "Gib ein Gerücht wieder, ohne es als Tatsache darzustellen.", "Report a rumour without presenting it as fact.", "fremde Behauptung", ["sichere Tatsache", "Pflicht"], "modal_form"),
+    "adjective_declension": ("Ich spreche mit einem nette Kollegen.", "Опиши коллегу, с которым ты работаешь.", "Beschreibe den Kollegen, mit dem du arbeitest.", "Describe the colleague you work with.", "Dativ nach einem", ["Akkusativ", "Nominativ"], "case_ending"),
+    "verb_prepositions": ("Ich interessiere mich an Politik.", "На знакомстве расскажи о своём интересе.", "Erzähle beim Kennenlernen von deinem Interesse.", "Talk about your interest when meeting someone.", "Interesse mit für", ["Ort mit an", "Herkunft mit aus"], "fixed_connection"),
+    "noun_verb_connections": ("Wir müssen eine Entscheidung machen.", "Команда должна сегодня принять решение.", "Das Team muss heute eine Entscheidung treffen.", "The team needs to make a decision today.", "feste Verbindung", ["wörtliche Übersetzung", "Passiv"], "fixed_connection"),
+    "genitive_prepositions": ("Trotz dem schlechten Wetter gehen wir raus.", "Объясни, почему мероприятие состоится несмотря на погоду.", "Erkläre, warum die Veranstaltung trotz des Wetters stattfindet.", "Explain why the event is taking place despite the weather.", "trotz mit Genitiv", ["Grund mit Dativ", "Richtung"], "case_ending"),
+    "pronoun_adverbs": ("Ich warte auf das, dass der Kurs beginnt.", "Скажи одногруппнику, чего ты ждёшь.", "Sage einem Kursteilnehmer, worauf du wartest.", "Tell a classmate what you are waiting for.", "Bezug auf eine Sache", ["Bezug auf eine Person", "Richtung"], "fixed_connection"),
+    "nominalization": ("Wegen die Preise steigen, sparen viele Menschen.", "Сделай фразу для отчёта более формальной.", "Formuliere einen Satz für einen Bericht formeller.", "Make a sentence more formal for a report.", "formeller Nominalstil", ["direkte Rede", "informelle Erzählung"], "case_ending"),
+    "formal_email": ("Gib mir bitte einen neuen Termin.", "Клиника отменила запись. Вежливо попроси новую дату.", "Die Praxis hat deinen Termin abgesagt. Bitte höflich um einen neuen.", "The clinic cancelled your appointment. Politely request a new one.", "formelle Bitte", ["private Nachricht", "Befehl"], "register"),
+    "opinion": ("Homeoffice ist gut.", "На встрече вырази мнение о Homeoffice и объясни его.", "Äußere in einer Besprechung deine Meinung zum Homeoffice und begründe sie.", "Express and justify your opinion about working from home in a meeting.", "Meinung mit Grund", ["neutrale Information", "reine Aufzählung"], "cohesion"),
+    "argumentation": ("Onlinekurse sind flexibel und unpersönlich.", "В дискуссии сравни плюс и минус онлайн-курсов.", "Vergleiche in einer Diskussion Vor- und Nachteil von Onlinekursen.", "Compare one advantage and disadvantage of online courses in a discussion.", "Pro und Contra", ["nur Vorteil", "zeitliche Reihenfolge"], "cohesion"),
+    "listening_attitude": ("Der Sprecher findet die Idee sicher perfekt.", "Коллега говорит: Die Idee ist zwar interessant, aber kaum realistisch. Определи позицию.", "Ein Kollege sagt: Die Idee ist zwar interessant, aber kaum realistisch. Erkenne seine Haltung.", "A colleague says: Die Idee ist zwar interessant, aber kaum realistisch. Identify the attitude.", "skeptische Haltung", ["volle Zustimmung", "Begeisterung"], "wrong_connector"),
+    "spoken_narrative": ("Ich habe den Bus verpasst. Ich war spät. Alles war gut.", "Расскажи другу о трудном дне в понятной последовательности.", "Erzähle einem Freund strukturiert von einem schwierigen Tag.", "Tell a friend about a difficult day in a clear sequence.", "geordnete Erzählung", ["ungeordnete Liste", "formelle Bitte"], "cohesion"),
+    "b1_final": ("Großstadt ist besser, weil ja.", "Ты участвуешь в B1-дискуссии о жизни в большом городе.", "Du nimmst an einer B1-Diskussion über das Leben in der Großstadt teil.", "You are taking part in a B1 discussion about life in a large city.", "Position mit Abwägung", ["Antwort ohne Grund", "reine Beschreibung"], "cohesion"),
+}
+
+
+def _localized_exercise(base: dict, ru: dict, de: dict, en: dict) -> dict:
+    return {**base, "i18n": {"ru": ru, "de": de, "en": en}}
+
 
 def build_b1_content(row):
     day, module, topic, pillar, title_ru, title_de, title_en, rule_ru, rule_de, rule_en, prompt_ru, prompt_de, prompt_en, answer, goal_ru, goal_de, goal_en = row
@@ -35,22 +66,46 @@ def build_b1_content(row):
         "de": {"title": title_de, "rule": rule_de, "objective": goal_de, "prompt": prompt_de},
         "en": {"title": title_en, "rule": rule_en, "objective": goal_en, "prompt": prompt_en},
     }
-    tokens = [token.strip(".,?!") for token in answer.split()]
-    kind = ("fill", "reorder", "choose")[(day - 31) % 3]
-    guided = {"type": kind, "stage": "guided", "question": prompt_ru, "answer": answer, "accepted_answers": [answer, answer.rstrip(".?!")], "hint": rule_ru, "explanation": rule_ru,
-              "i18n": {lang: {"question": copy["prompt"], "hint": copy["rule"], "explanation": copy["rule"]} for lang, copy in languages.items()}}
-    if kind == "reorder":
-        guided["tokens"] = tokens
-    if kind == "choose":
-        distractors = [
-            " ".join(answer.split()[1:] + answer.split()[:1]),
-            answer.rstrip(".?!") + " nicht.",
-        ]
-        guided["options"] = list(dict.fromkeys([answer, *distractors]))
+    wrong, scenario_ru, scenario_de, scenario_en, meaning, meaning_distractors, misconception = B1_TASKS[topic]
+    guided_type = "error_repair" if day % 2 else "transform"
+    guided_prompts = {
+        "ru": f"Исправь фразу: {wrong}" if guided_type == "error_repair" else prompt_ru,
+        "de": f"Korrigiere den Satz: {wrong}" if guided_type == "error_repair" else prompt_de,
+        "en": f"Repair the sentence: {wrong}" if guided_type == "error_repair" else prompt_en,
+    }
+    guided = _localized_exercise(
+        {"type": guided_type, "stage": "guided", "question": guided_prompts["ru"], "answer": answer, "accepted_answers": [answer, answer.rstrip(".?!")], "hint": rule_ru, "explanation": rule_ru, "misconception": misconception},
+        {"question": guided_prompts["ru"], "hint": rule_ru, "explanation": rule_ru},
+        {"question": guided_prompts["de"], "hint": rule_de, "explanation": rule_de},
+        {"question": guided_prompts["en"], "hint": rule_en, "explanation": rule_en},
+    )
+    context_options = list(dict.fromkeys([answer, wrong, f"{answer.rstrip('.?!')} nicht."]))
     patterns = [word.casefold().strip(".,?!") for word in answer.split() if len(word) > 3][:4]
-    exercises = [guided,
-        {"type": "listening", "stage": "independent", "question": "Прослушай и запиши ключевую фразу.", "answer": answer, "accepted_answers": [answer, answer.rstrip(".?!")], "hint": "Сначала определи связку и глагол.", "explanation": f"Модель: {answer}", "i18n": {"ru": {"question": "Прослушай и запиши ключевую фразу.", "hint": "Сначала определи связку и глагол."}, "de": {"question": "Höre zu und schreibe den Kernsatz.", "hint": "Erkenne zuerst Konnektor und Verb."}, "en": {"question": "Listen and write the key sentence.", "hint": "Identify the connector and verb first."}}},
-        {"type": "production", "stage": "transfer", "question": goal_ru, "answer": answer, "model_answer": answer, "accepted_answers": [answer, answer.rstrip(".?!")], "target_patterns": patterns, "hint": rule_ru, "explanation": "Сравни структуру со своей фразой.", "i18n": {lang: {"question": copy["objective"], "hint": copy["rule"]} for lang, copy in languages.items()}},
-        {"type": "repeat", "stage": "transfer", "question": "Произнеси модель вслух.", "answer": answer, "accepted_answers": [answer, answer.rstrip(".?!")], "explanation": "Повтори спокойно и связно.", "i18n": {"ru": {"question": "Произнеси модель вслух."}, "de": {"question": "Sprich das Modell laut nach."}, "en": {"question": "Say the model aloud."}}},
+    exercises = [
+        guided,
+        _localized_exercise(
+            {"type": "context_choice", "stage": "independent", "question": scenario_ru, "answer": answer, "accepted_answers": [answer], "options": context_options, "hint": "Выбери фразу, которая и по смыслу, и по форме подходит ситуации.", "explanation": rule_ru, "misconception": misconception},
+            {"question": scenario_ru, "hint": "Проверь смысл и форму.", "explanation": rule_ru},
+            {"question": scenario_de, "hint": "Prüfe Bedeutung und Form.", "explanation": rule_de},
+            {"question": scenario_en, "hint": "Check both meaning and form.", "explanation": rule_en},
+        ),
+        _localized_exercise(
+            {"type": "listening_choice", "stage": "independent", "question": "Прослушай фразу. Какую функцию она выражает?", "answer": meaning, "accepted_answers": [meaning], "options": [meaning, *meaning_distractors], "hint": "Слушай не каждое слово, а смысовую связь.", "explanation": f"{meaning}: {answer}", "misconception": misconception},
+            {"question": "Прослушай фразу. Какую функцию она выражает?", "hint": "Улови смысовую связь.", "explanation": f"{meaning}: {answer}"},
+            {"question": "Höre zu. Welche Funktion drückt der Satz aus?", "hint": "Achte auf die Bedeutungsbeziehung.", "explanation": f"{meaning}: {answer}"},
+            {"question": "Listen. What function does the sentence express?", "hint": "Listen for the relationship in meaning.", "explanation": f"{meaning}: {answer}"},
+        ),
+        _localized_exercise(
+            {"type": "dialogue", "stage": "transfer", "question": scenario_ru, "answer": answer, "model_answer": answer, "accepted_answers": [answer, answer.rstrip(".?!")], "target_patterns": patterns, "hint": rule_ru, "explanation": "Сравни свою реакцию с моделью.", "misconception": misconception},
+            {"question": scenario_ru, "hint": rule_ru, "explanation": "Сравни свою реакцию с моделью."},
+            {"question": scenario_de, "hint": rule_de, "explanation": "Vergleiche deine Reaktion mit dem Modell."},
+            {"question": scenario_en, "hint": rule_en, "explanation": "Compare your response with the model."},
+        ),
+        _localized_exercise(
+            {"type": "repeat", "stage": "transfer", "question": "Произнеси модель вслух.", "answer": answer, "accepted_answers": [answer, answer.rstrip(".?!")], "explanation": "Повтори спокойно и связно.", "misconception": misconception},
+            {"question": "Произнеси модель вслух.", "explanation": "Повтори спокойно и связно."},
+            {"question": "Sprich das Modell laut nach.", "explanation": "Sprich ruhig und zusammenhängend."},
+            {"question": "Say the model aloud.", "explanation": "Speak calmly and connect the sentence naturally."},
+        ),
     ]
-    return {"day": day, "week": module, "track": "B1", "module": module, "quality_version": 3, "title": title_ru, "objective": goal_ru, "communication_goal": goal_ru, "rule": rule_ru, "examples": [answer, answer.rstrip(".?!"), f"Das Zielmuster lautet: {answer}"], "audio_text": answer, "cefr": "B1", "prerequisites": [], "common_mistakes": ["❌ Die Satzstruktur bleibt unvollständig.", f"✅ {answer}"], "recall_prompt": "Закрой пример, назови правило и создай новую фразу.", "i18n": languages, "exercises": exercises}
+    return {"day": day, "week": module, "track": "B1", "module": module, "quality_version": 4, "learning_method": "notice_build_use_reflect", "title": title_ru, "objective": goal_ru, "communication_goal": goal_ru, "rule": rule_ru, "examples": [answer, answer.rstrip(".?!"), f"Das Zielmuster lautet: {answer}"], "audio_text": answer, "cefr": "B1", "prerequisites": [], "common_mistakes": [f"❌ {wrong}", f"✅ {answer}"], "recall_prompt": "Закрой пример, назови правило и создай новую фразу.", "i18n": languages, "exercises": exercises}

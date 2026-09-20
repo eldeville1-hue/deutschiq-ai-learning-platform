@@ -19,6 +19,7 @@ from app.services.content_quality import normalize_lesson_content
 from app.services.content_i18n import localize_lesson_content, normalize_language
 from app.services.production_feedback import evaluate_production
 from pathlib import Path
+from app.services.misconception_feedback import misconception_feedback
 
 router = APIRouter(prefix="/api/lesson", tags=["lesson"])
 
@@ -88,7 +89,7 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
     exercise = exercises[data.exercise_index]
     accepted = exercise.get("accepted_answers") or [exercise.get("answer", "")]
     production_feedback = None
-    if exercise.get("type") == "production":
+    if exercise.get("type") in {"production", "dialogue"}:
         production_feedback = await evaluate_production(data.answer, exercise, lesson_content, data.language)
         correct = production_feedback["correct"]
     else:
@@ -117,7 +118,8 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
     db.commit()
     skill = skill_for(topic)
     common_mistakes = lesson_content.get("common_mistakes") or []
-    error_type = None if correct else (exercise.get("error_type") or skill.pillar)
+    error_type = None if correct else (exercise.get("misconception") or exercise.get("error_type") or skill.pillar)
+    retry_copy = misconception_feedback(error_type, normalize_language(data.language)) if not correct else None
     return {
         "correct": correct,
         "correct_answer": production_feedback["corrected_answer"] if production_feedback else accepted[0],
@@ -130,11 +132,8 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
         "needs_support": not correct,
         "error_type": error_type,
         "contrast": common_mistakes[:2] if not correct else [],
-        "retry_instruction": (
-            ({"ru": "Сначала назови правило, затем составь ответ заново без копирования.", "de": "Nenne zuerst die Regel und bilde dann den Satz neu.", "en": "State the rule first, then rebuild the sentence without copying."}[normalize_language(data.language)])
-            if not correct else None
-        ),
-        "production": exercise.get("type") == "production",
+        "retry_instruction": retry_copy,
+        "production": exercise.get("type") in {"production", "dialogue"},
     }
 
 # Генерация упражнений (запасные)
