@@ -1,6 +1,22 @@
 from app.services.skill_graph import blocked_by
 
 
+def curriculum_track_for_level(level: str | None) -> str:
+    return "B1" if (level or "").upper() in {"B1", "B2", "C1", "C2"} else "foundation"
+
+
+def filter_roadmap_for_level(lessons, level: str | None):
+    """Choose one coherent route while retaining a fallback for older databases."""
+    requested = curriculum_track_for_level(level)
+    selected = [
+        lesson for lesson in lessons
+        if ((lesson.content or {}).get("track") or "foundation") == requested
+    ]
+    if selected:
+        return selected
+    return [lesson for lesson in lessons if ((lesson.content or {}).get("track") or "foundation") == "foundation"]
+
+
 def roadmap_order(lesson) -> int:
     content = lesson.content if isinstance(lesson.content, dict) else {}
     return int(content.get("day") or 999)

@@ -3,6 +3,7 @@ from app.core.database import SessionLocal
 from app.models.lesson import Lesson
 from app.models.learning import ExerciseAttempt, TopicMastery
 from app.models.user import User  # noqa: F401 - registers users for FK resolution
+from app.content.b1_curriculum import B1_CURRICULUM, build_b1_content
 
 
 CURRICULUM = [
@@ -172,6 +173,35 @@ def seed():
                     estimated_time=15,
                     is_active=True,
                 ))
+        for row in B1_CURRICULUM:
+            day, _module, topic, pillar, *_copy = row
+            content = build_b1_content(row)
+            existing = next((
+                item for item in existing_lessons
+                if isinstance(item.content, dict)
+                and item.content.get("track") == "B1"
+                and item.content.get("day") == day
+            ), None)
+            if existing:
+                existing.topic = topic
+                existing.level = "B1"
+                existing.pillar = pillar
+                existing.weak_point_tags = [topic]
+                existing.content = content
+                existing.estimated_time = 18
+                existing.xp_reward = 70
+                existing.is_active = True
+            else:
+                db.add(Lesson(
+                    level="B1",
+                    pillar=pillar,
+                    topic=topic,
+                    weak_point_tags=[topic],
+                    content=content,
+                    xp_reward=70,
+                    estimated_time=18,
+                    is_active=True,
+                ))
         # Preserve existing learning data while moving from translated titles to
         # stable skill ids. Multiple daily lessons may intentionally share a skill.
         legacy_to_skill = {topic: tag for _day, topic, _rule, tag, _example, _question, _answer in CURRICULUM}
@@ -202,7 +232,7 @@ def seed():
         for old_topic, skill in legacy_to_skill.items():
             db.query(ExerciseAttempt).filter(ExerciseAttempt.topic == old_topic).update({"topic": skill}, synchronize_session=False)
         db.commit()
-        print("✅ Roadmap синхронизирован: 30 уроков, 10 эталонных мультимодальных уроков")
+        print("✅ Roadmap синхронизирован: 30 foundation + 24 B1 урока")
     finally:
         db.close()
 

@@ -32,7 +32,13 @@ export const Plan: React.FC = () => {
   const visible = showWeek ? weekLessons : weekLessons.slice(0, 5);
   const routeCompleted = lessons.filter(item => item.completed).length;
   const routeProgress = Math.round((routeCompleted / Math.max(lessons.length, 1)) * 100);
-  const moduleNames = [
+  const isB1Track = current?.track === 'B1';
+  const moduleNames = isB1Track ? [
+    tr(lang, 'Связи предложений', 'Satzverknüpfung', 'Linking clauses'),
+    tr(lang, 'Пассив и модальность', 'Passiv & Modalität', 'Voice & modality'),
+    tr(lang, 'Грамматическая точность', 'Grammatische Präzision', 'Grammatical precision'),
+    tr(lang, 'Письмо и речь', 'Schreiben & Sprechen', 'Writing & speaking'),
+  ] : [
     tr(lang, 'Порядок слов', 'Satzbau', 'Word order'),
     tr(lang, 'Падежи', 'Fälle', 'Cases'),
     tr(lang, 'Артикли', 'Artikel', 'Articles'),

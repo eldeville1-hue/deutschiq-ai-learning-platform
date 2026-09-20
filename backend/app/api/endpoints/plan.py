@@ -37,18 +37,25 @@ async def get_plan(user_id: int, lang: str | None = None, db: Session = Depends(
         diagnostic = db.query(DiagnosticResult).filter(DiagnosticResult.user_id == user.id).order_by(DiagnosticResult.created_at.desc()).first()
         weak_points = diagnostic.weak_points if diagnostic and diagnostic.weak_points else {}
         recommended = select_recommended_lesson(lessons, completed_ids, mastery, weak_points)
-        week_titles = {
+        foundation_titles = {
             1: "Satzbau",
             2: "Dativ & Akkusativ",
             3: "Der, Die, Das",
             4: "Perfekt",
+        }
+        b1_titles = {
+            1: "Satzverknüpfung",
+            2: "Passiv & Modalität",
+            3: "Grammatische Präzision",
+            4: "Schreiben & Sprechen",
         }
         language = normalize_language(lang or user.language_code)
         return [{
             "id": lesson.id,
             "day": (lesson.content or {}).get("day", index + 1),
             "week": (lesson.content or {}).get("week", min(index // 7 + 1, 4)),
-            "week_title": week_titles.get((lesson.content or {}).get("week", min(index // 7 + 1, 4)), "Wiederholung"),
+            "week_title": (b1_titles if (lesson.content or {}).get("track") == "B1" else foundation_titles).get((lesson.content or {}).get("week", min(index // 7 + 1, 4)), "Wiederholung"),
+            "track": (lesson.content or {}).get("track", "foundation"),
             "topic": lesson.topic,
             "title": localize_lesson_content(normalize_lesson_content(lesson.content or {}, lesson.topic, lesson.level), language).get("title", lesson.topic),
             "pillar": lesson.pillar,

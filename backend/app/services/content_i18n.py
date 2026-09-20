@@ -74,6 +74,26 @@ def normalize_language(value: str | None) -> str:
 def localize_lesson_content(content: dict, language: str) -> dict:
     lang = normalize_language(language)
     value = deepcopy(content)
+    localized = (value.get("i18n") or {}).get(lang)
+    if localized:
+        objective = localized.get("objective", value.get("objective"))
+        value.update({
+            "title": localized.get("title", value.get("title")),
+            "rule": localized.get("rule", value.get("rule")),
+            "objective": objective,
+            "communication_goal": objective,
+        })
+        recall = {
+            "ru": "Закрой пример, назови правило и создай новую фразу.",
+            "de": "Schließe das Beispiel, nenne die Regel und bilde einen neuen Satz.",
+            "en": "Close the example, state the rule, and create a new sentence.",
+        }
+        value["recall_prompt"] = recall[lang]
+        for exercise in value.get("exercises") or []:
+            exercise.update((exercise.get("i18n") or {}).get(lang, {}))
+            exercise.pop("i18n", None)
+        value.pop("i18n", None)
+        return value
     if lang == "ru":
         return value
     day = int(value.get("day") or 0)
