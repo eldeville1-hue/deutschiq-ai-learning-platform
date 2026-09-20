@@ -43,6 +43,8 @@ async def get_plan(user_id: int, lang: str | None = None, db: Session = Depends(
             3: "Der, Die, Das",
             4: "Perfekt",
         }
+        a1_titles = {1: "Start & Orientierung", 2: "Sätze & Wörter", 3: "Alltagshandlungen", 4: "Im Alltag sprechen"}
+        a2_titles = {1: "Fälle sicher nutzen", 2: "Über Vergangenes sprechen", 3: "Sätze verbinden", 4: "Selbstständig kommunizieren"}
         b1_titles = {
             1: "Satzverknüpfung",
             2: "Passiv & Modalität",
@@ -60,7 +62,7 @@ async def get_plan(user_id: int, lang: str | None = None, db: Session = Depends(
             "id": lesson.id,
             "day": (lesson.content or {}).get("day", index + 1),
             "week": (lesson.content or {}).get("week", min(index // 7 + 1, 4)),
-            "week_title": ({"B1": b1_titles, "B2": b2_titles}.get((lesson.content or {}).get("track"), foundation_titles)).get((lesson.content or {}).get("week", min(index // 7 + 1, 4)), "Wiederholung"),
+            "week_title": ({"A1": a1_titles, "A2": a2_titles, "B1": b1_titles, "B2": b2_titles}.get((lesson.content or {}).get("track"), foundation_titles)).get((lesson.content or {}).get("week", min(index // 7 + 1, 4)), "Wiederholung"),
             "track": (lesson.content or {}).get("track", "foundation"),
             "topic": lesson.topic,
             "title": localize_lesson_content(normalize_lesson_content(lesson.content or {}, lesson.topic, lesson.level), language).get("title", lesson.topic),

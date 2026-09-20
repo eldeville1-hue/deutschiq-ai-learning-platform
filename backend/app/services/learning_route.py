@@ -2,10 +2,14 @@ from app.services.skill_graph import blocked_by
 
 
 def curriculum_track_for_level(level: str | None) -> str:
-    normalized = (level or "").upper()
+    # Accept display variants such as A1+ without letting presentation labels
+    # accidentally route a learner into another CEFR course.
+    normalized = (level or "A1").upper().strip()[:2]
     if normalized in {"B2", "C1", "C2"}:
         return "B2"
-    return "B1" if normalized == "B1" else "foundation"
+    if normalized == "B1":
+        return "B1"
+    return "A2" if normalized == "A2" else "A1"
 
 
 def filter_roadmap_for_level(lessons, level: str | None):
@@ -17,7 +21,17 @@ def filter_roadmap_for_level(lessons, level: str | None):
     ]
     if selected:
         return selected
-    return [lesson for lesson in lessons if ((lesson.content or {}).get("track") or "foundation") == "foundation"]
+    fallback_order = {
+        "A1": ("foundation",),
+        "A2": ("A1", "foundation"),
+        "B1": ("A2", "A1", "foundation"),
+        "B2": ("B1", "A2", "A1", "foundation"),
+    }
+    for fallback in fallback_order.get(requested, ("foundation",)):
+        fallback_lessons = [lesson for lesson in lessons if ((lesson.content or {}).get("track") or "foundation") == fallback]
+        if fallback_lessons:
+            return fallback_lessons
+    return []
 
 
 def roadmap_order(lesson) -> int:

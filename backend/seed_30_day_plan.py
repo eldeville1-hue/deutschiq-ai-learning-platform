@@ -5,6 +5,7 @@ from app.models.learning import ExerciseAttempt, TopicMastery
 from app.models.user import User  # noqa: F401 - registers users for FK resolution
 from app.content.b1_curriculum import B1_CURRICULUM, build_b1_content
 from app.content.b2_curriculum import B2_CURRICULUM, build_b2_content
+from app.content.foundation_curriculum import A1_CURRICULUM, A2_CURRICULUM, build_foundation_content
 
 
 CURRICULUM = [
@@ -203,6 +204,22 @@ def seed():
                     estimated_time=18,
                     is_active=True,
                 ))
+        for level, curriculum in (("A1", A1_CURRICULUM), ("A2", A2_CURRICULUM)):
+            for row in curriculum:
+                day, _module, topic, pillar, *_copy = row
+                content = build_foundation_content(row, level)
+                existing = next((item for item in existing_lessons if isinstance(item.content, dict) and item.content.get("track") == level and item.content.get("day") == day), None)
+                if existing:
+                    existing.topic = topic
+                    existing.level = level
+                    existing.pillar = pillar
+                    existing.weak_point_tags = [topic]
+                    existing.content = content
+                    existing.estimated_time = 14 if level == "A1" else 16
+                    existing.xp_reward = 50 if level == "A1" else 60
+                    existing.is_active = True
+                else:
+                    db.add(Lesson(level=level, pillar=pillar, topic=topic, weak_point_tags=[topic], content=content, xp_reward=50 if level == "A1" else 60, estimated_time=14 if level == "A1" else 16, is_active=True))
         for row in B2_CURRICULUM:
             day, _module, topic, pillar, *_copy = row
             content = build_b2_content(row)
@@ -253,7 +270,7 @@ def seed():
         for old_topic, skill in legacy_to_skill.items():
             db.query(ExerciseAttempt).filter(ExerciseAttempt.topic == old_topic).update({"topic": skill}, synchronize_session=False)
         db.commit()
-        print("✅ Roadmap синхронизирован: 30 foundation + 24 B1 + 16 B2 уроков")
+        print("✅ Roadmap синхронизирован: 20 A1 + 20 A2 + 24 B1 + 16 B2 уроков")
     finally:
         db.close()
 

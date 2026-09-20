@@ -5,6 +5,7 @@ from pathlib import Path
 from app.services.content_quality import normalize_lesson_content, validate_lesson_content, validate_roadmap_content
 from app.content.b1_curriculum import B1_CURRICULUM, build_b1_content
 from app.content.b2_curriculum import B2_CURRICULUM, build_b2_content
+from app.content.foundation_curriculum import A1_CURRICULUM, A2_CURRICULUM, build_foundation_content
 from app.services.content_i18n import localize_lesson_content
 
 
@@ -110,6 +111,22 @@ class ContentQualityTests(unittest.TestCase):
                 self.assertTrue(localized["title"])
                 self.assertTrue(localized["rule"])
                 self.assertTrue(all("i18n" not in exercise for exercise in localized["exercises"]))
+
+    def test_a1_and_a2_have_complete_multilingual_learning_loops(self):
+        for level, curriculum in (("A1", A1_CURRICULUM), ("A2", A2_CURRICULUM)):
+            self.assertEqual(20, len(curriculum))
+            self.assertEqual({1, 2, 3, 4}, {row[1] for row in curriculum})
+            for row in curriculum:
+                content = build_foundation_content(row, level)
+                self.assertEqual([], validate_roadmap_content(content), f"{level} day {row[0]}")
+                self.assertEqual(level, content["track"])
+                self.assertEqual(5, len(content["exercises"]))
+                self.assertEqual({"error_repair", "context_choice", "listening_choice", "dialogue", "repeat"}, {item["type"] for item in content["exercises"]})
+                for language in ("ru", "de", "en"):
+                    localized = localize_lesson_content(content, language)
+                    self.assertTrue(localized["title"])
+                    self.assertTrue(localized["objective"])
+                    self.assertTrue(all("i18n" not in item for item in localized["exercises"]))
 
 
 if __name__ == "__main__":
