@@ -47,49 +47,8 @@ function AppRoutes() {
   const legalKind = ({ '/privacy': 'privacy', '/imprint': 'imprint', '/terms': 'terms' } as const)[location.pathname as '/privacy' | '/imprint' | '/terms'];
   const portfolioRoute = location.pathname === '/about';
   const outsideTelegram = !import.meta.env.DEV && (window as any).Telegram?.WebApp?.platform === 'unknown';
-  const [telegramReady, setTelegramReady] = useState(() => hasTelegramIdentity());
-  const [bootstrapFinished, setBootstrapFinished] = useState(() => hasTelegramIdentity());
-
-  useEffect(() => {
-    const webApp = (window as any).Telegram?.WebApp;
-    if (outsideTelegram) { setBootstrapFinished(true); return; }
-    webApp?.ready?.();
-    webApp?.expand?.();
-
-    if (hasTelegramIdentity()) {
-      setTelegramReady(true);
-      setBootstrapFinished(true);
-      return;
-    }
-
-    // Telegram clients do not all populate WebApp data at exactly the same moment.
-    // Give the SDK enough time to finish initialization instead of rejecting the
-    // user after two seconds. Authentication is still enforced by the backend
-    // through Telegram's signed initData.
-    const startedAt = Date.now();
-    const maxWaitMs = 10_000;
-    const timer = window.setInterval(() => {
-      if (hasTelegramIdentity()) {
-        setTelegramReady(true);
-        setBootstrapFinished(true);
-        window.clearInterval(timer);
-        return;
-      }
-
-      if (Date.now() - startedAt >= maxWaitMs) {
-        setBootstrapFinished(true);
-        window.clearInterval(timer);
-      }
-    }, 150);
-
-    return () => window.clearInterval(timer);
-  }, [outsideTelegram]);
-
   if (legalKind) return <Suspense fallback={<main className="entry-loading"><div className="analysis-loader" /></main>}><Legal kind={legalKind} /></Suspense>;
   if (portfolioRoute || (outsideTelegram && location.pathname === '/')) return <Suspense fallback={<main className="entry-loading"><div className="analysis-loader" /></main>}><Portfolio /></Suspense>;
-  const authenticated = telegramReady || (import.meta.env.DEV && Boolean(import.meta.env.VITE_DEV_USER_ID));
-  if (!bootstrapFinished) return <main className="entry-loading"><BrandMark label="DeutschIQ" /><div className="analysis-loader" /></main>;
-  if (!authenticated) return <Suspense fallback={<main className="entry-loading"><div className="analysis-loader" /></main>}><Portfolio /></Suspense>;
   const primaryRoutes = ['/dashboard', '/analytics', '/plan', '/tutor', '/profile'];
   const hasBackButton = !['/', ...primaryRoutes].includes(location.pathname);
   const showPrimaryNav = primaryRoutes.includes(location.pathname);
@@ -97,7 +56,7 @@ function AppRoutes() {
     <div className={`app-frame${hasBackButton ? ' has-back-button' : ''}`}>
       <AppBackButton />
       <Suspense fallback={<div className="route-skeleton"><div className="skeleton" /><div className="skeleton" /><div className="skeleton" /></div>}>
-        <Routes location={location} key={location.key}>
+        <Routes location={location}>
           <Route path="/" element={<Entry />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/diagnostic" element={<Diagnostic />} />
@@ -116,14 +75,61 @@ function AppRoutes() {
   );
 }
 
+type BootstrapState = 'waiting' | 'ready' | 'missing';
+
+function TelegramBootstrap() {
+  const developmentIdentity = import.meta.env.DEV && Boolean(import.meta.env.VITE_DEV_USER_ID);
+  const publicPage = ['/about', '/privacy', '/imprint', '/terms'].includes(window.location.pathname)
+    || (window as any).Telegram?.WebApp?.platform === 'unknown';
+  const [state, setState] = useState<BootstrapState>(() => (
+    hasTelegramIdentity() || developmentIdentity || publicPage ? 'ready' : 'waiting'
+  ));
+
+  useEffect(() => {
+    if (state === 'ready') return;
+    const webApp = (window as any).Telegram?.WebApp;
+    webApp?.ready?.();
+    webApp?.expand?.();
+
+    const startedAt = Date.now();
+    const timer = window.setInterval(() => {
+      if (hasTelegramIdentity()) {
+        setState('ready');
+        window.clearInterval(timer);
+      } else if (Date.now() - startedAt >= 10_000) {
+        setState('missing');
+        window.clearInterval(timer);
+      }
+    }, 150);
+    return () => window.clearInterval(timer);
+  }, [state]);
+
+  if (state === 'waiting') return <main className="entry-loading"><BrandMark label="DeutschIQ" /><div className="analysis-loader" /></main>;
+  if (state === 'missing') return (
+    <main className="auth-error">
+      <BrandMark label="DeutschIQ" />
+      <h1>Open DeutschIQ in Telegram</h1>
+      <p>Открой приложение через @DeutschIQ_bot · Öffne die App über @DeutschIQ_bot</p>
+      <a className="primary-action" href="https://t.me/DeutschIQ_bot">Open Telegram</a>
+      <button className="secondary-action" type="button" onClick={() => window.location.reload()}>Try again</button>
+    </main>
+  );
+
+  // Providers that read Telegram identity mount only after the signed payload is
+  // available. This prevents an initial user 0 request and duplicate bootstrap.
+  return (
+    <LanguageProvider>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
+    </LanguageProvider>
+  );
+}
+
 function App() {
   return (
     <ThemeProvider>
-      <LanguageProvider>
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
-      </LanguageProvider>
+      <TelegramBootstrap />
     </ThemeProvider>
   );
 }

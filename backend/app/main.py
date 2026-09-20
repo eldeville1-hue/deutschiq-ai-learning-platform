@@ -15,14 +15,13 @@ from app.core.database import engine
 from sqlalchemy import text
 from aiogram.types import MenuButtonWebApp, WebAppInfo
 from app.bot.main import bot
-from app.core.cloud_runtime import public_origin
+from app.core.cloud_runtime import cache_control_for_path, public_origin
 from app.core.logging_config import configure_logging
 
 configure_logging()
 logger = logging.getLogger("deutschiq.api")
-VERSION = "31.0.0"
+VERSION = "31.0.1"
 BUILD_COMMIT = os.getenv("RENDER_GIT_COMMIT", os.getenv("GIT_COMMIT", "local"))[:12]
-
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     if settings.BOT_MODE == "webhook":
@@ -57,12 +56,17 @@ async def request_logging(request: Request, call_next):
         logger.exception("Unhandled request error", extra={"request_id": request_id, "method": request.method, "path": request.url.path})
         raise
     response.headers["X-Request-ID"] = request_id
+    cache_control = cache_control_for_path(request.url.path, response.headers.get("content-type", ""))
+    if cache_control:
+        response.headers["Cache-Control"] = cache_control
+        response.headers.pop("Pragma", None)
+        response.headers.pop("Expires", None)
     logger.info("Request completed", extra={"request_id": request_id, "method": request.method, "path": request.url.path, "status_code": response.status_code, "duration_ms": round((time.perf_counter() - started) * 1000, 2)})
     return response
 
 @app.get("/api/version")
 async def version():
-    return {"version": VERSION, "release": "functional-mobile-repair", "commit": BUILD_COMMIT}
+    return {"version": VERSION, "release": "telegram-session-stability", "commit": BUILD_COMMIT}
 
 @app.get("/api/health/live")
 async def liveness():

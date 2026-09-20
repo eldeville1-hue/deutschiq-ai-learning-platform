@@ -8,7 +8,7 @@ const apiClient = axios.create({
   baseURL: API_BASE,
   // Render free instances can need several seconds to wake up. A short timeout
   // made valid screens look broken before the server had a chance to answer.
-  timeout: 20000,
+  timeout: 35000,
 });
 
 apiClient.interceptors.request.use((config) => {
@@ -19,18 +19,49 @@ apiClient.interceptors.request.use((config) => {
 });
 
 const CACHE_TTL = 5 * 60 * 1000;
-const cachedGet = async <T>(key: string, request: () => Promise<T>): Promise<T> => {
+const inFlightGets = new Map<string, Promise<unknown>>();
+
+const cachedGet = async <T>(key: string, request: () => Promise<T>, ttl = CACHE_TTL, allowStale = false): Promise<T> => {
   const stored = localStorage.getItem(key);
+  let staleValue: T | undefined;
   if (stored) {
     try {
       const cached = JSON.parse(stored);
-      if (Date.now() - cached.savedAt < CACHE_TTL) return cached.value as T;
+      staleValue = cached.value as T;
+      if (Date.now() - cached.savedAt < ttl) return staleValue;
     } catch { localStorage.removeItem(key); }
   }
-  const value = await request();
-  localStorage.setItem(key, JSON.stringify({ savedAt: Date.now(), value }));
-  return value;
+  const existing = inFlightGets.get(key) as Promise<T> | undefined;
+  if (existing) return existing;
+
+  const pending = request()
+    .then(value => {
+      localStorage.setItem(key, JSON.stringify({ savedAt: Date.now(), value }));
+      return value;
+    })
+    .catch(error => {
+      if (allowStale && staleValue !== undefined) return staleValue;
+      throw error;
+    })
+    .finally(() => inFlightGets.delete(key));
+  inFlightGets.set(key, pending);
+  return pending;
 };
+
+const removeCached = (...prefixes: string[]) => {
+  for (let index = localStorage.length - 1; index >= 0; index -= 1) {
+    const key = localStorage.key(index);
+    if (key && prefixes.some(prefix => key.startsWith(prefix))) localStorage.removeItem(key);
+  }
+};
+
+const userCacheKey = (resource: string, userId: number, suffix = '') => `deutschiq-${resource}-${userId}${suffix}`;
+const invalidateLearningData = (userId: number) => removeCached(
+  userCacheKey('state', userId),
+  userCacheKey('dashboard', userId),
+  userCacheKey('plan', userId),
+  userCacheKey('today', userId),
+);
 
 apiClient.interceptors.response.use(
   response => response,
@@ -64,16 +95,22 @@ export const api = {
     return cachedGet(`deutschiq-questions-${lang}`, () => apiClient.get(`/api/diagnostic/questions?lang=${lang}`).then(r => r.data));
   },
   submitDiagnostic: (payload: { user_id: number; answers: Record<number, string>; language: AppLanguage }) => {
-    return apiClient.post('/api/diagnostic/submit', payload).then(r => r.data);
+    return apiClient.post('/api/diagnostic/submit', payload).then(r => {
+      invalidateLearningData(payload.user_id);
+      return r.data;
+    });
   },
 
   // Dashboard
   getDashboard: (userId: number) => {
-    return apiClient.get(`/api/dashboard/${userId}`).then(r => r.data);
+    return cachedGet(userCacheKey('dashboard', userId), () => apiClient.get(`/api/dashboard/${userId}`).then(r => r.data), 30_000, true);
   },
-  getUserState: (userId: number) => apiClient.get(`/api/user/state/${userId}`).then(r => r.data),
+  getUserState: (userId: number) => cachedGet(userCacheKey('state', userId), () => apiClient.get(`/api/user/state/${userId}`).then(r => r.data), 30_000, true),
   updateLanguage: (userId: number, language: AppLanguage) =>
-    apiClient.put('/api/user/language', { user_id: userId, language }).then(r => r.data),
+    apiClient.put('/api/user/language', { user_id: userId, language }).then(r => {
+      removeCached(userCacheKey('state', userId));
+      return r.data;
+    }),
 
   // Ошибки
   getMistakes: (userId: number) => {
@@ -82,7 +119,7 @@ export const api = {
 
   // План
   getPlan: (userId: number, lang?: AppLanguage) => {
-    return apiClient.get(`/api/plan/${userId}${lang ? `?lang=${lang}` : ''}`).then(r => r.data);
+    return cachedGet(userCacheKey('plan', userId, `-${lang || 'default'}`), () => apiClient.get(`/api/plan/${userId}${lang ? `?lang=${lang}` : ''}`).then(r => r.data), 30_000, true);
   },
 
   // Уроки
@@ -91,7 +128,10 @@ export const api = {
   },
   startLesson: (payload: { user_id: number; lesson_id: number }) => apiClient.post('/api/lesson/start', payload).then(r => r.data),
   completeLesson: (payload: { user_id: number; lesson_id: number; session_id: string }) => {
-    return apiClient.post('/api/lesson/complete', payload).then(r => r.data);
+    return apiClient.post('/api/lesson/complete', payload).then(r => {
+      invalidateLearningData(payload.user_id);
+      return r.data;
+    });
   },
   checkLessonAnswer: (payload: { user_id: number; lesson_id: number; exercise_index: number; answer: string; session_id: string; language: AppLanguage; confidence?: 'guess' | 'okay' | 'sure'; response_ms?: number }) =>
     apiClient.post('/api/lesson/check-answer', payload).then(r => r.data),
@@ -115,7 +155,7 @@ export const api = {
   getSpeechProgress: (userId: number) => apiClient.get(`/api/speech/progress/${userId}`).then(r => r.data),
 
   // Learning engine
-  getLearningToday: (userId: number, lang: AppLanguage) => apiClient.get(`/api/learning/today/${userId}?lang=${lang}`).then(r => r.data),
+  getLearningToday: (userId: number, lang: AppLanguage) => cachedGet(userCacheKey('today', userId, `-${lang}`), () => apiClient.get(`/api/learning/today/${userId}?lang=${lang}`).then(r => r.data), 30_000, true),
   getReviews: (userId: number, lang: AppLanguage) => apiClient.get(`/api/learning/reviews/${userId}?lang=${lang}`).then(r => r.data),
 
   // AI-тьютор
