@@ -49,12 +49,18 @@ async def get_plan(user_id: int, lang: str | None = None, db: Session = Depends(
             3: "Grammatische Präzision",
             4: "Schreiben & Sprechen",
         }
+        b2_titles = {
+            1: "Verknüpfen & Verdichten",
+            2: "Formeller Ausdruck",
+            3: "Argumentieren & Schreiben",
+            4: "Diskutieren & Präsentieren",
+        }
         language = normalize_language(lang or user.language_code)
         return [{
             "id": lesson.id,
             "day": (lesson.content or {}).get("day", index + 1),
             "week": (lesson.content or {}).get("week", min(index // 7 + 1, 4)),
-            "week_title": (b1_titles if (lesson.content or {}).get("track") == "B1" else foundation_titles).get((lesson.content or {}).get("week", min(index // 7 + 1, 4)), "Wiederholung"),
+            "week_title": ({"B1": b1_titles, "B2": b2_titles}.get((lesson.content or {}).get("track"), foundation_titles)).get((lesson.content or {}).get("week", min(index // 7 + 1, 4)), "Wiederholung"),
             "track": (lesson.content or {}).get("track", "foundation"),
             "topic": lesson.topic,
             "title": localize_lesson_content(normalize_lesson_content(lesson.content or {}, lesson.topic, lesson.level), language).get("title", lesson.topic),

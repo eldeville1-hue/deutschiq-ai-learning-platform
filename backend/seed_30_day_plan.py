@@ -4,6 +4,7 @@ from app.models.lesson import Lesson
 from app.models.learning import ExerciseAttempt, TopicMastery
 from app.models.user import User  # noqa: F401 - registers users for FK resolution
 from app.content.b1_curriculum import B1_CURRICULUM, build_b1_content
+from app.content.b2_curriculum import B2_CURRICULUM, build_b2_content
 
 
 CURRICULUM = [
@@ -202,6 +203,26 @@ def seed():
                     estimated_time=18,
                     is_active=True,
                 ))
+        for row in B2_CURRICULUM:
+            day, _module, topic, pillar, *_copy = row
+            content = build_b2_content(row)
+            existing = next((
+                item for item in existing_lessons
+                if isinstance(item.content, dict)
+                and item.content.get("track") == "B2"
+                and item.content.get("day") == day
+            ), None)
+            if existing:
+                existing.topic = topic
+                existing.level = "B2"
+                existing.pillar = pillar
+                existing.weak_point_tags = [topic]
+                existing.content = content
+                existing.estimated_time = 20
+                existing.xp_reward = 90
+                existing.is_active = True
+            else:
+                db.add(Lesson(level="B2", pillar=pillar, topic=topic, weak_point_tags=[topic], content=content, xp_reward=90, estimated_time=20, is_active=True))
         # Preserve existing learning data while moving from translated titles to
         # stable skill ids. Multiple daily lessons may intentionally share a skill.
         legacy_to_skill = {topic: tag for _day, topic, _rule, tag, _example, _question, _answer in CURRICULUM}
@@ -232,7 +253,7 @@ def seed():
         for old_topic, skill in legacy_to_skill.items():
             db.query(ExerciseAttempt).filter(ExerciseAttempt.topic == old_topic).update({"topic": skill}, synchronize_session=False)
         db.commit()
-        print("✅ Roadmap синхронизирован: 30 foundation + 24 B1 урока")
+        print("✅ Roadmap синхронизирован: 30 foundation + 24 B1 + 16 B2 уроков")
     finally:
         db.close()
 

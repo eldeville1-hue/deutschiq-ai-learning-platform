@@ -4,6 +4,7 @@ import unittest
 from pathlib import Path
 from app.services.content_quality import normalize_lesson_content, validate_lesson_content, validate_roadmap_content
 from app.content.b1_curriculum import B1_CURRICULUM, build_b1_content
+from app.content.b2_curriculum import B2_CURRICULUM, build_b2_content
 from app.services.content_i18n import localize_lesson_content
 
 
@@ -95,6 +96,20 @@ class ContentQualityTests(unittest.TestCase):
                     ])
                     self.assertIsNone(re.search(r"[А-Яа-яЁё]", visible), f"Cyrillic leaked into {language} day {row[0]}")
         self.assertEqual({"error_repair", "transform"}, guided_types)
+
+    def test_b2_track_has_16_multilingual_lessons(self):
+        self.assertEqual(16, len(B2_CURRICULUM))
+        self.assertEqual({1, 2, 3, 4}, {row[1] for row in B2_CURRICULUM})
+        for row in B2_CURRICULUM:
+            content = build_b2_content(row)
+            self.assertEqual([], validate_roadmap_content(content), f"day {row[0]}")
+            self.assertEqual("B2", content["track"])
+            self.assertEqual(5, len(content["exercises"]))
+            for language in ("ru", "de", "en"):
+                localized = localize_lesson_content(content, language)
+                self.assertTrue(localized["title"])
+                self.assertTrue(localized["rule"])
+                self.assertTrue(all("i18n" not in exercise for exercise in localized["exercises"]))
 
 
 if __name__ == "__main__":

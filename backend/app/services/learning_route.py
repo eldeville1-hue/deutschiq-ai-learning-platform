@@ -2,7 +2,10 @@ from app.services.skill_graph import blocked_by
 
 
 def curriculum_track_for_level(level: str | None) -> str:
-    return "B1" if (level or "").upper() in {"B1", "B2", "C1", "C2"} else "foundation"
+    normalized = (level or "").upper()
+    if normalized in {"B2", "C1", "C2"}:
+        return "B2"
+    return "B1" if normalized == "B1" else "foundation"
 
 
 def filter_roadmap_for_level(lessons, level: str | None):
