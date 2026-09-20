@@ -12,17 +12,23 @@ export const Plan: React.FC = () => {
   const navigate = useNavigate();
   const [lessons, setLessons] = useState<any[]>([]);
   const [dashboard, setDashboard] = useState<any>(null);
+  const [journey, setJourney] = useState<any>(null);
+  const [selectedTrack, setSelectedTrack] = useState<string>('');
   const [showWeek, setShowWeek] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const userId = getUserId();
 
   const load = useCallback(async () => {
-    const [plan, profile] = await Promise.allSettled([api.getPlan(userId, lang), api.getDashboard(userId)]);
+    const [plan, profile, path] = await Promise.allSettled([api.getPlan(userId, lang, selectedTrack || undefined), api.getDashboard(userId), api.getJourney(userId)]);
     if (plan.status === 'fulfilled') setLessons(Array.isArray(plan.value) ? plan.value : []);
     if (profile.status === 'fulfilled') setDashboard(profile.value);
     else setDashboard({ level: 'A1', targetLevel: 'A2' });
-    setLoadError(plan.status === 'rejected' || profile.status === 'rejected');
-  }, [lang, userId]);
+    if (path.status === 'fulfilled') {
+      setJourney(path.value);
+      if (!selectedTrack && path.value?.current_level) setSelectedTrack(path.value.current_level);
+    }
+    setLoadError(plan.status === 'rejected' || profile.status === 'rejected' || path.status === 'rejected');
+  }, [lang, selectedTrack, userId]);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -32,12 +38,22 @@ export const Plan: React.FC = () => {
   const visible = showWeek ? weekLessons : weekLessons.slice(0, 5);
   const routeCompleted = lessons.filter(item => item.completed).length;
   const routeProgress = Math.round((routeCompleted / Math.max(lessons.length, 1)) * 100);
-  const isB1Track = current?.track === 'B1';
-  const moduleNames = isB1Track ? [
+  const track = selectedTrack || current?.track || dashboard?.level || 'A1';
+  const moduleNames = track === 'B1' ? [
     tr(lang, 'Связи предложений', 'Satzverknüpfung', 'Linking clauses'),
     tr(lang, 'Пассив и модальность', 'Passiv & Modalität', 'Voice & modality'),
     tr(lang, 'Грамматическая точность', 'Grammatische Präzision', 'Grammatical precision'),
     tr(lang, 'Письмо и речь', 'Schreiben & Sprechen', 'Writing & speaking'),
+  ] : track === 'B2' ? [
+    tr(lang, 'Связи и сжатие', 'Verknüpfen & Verdichten', 'Linking & condensing'),
+    tr(lang, 'Формальный язык', 'Formeller Ausdruck', 'Formal expression'),
+    tr(lang, 'Аргументация', 'Argumentieren', 'Argumentation'),
+    tr(lang, 'Дискуссия', 'Diskutieren', 'Discussion'),
+  ] : track === 'A2' ? [
+    tr(lang, 'Падежи', 'Fälle', 'Cases'),
+    tr(lang, 'Прошедшее', 'Vergangenheit', 'Past events'),
+    tr(lang, 'Придаточные', 'Nebensätze', 'Subordinate clauses'),
+    tr(lang, 'Самостоятельная речь', 'Selbstständig sprechen', 'Independent communication'),
   ] : [
     tr(lang, 'Порядок слов', 'Satzbau', 'Word order'),
     tr(lang, 'Падежи', 'Fälle', 'Cases'),
@@ -56,6 +72,18 @@ export const Plan: React.FC = () => {
       </header>
 
       {loadError && <div className="rc-notice error"><span>{tr(lang, 'Не удалось полностью обновить маршрут', 'Die Route konnte nicht vollständig aktualisiert werden', 'The learning path could not be fully refreshed')}</span><button type="button" onClick={load}>{tr(lang, 'Обновить', 'Aktualisieren', 'Refresh')}</button></div>}
+
+      <section className="cefr-journey" aria-label={tr(lang, 'Путь по уровням', 'Niveaureise', 'Level journey')}>
+        <header><div><small>{tr(lang, 'ТВОЙ ПУТЬ', 'DEIN WEG', 'YOUR JOURNEY')}</small><h2>{tr(lang, 'Уровни немецкого', 'Deine Deutschniveaus', 'Your German levels')}</h2></div><span>{tr(lang, 'Освоение, не спешка', 'Können statt Tempo', 'Mastery over speed')}</span></header>
+        <div className="cefr-levels">{(journey?.levels || []).map((item: any) => {
+          const accessible = ['active', 'review', 'completed'].includes(item.state);
+          const label = item.state === 'active' ? tr(lang, 'Активный', 'Aktiv', 'Active') : item.state === 'review' ? tr(lang, 'Повторение', 'Wiederholen', 'Review') : item.state === 'completed' ? tr(lang, 'Пройден', 'Abgeschlossen', 'Completed') : item.state === 'coming_soon' ? tr(lang, 'Позже', 'Demnächst', 'Coming later') : tr(lang, 'Закрыт', 'Gesperrt', 'Locked');
+          return <button type="button" key={item.level} className={`cefr-level ${item.state}${track === item.level ? ' selected' : ''}`} disabled={!accessible} onClick={() => accessible && setSelectedTrack(item.level)}>
+            <span className="cefr-code">{item.level}</span><span><strong>{label}</strong><small>{item.total_lessons ? `${item.completed_lessons}/${item.total_lessons} · ${item.mastery}%` : '—'}</small></span>{accessible ? item.state === 'completed' ? <FaCheck /> : <FaPlay /> : <FaLock />}
+          </button>;
+        })}</div>
+        <p>{tr(lang, 'Нижние уровни доступны для повторения. Следующий уровень откроется после 80% уроков и 70% освоения.', 'Frühere Niveaus bleiben zum Wiederholen offen. Das nächste Niveau öffnet sich nach 80 % der Lektionen und 70 % Beherrschung.', 'Earlier levels remain open for review. The next level unlocks after 80% lesson completion and 70% mastery.')}</p>
+      </section>
 
       <section className="rc-plan-now">
         <header><span>{tr(lang, 'СЛЕДУЮЩИЙ УРОК', 'NÄCHSTE LEKTION', 'NEXT LESSON')}</span></header>

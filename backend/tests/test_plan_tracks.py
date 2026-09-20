@@ -1,7 +1,7 @@
 import unittest
 from types import SimpleNamespace
 
-from app.services.learning_route import curriculum_track_for_level, filter_roadmap_for_level
+from app.services.learning_route import curriculum_track_for_level, filter_roadmap_for_level, next_cefr_track, normalize_cefr, track_access
 
 
 def lesson(day, track=None):
@@ -39,6 +39,16 @@ class PlanTrackTests(unittest.TestCase):
         lessons = [lesson(31, "B1"), lesson(55, "B2"), lesson(56, "B2")]
         selected = filter_roadmap_for_level(lessons, "B2")
         self.assertEqual([55, 56], [item.content["day"] for item in selected])
+
+    def test_journey_access_keeps_lower_levels_open_and_higher_levels_locked(self):
+        self.assertEqual("review", track_access("A1", "B1"))
+        self.assertEqual("active", track_access("B1", "B1+"))
+        self.assertEqual("locked", track_access("B2", "B1"))
+        self.assertEqual("coming_soon", track_access("C1", "B2"))
+        self.assertEqual("A2", normalize_cefr("a2+"))
+        self.assertEqual("A2", next_cefr_track("A1"))
+        self.assertEqual("B1", next_cefr_track("A2+"))
+        self.assertIsNone(next_cefr_track("B2"))
 
 
 if __name__ == "__main__":

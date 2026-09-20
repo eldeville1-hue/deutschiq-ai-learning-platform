@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.services.plan import generate_plan
-from app.services.learning_route import lesson_blockers, select_recommended_lesson
+from app.services.learning_route import CEFR_TRACKS, lesson_blockers, select_recommended_lesson, normalize_cefr, track_access
 from app.models.user import User
 from app.models.diagnostic import DiagnosticResult
 from app.models.progress import UserProgress
@@ -18,14 +18,40 @@ from app.services.content_quality import normalize_lesson_content
 
 router = APIRouter(prefix="/api/plan", tags=["plan"])
 
+@router.get("/journey/{user_id}")
+async def get_journey(user_id: int, db: Session = Depends(get_db), authenticated_id: int = Depends(telegram_user_id)):
+    assert_owner(authenticated_id, user_id)
+    user = db.query(User).filter(User.telegram_id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    lessons = db.query(Lesson).filter(Lesson.is_active == True).all()
+    completed_ids = {row[0] for row in db.query(UserProgress.lesson_id).filter(UserProgress.user_id == user.id, UserProgress.completed == True).all()}
+    mastery = {row.topic: float(row.mastery or 0) for row in db.query(TopicMastery).filter(TopicMastery.user_id == user.id).all()}
+    result = []
+    for level in (*CEFR_TRACKS, "C1"):
+        track_lessons = [item for item in lessons if isinstance(item.content, dict) and item.content.get("track") == level]
+        completed = sum(1 for item in track_lessons if item.id in completed_ids)
+        mastered = [mastery[item.topic] for item in track_lessons if item.topic in mastery]
+        average_mastery = round(sum(mastered) / len(mastered)) if mastered else 0
+        completion = round(completed / len(track_lessons) * 100) if track_lessons else 0
+        state = track_access(level, user.current_level)
+        if state == "review" and completion >= 80 and average_mastery >= 70:
+            state = "completed"
+        result.append({"level": level, "state": state, "completion": completion, "mastery": average_mastery, "completed_lessons": completed, "total_lessons": len(track_lessons)})
+    return {"current_level": normalize_cefr(user.current_level), "levels": result, "unlock_rule": {"completion": 80, "mastery": 70}}
+
+
 @router.get("/{user_id}")
-async def get_plan(user_id: int, lang: str | None = None, db: Session = Depends(get_db), authenticated_id: int = Depends(telegram_user_id)):
+async def get_plan(user_id: int, lang: str | None = None, track: str | None = None, db: Session = Depends(get_db), authenticated_id: int = Depends(telegram_user_id)):
     assert_owner(authenticated_id, user_id)
     try:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         if not user:
             return {"error": f"Пользователь с telegram_id {user_id} не найден"}
-        lessons = generate_plan(db, user.id)
+        requested_track = normalize_cefr(track) if track else normalize_cefr(user.current_level)
+        if track_access(requested_track, user.current_level) == "locked":
+            raise HTTPException(status_code=403, detail="Complete your active level before opening this track")
+        lessons = generate_plan(db, user.id, level=requested_track)
         completed_ids = {
             row[0] for row in db.query(UserProgress.lesson_id).filter(
                 UserProgress.user_id == user.id,
@@ -79,6 +105,8 @@ async def get_plan(user_id: int, lang: str | None = None, db: Session = Depends(
                 else "improve_mastery"
             ),
         } for index, lesson in enumerate(lessons)]
+    except HTTPException:
+        raise
     except SQLAlchemyError:
         db.rollback()
         return []

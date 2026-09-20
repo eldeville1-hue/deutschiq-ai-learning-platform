@@ -20,6 +20,7 @@ from app.services.content_i18n import localize_lesson_content, normalize_languag
 from app.services.production_feedback import evaluate_production
 from pathlib import Path
 from app.services.misconception_feedback import misconception_feedback
+from app.services.learning_route import next_cefr_track, normalize_cefr
 
 router = APIRouter(prefix="/api/lesson", tags=["lesson"])
 
@@ -211,6 +212,21 @@ async def complete_lesson(data: CompleteLessonRequest, db: Session = Depends(get
         elif last_day != today:
             user.streak = 1
         user.last_activity = datetime.now()
+    unlocked_level = None
+    lesson_track = (lesson.content or {}).get("track") if isinstance(lesson.content, dict) else None
+    current_track = normalize_cefr(user.current_level)
+    if passed and lesson_track == current_track:
+        track_lessons = [item for item in db.query(Lesson).filter(Lesson.is_active == True).all() if isinstance(item.content, dict) and item.content.get("track") == current_track]
+        track_ids = [item.id for item in track_lessons]
+        completed_count = db.query(UserProgress).filter(UserProgress.user_id == user.id, UserProgress.lesson_id.in_(track_ids), UserProgress.completed == True).count() if track_ids else 0
+        track_topics = {item.topic for item in track_lessons}
+        mastery_values = [float(row.mastery or 0) for row in db.query(TopicMastery).filter(TopicMastery.user_id == user.id).all() if row.topic in track_topics]
+        completion_percent = round(completed_count / len(track_lessons) * 100) if track_lessons else 0
+        average_mastery = round(sum(mastery_values) / len(mastery_values)) if mastery_values else 0
+        candidate = next_cefr_track(current_track)
+        if candidate and completion_percent >= 80 and average_mastery >= 70:
+            user.current_level = candidate
+            unlocked_level = candidate
     db.commit()
     if passed:
         schedule_review(db, user.id, lesson.id)
@@ -229,4 +245,5 @@ async def complete_lesson(data: CompleteLessonRequest, db: Session = Depends(get
         "exercise_count": summary["exercise_count"],
         "duration_seconds": duration_seconds,
         "next_action": "plan" if passed else "retry",
+        "unlocked_level": unlocked_level,
     }

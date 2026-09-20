@@ -109,6 +109,7 @@ export const Lesson: React.FC = () => {
         completedRef.current = true;
         void api.trackEvent({ user_id: getUserId(), event_name: 'lesson_completed', properties: { lesson_id: Number(id), passed: Boolean(result.passed), score: Number(result.score || 0) } });
         void api.trackEvent({ user_id: getUserId(), event_name: 'session_finished', properties: { lesson_id: Number(id), duration_seconds: Number(result.duration_seconds || 0), corrected_retries: Number(result.corrected_retries || 0), needs_review: Number(result.needs_review || 0) } });
+        if (result.unlocked_level) void api.trackEvent({ user_id: getUserId(), event_name: 'level_unlocked', properties: { level: String(result.unlocked_level) } });
       }
     }
   };
@@ -413,6 +414,7 @@ export const Lesson: React.FC = () => {
               <span><b>{outcome.needs_review || 0}</b>{tr(lang, 'На повтор', 'Zum Wiederholen', 'To review')}</span>
             </div>
           )}
+          {outcome?.unlocked_level && <div className="level-unlocked"><small>{tr(lang, 'НОВЫЙ УРОВЕНЬ', 'NEUES NIVEAU', 'NEW LEVEL')}</small><strong>{outcome.unlocked_level}</strong><span>{tr(lang, 'Твой следующий маршрут открыт.', 'Dein nächster Lernweg ist jetzt offen.', 'Your next learning path is now open.')}</span></div>}
           <p>
             {outcome?.passed === false
               ? tr(lang, "Урок не завершён: повтори задания и набери 70%.", "Die Lektion bleibt offen. Wiederhole sie und erreiche 70%.", "The lesson remains open. Repeat it and reach 70%.")

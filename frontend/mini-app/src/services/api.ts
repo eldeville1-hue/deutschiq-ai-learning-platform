@@ -128,9 +128,14 @@ export const api = {
   },
 
   // План
-  getPlan: (userId: number, lang?: AppLanguage) => {
-    return cachedGet(userCacheKey('plan', userId, `-${lang || 'default'}`), () => apiClient.get(`/api/plan/${userId}${lang ? `?lang=${lang}` : ''}`).then(r => r.data), 30_000, true);
+  getPlan: (userId: number, lang?: AppLanguage, track?: string) => {
+    const params = new URLSearchParams();
+    if (lang) params.set('lang', lang);
+    if (track) params.set('track', track);
+    const suffix = params.toString() ? `?${params.toString()}` : '';
+    return cachedGet(userCacheKey('plan', userId, `-${lang || 'default'}-${track || 'active'}`), () => apiClient.get(`/api/plan/${userId}${suffix}`).then(r => r.data), 30_000, true);
   },
+  getJourney: (userId: number) => cachedGet(userCacheKey('journey', userId), () => apiClient.get(`/api/plan/journey/${userId}`).then(r => r.data), 30_000, true),
 
   // Уроки
   getLesson: (lessonId: number, lang: AppLanguage) => {

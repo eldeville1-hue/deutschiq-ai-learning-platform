@@ -1,10 +1,39 @@
 from app.services.skill_graph import blocked_by
 
+CEFR_TRACKS = ("A1", "A2", "B1", "B2")
+
+
+def normalize_cefr(level: str | None) -> str:
+    value = (level or "A1").upper().strip()[:2]
+    return value if value in CEFR_TRACKS else ("B2" if value in {"C1", "C2"} else "A1")
+
+
+def track_access(track: str, current_level: str | None) -> str:
+    """Return the learner-facing state for a CEFR track."""
+    if track == "C1":
+        return "coming_soon"
+    if track not in CEFR_TRACKS:
+        return "locked"
+    current = normalize_cefr(current_level)
+    requested_rank = CEFR_TRACKS.index(track)
+    current_rank = CEFR_TRACKS.index(current)
+    if requested_rank < current_rank:
+        return "review"
+    if requested_rank == current_rank:
+        return "active"
+    return "locked"
+
+
+def next_cefr_track(level: str | None) -> str | None:
+    current = normalize_cefr(level)
+    index = CEFR_TRACKS.index(current)
+    return CEFR_TRACKS[index + 1] if index + 1 < len(CEFR_TRACKS) else None
+
 
 def curriculum_track_for_level(level: str | None) -> str:
     # Accept display variants such as A1+ without letting presentation labels
     # accidentally route a learner into another CEFR course.
-    normalized = (level or "A1").upper().strip()[:2]
+    normalized = normalize_cefr(level)
     if normalized in {"B2", "C1", "C2"}:
         return "B2"
     if normalized == "B1":

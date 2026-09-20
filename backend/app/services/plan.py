@@ -5,7 +5,7 @@ from app.models.diagnostic import DiagnosticResult
 from app.models.lesson import Lesson
 from app.services.learning_route import filter_roadmap_for_level, roadmap_order
 
-def generate_plan(db: Session, user_id: int, limit: int = 30):
+def generate_plan(db: Session, user_id: int, limit: int = 30, level: str | None = None):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         return []
@@ -20,7 +20,7 @@ def generate_plan(db: Session, user_id: int, limit: int = 30):
     if roadmap:
         # The visible route is pedagogical and stable. Personalization chooses a
         # recommendation; it must never renumber or reshuffle the curriculum.
-        roadmap = filter_roadmap_for_level(roadmap, user.current_level)
+        roadmap = filter_roadmap_for_level(roadmap, level or user.current_level)
         roadmap.sort(key=roadmap_order)
         return roadmap[:limit]
 
