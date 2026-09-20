@@ -20,7 +20,7 @@ export const Tutor: React.FC = () => {
   const conversationEnd = useRef<HTMLDivElement>(null);
   const loadTutor = useCallback(() => {
     setReady(false);
-    return api.getTutorState(userId)
+    return api.getTutorState(userId, lang)
       .then((tutor) => {
         setMessages(Array.isArray(tutor.messages) ? tutor.messages : []);
         setRemaining(Number(tutor.remaining || 0));
@@ -28,7 +28,7 @@ export const Tutor: React.FC = () => {
       })
       .catch(() => setLoadError(true))
       .finally(() => setReady(true));
-  }, [userId]);
+  }, [lang, userId]);
   useEffect(() => { void api.trackEvent({ user_id: userId, event_name: 'tutor_opened' }); void loadTutor(); }, [loadTutor, userId]);
   useEffect(() => { conversationEnd.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, [messages, loading]);
   const send = async (text = question) => {

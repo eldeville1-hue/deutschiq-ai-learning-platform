@@ -1,0 +1,40 @@
+import unittest
+from pathlib import Path
+
+
+class FrontendInternationalizationTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.frontend = Path(__file__).resolve().parents[2] / "frontend" / "mini-app" / "src"
+
+    def read(self, relative: str) -> str:
+        return (self.frontend / relative).read_text(encoding="utf-8")
+
+    def test_authentication_recovery_uses_selected_language(self):
+        source = self.read("App.tsx")
+        self.assertIn("tr(preferredLanguage", source)
+        self.assertNotIn("Открой приложение через @DeutschIQ_bot · Öffne", source)
+
+    def test_celebration_has_no_russian_only_user_copy(self):
+        source = self.read("components/Celebration.tsx")
+        self.assertIn("useLanguage", source)
+        self.assertNotIn("Урок завершён!</h2>", source)
+        self.assertNotIn("Продолжайте в том же духе", source)
+
+    def test_tutor_history_is_requested_for_active_language(self):
+        page = self.read("pages/Tutor.tsx")
+        api = self.read("services/api.ts")
+        self.assertIn("api.getTutorState(userId, lang)", page)
+        self.assertIn("/api/tutor/state/${userId}?lang=${lang}", api)
+
+    def test_diagnostic_and_mistakes_have_localized_retry_states(self):
+        diagnostic = self.read("pages/Diagnostic.tsx")
+        mistakes = self.read("pages/Mistakes.tsx")
+        self.assertIn("questionError", diagnostic)
+        self.assertIn("setQuestionRetry", diagnostic)
+        self.assertIn("loadError", mistakes)
+        self.assertIn("Erneut versuchen", mistakes)
+
+
+if __name__ == "__main__":
+    unittest.main()

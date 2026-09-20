@@ -19,4 +19,5 @@ class TutorMessage(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     role = Column(String(16), nullable=False)
     content = Column(Text, nullable=False)
+    language = Column(String(8), nullable=False, default="legacy", server_default="legacy", index=True)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)

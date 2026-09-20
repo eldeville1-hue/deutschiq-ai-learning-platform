@@ -5,7 +5,8 @@ import { ThemeProvider } from './context/ThemeContext';
 import { AppBackButton } from './components/AppBackButton';
 import { BrandMark } from './components/BrandMark';
 import { BottomNav } from './components/BottomNav';
-import { hasTelegramIdentity } from './utils/user';
+import { getTelegramUser, hasTelegramIdentity } from './utils/user';
+import { normalizeLanguage, tr } from './i18n/language';
 import './styles/global.css';
 
 const Entry = lazy(() => import('./pages/Entry').then(module => ({ default: module.Entry })));
@@ -84,6 +85,9 @@ function TelegramBootstrap() {
   const [state, setState] = useState<BootstrapState>(() => (
     hasTelegramIdentity() || developmentIdentity || publicPage ? 'ready' : 'waiting'
   ));
+  const preferredLanguage = normalizeLanguage(
+    localStorage.getItem('deutschiq_lang') || getTelegramUser()?.language_code,
+  );
 
   useEffect(() => {
     if (state === 'ready') return;
@@ -108,10 +112,10 @@ function TelegramBootstrap() {
   if (state === 'missing') return (
     <main className="auth-error">
       <BrandMark label="DeutschIQ" />
-      <h1>Open DeutschIQ in Telegram</h1>
-      <p>Открой приложение через @DeutschIQ_bot · Öffne die App über @DeutschIQ_bot</p>
-      <a className="primary-action" href="https://t.me/DeutschIQ_bot">Open Telegram</a>
-      <button className="secondary-action" type="button" onClick={() => window.location.reload()}>Try again</button>
+      <h1>{tr(preferredLanguage, 'Открой DeutschIQ в Telegram', 'Öffne DeutschIQ in Telegram', 'Open DeutschIQ in Telegram')}</h1>
+      <p>{tr(preferredLanguage, 'Запусти приложение через @DeutschIQ_bot.', 'Starte die App über @DeutschIQ_bot.', 'Launch the app through @DeutschIQ_bot.')}</p>
+      <a className="primary-action" href="https://t.me/DeutschIQ_bot">{tr(preferredLanguage, 'Открыть Telegram', 'Telegram öffnen', 'Open Telegram')}</a>
+      <button className="secondary-action" type="button" onClick={() => window.location.reload()}>{tr(preferredLanguage, 'Повторить', 'Erneut versuchen', 'Try again')}</button>
     </main>
   );
 

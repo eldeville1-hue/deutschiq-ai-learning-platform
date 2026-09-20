@@ -19,9 +19,9 @@ from app.services.content_i18n import normalize_language
 
 router = APIRouter(prefix="/api/tutor", tags=["tutor"])
 
-def save_exchange(db: Session, user_id: int, question: str, answer: str, usage: "TutorUsage", daily_limit: int, mode: str):
-    db.add(TutorMessage(user_id=user_id, role="user", content=question))
-    db.add(TutorMessage(user_id=user_id, role="assistant", content=answer))
+def save_exchange(db: Session, user_id: int, question: str, answer: str, usage: "TutorUsage", daily_limit: int, mode: str, language: str):
+    db.add(TutorMessage(user_id=user_id, role="user", content=question, language=language))
+    db.add(TutorMessage(user_id=user_id, role="assistant", content=answer, language=language))
     usage.questions_used += 1
     db.commit()
     return {"answer": answer, "remaining": max(0, daily_limit - usage.questions_used), "mode": mode}
@@ -79,7 +79,7 @@ async def ask_tutor(data: TutorRequest, db: Session = Depends(get_db), authentic
     # A provider outage or exhausted credit must not turn the tutor into a dead button.
     if not client:
         answer = fallback_answer(data.question, lang, level, fallback_topics)
-        return save_exchange(db, user.id, data.question, answer, usage, daily_limit, "local")
+        return save_exchange(db, user.id, data.question, answer, usage, daily_limit, "local", lang)
     
     # 4. Системный промпт
     system_prompt = f"""
@@ -107,7 +107,7 @@ Rules:
     
     # 5. Собираем сообщения: системный промпт + история (если есть) + текущий вопрос
     messages = [{"role": "system", "content": system_prompt}]
-    stored_history = db.query(TutorMessage).filter(TutorMessage.user_id == user.id).order_by(TutorMessage.created_at.desc()).limit(12).all()
+    stored_history = db.query(TutorMessage).filter(TutorMessage.user_id == user.id, TutorMessage.language == lang).order_by(TutorMessage.created_at.desc()).limit(12).all()
     messages.extend({"role": item.role, "content": item.content} for item in reversed(stored_history))
     messages.append({"role": "user", "content": data.question})
     
@@ -120,15 +120,15 @@ Rules:
             max_tokens=400
         )
         answer = response.choices[0].message.content
-        return save_exchange(db, user.id, data.question, answer, usage, daily_limit, "ai")
+        return save_exchange(db, user.id, data.question, answer, usage, daily_limit, "ai", lang)
         
     except Exception as e:
         print(f"❌ OpenAI error, using local tutor: {e}")
         answer = fallback_answer(data.question, lang, level, fallback_topics)
-        return save_exchange(db, user.id, data.question, answer, usage, daily_limit, "local")
+        return save_exchange(db, user.id, data.question, answer, usage, daily_limit, "local", lang)
 
 @router.get("/state/{user_id}")
-async def tutor_state(user_id: int, db: Session = Depends(get_db), authenticated_id: int = Depends(telegram_user_id)):
+async def tutor_state(user_id: int, lang: str = "en", db: Session = Depends(get_db), authenticated_id: int = Depends(telegram_user_id)):
     assert_owner(authenticated_id, user_id)
     user = db.query(User).filter(User.telegram_id == user_id).first()
     if not user:
@@ -136,5 +136,6 @@ async def tutor_state(user_id: int, db: Session = Depends(get_db), authenticated
     usage = db.query(TutorUsage).filter(TutorUsage.user_id == user.id, TutorUsage.usage_date == date.today()).first()
     pro = has_active_pro(user)
     limit = settings.BETA_TUTOR_DAILY_LIMIT if settings.BETA_FREE_ACCESS else (999 if pro else 3)
-    history = db.query(TutorMessage).filter(TutorMessage.user_id == user.id).order_by(TutorMessage.created_at.desc()).limit(30).all()
+    language = normalize_language(lang)
+    history = db.query(TutorMessage).filter(TutorMessage.user_id == user.id, TutorMessage.language == language).order_by(TutorMessage.created_at.desc()).limit(30).all()
     return {"remaining": max(0, limit - (usage.questions_used if usage else 0)), "limit": limit, "is_pro": pro, "beta_free": settings.BETA_FREE_ACCESS, "messages": [{"role": item.role, "content": item.content} for item in reversed(history)]}

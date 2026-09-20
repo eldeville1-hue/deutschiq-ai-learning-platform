@@ -26,7 +26,7 @@ interface RadarChartProps {
 export const RadarChart: React.FC<RadarChartProps> = ({
   data,
   maxValue = 10,
-  label = 'Оценка',
+  label = 'DeutschIQ',
   height = 220,
   compact = false,
 }) => {

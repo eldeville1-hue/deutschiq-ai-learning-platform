@@ -162,7 +162,7 @@ export const api = {
   askTutor: (payload: { user_id: number; question: string; language: AppLanguage; history?: any[] }) => {
     return apiClient.post('/api/tutor/ask', payload).then(r => r.data);
   },
-  getTutorState: (userId: number) => apiClient.get(`/api/tutor/state/${userId}`).then(r => r.data),
+  getTutorState: (userId: number, lang: AppLanguage) => apiClient.get(`/api/tutor/state/${userId}?lang=${lang}`).then(r => r.data),
 
   // Достижения
   getBadges: (userId: number) => {

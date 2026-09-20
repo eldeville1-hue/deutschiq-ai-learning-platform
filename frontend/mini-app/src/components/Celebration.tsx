@@ -1,6 +1,8 @@
 // frontend/mini-app/src/components/Celebration.tsx
 import React, { useEffect, useState } from 'react';
 import Confetti from 'react-confetti';
+import { useLanguage } from '../context/LanguageContext';
+import { tr } from '../i18n/language';
 
 interface CelebrationProps {
   show: boolean;
@@ -13,9 +15,11 @@ export const Celebration: React.FC<CelebrationProps> = ({
   show,
   onComplete,
   xpGained = 50,
-  lessonTitle = 'Урок',
+  lessonTitle,
 }) => {
+  const { lang } = useLanguage();
   const [isVisible, setIsVisible] = useState(show);
+  const title = lessonTitle || tr(lang, 'Урок', 'Lektion', 'Lesson');
 
   useEffect(() => {
     if (show) {
@@ -69,10 +73,10 @@ export const Celebration: React.FC<CelebrationProps> = ({
       }}>
         <div style={{ fontSize: '64px', marginBottom: '8px' }}>🎉</div>
         <h2 style={{ color: '#FFD700', fontSize: '24px', fontWeight: '700', margin: '0 0 8px 0' }}>
-          Урок завершён!
+          {tr(lang, 'Урок завершён!', 'Lektion abgeschlossen!', 'Lesson complete!')}
         </h2>
         <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '16px', margin: '0 0 12px 0' }}>
-          «{lessonTitle}»
+          «{title}»
         </p>
         <div style={{
           display: 'inline-block',
@@ -86,10 +90,9 @@ export const Celebration: React.FC<CelebrationProps> = ({
           </span>
         </div>
         <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '13px', marginTop: '16px' }}>
-          Продолжайте в том же духе! 💪
+          {tr(lang, 'Продолжай в том же духе!', 'Weiter so!', 'Keep it up!')} 💪
         </p>
       </div>
     </div>
   );
 };
-

@@ -21,6 +21,8 @@ export const Diagnostic: React.FC = () => {
   const [answerLocked, setAnswerLocked] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [questionError, setQuestionError] = useState(false);
+  const [questionRetry, setQuestionRetry] = useState(0);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -37,10 +39,15 @@ export const Diagnostic: React.FC = () => {
 
   useEffect(() => {
     if (userId === null) return;
+    setLoading(true);
+    setQuestionError(false);
+    setCurrent(0);
+    setAnswers({});
+    setAnswerLocked(false);
     api.getQuestions(lang)
       .then(data => { setQuestions(Array.isArray(data) ? data : []); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, [userId, lang]);
+      .catch(() => { setQuestions([]); setQuestionError(true); setLoading(false); });
+  }, [userId, lang, questionRetry]);
 
   const submitTest = async (finalAnswers: Record<number, string>) => {
     if (!userId || submitting) return;
@@ -88,8 +95,10 @@ export const Diagnostic: React.FC = () => {
   if (questions.length === 0) {
     return (
       <main className="diagnostic-shell diagnostic-empty">
-        <p>{t.diagnostic.noQuestions}</p>
-        <button onClick={() => navigate('/')} className="btn-gold">{t.common.back}</button>
+        <p>{questionError ? tr(lang, 'Не удалось загрузить вопросы.', 'Fragen konnten nicht geladen werden.', 'Could not load the questions.') : t.diagnostic.noQuestions}</p>
+        {questionError
+          ? <button type="button" onClick={() => setQuestionRetry(value => value + 1)} className="btn-gold">{tr(lang, 'Повторить', 'Erneut versuchen', 'Try again')}</button>
+          : <button type="button" onClick={() => navigate('/')} className="btn-gold">{t.common.back}</button>}
       </main>
     );
   }
