@@ -71,6 +71,7 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .profile-language .language-picker { max-width: none; margin: 0; }
 
 .app-frame { position: relative; width: 100%; height: 100dvh; min-height: 0; overflow: hidden; background: radial-gradient(circle at 50% -10%, #172235 0, var(--dq-bg) 34%); }
+.connection-status { position: fixed; z-index: 120; top: max(7px,env(safe-area-inset-top)); left: 50%; max-width: calc(100% - 24px); transform: translateX(-50%); padding: 7px 11px; border: 1px solid rgba(244,191,85,.28); border-radius: 999px; background: rgba(16,23,33,.96); color: var(--dq-gold-soft); box-shadow: 0 8px 24px rgba(0,0,0,.28); font-size: 10px; font-weight: 750; text-align: center; }
 [data-theme="light"] .app-frame { background: radial-gradient(circle at 50% -10%, #fff8e7 0, var(--dq-bg) 36%); }
 .app-shell, .app-shell.compact-page, .rc-page {
   position: relative;

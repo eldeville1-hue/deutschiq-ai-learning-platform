@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useLayoutEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
-import { LanguageProvider } from './context/LanguageContext';
+import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { AppBackButton } from './components/AppBackButton';
 import { BrandMark } from './components/BrandMark';
@@ -22,6 +22,23 @@ const Mistakes = lazy(() => import('./pages/Mistakes').then(module => ({ default
 const Review = lazy(() => import('./pages/Review').then(module => ({ default: module.Review })));
 const Legal = lazy(() => import('./pages/Legal').then(module => ({ default: module.Legal })));
 const Portfolio = lazy(() => import('./pages/Portfolio').then(module => ({ default: module.Portfolio })));
+
+function ConnectionStatus() {
+  const { lang } = useLanguage();
+  const [online, setOnline] = useState(() => navigator.onLine);
+  useEffect(() => {
+    const connected = () => setOnline(true);
+    const disconnected = () => setOnline(false);
+    window.addEventListener('online', connected);
+    window.addEventListener('offline', disconnected);
+    return () => {
+      window.removeEventListener('online', connected);
+      window.removeEventListener('offline', disconnected);
+    };
+  }, []);
+  if (online) return null;
+  return <div className="connection-status" role="status">{tr(lang, 'Нет сети · сохранённые данные доступны', 'Offline · gespeicherte Daten sind verfügbar', 'Offline · saved data remains available')}</div>;
+}
 
 function AppRoutes() {
   const location = useLocation();
@@ -55,6 +72,7 @@ function AppRoutes() {
   const showPrimaryNav = primaryRoutes.includes(location.pathname);
   return (
     <div className={`app-frame${hasBackButton ? ' has-back-button' : ''}`}>
+      <ConnectionStatus />
       <AppBackButton />
       <Suspense fallback={<div className="route-skeleton"><div className="skeleton" /><div className="skeleton" /><div className="skeleton" /></div>}>
         <Routes location={location}>

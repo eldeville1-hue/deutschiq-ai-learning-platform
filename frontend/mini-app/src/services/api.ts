@@ -21,22 +21,30 @@ apiClient.interceptors.request.use((config) => {
 const CACHE_TTL = 5 * 60 * 1000;
 const inFlightGets = new Map<string, Promise<unknown>>();
 
+const readCache = (key: string) => {
+  try { return localStorage.getItem(key); } catch { return null; }
+};
+
+const writeCache = (key: string, value: unknown) => {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* Private mode or full storage: network still works. */ }
+};
+
 const cachedGet = async <T>(key: string, request: () => Promise<T>, ttl = CACHE_TTL, allowStale = false): Promise<T> => {
-  const stored = localStorage.getItem(key);
+  const stored = readCache(key);
   let staleValue: T | undefined;
   if (stored) {
     try {
       const cached = JSON.parse(stored);
       staleValue = cached.value as T;
       if (Date.now() - cached.savedAt < ttl) return staleValue;
-    } catch { localStorage.removeItem(key); }
+    } catch { try { localStorage.removeItem(key); } catch { /* Ignore unavailable storage. */ } }
   }
   const existing = inFlightGets.get(key) as Promise<T> | undefined;
   if (existing) return existing;
 
   const pending = request()
     .then(value => {
-      localStorage.setItem(key, JSON.stringify({ savedAt: Date.now(), value }));
+      writeCache(key, { savedAt: Date.now(), value });
       return value;
     })
     .catch(error => {
@@ -49,10 +57,12 @@ const cachedGet = async <T>(key: string, request: () => Promise<T>, ttl = CACHE_
 };
 
 const removeCached = (...prefixes: string[]) => {
-  for (let index = localStorage.length - 1; index >= 0; index -= 1) {
-    const key = localStorage.key(index);
-    if (key && prefixes.some(prefix => key.startsWith(prefix))) localStorage.removeItem(key);
-  }
+  try {
+    for (let index = localStorage.length - 1; index >= 0; index -= 1) {
+      const key = localStorage.key(index);
+      if (key && prefixes.some(prefix => key.startsWith(prefix))) localStorage.removeItem(key);
+    }
+  } catch { /* Cache invalidation must never block a learning action. */ }
 };
 
 const userCacheKey = (resource: string, userId: number, suffix = '') => `deutschiq-${resource}-${userId}${suffix}`;

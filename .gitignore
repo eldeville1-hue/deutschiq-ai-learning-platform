@@ -17,6 +17,8 @@ backend/venv/
 node_modules/
 frontend/mini-app/node_modules/
 frontend/mini-app/dist/
+frontend/mini-app/playwright-report/
+frontend/mini-app/test-results/
 dist/
 *.tsbuildinfo
 

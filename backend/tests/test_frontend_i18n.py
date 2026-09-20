@@ -51,6 +51,14 @@ class FrontendInternationalizationTests(unittest.TestCase):
         self.assertIn("exercise_retried", lesson)
         self.assertIn("corrected_retries", lesson)
 
+    def test_mobile_reliability_has_offline_and_safe_cache_recovery(self):
+        app = self.read("App.tsx")
+        api = self.read("services/api.ts")
+        self.assertIn("ConnectionStatus", app)
+        self.assertIn("window.addEventListener('offline'", app)
+        self.assertIn("const readCache", api)
+        self.assertIn("const writeCache", api)
+
 
 if __name__ == "__main__":
     unittest.main()
