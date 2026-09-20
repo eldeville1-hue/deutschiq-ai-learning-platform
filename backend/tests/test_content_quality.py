@@ -44,17 +44,20 @@ class ContentQualityTests(unittest.TestCase):
 
         self.assertEqual(len(namespace["CURRICULUM"]), 30)
         total_exercises = 0
+        exercise_types = set()
         for row in namespace["CURRICULUM"]:
             day, topic, rule, _, example, question, answer = row
             content = namespace["build_content"](day, topic, rule, example, question, answer)
             self.assertEqual(content["quality_version"], 2)
             self.assertEqual(validate_roadmap_content(content), [], f"day {day}")
             kinds = {item["type"] for item in content["exercises"]}
+            exercise_types.update(kinds)
             self.assertTrue({"listening", "production", "repeat"}.issubset(kinds))
             self.assertGreaterEqual(len(set(content["examples"])), 3)
             self.assertFalse(content["title"].lower().startswith("tag "))
             total_exercises += len(content["exercises"])
         self.assertGreaterEqual(total_exercises, 120)
+        self.assertTrue({"fill", "reorder", "listening", "production", "repeat"}.issubset(exercise_types))
 
 
 if __name__ == "__main__":

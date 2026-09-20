@@ -29,7 +29,7 @@ export const Tutor: React.FC = () => {
       .catch(() => setLoadError(true))
       .finally(() => setReady(true));
   }, [userId]);
-  useEffect(() => { void loadTutor(); }, [loadTutor]);
+  useEffect(() => { void api.trackEvent({ user_id: userId, event_name: 'tutor_opened' }); void loadTutor(); }, [loadTutor, userId]);
   useEffect(() => { conversationEnd.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, [messages, loading]);
   const send = async (text = question) => {
     if (!text.trim() || loading) return;

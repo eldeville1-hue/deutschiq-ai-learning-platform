@@ -26,15 +26,18 @@ export const Plan: React.FC = () => {
 
   useEffect(() => { void load(); }, [load]);
 
-  const current = useMemo(() => lessons.find(item => !item.completed && !(Array.isArray(item.blocked_by) && item.blocked_by.length)) || lessons.find(item => !item.completed) || lessons[0], [lessons]);
+  const current = useMemo(() => lessons.find(item => item.recommended) || lessons.find(item => !item.completed && !(Array.isArray(item.blocked_by) && item.blocked_by.length)) || lessons.find(item => !item.completed) || lessons[0], [lessons]);
   const week = Number(current?.week || 1);
   const weekLessons = lessons.filter(item => Number(item.week || 1) === week);
   const visible = showWeek ? weekLessons : weekLessons.slice(0, 5);
-  const completed = weekLessons.filter(item => item.completed).length;
-  const total = weekLessons.length || 7;
-  const progress = Math.round((completed / total) * 100);
   const routeCompleted = lessons.filter(item => item.completed).length;
-  const weekdays = lang === 'ru' ? ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС'] : lang === 'de' ? ['MO', 'DI', 'MI', 'DO', 'FR', 'SA', 'SO'] : ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
+  const routeProgress = Math.round((routeCompleted / Math.max(lessons.length, 1)) * 100);
+  const moduleNames = [
+    tr(lang, 'Порядок слов', 'Satzbau', 'Word order'),
+    tr(lang, 'Падежи', 'Fälle', 'Cases'),
+    tr(lang, 'Артикли', 'Artikel', 'Articles'),
+    tr(lang, 'Прошедшее время', 'Vergangenheit', 'Past tense'),
+  ];
 
   if (!dashboard) return <main className="app-shell rc-page"><div className="skeleton rc-hero-skeleton" /></main>;
 
@@ -43,7 +46,7 @@ export const Plan: React.FC = () => {
       <header className="rc-page-title">
         <p>{tr(lang, 'ПЛАН', 'PLAN', 'PLAN')}</p>
         <h1>{dashboard.level || 'A1'} <span>→</span> {dashboard.targetLevel || 'A2'}</h1>
-        <span>{tr(lang, `${routeCompleted} из ${lessons.length || 30} тем освоено`, `${routeCompleted} von ${lessons.length || 30} Themen gelernt`, `${routeCompleted} of ${lessons.length || 30} topics mastered`)}</span>
+        <span>{tr(lang, 'Твой маршрут по навыкам', 'Dein Weg nach Fähigkeiten', 'Your skill-based path')}</span>
       </header>
 
       {loadError && <div className="rc-notice error"><span>{tr(lang, 'Не удалось полностью обновить маршрут', 'Die Route konnte nicht vollständig aktualisiert werden', 'The learning path could not be fully refreshed')}</span><button type="button" onClick={load}>{tr(lang, 'Обновить', 'Aktualisieren', 'Refresh')}</button></div>}
@@ -54,14 +57,14 @@ export const Plan: React.FC = () => {
         <button type="button" className="rc-primary" disabled={!current?.id} onClick={() => current?.id && navigate(withUser(`/lesson/${current.id}`))}><span><FaPlay /> {current?.id ? tr(lang, 'Начать', 'Starten', 'Start') : tr(lang, 'Загрузка…', 'Laden…', 'Loading…')}</span></button>
       </section>
 
-      <section className="rc-week-progress">
-        <header><div><small>{tr(lang, `НЕДЕЛЯ ${week}`, `WOCHE ${week}`, `WEEK ${week}`)}</small><h2>{tr(lang, 'Календарь занятий', 'Lernkalender', 'Learning calendar')}</h2></div><strong>{completed}/{total}</strong></header>
-        <div className="rc-week-days">{weekdays.map((day, index) => <div key={day} className={index < completed ? 'done' : index === completed ? 'current' : ''}><span>{day}</span><i>{index < completed ? <FaCheck /> : index + 1}</i></div>)}</div>
-        <div className="rc-meter"><i style={{ width: `${progress}%` }} /></div>
+      <section className="rc-plan-progress">
+        <header><span>{tr(lang, 'ПРОГРЕСС', 'FORTSCHRITT', 'PROGRESS')}</span><strong>{routeCompleted}/{lessons.length || 30}</strong></header>
+        <div className="rc-meter"><i style={{ width: `${routeProgress}%` }} /></div>
+        <div className="rc-module-strip">{moduleNames.map((name, index) => <span key={name} className={index + 1 < week ? 'done' : index + 1 === week ? 'current' : ''}>{index + 1}. {name}</span>)}</div>
       </section>
 
       <section className="rc-route">
-        <header><div><small>{tr(lang, 'МАРШРУТ', 'ROUTE', 'PATH')}</small><h2>{tr(lang, 'Следующие навыки', 'Nächste Fähigkeiten', 'Next skills')}</h2></div><span>{progress}%</span></header>
+        <header><div><small>{tr(lang, `МОДУЛЬ ${week}`, `MODUL ${week}`, `MODULE ${week}`)}</small><h2>{moduleNames[week - 1] || tr(lang, 'Следующие навыки', 'Nächste Fähigkeiten', 'Next skills')}</h2></div><span>{routeProgress}%</span></header>
         <div className="rc-route-list">
           {visible.map((lesson, index) => {
             const locked = Array.isArray(lesson.blocked_by) && lesson.blocked_by.length > 0;
@@ -69,7 +72,9 @@ export const Plan: React.FC = () => {
             const detail = lesson.completed
               ? tr(lang, 'Завершено', 'Abgeschlossen', 'Completed')
               : locked
-                ? tr(lang, 'Сначала заверши предыдущий этап', 'Zuerst die vorherige Etappe abschließen', 'Complete the previous step first')
+                ? lesson.blocked_by?.includes('previous_step')
+                  ? tr(lang, 'Сначала пройди предыдущий шаг', 'Zuerst den vorherigen Schritt abschließen', 'Complete the previous step first')
+                  : tr(lang, 'Сначала закрепи базовый навык', 'Zuerst die Grundlage festigen', 'Strengthen the prerequisite first')
                 : lesson.mastery == null
                   ? tr(lang, 'Доступно', 'Bereit', 'Ready')
                   : `${tr(lang, 'Освоено', 'Beherrscht', 'Mastery')} ${lesson.mastery}%`;
@@ -81,7 +86,7 @@ export const Plan: React.FC = () => {
           })}
           {!visible.length && <div className="rc-empty-inline"><span>{tr(lang, 'Маршрут появится после диагностики.', 'Deine Route erscheint nach der Diagnose.', 'Your learning path will appear after the placement test.')}</span></div>}
         </div>
-        {weekLessons.length > 5 && <button type="button" className="rc-text-action" onClick={() => setShowWeek(value => !value)}>{showWeek ? tr(lang, 'Скрыть дополнительные дни', 'Weitere Tage ausblenden', 'Show fewer days') : tr(lang, 'Показать всю неделю', 'Ganze Woche anzeigen', 'Show full week')} <FaChevronDown className={showWeek ? 'rotated' : ''} /></button>}
+        {weekLessons.length > 5 && <button type="button" className="rc-text-action" onClick={() => setShowWeek(value => !value)}>{showWeek ? tr(lang, 'Показать меньше шагов', 'Weniger Schritte anzeigen', 'Show fewer steps') : tr(lang, 'Показать весь модуль', 'Ganzes Modul anzeigen', 'Show full module')} <FaChevronDown className={showWeek ? 'rotated' : ''} /></button>}
       </section>
     </main>
   );

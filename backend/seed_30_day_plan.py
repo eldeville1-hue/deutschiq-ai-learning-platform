@@ -106,8 +106,21 @@ def build_content(day, topic, rule, example, question, answer):
     if day in GOLD_LESSON_EXAMPLES:
         examples.extend(GOLD_LESSON_EXAMPLES[day])
     listening_answer = GOLD_LESSON_EXAMPLES.get(day, (example,))[0]
+    token_source = question.split(":", 1)[-1]
+    tokens = [token.strip() for token in token_source.split("/") if token.strip()]
+    guided_exercise = {
+        "type": "reorder" if len(tokens) >= 3 else "fill",
+        "stage": "guided",
+        "question": question,
+        "answer": answer,
+        "accepted_answers": [answer],
+        "hint": rule,
+        "explanation": f"Правило: {rule}",
+    }
+    if guided_exercise["type"] == "reorder":
+        guided_exercise["tokens"] = tokens
     exercises = [
-        {"type": "fill", "stage": "guided", "question": question, "answer": answer, "accepted_answers": [answer], "hint": rule, "explanation": f"Правило: {rule}"},
+        guided_exercise,
         {"type": "listening", "stage": "independent", "question": "Прослушай фразу и запиши её по-немецки.", "answer": listening_answer, "accepted_answers": [listening_answer, listening_answer.rstrip(".?!")], "hint": "Сначала улови глагол, затем восстанови остальные части.", "explanation": f"Ты услышал: {listening_answer}"},
         {"type": "production", "stage": "transfer", "question": communication_goal, "answer": example, "model_answer": example, "accepted_answers": [example, example.rstrip(".?!")], "target_patterns": target_patterns, "hint": "Используй структуру урока, но выбери собственные детали.", "explanation": "Проверь, выполнена ли коммуникативная цель, затем сравни грамматику с моделью."},
         {"type": "repeat", "stage": "transfer", "question": "Произнеси модель вслух, сохраняя порядок слов и окончания.", "answer": example, "accepted_answers": [example, example.rstrip(".?!")], "explanation": "Повтори фразу спокойно ещё раз и добейся полного распознавания ключевых слов."},

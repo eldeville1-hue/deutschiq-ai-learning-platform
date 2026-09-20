@@ -12,6 +12,7 @@ router = APIRouter(prefix="/api/events", tags=["events"])
 ALLOWED_EVENTS = {
     "dashboard_viewed", "lesson_started", "exercise_answered",
     "lesson_completed", "review_started", "tutor_opened",
+    "beta_feedback",
 }
 
 
@@ -29,7 +30,11 @@ async def capture_event(data: EventRequest, db: Session = Depends(get_db), authe
     user = db.query(User).filter(User.telegram_id == data.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    safe_properties = {str(key)[:48]: value for key, value in list(data.properties.items())[:12] if isinstance(value, (str, int, float, bool))}
+    safe_properties = {
+        str(key)[:48]: (value[:800] if isinstance(value, str) else value)
+        for key, value in list(data.properties.items())[:12]
+        if isinstance(value, (str, int, float, bool))
+    }
     db.add(ProductEvent(user_id=user.id, event_name=data.event_name, properties=safe_properties))
     db.commit()
     return Response(status_code=204)

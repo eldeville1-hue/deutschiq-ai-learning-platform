@@ -3,13 +3,14 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.services.plan import generate_plan
+from app.services.learning_route import lesson_blockers, select_recommended_lesson
 from app.models.user import User
+from app.models.diagnostic import DiagnosticResult
 from app.models.progress import UserProgress
 from app.models.learning import TopicMastery
 import traceback
 from sqlalchemy.exc import SQLAlchemyError
 from app.core.telegram_auth import telegram_user_id, assert_owner
-from app.services.skill_graph import blocked_by
 from datetime import datetime, timezone
 from app.services.content_i18n import localize_lesson_content
 from app.services.content_i18n import normalize_language
@@ -33,6 +34,9 @@ async def get_plan(user_id: int, lang: str | None = None, db: Session = Depends(
         }
         mastery_rows = db.query(TopicMastery).filter(TopicMastery.user_id == user.id).all()
         mastery = {row.topic: round(row.mastery) for row in mastery_rows}
+        diagnostic = db.query(DiagnosticResult).filter(DiagnosticResult.user_id == user.id).order_by(DiagnosticResult.created_at.desc()).first()
+        weak_points = diagnostic.weak_points if diagnostic and diagnostic.weak_points else {}
+        recommended = select_recommended_lesson(lessons, completed_ids, mastery, weak_points)
         week_titles = {
             1: "Satzbau",
             2: "Dativ & Akkusativ",
@@ -52,7 +56,8 @@ async def get_plan(user_id: int, lang: str | None = None, db: Session = Depends(
             "estimated_time": lesson.estimated_time,
             "completed": lesson.id in completed_ids,
             "mastery": mastery.get(lesson.topic),
-            "blocked_by": blocked_by(lesson.topic, mastery),
+            "blocked_by": lesson_blockers(lesson, lessons, completed_ids, mastery),
+            "recommended": bool(recommended and lesson.id == recommended.id),
             "recommendation_reason": (
                 "review_due" if any(row.topic == lesson.topic and row.next_review_at and (row.next_review_at if row.next_review_at.tzinfo else row.next_review_at.replace(tzinfo=timezone.utc)) <= datetime.now(timezone.utc) for row in mastery_rows)
                 else "build_foundation" if mastery.get(lesson.topic) is None

@@ -34,7 +34,8 @@ export const Lesson: React.FC = () => {
     () => (lesson?.content?.exercises || []).slice(0, 4),
     [lesson],
   );
-  const total = 4 + exercises.length;
+  const introSteps = 2;
+  const total = introSteps + exercises.length;
   useEffect(() => {
     Promise.all([
       api.getLesson(Number(id), lang),
@@ -60,7 +61,7 @@ export const Lesson: React.FC = () => {
       </div>
     );
   const content = lesson.content || {};
-  const exerciseIndex = step - 4;
+  const exerciseIndex = step - introSteps;
   const exercise = exercises[exerciseIndex];
   const resetAnswer = () => {
     setAnswer("");
@@ -159,7 +160,7 @@ export const Lesson: React.FC = () => {
           <div className="lesson-objective">{content.objective}</div>
           <div className="rule-card">{content.rule}</div>
           <button className="primary-action" onClick={next}>
-            {tr(lang, "Посмотреть пример", "Beispiel ansehen", "See an example")}{" "}
+            {tr(lang, "Показать пример", "Beispiel zeigen", "Show example")}{" "}
             <FaArrowRight />
           </button>
         </section>
@@ -176,53 +177,22 @@ export const Lesson: React.FC = () => {
             {content.examples?.[0] || "Heute lerne ich Deutsch."}
           </div>
           <div className="audio-controls">
-            <button onClick={() => speak(0.9)}>
+            <button type="button" onClick={() => speak(0.9)}>
               <FaVolumeUp /> {tr(lang, "Обычно", "Normal", "Normal")}
             </button>
-            <button onClick={() => speak(0.65)}>
+            <button type="button" onClick={() => speak(0.65)}>
               <FaVolumeUp /> {tr(lang, "Медленно", "Langsam", "Slow")}
             </button>
           </div>
+          {(content.common_mistakes || []).length > 0 && (
+            <div className="mistake-contrast compact">
+              {(content.common_mistakes || []).slice(0, 2).map((item: string, index: number) => (
+                <div key={index} className={item.includes("❌") ? "bad" : "good"}>{item}</div>
+              ))}
+            </div>
+          )}
           <button className="primary-action" onClick={next}>
-            {tr(lang, "Дальше", "Weiter", "Continue")}{" "}
-            <FaArrowRight />
-          </button>
-        </section>
-      )}
-      {step === 2 && (
-        <section className="lesson-step">
-          <p className="eyebrow">
-            {tr(lang, "СРАВНИ", "VERGLEICHEN", "COMPARE")}
-          </p>
-          <h1>{tr(lang, "Найди разницу", "Erkenne den Unterschied", "Spot the difference")}</h1>
-          <div className="mistake-contrast">
-            {(content.common_mistakes || []).map(
-              (item: string, index: number) => (
-                <div
-                  key={index}
-                  className={item.includes("❌") ? "bad" : "good"}
-                >
-                  {item}
-                </div>
-              ),
-            )}
-          </div>
-          <button className="primary-action" onClick={next}>
-            {tr(lang, "Понятно", "Verstanden", "Got it")}{" "}
-            <FaArrowRight />
-          </button>
-        </section>
-      )}
-      {step === 3 && (
-        <section className="lesson-step retrieval-gate">
-          <p className="eyebrow">
-            {tr(lang, "ВСПОМНИ", "ERINNERN", "RECALL")}
-          </p>
-          <h1>
-          {content.recall_prompt || tr(lang, "Закрой пример и вспомни правило своими словами", "Erinnere dich an die Regel mit eigenen Worten", "Hide the example and recall the rule in your own words")}
-          </h1>
-          <button className="primary-action" onClick={next}>
-            {tr(lang, "К заданиям", "Zu den Aufgaben", "Start exercises")}{" "}
+            {tr(lang, "Начать практику", "Übung starten", "Start practice")}{" "}
             <FaArrowRight />
           </button>
         </section>

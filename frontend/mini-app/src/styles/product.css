@@ -275,6 +275,15 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .rc-plan-now > div small { color: var(--dq-muted); font-size: 10px; }
 .rc-plan-now h2 { margin: 0; font-size: 23px; line-height: 1.12; letter-spacing: -.035em; }
 .rc-plan-now .rc-primary { min-height: 48px; box-shadow: none; }
+.rc-plan-progress { display: grid; gap: 13px; padding: 16px 0; border-top: 1px solid var(--dq-border); border-bottom: 1px solid var(--dq-border); }
+.rc-plan-progress > header { display: flex; align-items: center; justify-content: space-between; }
+.rc-plan-progress > header span { color: var(--dq-gold); font-size: 9px; font-weight: 850; letter-spacing: .14em; }
+.rc-plan-progress > header strong { color: var(--dq-muted); font-size: 12px; }
+.rc-module-strip { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+.rc-module-strip::-webkit-scrollbar { display: none; }
+.rc-module-strip span { flex: 0 0 auto; padding: 7px 9px; border: 1px solid var(--dq-border); border-radius: 10px; color: var(--dq-subtle); font-size: 10px; }
+.rc-module-strip span.current { border-color: rgba(244,191,85,.38); background: rgba(244,191,85,.08); color: var(--dq-gold-soft); }
+.rc-module-strip span.done { border-color: rgba(99,215,170,.2); color: var(--dq-green); }
 .rc-week-progress { display: grid; gap: 15px; padding: 17px 0; border-top: 1px solid var(--dq-border); border-bottom: 1px solid var(--dq-border); }
 .rc-week-progress > header, .rc-route > header { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
 .rc-week-progress > header > div, .rc-route > header > div { display: grid; gap: 5px; }
@@ -476,6 +485,11 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .subscription-card > header span { display: flex; align-items: center; gap: 7px; }
 .subscription-card > header b { padding: 5px 8px; border-radius: 8px; background: rgba(130,174,248,.1); }
 .subscription-card h2 { margin: 2px 0 0; font-size: 18px; }
+.beta-feedback-trigger { min-height: 42px; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 13px; border: 1px solid rgba(244,191,85,.22); border-radius: 13px; background: rgba(244,191,85,.07); color: var(--dq-gold-soft); font: inherit; font-size: 12px; font-weight: 750; }
+.beta-feedback-form { display: grid; gap: 9px; padding-top: 3px; }
+.beta-feedback-form textarea { width: 100%; min-height: 94px; resize: vertical; padding: 12px; border: 1px solid var(--dq-border); border-radius: 13px; outline: 0; background: rgba(6,10,16,.55); color: var(--dq-text); font: inherit; font-size: 13px; line-height: 1.45; }
+.beta-feedback-form textarea:focus { border-color: rgba(244,191,85,.45); }
+.beta-feedback-form button { min-height: 42px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 13px; background: var(--dq-gold-soft); color: #10151d; font: inherit; font-size: 12px; font-weight: 850; }
 .subscription-card p { margin: 0; color: var(--dq-muted); font-size: 11px; line-height: 1.48; }
 .subscription-card > button { min-height: 43px; display: flex; align-items: center; justify-content: space-between; padding: 0 13px; border: 0; border-radius: 12px; background: var(--dq-gold); color: #11151c; font-size: 11px; font-weight: 850; }
 
@@ -533,6 +547,8 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .precision-lesson .mistake-contrast > div { min-height: 52px; display: flex; align-items: center; padding: 13px 15px; border: 1px solid var(--dq-border); border-radius: 14px; background: var(--dq-surface); font-size: 14px; line-height: 1.45; }
 .precision-lesson .mistake-contrast > .bad { border-color: rgba(255,120,133,.23); }
 .precision-lesson .mistake-contrast > .good { border-color: rgba(99,215,170,.23); }
+.precision-lesson .mistake-contrast.compact { gap: 7px; }
+.precision-lesson .mistake-contrast.compact > div { min-height: 44px; padding: 10px 13px; font-size: 13px; }
 .precision-lesson .reorder-answer { min-height: 58px; padding: 16px; border: 1px dashed var(--dq-border-strong); border-radius: 15px; color: var(--dq-muted); font-size: 14px; line-height: 1.5; }
 .precision-lesson .word-tokens { display: flex; flex-wrap: wrap; gap: 8px; }
 .precision-lesson .word-tokens button { min-height: 42px; padding: 0 13px; font-size: 14px; }

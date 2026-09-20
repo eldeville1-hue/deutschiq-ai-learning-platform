@@ -19,7 +19,7 @@ export const Review: React.FC = () => {
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => { api.getReviews(getUserId(), lang).then(data => setItems(data.reviews || [])).catch(() => { setItems([]); setError(tr(lang, 'Не удалось загрузить повторения.', 'Wiederholungen konnten nicht geladen werden.', 'Could not load reviews.')); }); }, [lang]);
+  useEffect(() => { void api.trackEvent({ user_id: getUserId(), event_name: 'review_started' }); api.getReviews(getUserId(), lang).then(data => setItems(data.reviews || [])).catch(() => { setItems([]); setError(tr(lang, 'Не удалось загрузить повторения.', 'Wiederholungen konnten nicht geladen werden.', 'Could not load reviews.')); }); }, [lang]);
 
   const leave = () => navigate(withUser('/dashboard'));
   if (items === null) return <main className="lesson-flow rc-review"><div className="skeleton rc-hero-skeleton" /></main>;

@@ -51,6 +51,12 @@ export const api = {
   getVersion: () => apiClient.get('/api/version').then(r => r.data),
   trackEvent: (payload: { user_id: number; event_name: string; properties?: Record<string, string | number | boolean> }) =>
     apiClient.post('/api/events', payload).catch(() => undefined),
+  submitBetaFeedback: (payload: { user_id: number; message: string; language: AppLanguage; page: string }) =>
+    apiClient.post('/api/events', {
+      user_id: payload.user_id,
+      event_name: 'beta_feedback',
+      properties: { message: payload.message, language: payload.language, page: payload.page },
+    }),
   exportUserData: (userId: number) => apiClient.get(`/api/user-data/${userId}`).then(r => r.data),
   deleteUserData: (userId: number) => apiClient.delete(`/api/user-data/${userId}`),
   // Диагностика

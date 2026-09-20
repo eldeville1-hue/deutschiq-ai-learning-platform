@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { FaCheck, FaChevronRight, FaDownload, FaMedal, FaMoon, FaRedo, FaShareAlt, FaSun, FaTrash } from 'react-icons/fa';
+import { FaCheck, FaChevronRight, FaCommentDots, FaDownload, FaMedal, FaMoon, FaPaperPlane, FaRedo, FaShareAlt, FaSun, FaTrash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
@@ -21,6 +21,8 @@ export const Profile: React.FC = () => {
   const [data, setData] = useState<any>(null);
   const [lessons, setLessons] = useState<any[]>([]);
   const [actionStatus, setActionStatus] = useState('');
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedbackText, setFeedbackText] = useState('');
   const user = getTelegramUser();
   const rawName = user?.first_name || '';
   const name = /[\p{L}\p{N}]/u.test(rawName) ? rawName : tr(lang, 'Ученик', 'Lernende', 'Learner');
@@ -52,13 +54,26 @@ export const Profile: React.FC = () => {
       window.location.assign('/');
     } catch { setActionStatus(tr(lang, 'Не удалось удалить данные. Попробуй позже.', 'Daten konnten nicht gelöscht werden. Versuche es später erneut.', 'Could not delete your data. Try again later.')); }
   };
+  const sendFeedback = async () => {
+    const message = feedbackText.trim();
+    if (!message) return;
+    setActionStatus(tr(lang, 'Отправляем отзыв…', 'Feedback wird gesendet…', 'Sending feedback…'));
+    try {
+      await api.submitBetaFeedback({ user_id: getUserId(), message, language: lang, page: 'profile' });
+      setFeedbackText('');
+      setFeedbackOpen(false);
+      setActionStatus(tr(lang, 'Спасибо. Отзыв сохранён.', 'Danke. Dein Feedback wurde gespeichert.', 'Thank you. Your feedback was saved.'));
+    } catch {
+      setActionStatus(tr(lang, 'Не удалось отправить. Попробуй ещё раз.', 'Senden fehlgeschlagen. Versuche es erneut.', 'Could not send it. Please try again.'));
+    }
+  };
   const weekdays = lang === 'ru' ? ['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'] : lang === 'de' ? ['MO','DI','MI','DO','FR','SA','SO'] : ['MO','TU','WE','TH','FR','SA','SU'];
   return (
     <main className="app-shell profile-page precision-profile v30-page v30-profile page-enter">
       <header className="profile-masthead page-stagger-1"><span>{tr(lang, 'ПРОФИЛЬ', 'PROFIL', 'PROFILE')}</span><b>DeutschIQ</b></header>
       <section className="profile-passport page-stagger-1"><div className="avatar">{initials}</div><div><small>{tr(lang, 'УЧЕНИК', 'LERNENDE', 'LEARNER')}</small><h1>{name}</h1><p>{tr(lang, 'Немецкий каждый день', 'Deutsch jeden Tag', 'German every day')}</p></div><strong>{data.level || 'A1'}</strong></section>
       <section className="profile-numbers page-stagger-2"><div><strong><CountUp value={data.xp || 0} /></strong><span>XP</span></div><div><strong>{completed}</strong><span>{tr(lang, 'уроков', 'Lektionen', 'lessons')}</span></div><div><strong>{activityCount}</strong><span>{tr(lang, 'активностей', 'Aktivitäten', 'activities')}</span></div></section>
-      <section className="subscription-card active beta-access"><header><span><FaCheck /> {tr(lang, 'БЕСПЛАТНАЯ БЕТА', 'KOSTENLOSE BETA', 'FREE BETA')}</span><b>{tr(lang, 'ОТКРЫТО', 'OFFEN', 'OPEN')}</b></header><h2>{tr(lang, 'Все функции доступны', 'Alle Funktionen verfügbar', 'All features available')}</h2><p>{tr(lang, 'Тестируй приложение бесплатно.', 'Teste die App kostenlos.', 'Test the app for free.')}</p></section>
+      <section className="subscription-card active beta-access"><header><span><FaCheck /> {tr(lang, 'БЕСПЛАТНАЯ БЕТА', 'KOSTENLOSE BETA', 'FREE BETA')}</span><b>{tr(lang, 'ОТКРЫТО', 'OFFEN', 'OPEN')}</b></header><h2>{tr(lang, 'Все функции доступны', 'Alle Funktionen verfügbar', 'All features available')}</h2><p>{tr(lang, 'Тестируй приложение бесплатно.', 'Teste die App kostenlos.', 'Test the app for free.')}</p><button type="button" className="beta-feedback-trigger" onClick={() => setFeedbackOpen(value => !value)}><FaCommentDots /> {tr(lang, 'Что улучшить?', 'Was sollen wir verbessern?', 'What should we improve?')}</button>{feedbackOpen && <div className="beta-feedback-form"><textarea autoFocus maxLength={800} value={feedbackText} onChange={event => setFeedbackText(event.target.value)} placeholder={tr(lang, 'Напиши коротко, что было непонятно или не работало.', 'Was war unklar oder hat nicht funktioniert?', 'What was unclear or did not work?')} /><button type="button" disabled={!feedbackText.trim()} onClick={sendFeedback}><FaPaperPlane /> {tr(lang, 'Отправить', 'Senden', 'Send')}</button></div>}</section>
       <section className="streak-section page-stagger-2"><small>{tr(lang, 'ТВОЯ СЕРИЯ', 'DEINE SERIE', 'YOUR STREAK')}</small><h2>{data.streak || 0} {tr(lang, 'дней', 'Tage', 'days')}</h2><div className="week-row">{weekdays.map((day, index) => <div key={day} style={{ animationDelay: `${index * 55}ms` }}><span>{day}</span><i className={index < (data.streak || 0) ? 'active' : ''} /></div>)}</div></section>
       <section className="achievement-section page-stagger-3"><header><small>{tr(lang, 'ДОСТИЖЕНИЯ', 'ERFOLGE', 'ACHIEVEMENTS')}</small><span>1 / 8</span></header><button type="button" className="achievement-card" onClick={() => navigate(withUser('/analytics'))}><FaMedal /><span><b>{tr(lang, 'Первый шаг', 'Erster Schritt', 'First step')}</b><small>{tr(lang, 'Диагностика завершена', 'Diagnose abgeschlossen', 'Placement test completed')} <FaCheck /></small></span><FaChevronRight /></button></section>
       <section className="profile-settings page-stagger-4"><div className="profile-language"><strong>{tr(lang, 'Язык интерфейса', 'App-Sprache', 'App language')}</strong><LanguagePicker compact /></div><button onClick={toggleTheme}><span>{theme === 'dark' ? <FaMoon /> : <FaSun />}{tr(lang, 'Оформление', 'Darstellung', 'Appearance')}</span><small>{theme === 'dark' ? tr(lang, 'Тёмное', 'Dunkel', 'Dark') : tr(lang, 'Светлое', 'Hell', 'Light')}</small></button><button onClick={share}><span><FaShareAlt />{tr(lang, 'Пригласить друга', 'Freund einladen', 'Invite a friend')}</span><FaChevronRight /></button></section>

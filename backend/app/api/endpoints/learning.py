@@ -6,10 +6,13 @@ from app.core.database import get_db
 from app.core.telegram_auth import assert_owner, telegram_user_id
 from app.models.learning import TopicMastery
 from app.models.lesson import Lesson
+from app.models.progress import UserProgress
+from app.models.diagnostic import DiagnosticResult
 from app.models.user import User
 from app.services.learning_engine import retention_score
 from app.services.plan import generate_plan
-from app.services.skill_graph import blocked_by, skill_for
+from app.services.learning_route import lesson_blockers, select_recommended_lesson
+from app.services.skill_graph import skill_for
 from app.services.content_quality import normalize_lesson_content
 from app.services.content_i18n import localize_lesson_content, normalize_language
 
@@ -38,8 +41,16 @@ async def today(user_id: int, lang: str | None = None, db: Session = Depends(get
     ).order_by(TopicMastery.mastery.asc()).all()
     mastery = db.query(TopicMastery).filter(TopicMastery.user_id == user.id).order_by(TopicMastery.mastery.asc()).all()
     mastery_map = {item.topic: item.mastery for item in mastery}
-    plan = generate_plan(db, user.id, limit=10)
-    next_lesson = next((item for item in plan if not blocked_by(item.topic, mastery_map)), plan[0] if plan else None)
+    plan = generate_plan(db, user.id, limit=30)
+    completed_ids = {
+        row[0] for row in db.query(UserProgress.lesson_id).filter(
+            UserProgress.user_id == user.id,
+            UserProgress.completed == True,
+        ).all()
+    }
+    diagnostic = db.query(DiagnosticResult).filter(DiagnosticResult.user_id == user.id).order_by(DiagnosticResult.created_at.desc()).first()
+    weak_points = diagnostic.weak_points if diagnostic and diagnostic.weak_points else {}
+    next_lesson = select_recommended_lesson(plan, completed_ids, mastery_map, weak_points)
     language = normalize_language(lang or user.language_code)
     next_content = localize_lesson_content(normalize_lesson_content(next_lesson.content or {}, next_lesson.topic, next_lesson.level), language) if next_lesson else {}
     due_count = len(due)
@@ -73,10 +84,11 @@ async def today(user_id: int, lang: str | None = None, db: Session = Depends(get
         "next_lesson": ({
             "id": next_lesson.id,
             "topic": next_lesson.topic,
+            "title": next_content.get("title", next_lesson.topic),
             "level": next_lesson.level,
             "minutes": next_lesson.estimated_time or 12,
             "reason": "review_due" if next_lesson.topic in {item.topic for item in due} else ("weakest_ready_skill" if mastery else "first_step"),
-            "blocked_by": blocked_by(next_lesson.topic, mastery_map),
+            "blocked_by": lesson_blockers(next_lesson, plan, completed_ids, mastery_map),
         } if next_lesson else None),
         "session": {
             "phases": phases,
