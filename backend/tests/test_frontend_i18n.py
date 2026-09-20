@@ -35,6 +35,13 @@ class FrontendInternationalizationTests(unittest.TestCase):
         self.assertIn("loadError", mistakes)
         self.assertIn("Erneut versuchen", mistakes)
 
+    def test_document_language_and_metadata_follow_active_language(self):
+        context = self.read("context/LanguageContext.tsx")
+        index = (self.frontend.parent / "index.html").read_text(encoding="utf-8")
+        self.assertIn("document.documentElement.lang = lang", context)
+        self.assertIn("META_COPY", context)
+        self.assertIn('<html lang="en">', index)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -5,6 +5,21 @@ import { getTelegramUser, getUserId } from '../utils/user';
 import { normalizeLanguage } from '../i18n/language';
 import type { AppLanguage } from '../i18n/language';
 
+const META_COPY: Record<AppLanguage, { title: string; description: string }> = {
+  ru: {
+    title: 'DeutschIQ · Персональное изучение немецкого',
+    description: 'Диагностика, персональный маршрут и ИИ-репетитор для изучения немецкого в Telegram.',
+  },
+  de: {
+    title: 'DeutschIQ · Personalisiertes Deutschlernen',
+    description: 'Einstufung, persönlicher Lernweg und KI-Tutor zum Deutschlernen in Telegram.',
+  },
+  en: {
+    title: 'DeutschIQ · Adaptive German Learning',
+    description: 'Placement, a personal learning path and an AI tutor for learning German in Telegram.',
+  },
+};
+
 interface LanguageContextType {
   lang: AppLanguage;
   setLanguage: (language: AppLanguage, persist?: boolean) => void;
@@ -34,6 +49,14 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       else setLanguage(initialLanguage.current, true);
     }).catch(() => undefined);
   }, [setLanguage]);
+
+  useEffect(() => {
+    const metadata = META_COPY[lang];
+    document.documentElement.lang = lang;
+    document.title = metadata.title;
+    document.querySelector<HTMLMetaElement>('meta[name="description"]')?.setAttribute('content', metadata.description);
+    document.querySelector<HTMLMetaElement>('meta[property="og:description"]')?.setAttribute('content', metadata.description);
+  }, [lang]);
   return (
     <LanguageContext.Provider value={{ lang, setLanguage }}>
       {children}
