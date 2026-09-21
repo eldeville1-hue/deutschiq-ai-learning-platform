@@ -33,6 +33,7 @@ export const Lesson: React.FC = () => {
   const [speechResult, setSpeechResult] = useState<any>(null);
   const [checking, setChecking] = useState(false);
   const [checkError, setCheckError] = useState('');
+  const [showHint, setShowHint] = useState(false);
   const completedRef = useRef(false);
   const openedAtRef = useRef(Date.now());
   const stepRef = useRef(0);
@@ -85,6 +86,7 @@ export const Lesson: React.FC = () => {
       </div>
     );
   const content = lesson.content || {};
+  const learningProfile = lesson.learning_profile || { mode: 'balanced', mastery: 0, show_guided_hint: false };
   const exerciseIndex = step - introSteps;
   const exercise = exercises[exerciseIndex];
   const resetAnswer = () => {
@@ -96,6 +98,7 @@ export const Lesson: React.FC = () => {
     setStartedAt(Date.now());
     setSpeechResult(null);
     setCheckError('');
+    setShowHint(false);
   };
   const next = async () => {
     if (exercise && checked === false && !retried[exerciseIndex]) {
@@ -181,6 +184,15 @@ export const Lesson: React.FC = () => {
           />
         </div>
       </header>
+      <div className={`lesson-coach-mode ${learningProfile.mode}`}>
+        <span>{tr(lang, "РЕЖИМ УРОКА", "LEKTIONSMODUS", "LESSON MODE")}</span>
+        <strong>{learningProfile.mode === 'supported'
+          ? tr(lang, "С поддержкой", "Mit Unterstützung", "Supported")
+          : learningProfile.mode === 'challenge'
+            ? tr(lang, "Самостоятельный вызов", "Selbstständige Herausforderung", "Independent challenge")
+            : tr(lang, "Сбалансированный", "Ausgewogen", "Balanced")}</strong>
+        <small>{tr(lang, `Освоение темы: ${learningProfile.mastery}%`, `Themenkenntnis: ${learningProfile.mastery}%`, `Topic mastery: ${learningProfile.mastery}%`)}</small>
+      </div>
       {step === 0 && (
         <section className="lesson-step">
           <p className="eyebrow">
@@ -319,8 +331,13 @@ export const Lesson: React.FC = () => {
             )}
             </>
           )}
-          {checked === null && exercise.stage === "guided" && (
+          {checked === null && exercise.stage === "guided" && (learningProfile.show_guided_hint || showHint) && (
             <div className="guided-hint">{exercise.hint}</div>
+          )}
+          {checked === null && exercise.stage === "guided" && !learningProfile.show_guided_hint && !showHint && (
+            <button type="button" className="lesson-hint-toggle" onClick={() => setShowHint(true)}>
+              {tr(lang, "Показать подсказку", "Hinweis anzeigen", "Show hint")}
+            </button>
           )}
           {checked === null && (
             <div className="confidence-check">
@@ -373,6 +390,9 @@ export const Lesson: React.FC = () => {
                   <small>{tr(lang, 'ПОДСКАЗКА', 'HINWEIS', 'TIP')}</small>
                   {Array.isArray(feedback.contrast) && feedback.contrast.map((line: string, index: number) => <p key={index}>{line}</p>)}
                   <em>{feedback.retry_instruction || tr(lang, 'Сначала назови правило, затем составь ответ заново.', 'Nenne zuerst die Regel und bilde die Antwort dann neu.', 'State the rule first, then build the answer again.')}</em>
+                  {Array.isArray(feedback.repair_steps) && feedback.repair_steps.length > 0 && <ol className="repair-steps">
+                    {feedback.repair_steps.map((line: string, index: number) => <li key={index}>{line}</li>)}
+                  </ol>}
                 </div>}
                 {feedback?.production && (
                   <small>

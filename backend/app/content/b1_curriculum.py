@@ -96,10 +96,10 @@ def build_b1_content(row):
             {"question": "Listen. What function does the sentence express?", "hint": "Listen for the relationship in meaning.", "explanation": f"{meaning}: {answer}"},
         ),
         _localized_exercise(
-            {"type": "dialogue", "stage": "transfer", "question": scenario_ru, "answer": answer, "model_answer": answer, "accepted_answers": [answer, answer.rstrip(".?!")], "target_patterns": patterns, "hint": rule_ru, "explanation": "Сравни свою реакцию с моделью.", "misconception": misconception},
-            {"question": scenario_ru, "hint": rule_ru, "explanation": "Сравни свою реакцию с моделью."},
-            {"question": scenario_de, "hint": rule_de, "explanation": "Vergleiche deine Reaktion mit dem Modell."},
-            {"question": scenario_en, "hint": rule_en, "explanation": "Compare your response with the model."},
+            {"type": "dialogue", "stage": "transfer", "question": f"Ответь самостоятельно: {scenario_ru}", "answer": answer, "model_answer": answer, "accepted_answers": [answer, answer.rstrip(".?!")], "target_patterns": patterns, "hint": rule_ru, "explanation": "Сравни свою реакцию с моделью.", "misconception": misconception},
+            {"question": f"Ответь самостоятельно: {scenario_ru}", "hint": rule_ru, "explanation": "Сравни свою реакцию с моделью."},
+            {"question": f"Antworte selbstständig: {scenario_de}", "hint": rule_de, "explanation": "Vergleiche deine Reaktion mit dem Modell."},
+            {"question": f"Respond independently: {scenario_en}", "hint": rule_en, "explanation": "Compare your response with the model."},
         ),
         _localized_exercise(
             {"type": "repeat", "stage": "transfer", "question": "Произнеси модель вслух.", "answer": answer, "accepted_answers": [answer, answer.rstrip(".?!")], "explanation": "Повтори спокойно и связно.", "misconception": misconception},

@@ -128,6 +128,22 @@ class ContentQualityTests(unittest.TestCase):
                     self.assertTrue(localized["objective"])
                     self.assertTrue(all("i18n" not in item for item in localized["exercises"]))
 
+    def test_quality_v4_rejects_repetitive_or_unmapped_practice(self):
+        content = {
+            "quality_version": 4, "learning_method": "notice_build_use_reflect",
+            "objective": "x", "rule": "x", "examples": ["x", "y", "z"], "audio_text": "x",
+            "common_mistakes": ["❌ x", "✅ y"], "day": 1, "communication_goal": "x",
+            "recall_prompt": "x", "cefr": "A1", "prerequisites": [],
+            "exercises": [
+                {"type": "fill", "stage": stage, "question": "same", "answer": "x", "explanation": "x"}
+                for stage in ("guided", "independent", "transfer", "transfer", "transfer")
+            ],
+        }
+        errors = validate_roadmap_content(content)
+        self.assertIn("adaptive:insufficient_variety", errors)
+        self.assertIn("adaptive:missing_misconception", errors)
+        self.assertIn("adaptive:duplicate_prompt", errors)
+
 
 if __name__ == "__main__":
     unittest.main()

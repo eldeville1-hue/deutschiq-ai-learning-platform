@@ -539,6 +539,13 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .precision-tutor .voice-button { min-height: 40px; padding: 0 9px; color: var(--dq-gold-soft); font-size: 12px; }
 .precision-tutor .chat-composer input { font-size: 14px; }
 .precision-lesson .lesson-step { gap: 14px; padding-top: 18px; }
+.precision-lesson .lesson-coach-mode { display: grid; grid-template-columns: 1fr auto; gap: 3px 10px; margin-top: 10px; padding: 10px 13px; border: 1px solid var(--dq-border); border-radius: 13px; background: rgba(130,174,248,.05); }
+.precision-lesson .lesson-coach-mode > span { grid-column: 1 / -1; color: var(--dq-muted); font-size: 9px; font-weight: 850; letter-spacing: .12em; }
+.precision-lesson .lesson-coach-mode > strong { color: var(--dq-text); font-size: 12px; }
+.precision-lesson .lesson-coach-mode > small { color: var(--dq-muted); font-size: 11px; }
+.precision-lesson .lesson-coach-mode.supported { border-color: rgba(99,215,170,.24); background: rgba(99,215,170,.05); }
+.precision-lesson .lesson-coach-mode.challenge { border-color: rgba(251,191,36,.25); background: rgba(251,191,36,.05); }
+.precision-lesson .lesson-hint-toggle { min-height: 40px; width: max-content; padding: 0 12px; border: 1px solid var(--dq-border); border-radius: 11px; background: transparent; color: var(--dq-blue); font-size: 12px; font-weight: 750; }
 .precision-lesson .lesson-step .eyebrow { font-size: 11px; }
 .precision-lesson .lesson-objective { font-size: 14px; }
 .precision-lesson .audio-controls, .precision-lesson .listening-challenge { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
@@ -570,6 +577,7 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .precision-lesson .session-summary span { min-width: 0; min-height: 68px; display: grid; align-content: center; gap: 4px; padding: 9px 6px; border: 1px solid var(--dq-border); border-radius: 13px; background: var(--dq-surface); color: var(--dq-muted); font-size: 10px; line-height: 1.25; text-align: center; }
 .precision-lesson .session-summary b { color: var(--dq-text); font-size: 18px; }
 .precision-lesson .error-diagnosis { padding: 10px 12px; }
+.precision-lesson .repair-steps { display: grid; gap: 6px; margin: 10px 0 0; padding-left: 20px; color: var(--dq-text); font-size: 12px; line-height: 1.4; }
 .precision-lesson .lesson-check-error { padding: 11px 13px; border: 1px solid rgba(255,120,133,.25); border-radius: 12px; background: rgba(255,120,133,.07); color: var(--dq-red); font-size: 13px; }
 .mistake-cards .answer-line > span { display: grid; gap: 3px; }
 .mistake-cards .answer-line small { color: var(--dq-muted); font-size: 10px; font-weight: 800; letter-spacing: .1em; }

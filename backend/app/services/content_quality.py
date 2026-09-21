@@ -88,4 +88,16 @@ def validate_roadmap_content(content: dict) -> list[str]:
         mistakes = content.get("common_mistakes") or []
         if not any("❌" in item for item in mistakes) or not any("✅" in item for item in mistakes):
             errors.append("gold:missing_contrast")
+    if content.get("quality_version", 0) >= 4:
+        exercises = content.get("exercises") or []
+        kinds = {item.get("type") for item in exercises}
+        prompts = [str(item.get("question", "")).strip().casefold() for item in exercises]
+        if content.get("learning_method") != "notice_build_use_reflect":
+            errors.append("adaptive:missing_learning_method")
+        if len(exercises) < 5 or len(kinds) < 4:
+            errors.append("adaptive:insufficient_variety")
+        if any(not item.get("misconception") for item in exercises):
+            errors.append("adaptive:missing_misconception")
+        if len(prompts) != len(set(prompts)):
+            errors.append("adaptive:duplicate_prompt")
     return errors

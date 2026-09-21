@@ -22,6 +22,7 @@ from pathlib import Path
 from app.services.misconception_feedback import misconception_feedback
 from app.services.learning_route import next_cefr_track, normalize_cefr
 from app.services.answer_intelligence import evaluate_structured_answer
+from app.services.lesson_coaching import learning_profile, repair_plan
 
 router = APIRouter(prefix="/api/lesson", tags=["lesson"])
 
@@ -48,6 +49,16 @@ async def get_lesson(lesson_id: int, lang: str = "en", db: Session = Depends(get
     if not lesson:
         raise HTTPException(status_code=404, detail="Урок не найден")
     public_content = localize_lesson_content(normalize_lesson_content(lesson.content or {}, lesson.topic, lesson.level), lang)
+    user = db.query(User).filter(User.telegram_id == authenticated_id).first()
+    mastery = db.query(TopicMastery).filter(TopicMastery.user_id == user.id, TopicMastery.topic == lesson.topic).first() if user else None
+    recent_attempts = db.query(ExerciseAttempt).filter(
+        ExerciseAttempt.user_id == user.id, ExerciseAttempt.lesson_id == lesson.id
+    ).order_by(ExerciseAttempt.created_at.desc()).limit(4).all() if user else []
+    profile = learning_profile(
+        float(mastery.mastery or 0) if mastery else 0,
+        [bool(item.correct) for item in reversed(recent_attempts)],
+        int(mastery.correct_streak or 0) if mastery else 0,
+    )
     audio_path = Path(__file__).resolve().parents[3] / "static" / "audio" / f"lesson_{lesson.id}.mp3"
     public_content["audio_url"] = f"/media/audio/lesson_{lesson.id}.mp3" if audio_path.exists() else None
     for exercise in public_content.get("exercises", []):
@@ -63,7 +74,8 @@ async def get_lesson(lesson_id: int, lang: str = "en", db: Session = Depends(get
         "topic": lesson.topic,
         "content": public_content,
         "xp_reward": lesson.xp_reward,
-        "estimated_time": lesson.estimated_time
+        "estimated_time": lesson.estimated_time,
+        "learning_profile": profile,
     }
 
 class CheckAnswerRequest(BaseModel):
@@ -124,6 +136,8 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
     common_mistakes = lesson_content.get("common_mistakes") or []
     error_type = None if correct else ((production_feedback or {}).get("error_type") or (structured_feedback or {}).get("error_type") or exercise.get("misconception") or exercise.get("error_type") or skill.pillar)
     retry_copy = misconception_feedback(error_type, normalize_language(data.language)) if not correct else None
+    missing_words = (production_feedback or {}).get("missing_words", []) if production_feedback else (structured_feedback or {}).get("missing_words", [])
+    extra_words = (production_feedback or {}).get("extra_words", []) if production_feedback else (structured_feedback or {}).get("extra_words", [])
     return {
         "correct": correct,
         "correct_answer": production_feedback["corrected_answer"] if production_feedback else accepted[0],
@@ -138,7 +152,10 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
         "contrast": common_mistakes[:2] if not correct else [],
         "retry_instruction": retry_copy,
         "production": exercise.get("type") in {"production", "dialogue"},
-        "missing_words": (production_feedback or {}).get("missing_words", []) if production_feedback else (structured_feedback or {}).get("missing_words", []),
+        "missing_words": missing_words,
+        "extra_words": extra_words,
+        "repair_steps": repair_plan(error_type, missing_words, extra_words, normalize_language(data.language)) if not correct else [],
+        "next_action": "retry" if not correct else ("advance" if data.confidence == "sure" else "reinforce"),
     }
 
 # Генерация упражнений (запасные)
