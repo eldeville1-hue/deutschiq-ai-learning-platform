@@ -8,7 +8,7 @@ from fastapi import Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from app.api.endpoints import diagnostic, dashboard, plan, tutor, lesson, badges, mistakes, stats, referral, user_state, learning, telegram_webhook, events, user_data, speech, checkpoint
+from app.api.endpoints import diagnostic, dashboard, plan, tutor, lesson, badges, mistakes, stats, referral, user_state, learning, telegram_webhook, events, user_data, speech, checkpoint, internal
 import os
 from app.core.config import settings
 from app.core.database import engine
@@ -20,7 +20,7 @@ from app.core.logging_config import configure_logging
 
 configure_logging()
 logger = logging.getLogger("deutschiq.api")
-VERSION = "42.0.0"
+VERSION = "43.0.0"
 BUILD_COMMIT = os.getenv("RENDER_GIT_COMMIT", os.getenv("GIT_COMMIT", "local"))[:12]
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -68,7 +68,7 @@ async def request_logging(request: Request, call_next):
 
 @app.get("/api/version")
 async def version():
-    return {"version": VERSION, "release": "adaptive-learning-coach", "commit": BUILD_COMMIT}
+    return {"version": VERSION, "release": "beta-control-center", "commit": BUILD_COMMIT}
 
 @app.get("/api/health/live")
 async def liveness():
@@ -124,6 +124,7 @@ app.include_router(user_state.router)
 app.include_router(learning.router)
 app.include_router(telegram_webhook.router)
 app.include_router(events.router)
+app.include_router(internal.router)
 app.include_router(user_data.router)
 app.include_router(speech.router)
 app.include_router(checkpoint.router)

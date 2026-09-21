@@ -23,6 +23,7 @@ const Review = lazy(() => import('./pages/Review').then(module => ({ default: mo
 const Legal = lazy(() => import('./pages/Legal').then(module => ({ default: module.Legal })));
 const Portfolio = lazy(() => import('./pages/Portfolio').then(module => ({ default: module.Portfolio })));
 const Checkpoint = lazy(() => import('./pages/Checkpoint').then(module => ({ default: module.Checkpoint })));
+const ControlCenter = lazy(() => import('./pages/ControlCenter').then(module => ({ default: module.ControlCenter })));
 
 function ConnectionStatus() {
   const { lang } = useLanguage();
@@ -65,6 +66,7 @@ function AppRoutes() {
   }, [location.key]);
   const legalKind = ({ '/privacy': 'privacy', '/imprint': 'imprint', '/terms': 'terms' } as const)[location.pathname as '/privacy' | '/imprint' | '/terms'];
   const portfolioRoute = location.pathname === '/about';
+  if (location.pathname === '/control-center') return <Suspense fallback={<main className="entry-loading"><div className="analysis-loader" /></main>}><ControlCenter /></Suspense>;
   const outsideTelegram = !import.meta.env.DEV && (window as any).Telegram?.WebApp?.platform === 'unknown';
   if (legalKind) return <Suspense fallback={<main className="entry-loading"><div className="analysis-loader" /></main>}><Legal kind={legalKind} /></Suspense>;
   if (portfolioRoute || (outsideTelegram && location.pathname === '/')) return <Suspense fallback={<main className="entry-loading"><div className="analysis-loader" /></main>}><Portfolio /></Suspense>;
@@ -100,7 +102,7 @@ type BootstrapState = 'waiting' | 'ready' | 'missing';
 
 function TelegramBootstrap() {
   const developmentIdentity = import.meta.env.DEV && Boolean(import.meta.env.VITE_DEV_USER_ID);
-  const publicPage = ['/about', '/privacy', '/imprint', '/terms'].includes(window.location.pathname)
+  const publicPage = ['/about', '/privacy', '/imprint', '/terms', '/control-center'].includes(window.location.pathname)
     || (window as any).Telegram?.WebApp?.platform === 'unknown';
   const [state, setState] = useState<BootstrapState>(() => (
     hasTelegramIdentity() || developmentIdentity || publicPage ? 'ready' : 'waiting'

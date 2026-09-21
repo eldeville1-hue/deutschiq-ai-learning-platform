@@ -122,6 +122,7 @@ export const api = {
     }),
   exportUserData: (userId: number) => apiClient.get(`/api/user-data/${userId}`).then(r => r.data),
   deleteUserData: (userId: number) => apiClient.delete(`/api/user-data/${userId}`),
+  getBetaControlCenter: (key: string, days = 30) => apiClient.get(`/api/internal/beta?days=${days}`, { headers: { 'X-Control-Key': key }, __telemetry: true } as any).then(r => r.data),
   // Диагностика
   getQuestions: (lang: AppLanguage = 'en') => {
     return cachedGet(`deutschiq-questions-${lang}`, () => apiClient.get(`/api/diagnostic/questions?lang=${lang}`).then(r => r.data));
