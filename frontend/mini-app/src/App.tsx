@@ -22,6 +22,7 @@ const Mistakes = lazy(() => import('./pages/Mistakes').then(module => ({ default
 const Review = lazy(() => import('./pages/Review').then(module => ({ default: module.Review })));
 const Legal = lazy(() => import('./pages/Legal').then(module => ({ default: module.Legal })));
 const Portfolio = lazy(() => import('./pages/Portfolio').then(module => ({ default: module.Portfolio })));
+const Checkpoint = lazy(() => import('./pages/Checkpoint').then(module => ({ default: module.Checkpoint })));
 
 function ConnectionStatus() {
   const { lang } = useLanguage();
@@ -87,6 +88,7 @@ function AppRoutes() {
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/mistakes" element={<Mistakes />} />
           <Route path="/review" element={<Review />} />
+          <Route path="/checkpoint/:level" element={<Checkpoint />} />
         </Routes>
       </Suspense>
       {showPrimaryNav && <BottomNav />}

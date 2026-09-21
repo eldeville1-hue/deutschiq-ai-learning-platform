@@ -83,6 +83,7 @@ export const Plan: React.FC = () => {
           </button>;
         })}</div>
         <p>{tr(lang, 'Нижние уровни доступны для повторения. Следующий уровень откроется после 80% уроков и 70% освоения.', 'Frühere Niveaus bleiben zum Wiederholen offen. Das nächste Niveau öffnet sich nach 80 % der Lektionen und 70 % Beherrschung.', 'Earlier levels remain open for review. The next level unlocks after 80% lesson completion and 70% mastery.')}</p>
+        {(() => { const active = (journey?.levels || []).find((item: any) => item.state === 'active'); return active && active.completion >= 80 && active.mastery >= 70 ? <button type="button" className="rc-primary checkpoint-cta" onClick={() => navigate(withUser(`/checkpoint/${active.level}`))}>{tr(lang, `Пройти финальный тест ${active.level}`, `${active.level}-Abschlusstest starten`, `Take the ${active.level} final checkpoint`)}</button> : null; })()}
       </section>
 
       <section className="rc-plan-now">

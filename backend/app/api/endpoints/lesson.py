@@ -21,6 +21,7 @@ from app.services.production_feedback import evaluate_production
 from pathlib import Path
 from app.services.misconception_feedback import misconception_feedback
 from app.services.learning_route import next_cefr_track, normalize_cefr
+from app.services.answer_intelligence import evaluate_structured_answer
 
 router = APIRouter(prefix="/api/lesson", tags=["lesson"])
 
@@ -90,11 +91,13 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
     exercise = exercises[data.exercise_index]
     accepted = exercise.get("accepted_answers") or [exercise.get("answer", "")]
     production_feedback = None
+    structured_feedback = None
     if exercise.get("type") in {"production", "dialogue"}:
         production_feedback = await evaluate_production(data.answer, exercise, lesson_content, data.language)
         correct = production_feedback["correct"]
     else:
-        correct = normalize_answer(data.answer) in {normalize_answer(str(item)) for item in accepted}
+        structured_feedback = evaluate_structured_answer(data.answer, exercise)
+        correct = structured_feedback["correct"]
     user = db.query(User).filter(User.telegram_id == data.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -119,7 +122,7 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
     db.commit()
     skill = skill_for(topic)
     common_mistakes = lesson_content.get("common_mistakes") or []
-    error_type = None if correct else (exercise.get("misconception") or exercise.get("error_type") or skill.pillar)
+    error_type = None if correct else ((production_feedback or {}).get("error_type") or (structured_feedback or {}).get("error_type") or exercise.get("misconception") or exercise.get("error_type") or skill.pillar)
     retry_copy = misconception_feedback(error_type, normalize_language(data.language)) if not correct else None
     return {
         "correct": correct,
@@ -135,6 +138,7 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
         "contrast": common_mistakes[:2] if not correct else [],
         "retry_instruction": retry_copy,
         "production": exercise.get("type") in {"production", "dialogue"},
+        "missing_words": (production_feedback or {}).get("missing_words", []) if production_feedback else (structured_feedback or {}).get("missing_words", []),
     }
 
 # Генерация упражнений (запасные)
@@ -212,7 +216,7 @@ async def complete_lesson(data: CompleteLessonRequest, db: Session = Depends(get
         elif last_day != today:
             user.streak = 1
         user.last_activity = datetime.now()
-    unlocked_level = None
+    checkpoint_ready = False
     lesson_track = (lesson.content or {}).get("track") if isinstance(lesson.content, dict) else None
     current_track = normalize_cefr(user.current_level)
     if passed and lesson_track == current_track:
@@ -223,10 +227,7 @@ async def complete_lesson(data: CompleteLessonRequest, db: Session = Depends(get
         mastery_values = [float(row.mastery or 0) for row in db.query(TopicMastery).filter(TopicMastery.user_id == user.id).all() if row.topic in track_topics]
         completion_percent = round(completed_count / len(track_lessons) * 100) if track_lessons else 0
         average_mastery = round(sum(mastery_values) / len(mastery_values)) if mastery_values else 0
-        candidate = next_cefr_track(current_track)
-        if candidate and completion_percent >= 80 and average_mastery >= 70:
-            user.current_level = candidate
-            unlocked_level = candidate
+        checkpoint_ready = bool(next_cefr_track(current_track) and completion_percent >= 80 and average_mastery >= 70)
     db.commit()
     if passed:
         schedule_review(db, user.id, lesson.id)
@@ -245,5 +246,5 @@ async def complete_lesson(data: CompleteLessonRequest, db: Session = Depends(get
         "exercise_count": summary["exercise_count"],
         "duration_seconds": duration_seconds,
         "next_action": "plan" if passed else "retry",
-        "unlocked_level": unlocked_level,
+        "checkpoint_ready": checkpoint_ready,
     }

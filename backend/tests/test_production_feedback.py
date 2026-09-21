@@ -2,9 +2,21 @@ import unittest
 
 from app.services.production_feedback import local_feedback
 from app.services.misconception_feedback import misconception_feedback
+from app.services.answer_intelligence import evaluate_structured_answer, normalize_text
 
 
 class ProductionFeedbackTests(unittest.TestCase):
+    def test_structured_answers_ignore_punctuation_and_accept_minor_spelling(self):
+        exercise = {"answer": "Ich habe gestern gearbeitet.", "accepted_answers": ["Ich habe gestern gearbeitet."]}
+        self.assertTrue(evaluate_structured_answer("ich habe gestern gearbeitet!", exercise)["correct"])
+        self.assertTrue(evaluate_structured_answer("Ich habe gestern gearbeitt.", exercise)["correct"])
+        self.assertFalse(evaluate_structured_answer("Gestern ich habe gearbeitet.", exercise)["correct"])
+        self.assertEqual("strasse", normalize_text("Straße"))
+
+    def test_structured_feedback_reports_missing_words(self):
+        result = evaluate_structured_answer("Ich gestern gearbeitet", {"answer": "Ich habe gestern gearbeitet"})
+        self.assertFalse(result["correct"])
+        self.assertIn("habe", result["missing_words"])
     def test_complete_target_sentence_passes(self):
         result = local_feedback(
             "Heute lerne ich Deutsch.",

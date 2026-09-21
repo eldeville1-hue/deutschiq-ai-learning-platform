@@ -62,7 +62,14 @@ async def get_mistakes(user_id: int, lang: str | None = None, db: Session = Depe
             "misconception": exercise.get("misconception"),
             "lesson_id": lesson.id,
         })
+    pattern_counts = {}
+    for item in mistakes:
+        pattern = item.get("misconception") or item.get("topic")
+        if pattern:
+            pattern_counts[pattern] = pattern_counts.get(pattern, 0) + 1
+    patterns = [{"key": key, "count": count} for key, count in sorted(pattern_counts.items(), key=lambda item: (-item[1], item[0])) if count >= 2]
     return {
         "diagnostic_id": diagnostic.id if diagnostic else None,
         "mistakes": mistakes[:24],
+        "patterns": patterns[:5],
     }

@@ -18,7 +18,7 @@ def main() -> None:
     release = read_json(f"{origin}/api/version")
     if live.get("status") != "ok" or health.get("status") != "ok":
         raise RuntimeError(f"Unhealthy deployment: {health}")
-    if release.get("version") != "38.0.0" or release.get("release") != "cefr-journey-mastery":
+    if release.get("version") != "39.0.0" or release.get("release") != "answer-intelligence-checkpoints":
         raise RuntimeError(f"Stale deployment: {release}")
     print(f"DeutschIQ {release.get('version')} ({release.get('commit')}) is healthy: database={health.get('database')}, migrations={health.get('migrations')}")
 
