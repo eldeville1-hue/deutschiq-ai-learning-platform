@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.telegram_auth import assert_owner, telegram_user_id
 from app.models.learning import TopicMastery
+from app.models.learning import ExerciseAttempt
 from app.models.lesson import Lesson
 from app.models.progress import UserProgress
 from app.models.diagnostic import DiagnosticResult
@@ -59,6 +60,9 @@ async def today(user_id: int, lang: str | None = None, db: Session = Depends(get
     if review_count:
         phases.append({"kind": "review", "count": review_count, "minutes": max(2, review_count * 2), "reason": "due"})
     if next_lesson:
+        weakest = mastery[0] if mastery else None
+        if weakest and weakest.mastery < 70 and weakest.topic not in {item.topic for item in due[:5]}:
+            phases.append({"kind": "repair", "count": 1, "minutes": 3, "topic": weakest.topic, "reason": "weak_mastery"})
         phases.append({
             "kind": "learn",
             "count": 1,
@@ -69,8 +73,15 @@ async def today(user_id: int, lang: str | None = None, db: Session = Depends(get
             "reason": "weakest_ready_skill" if mastery else "first_step",
             "prerequisites": list(skill_for(next_lesson.topic).prerequisites),
         })
-        phases.append({"kind": "transfer", "count": 1, "minutes": 3, "topic": next_lesson.topic, "reason": "active_use"})
+        phases.append({"kind": "speak", "count": 1, "minutes": 3, "topic": next_lesson.topic, "reason": "active_recall"})
     total_minutes = sum(item["minutes"] for item in phases)
+    recent_errors = db.query(ExerciseAttempt).filter(ExerciseAttempt.user_id == user.id, ExerciseAttempt.correct == False).order_by(ExerciseAttempt.created_at.desc()).limit(100).all()
+    error_counts = {}
+    for attempt in recent_errors:
+        error_counts[attempt.topic] = error_counts.get(attempt.topic, 0) + 1
+    mistake_patterns = [{"topic": topic, "count": count} for topic, count in sorted(error_counts.items(), key=lambda item: (-item[1], item[0]))[:5] if count >= 2]
+    retained = [item for item in mastery if retention_score(item.mastery, item.stability_days or 1, _days_overdue(item.next_review_at, now)) >= 70]
+    at_risk = [item for item in mastery if retention_score(item.mastery, item.stability_days or 1, _days_overdue(item.next_review_at, now)) < 50]
     return {
         "due_count": due_count,
         "due_topics": [{"topic": item.topic, "mastery": round(item.mastery), "retention": retention_score(item.mastery, item.stability_days or 1, _days_overdue(item.next_review_at, now))} for item in due[:5]],
@@ -81,6 +92,8 @@ async def today(user_id: int, lang: str | None = None, db: Session = Depends(get
             "attempts": item.attempts,
             "lapses": item.lapse_count or 0,
         } for item in mastery[:8]],
+        "retention_summary": {"learned": len(mastery), "retained": len(retained), "at_risk": len(at_risk)},
+        "mistake_patterns": mistake_patterns,
         "next_lesson": ({
             "id": next_lesson.id,
             "topic": next_lesson.topic,
@@ -93,7 +106,7 @@ async def today(user_id: int, lang: str | None = None, db: Session = Depends(get
         "session": {
             "phases": phases,
             "minutes": total_minutes,
-            "explanation": "review_then_learn" if review_count else "learn_then_transfer",
+            "explanation": "review_repair_learn_speak" if review_count else "repair_learn_speak",
         },
     }
 

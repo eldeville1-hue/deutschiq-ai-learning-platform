@@ -76,4 +76,5 @@ async def submit_checkpoint(data: CheckpointSubmission, db: Session = Depends(ge
     if unlocked:
         user.current_level = unlocked
         db.commit()
-    return {"passed": passed, "score": score, "required": 75, "unlocked_level": unlocked, "results": results}
+    recovery_topics = list(dict.fromkeys(item["topic"] for item in results if not item["correct"]))[:4]
+    return {"passed": passed, "score": score, "required": 75, "unlocked_level": unlocked, "results": results, "recovery_topics": recovery_topics}

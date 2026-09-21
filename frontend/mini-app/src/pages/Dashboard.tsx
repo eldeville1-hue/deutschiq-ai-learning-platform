@@ -81,6 +81,8 @@ export const Dashboard: React.FC = () => {
         <button type="button" className="rc-primary" onClick={startLesson}><span><FaPlay /> {selectedLesson?.id ? (learning?.due_count ? tr(lang, 'Начать с повторения', 'Mit Wiederholung starten', 'Start with review') : tr(lang, 'Начать', 'Starten', 'Start')) : tr(lang, 'Открыть план', 'Plan öffnen', 'Open plan')}</span><FaArrowRight /></button>
       </section>
 
+      {learning?.session?.phases?.length > 0 && <section className="daily-session"><header><span>{tr(lang,'СЕГОДНЯШНЯЯ СЕССИЯ','HEUTIGE SESSION','TODAY’S SESSION')}</span><b>{learning.session.minutes} {tr(lang,'мин','Min.','min')}</b></header><div>{learning.session.phases.map((phase:any,index:number)=><span key={`${phase.kind}-${index}`}><small>0{index+1}</small><strong>{phase.kind==='review'?tr(lang,'Повторение','Wiederholen','Review'):phase.kind==='repair'?tr(lang,'Слабое место','Schwachstelle','Weak skill'):phase.kind==='speak'?tr(lang,'Говорение','Sprechen','Speaking'):tr(lang,'Новый урок','Neue Lektion','New lesson')}</strong><em>{phase.minutes} {tr(lang,'мин','Min.','min')}</em></span>)}</div></section>}
+
       <section className="rc-home-actions" aria-label={tr(lang, 'Дополнительные действия', 'Weitere Aktionen', 'More actions')}>
         <button type="button" onClick={() => navigate(withUser('/review'))}>
           <span className="rc-action-icon"><FaRedoAlt /></span>
