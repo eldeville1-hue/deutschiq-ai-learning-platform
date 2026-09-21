@@ -12,11 +12,27 @@ const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
+  (config as any).__startedAt = performance.now();
   const initData = getTelegramInitData();
   if (initData) config.headers['X-Telegram-Init-Data'] = initData;
   else if (import.meta.env.DEV && getUserId()) config.headers['X-Dev-User-Id'] = String(getUserId());
   return config;
 });
+
+const reportApiEvent = (eventName: 'api_failed' | 'api_slow', config: any, status = 0) => {
+  if (config?.__telemetry || !getUserId()) return;
+  const durationMs = Math.round(performance.now() - Number(config?.__startedAt || performance.now()));
+  const properties = {
+    path: String(config?.url || '').split('?')[0].slice(0, 160),
+    method: String(config?.method || 'unknown').toUpperCase(),
+    status,
+    duration_ms: Math.max(0, durationMs),
+    online: navigator.onLine,
+  };
+  void apiClient.post('/api/events', {
+    user_id: getUserId(), event_name: eventName, properties,
+  }, { __telemetry: true } as any).catch(() => undefined);
+};
 
 const CACHE_TTL = 5 * 60 * 1000;
 const inFlightGets = new Map<string, Promise<unknown>>();
@@ -74,7 +90,12 @@ const invalidateLearningData = (userId: number) => removeCached(
 );
 
 apiClient.interceptors.response.use(
-  response => response,
+  response => {
+    const config = response.config as any;
+    const durationMs = performance.now() - Number(config.__startedAt || performance.now());
+    if (durationMs >= 3000) reportApiEvent('api_slow', config, response.status);
+    return response;
+  },
   async error => {
     const config = error.config as any;
     const retryable = config?.method === 'get' && !config.__deutschiqRetried && (!error.response || error.response.status >= 500);
@@ -83,6 +104,7 @@ apiClient.interceptors.response.use(
       await new Promise(resolve => window.setTimeout(resolve, 450));
       return apiClient(config);
     }
+    reportApiEvent('api_failed', config, Number(error.response?.status || 0));
     console.error('❌ API Error:', error.response?.data || error.message);
     return Promise.reject(error);
   }

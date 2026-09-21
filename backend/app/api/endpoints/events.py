@@ -13,7 +13,9 @@ ALLOWED_EVENTS = {
     "dashboard_viewed", "lesson_started", "exercise_answered",
     "lesson_completed", "review_started", "tutor_opened",
     "review_completed", "exercise_retried", "lesson_stage_viewed", "lesson_abandoned",
-    "session_finished", "beta_feedback",
+    "session_finished", "beta_feedback", "level_unlocked", "app_started",
+    "reload_loop_detected", "api_failed", "api_slow", "client_error",
+    "microphone_failed", "draft_restored", "checkpoint_draft_restored",
 }
 
 

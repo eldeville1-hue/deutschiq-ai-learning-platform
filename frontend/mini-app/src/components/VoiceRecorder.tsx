@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { FaMicrophone, FaStop } from "react-icons/fa";
 import type { AppLanguage } from '../i18n/language';
 import { tr } from '../i18n/language';
+import { api } from '../services/api';
+import { getUserId } from '../utils/user';
 
 type Props = {
   compact?: boolean;
@@ -17,6 +19,13 @@ export const VoiceRecorder: React.FC<Props> = ({ compact = false, disabled, lang
   const stopTimer = useRef<number | null>(null);
   const [state, setState] = useState<"idle" | "recording" | "sending" | "error">("idle");
   const [seconds, setSeconds] = useState(0);
+  const reportFailure = (stage: string, error?: unknown) => {
+    if (!getUserId()) return;
+    void api.trackEvent({ user_id: getUserId(), event_name: 'microphone_failed', properties: {
+      stage, error: error instanceof Error ? error.name : String(error || 'unavailable'),
+      media_recorder: typeof MediaRecorder !== 'undefined',
+    }});
+  };
 
   useEffect(() => {
     if (state !== "recording") return;
@@ -32,6 +41,7 @@ export const VoiceRecorder: React.FC<Props> = ({ compact = false, disabled, lang
   const start = async () => {
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
       setState("error");
+      reportFailure('unsupported');
       return;
     }
     try {
@@ -48,8 +58,9 @@ export const VoiceRecorder: React.FC<Props> = ({ compact = false, disabled, lang
         try {
           await onAudio(blob);
           setState("idle");
-        } catch {
+        } catch (error) {
           setState("error");
+          reportFailure('transcription', error);
         }
       };
       mediaRecorder.start();
@@ -57,8 +68,9 @@ export const VoiceRecorder: React.FC<Props> = ({ compact = false, disabled, lang
         if (mediaRecorder.state === "recording") mediaRecorder.stop();
       }, 20000);
       setState("recording");
-    } catch {
+    } catch (error) {
       setState("error");
+      reportFailure('permission_or_recording', error);
     }
   };
 

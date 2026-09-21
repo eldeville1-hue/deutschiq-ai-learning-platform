@@ -14,19 +14,22 @@ export const Lesson: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { lang } = useLanguage();
+  const draftKey = `deutschiq-lesson-draft-${getUserId()}-${id}`;
+  const readDraft = () => {
+    try { return JSON.parse(localStorage.getItem(draftKey) || 'null'); } catch { return null; }
+  };
+  const initialDraft = useRef<any>(readDraft());
   const [lesson, setLesson] = useState<any>(null);
-  const [step, setStep] = useState(0);
-  const [answer, setAnswer] = useState("");
+  const [step, setStep] = useState(() => Number(initialDraft.current?.step || 0));
+  const [answer, setAnswer] = useState(() => String(initialDraft.current?.answer || ""));
   const [checked, setChecked] = useState<boolean | null>(null);
   const [feedback, setFeedback] = useState<any>(null);
-  const [confidence, setConfidence] = useState<"guess" | "okay" | "sure">(
-    "okay",
-  );
+  const [confidence, setConfidence] = useState<"guess" | "okay" | "sure">(initialDraft.current?.confidence || "okay");
   const [startedAt, setStartedAt] = useState(() => Date.now());
   const [retried, setRetried] = useState<Record<number, boolean>>({});
   const [outcome, setOutcome] = useState<any>(null);
   const [sessionId, setSessionId] = useState("");
-  const [usedTokens, setUsedTokens] = useState<number[]>([]);
+  const [usedTokens, setUsedTokens] = useState<number[]>(() => initialDraft.current?.usedTokens || []);
   const [speechResult, setSpeechResult] = useState<any>(null);
   const [checking, setChecking] = useState(false);
   const [checkError, setCheckError] = useState('');
@@ -48,9 +51,17 @@ export const Lesson: React.FC = () => {
         setLesson(lessonData);
         setSessionId(session.session_id);
         void api.trackEvent({ user_id: getUserId(), event_name: 'lesson_started', properties: { lesson_id: Number(id), topic: lessonData.topic } });
+        if (initialDraft.current) {
+          void api.trackEvent({ user_id: getUserId(), event_name: 'draft_restored', properties: { lesson_id: Number(id), step: Number(initialDraft.current.step || 0) } });
+          initialDraft.current = null;
+        }
       })
       .catch(() => setLesson(false));
   }, [id, lang]);
+  useEffect(() => {
+    if (!lesson || step >= total) return;
+    try { localStorage.setItem(draftKey, JSON.stringify({ step, answer, confidence, usedTokens, savedAt: Date.now() })); } catch { /* Recovery is best-effort. */ }
+  }, [answer, confidence, draftKey, lesson, step, total, usedTokens]);
   useEffect(() => {
     if (!lesson || !sessionId) return;
     const stage = step === 0 ? 'learn' : step === 1 ? 'model' : step >= total ? 'result' : exercises[step - introSteps]?.stage || 'practice';
@@ -107,6 +118,7 @@ export const Lesson: React.FC = () => {
       setOutcome(result);
       if (result) {
         completedRef.current = true;
+        try { localStorage.removeItem(draftKey); } catch { /* Ignore unavailable storage. */ }
         void api.trackEvent({ user_id: getUserId(), event_name: 'lesson_completed', properties: { lesson_id: Number(id), passed: Boolean(result.passed), score: Number(result.score || 0) } });
         void api.trackEvent({ user_id: getUserId(), event_name: 'session_finished', properties: { lesson_id: Number(id), duration_seconds: Number(result.duration_seconds || 0), corrected_retries: Number(result.corrected_retries || 0), needs_review: Number(result.needs_review || 0) } });
         if (result.unlocked_level) void api.trackEvent({ user_id: getUserId(), event_name: 'level_unlocked', properties: { level: String(result.unlocked_level) } });
