@@ -30,7 +30,9 @@ class Issue(BaseModel):
 @router.post("/claim")
 async def claim(data: Claim, db: Session = Depends(get_db), authenticated_id: int = Depends(telegram_user_id)):
     assert_owner(authenticated_id, data.user_id)
-    invite = db.query(BetaInvite).filter(BetaInvite.code == data.code.strip().upper(), BetaInvite.active == True).first()
+    # Lock while claiming so simultaneous requests cannot consume the same
+    # final seat.
+    invite = db.query(BetaInvite).filter(BetaInvite.code == data.code.strip().upper(), BetaInvite.active == True).with_for_update().first()
     if not invite or invite.uses >= invite.max_uses:
         raise HTTPException(status_code=422, detail="Invite is invalid or full")
     user = db.query(User).filter(User.telegram_id == data.user_id).first()
@@ -60,5 +62,5 @@ async def report_issue(data: Issue, db: Session = Depends(get_db), authenticated
     assert_owner(authenticated_id, data.user_id)
     user = db.query(User).filter(User.telegram_id == data.user_id).first()
     if not user: raise HTTPException(status_code=403, detail="Beta access required")
-    db.add(ProductEvent(user_id=user.id, event_name="beta_feedback", properties={"kind":"issue","category":data.category,"message":data.message.strip(),"page":data.page,"language":user.language_code,"release":"closed-beta-launch"}))
+    db.add(ProductEvent(user_id=user.id, event_name="beta_feedback", properties={"kind":"issue","category":data.category,"message":data.message.strip(),"page":data.page,"language":user.language_code,"release":"beta-readiness"}))
     db.commit(); return {"ok": True}
