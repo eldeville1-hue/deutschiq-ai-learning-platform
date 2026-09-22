@@ -188,6 +188,9 @@ export const Lesson: React.FC = () => {
     setUsedTokens((value) => [...value, index]);
     setAnswer((value) => `${value}${value ? " " : ""}${token}`);
   };
+  const guidedTokens = exercise?.stage === 'guided' && !exercise?.options?.length
+    ? String(exercise.answer || '').trim().split(/\s+/).reverse()
+    : [];
   return (
     <main className="lesson-flow precision-lesson rc-lesson fade-up">
       <header>
@@ -201,7 +204,7 @@ export const Lesson: React.FC = () => {
           />
         </div>
       </header>
-      <div className={`lesson-coach-mode ${learningProfile.mode}`}>
+      {step === 0 && <div className={`lesson-coach-mode ${learningProfile.mode}`}>
         <span>{tr(lang, "РЕЖИМ УРОКА", "LEKTIONSMODUS", "LESSON MODE")}</span>
         <strong>{learningProfile.mode === 'supported'
           ? tr(lang, "С поддержкой", "Mit Unterstützung", "Supported")
@@ -209,7 +212,7 @@ export const Lesson: React.FC = () => {
             ? tr(lang, "Самостоятельный вызов", "Selbstständige Herausforderung", "Independent challenge")
             : tr(lang, "Сбалансированный", "Ausgewogen", "Balanced")}</strong>
         <small>{tr(lang, `До урока: ${learningProfile.mastery}%`, `Vor der Lektion: ${learningProfile.mastery}%`, `Before lesson: ${learningProfile.mastery}%`)}</small>
-      </div>
+      </div>}
       {step === 0 && (
         <section className="lesson-step">
           <p className="eyebrow">
@@ -260,19 +263,18 @@ export const Lesson: React.FC = () => {
         </section>
       )}
       {exercise && (
-        <section className="lesson-step">
-          <p className="eyebrow">
+        <section className="lesson-step exercise-step">
+          <div className="exercise-stage-row"><p className="eyebrow">
             {exercise.stage === "guided"
               ? tr(lang, "С ПОДСКАЗКОЙ", "MIT HILFE", "GUIDED")
               : exercise.stage === "transfer"
                 ? tr(lang, "ТВОЯ ФРАЗА", "DEIN SATZ", "YOUR SENTENCE")
-                : tr(lang, "САМОСТОЯТЕЛЬНО", "SELBSTSTÄNDIG", "INDEPENDENT")}{" "}
-            · {exerciseIndex + 1}/{exercises.length}
+                : tr(lang, "САМОСТОЯТЕЛЬНО", "SELBSTSTÄNDIG", "INDEPENDENT")}
             {retried[exerciseIndex]
               ? tr(lang, " · вторая попытка", " · zweiter Versuch", " · second attempt")
               : ""}
-          </p>
-          <h1>{exercise.type === "repeat" ? tr(lang, "Повтори фразу", "Sprich den Satz nach", "Repeat the sentence") : exercise.question}</h1>
+          </p><span>{exerciseIndex + 1}/{exercises.length}</span></div>
+          <div className="exercise-prompt"><small>{tr(lang, 'ЗАДАНИЕ', 'AUFGABE', 'TASK')}</small><h1>{exercise.type === "repeat" ? tr(lang, "Повтори фразу", "Sprich den Satz nach", "Repeat the sentence") : exercise.question}</h1></div>
           {exercise.type === "repeat" && <div className="example-sentence">{content.audio_text || content.examples?.[0]}</div>}
           {(exercise.type === "listening" || exercise.type === "listening_choice") && (
             <div className="listening-challenge">
@@ -282,13 +284,13 @@ export const Lesson: React.FC = () => {
           )}
           {Array.isArray(exercise.options) && exercise.options.length > 0 ? (
             <div className="lesson-options">
-              {exercise.options.map((option: string) => (
+              {exercise.options.map((option: string, optionIndex: number) => (
                 <button
                   key={option}
                   onClick={() => setAnswer(option)}
                   className={answer === option ? "active" : ""}
                 >
-                  {option}
+                  <span className="option-letter">{String.fromCharCode(65 + optionIndex)}</span><span>{option}</span>{answer === option && <FaCheck />}
                 </button>
               ))}
             </div>
@@ -322,10 +324,18 @@ export const Lesson: React.FC = () => {
             </>
           ) : (
             <>
-            <textarea
+            {exercise.type === "production" || exercise.type === "dialogue" ? <textarea
               className="lesson-answer production-answer"
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
+              placeholder={tr(lang, "Напиши одну короткую немецкую фразу…", "Schreibe einen kurzen deutschen Satz…", "Write one short German sentence…")}
+              disabled={checked !== null}
+              rows={3}
+            /> : <input
+              className="lesson-answer compact-answer"
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && answer.trim() && sessionId && !checking) void check(); }}
               placeholder={
                 exercise.type === "production" || exercise.type === "dialogue"
                   ? tr(lang, "Напиши свою немецкую фразу…", "Schreibe deinen eigenen Satz…", "Write your own German sentence…")
@@ -336,7 +346,12 @@ export const Lesson: React.FC = () => {
                     : tr(lang, "Введи ответ", "Antwort eingeben", "Enter your answer")
               }
               disabled={checked !== null}
-            />
+            />}
+            {checked === null && guidedTokens.length > 0 && <div className="guided-builder">
+              <small>{tr(lang, 'ИЛИ СОБЕРИ ОТВЕТ', 'ODER ANTWORT BAUEN', 'OR BUILD THE ANSWER')}</small>
+              <div>{guidedTokens.map((token: string, index: number) => <button type="button" key={`${token}-${index}`} disabled={usedTokens.includes(index)} onClick={() => addToken(token, index)}>{token}</button>)}</div>
+              {usedTokens.length > 0 && <button type="button" className="builder-clear" onClick={() => { setAnswer(''); setUsedTokens([]); }}>{tr(lang, 'Очистить', 'Löschen', 'Clear')}</button>}
+            </div>}
             {(exercise.type === "production" || exercise.type === "dialogue" || exercise.type === "repeat") && checked === null && (
               <VoiceRecorder lang={lang} disabled={!sessionId} onAudio={transcribe} />
             )}
@@ -357,33 +372,6 @@ export const Lesson: React.FC = () => {
             <button type="button" className="lesson-hint-toggle" onClick={() => setShowHint(true)}>
               {tr(lang, "Показать подсказку", "Hinweis anzeigen", "Show hint")}
             </button>
-          )}
-          {checked === null && (
-            <div className="confidence-check">
-              <small>
-                {tr(lang, "Как было?", "Wie war es?", "How did it feel?")}
-              </small>
-              <div>
-                <button
-                  className={confidence === "guess" ? "active" : ""}
-                  onClick={() => setConfidence("guess")}
-                >
-                  {tr(lang, "Сложно", "Schwer", "Hard")}
-                </button>
-                <button
-                  className={confidence === "okay" ? "active" : ""}
-                  onClick={() => setConfidence("okay")}
-                >
-                  {tr(lang, "Нормально", "Okay", "Okay")}
-                </button>
-                <button
-                  className={confidence === "sure" ? "active" : ""}
-                  onClick={() => setConfidence("sure")}
-                >
-                  {tr(lang, "Легко", "Leicht", "Easy")}
-                </button>
-              </div>
-            </div>
           )}
           {checked === null ? (
             <button className="primary-action" onClick={check} disabled={!answer.trim() || !sessionId || checking}>
