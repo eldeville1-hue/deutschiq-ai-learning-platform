@@ -26,6 +26,8 @@ services:
         value: "true"
       - key: BETA_TUTOR_DAILY_LIMIT
         value: "25"
+      - key: BETA_INVITE_REQUIRED
+        value: "true"
       - key: DEBUG
         value: "false"
       - key: BOT_TOKEN

@@ -8,8 +8,9 @@ import { Navigate } from 'react-router-dom';
 import { BrandMark } from '../components/BrandMark';
 import type { AppLanguage } from '../i18n/language';
 import { normalizeLanguage, tr } from '../i18n/language';
+import { BetaAccess, BetaOnboarding } from './BetaAccess';
 
-type UserState = { exists?: boolean; diagnostic_completed: boolean; language: AppLanguage; level: string };
+type UserState = { exists?: boolean; diagnostic_completed: boolean; language: AppLanguage; level: string; beta_access?: boolean; beta_onboarding_completed?: boolean };
 
 export const Entry: React.FC = () => {
   const { lang, setLanguage } = useLanguage();
@@ -30,6 +31,8 @@ export const Entry: React.FC = () => {
 
   if (failed) return <main className="auth-error"><BrandMark label="DeutschIQ" /><h1>{tr(lang, 'Не удалось загрузить профиль', 'Profil konnte nicht geladen werden', 'Could not load your profile')}</h1><p>{tr(lang, 'Проверь соединение и попробуй ещё раз.', 'Prüfe deine Verbindung und versuche es erneut.', 'Check your connection and try again.')}</p><button className="primary-action" onClick={loadState}>{tr(lang, 'Повторить', 'Erneut versuchen', 'Try again')}</button></main>;
   if (!state) return <main className="entry-loading"><BrandMark label="DeutschIQ" /><div className="analysis-loader" /></main>;
+  if (state.beta_access === false) return <BetaAccess onDone={loadState} />;
+  if (state.beta_onboarding_completed === false) return <BetaOnboarding onDone={loadState} />;
   if (!state.diagnostic_completed) return <DiagnosticWelcome />;
   const introKey = `deutschiq-intro-${userId}-${new Date().toISOString().slice(0, 10)}`;
   if (sessionStorage.getItem(introKey)) return <Navigate to="/dashboard" replace />;

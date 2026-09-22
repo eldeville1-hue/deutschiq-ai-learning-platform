@@ -1,8 +1,8 @@
 import unittest
-from datetime import datetime
+from datetime import datetime, timedelta
 from types import SimpleNamespace
 
-from app.services.beta_insights import exercise_health, summarize_events
+from app.services.beta_insights import exercise_health, retention_cohorts, summarize_events
 
 
 class BetaInsightsTests(unittest.TestCase):
@@ -25,6 +25,20 @@ class BetaInsightsTests(unittest.TestCase):
         rows = exercise_health([*hard, *sparse], {3: "dative", 4: "articles"})
         self.assertEqual("too_hard", rows[0]["status"])
         self.assertEqual("healthy", rows[1]["status"])
+
+    def test_retention_uses_eligible_invite_cohorts(self):
+        now = datetime.now()
+        enrollments = [
+            SimpleNamespace(user_id=1, joined_at=now - timedelta(days=8)),
+            SimpleNamespace(user_id=2, joined_at=now - timedelta(days=2)),
+        ]
+        sessions = [
+            SimpleNamespace(user_id=1, started_at=now - timedelta(hours=12)),
+            SimpleNamespace(user_id=2, started_at=now - timedelta(hours=12)),
+        ]
+        result = retention_cohorts(enrollments, sessions, now)
+        self.assertEqual({"eligible": 2, "retained": 2, "rate": 100}, result["d1"])
+        self.assertEqual({"eligible": 1, "retained": 1, "rate": 100}, result["d7"])
 
 
 if __name__ == "__main__":

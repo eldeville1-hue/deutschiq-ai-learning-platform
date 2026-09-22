@@ -1,5 +1,6 @@
 """Privacy-safe aggregation helpers for the internal beta control center."""
 from collections import Counter, defaultdict
+from datetime import timedelta
 
 
 RELIABILITY_EVENTS = {"api_failed", "api_slow", "client_error", "reload_loop_detected", "microphone_failed"}
@@ -59,3 +60,15 @@ def exercise_health(attempts, lesson_topics: dict[int, str]) -> list[dict]:
         })
     return sorted(rows, key=lambda row: (-int(row["attempts"]), int(row["accuracy"])))[:40]
 
+
+def retention_cohorts(enrollments, sessions, now) -> dict:
+    sessions_by_user = defaultdict(list)
+    for item in sessions:
+        if item.started_at:
+            sessions_by_user[int(item.user_id)].append(item.started_at.replace(tzinfo=None))
+    result = {}
+    for day in (1, 3, 7):
+        eligible = [item for item in enrollments if item.joined_at and item.joined_at.replace(tzinfo=None) <= now - timedelta(days=day)]
+        retained = sum(any(moment >= item.joined_at.replace(tzinfo=None) + timedelta(days=day) for moment in sessions_by_user[int(item.user_id)]) for item in eligible)
+        result[f"d{day}"] = {"eligible": len(eligible), "retained": retained, "rate": round(retained / len(eligible) * 100) if eligible else None}
+    return result

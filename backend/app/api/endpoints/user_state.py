@@ -6,6 +6,8 @@ from app.core.database import get_db
 from app.models.user import User
 from app.models.diagnostic import DiagnosticResult
 from app.core.telegram_auth import telegram_user_id, assert_owner
+from app.core.config import settings
+from app.models.beta import BetaEnrollment
 
 router = APIRouter(prefix="/api/user", tags=["user"])
 
@@ -27,6 +29,8 @@ async def get_user_state(telegram_id: int, db: Session = Depends(get_db), authen
             "level": "A1",
             "xp": 0,
             "streak": 0,
+            "beta_access": not settings.BETA_INVITE_REQUIRED,
+            "beta_onboarding_completed": False,
         }
     diagnostic = (
         db.query(DiagnosticResult)
@@ -34,6 +38,7 @@ async def get_user_state(telegram_id: int, db: Session = Depends(get_db), authen
         .order_by(DiagnosticResult.created_at.desc())
         .first()
     )
+    enrollment = db.query(BetaEnrollment).filter(BetaEnrollment.user_id == user.id, BetaEnrollment.status == "active").first()
     return {
         "exists": True,
         "diagnostic_completed": bool(user.diagnostic_completed or diagnostic is not None),
@@ -41,6 +46,8 @@ async def get_user_state(telegram_id: int, db: Session = Depends(get_db), authen
         "level": user.current_level or "A1",
         "xp": user.xp or 0,
         "streak": user.streak or 0,
+        "beta_access": True,
+        "beta_onboarding_completed": bool(not enrollment or (enrollment.consent and enrollment.goal)),
     }
 
 

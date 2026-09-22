@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta
 from hmac import compare_digest
+import secrets
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -10,7 +12,8 @@ from app.models.event import ProductEvent
 from app.models.learning import ExerciseAttempt, LearningSession
 from app.models.lesson import Lesson
 from app.models.user import User
-from app.services.beta_insights import exercise_health, summarize_events
+from app.models.beta import BetaEnrollment, BetaInvite
+from app.services.beta_insights import exercise_health, retention_cohorts, summarize_events
 
 router = APIRouter(prefix="/api/internal", tags=["internal"])
 
@@ -18,6 +21,27 @@ router = APIRouter(prefix="/api/internal", tags=["internal"])
 def require_control_key(x_control_key: str = Header(default="")) -> None:
     if not settings.TASK_SECRET or not compare_digest(x_control_key, settings.TASK_SECRET):
         raise HTTPException(status_code=403, detail="Invalid control-center key")
+
+
+class InviteRequest(BaseModel):
+    label: str = Field(default="Beta invite", min_length=1, max_length=80)
+    max_uses: int = Field(default=1, ge=1, le=500)
+
+
+@router.post("/invites", dependencies=[Depends(require_control_key)])
+async def create_invite(payload: InviteRequest, db: Session = Depends(get_db)):
+    code = secrets.token_hex(4).upper()
+    invite = BetaInvite(code=code, label=payload.label, max_uses=payload.max_uses)
+    db.add(invite); db.commit(); db.refresh(invite)
+    return {"id": invite.id, "code": invite.code, "label": invite.label, "max_uses": invite.max_uses, "uses": invite.uses, "active": invite.active}
+
+
+@router.delete("/invites/{invite_id}", dependencies=[Depends(require_control_key)])
+async def deactivate_invite(invite_id: int, db: Session = Depends(get_db)):
+    invite = db.query(BetaInvite).filter(BetaInvite.id == invite_id).first()
+    if not invite: raise HTTPException(status_code=404, detail="Invite not found")
+    invite.active = False; db.commit()
+    return {"ok": True}
 
 
 @router.get("/beta", dependencies=[Depends(require_control_key)])
@@ -31,6 +55,8 @@ async def beta_control_center(
     sessions = db.query(LearningSession).filter(LearningSession.started_at >= since).all()
     users = db.query(User).all()
     lessons = db.query(Lesson).all()
+    enrollments = db.query(BetaEnrollment).all()
+    invites = db.query(BetaInvite).order_by(BetaInvite.created_at.desc()).all()
     event_summary = summarize_events(events)
     session_users = {item.user_id for item in sessions}
     completed_sessions = [item for item in sessions if item.status in {"passed", "practice_needed"}]
@@ -62,4 +88,10 @@ async def beta_control_center(
         },
         "events": event_summary,
         "exercise_health": exercise_health(attempts, {item.id: item.topic for item in lessons}),
+        "retention": retention_cohorts(enrollments, db.query(LearningSession).all(), datetime.now()),
+        "beta": {
+            "enrolled": len(enrollments),
+            "onboarded": sum(1 for item in enrollments if item.consent and item.goal),
+            "invites": [{"id": item.id, "code": item.code, "label": item.label, "uses": item.uses, "max_uses": item.max_uses, "active": item.active} for item in invites],
+        },
     }

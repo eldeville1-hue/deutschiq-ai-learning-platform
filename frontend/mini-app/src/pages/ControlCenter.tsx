@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaChartLine, FaLock, FaSyncAlt } from 'react-icons/fa';
+import { FaChartLine, FaLock, FaPlus, FaSyncAlt } from 'react-icons/fa';
 import { api } from '../services/api';
 
 const metric = (value: unknown) => Number(value || 0).toLocaleString();
@@ -10,6 +10,8 @@ export const ControlCenter: React.FC = () => {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [inviteLabel, setInviteLabel] = useState('Beta tester');
+  const [inviteUses, setInviteUses] = useState(1);
 
   const load = async () => {
     if (!key.trim()) return;
@@ -23,6 +25,8 @@ export const ControlCenter: React.FC = () => {
       setError(requestError?.response?.status === 403 ? 'Access key is not valid.' : 'Control-center data is temporarily unavailable.');
     } finally { setLoading(false); }
   };
+  const createInvite = async () => { await api.createBetaInvite(key, { label: inviteLabel, max_uses: inviteUses }); await load(); };
+  const deactivateInvite = async (id: number) => { await api.deactivateBetaInvite(key, id); await load(); };
 
   if (!data) return <main className="control-center-login"><div className="control-login-card"><FaLock /><small>DEUTSCHIQ INTERNAL</small><h1>Beta control center</h1><p>Enter the protected control-center key. It remains only in this browser session.</p><input type="password" value={key} onChange={event => setKey(event.target.value)} onKeyDown={event => event.key === 'Enter' && void load()} placeholder="Access key" autoComplete="current-password" /><button type="button" onClick={load} disabled={!key.trim() || loading}>{loading ? 'Opening…' : 'Open dashboard'}</button>{error && <div className="control-error">{error}</div>}</div></main>;
 
@@ -36,6 +40,8 @@ export const ControlCenter: React.FC = () => {
       <article><small>Lesson completion</small><strong>{metric(data.funnel?.completion_rate)}%</strong><span>{metric(data.funnel?.lesson_completed)} learners</span></article>
       <article><small>Abandonments</small><strong>{metric(data.sessions?.abandoned_events)}</strong><span>{metric(data.sessions?.started)} sessions</span></article>
     </section>
+    <section className="control-panel control-wide"><header><FaChartLine /><div><small>BETA COHORT</small><h2>Enrollment & retention</h2></div></header><div className="control-retention"><div><strong>{metric(data.beta?.enrolled)}</strong><span>enrolled</span></div><div><strong>{metric(data.beta?.onboarded)}</strong><span>onboarded</span></div>{['d1','d3','d7'].map(day=><div key={day}><strong>{data.retention?.[day]?.rate == null ? '—' : `${data.retention[day].rate}%`}</strong><span>{day.toUpperCase()} · {metric(data.retention?.[day]?.eligible)} eligible</span></div>)}</div></section>
+    <section className="control-panel control-wide"><header><FaPlus /><div><small>ACCESS</small><h2>Invite codes</h2></div></header><div className="control-invite-create"><input value={inviteLabel} onChange={e=>setInviteLabel(e.target.value)} maxLength={80}/><input type="number" min={1} max={500} value={inviteUses} onChange={e=>setInviteUses(Number(e.target.value))}/><button onClick={createInvite}><FaPlus/> Create invite</button></div><div className="control-invites">{(data.beta?.invites||[]).map((item:any)=><article key={item.id}><code>{item.code}</code><span>{item.label} · {item.uses}/{item.max_uses}</span><button disabled={!item.active} onClick={()=>deactivateInvite(item.id)}>{item.active?'Deactivate':'Inactive'}</button></article>)}</div></section>
     <div className="control-grid">
       <section className="control-panel"><header><FaChartLine /><div><small>FUNNEL</small><h2>Activation</h2></div></header>{[['Diagnostic complete',data.funnel?.diagnostic_completed],['Started a lesson',data.funnel?.lesson_started],['Completed a lesson',data.funnel?.lesson_completed]].map(([label,value])=><div className="control-row" key={String(label)}><span>{label}</span><b>{metric(value)}</b></div>)}</section>
       <section className="control-panel"><header><FaChartLine /><div><small>RELIABILITY</small><h2>Client signals</h2></div></header>{[['API failures',reliability.api_failed],['Slow API',reliability.api_slow],['Client errors',reliability.client_error],['Reload loops',reliability.reload_loop_detected],['Microphone failures',reliability.microphone_failed]].map(([label,value])=><div className="control-row" key={String(label)}><span>{label}</span><b>{metric(value)}</b></div>)}</section>

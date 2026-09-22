@@ -35,6 +35,7 @@ class Settings:
     SPEECH_MAX_BYTES = int(os.getenv("SPEECH_MAX_BYTES", "5000000"))
     BETA_FREE_ACCESS = os.getenv("BETA_FREE_ACCESS", "true").lower() == "true"
     BETA_TUTOR_DAILY_LIMIT = int(os.getenv("BETA_TUTOR_DAILY_LIMIT", "25"))
+    BETA_INVITE_REQUIRED = os.getenv("BETA_INVITE_REQUIRED", "true").lower() == "true"
     WEBAPP_URL = os.getenv("WEBAPP_URL", "http://localhost:5173")
     SECRET_KEY = os.getenv("SECRET_KEY", "change-me-in-production")
     DEBUG = os.getenv("DEBUG", "false").lower() == "true"

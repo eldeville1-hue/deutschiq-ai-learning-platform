@@ -33,6 +33,7 @@ export const Lesson: React.FC = () => {
   const [speechResult, setSpeechResult] = useState<any>(null);
   const [checking, setChecking] = useState(false);
   const [checkError, setCheckError] = useState('');
+  const [milestoneSent, setMilestoneSent] = useState(() => localStorage.getItem(`deutschiq-beta-milestone-${getUserId()}`) === '1');
   const [showHint, setShowHint] = useState(false);
   const completedRef = useRef(false);
   const openedAtRef = useRef(Date.now());
@@ -143,6 +144,11 @@ export const Lesson: React.FC = () => {
     navigate(withUser(outcome?.passed ? "/plan" : `/lesson/${id}`), {
       replace: true,
     });
+  const sendMilestone = (rating: string) => {
+    void api.submitBetaFeedback({ user_id: getUserId(), message: `First lesson rating: ${rating}`, language: lang, page: 'lesson_complete' });
+    localStorage.setItem(`deutschiq-beta-milestone-${getUserId()}`, '1');
+    setMilestoneSent(true);
+  };
   const speak = (rate = 0.9) => {
     if (content.audio_url) {
       const audio = new Audio(content.audio_url);
@@ -447,6 +453,7 @@ export const Lesson: React.FC = () => {
             </div>
           )}
           {outcome?.unlocked_level && <div className="level-unlocked"><small>{tr(lang, 'НОВЫЙ УРОВЕНЬ', 'NEUES NIVEAU', 'NEW LEVEL')}</small><strong>{outcome.unlocked_level}</strong><span>{tr(lang, 'Твой следующий маршрут открыт.', 'Dein nächster Lernweg ist jetzt offen.', 'Your next learning path is now open.')}</span></div>}
+          {outcome && !milestoneSent && <div className="beta-milestone"><small>{tr(lang,'БЫСТРЫЙ ОТЗЫВ','KURZES FEEDBACK','QUICK FEEDBACK')}</small><strong>{tr(lang,'Как прошёл первый урок?','Wie war deine erste Lektion?','How was your first lesson?')}</strong><div><button onClick={()=>sendMilestone('hard')}>{tr(lang,'Сложно','Schwer','Hard')}</button><button onClick={()=>sendMilestone('good')}>{tr(lang,'Хорошо','Gut','Good')}</button><button onClick={()=>sendMilestone('easy')}>{tr(lang,'Легко','Leicht','Easy')}</button></div></div>}
           <p>
             {outcome?.passed === false
               ? tr(lang, "Урок не завершён: повтори задания и набери 70%.", "Die Lektion bleibt offen. Wiederhole sie und erreiche 70%.", "The lesson remains open. Repeat it and reach 70%.")
