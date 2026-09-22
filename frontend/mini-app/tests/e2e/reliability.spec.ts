@@ -169,6 +169,7 @@ test('stale dashboard cache survives a bounded network failure without reload lo
 });
 
 test('Telegram BackButton owns nested navigation without duplicate browser control', async ({ page }) => {
+  await page.route('https://telegram.org/js/telegram-web-app.js*', route => route.abort());
   await page.addInitScript(() => {
     const calls = { shown: 0, hidden: 0, handler: null as null | (() => void) };
     (window as any).__backCalls = calls;
