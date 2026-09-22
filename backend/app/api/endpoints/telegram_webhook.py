@@ -1,5 +1,5 @@
 from aiogram.types import Update
-from fastapi import APIRouter, Header, HTTPException, Request, status
+from fastapi import APIRouter, BackgroundTasks, Header, HTTPException, Request, status
 
 from app.bot.main import bot, dp
 from app.bot.scheduler import send_daily_reminders
@@ -29,6 +29,7 @@ async def telegram_health():
 @router.post(settings.TELEGRAM_WEBHOOK_PATH, include_in_schema=False)
 async def telegram_webhook(
     request: Request,
+    background_tasks: BackgroundTasks,
     x_telegram_bot_api_secret_token: str | None = Header(default=None),
 ):
     if settings.BOT_MODE != "webhook":
@@ -38,7 +39,10 @@ async def telegram_webhook(
 
     payload = await request.json()
     update = Update.model_validate(payload, context={"bot": bot})
-    await dp.feed_update(bot, update)
+    # Telegram expects a fast acknowledgement. Sending bot replies in the
+    # background prevents slow database/API work from making Telegram retry or
+    # discard an otherwise valid update.
+    background_tasks.add_task(dp.feed_update, bot, update)
     return {"ok": True}
 
 
