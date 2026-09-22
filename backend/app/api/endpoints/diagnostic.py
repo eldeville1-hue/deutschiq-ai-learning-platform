@@ -6,6 +6,7 @@ from copy import deepcopy
 from app.core.database import get_db
 from app.models.user import User
 from app.models.diagnostic import DiagnosticResult, DiagnosticMistake
+from app.models.event import ProductEvent
 from app.services.diagnostic import calculate_level_and_scores
 from sqlalchemy.exc import SQLAlchemyError
 from app.core.telegram_auth import telegram_user_id, assert_owner
@@ -143,6 +144,7 @@ async def submit_diagnostic(data: SubmitAnswers, db: Session = Depends(get_db), 
                 ))
         user.current_level = result["level"]
         user.diagnostic_completed = True
+        db.add(ProductEvent(user_id=user.id, event_name="diagnostic_completed", properties={"level": result["level"], "score": result["overall_score"], "language": data.language}))
         db.commit()
         persisted = True
     except SQLAlchemyError:

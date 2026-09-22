@@ -115,6 +115,20 @@ test('beta learner can report an issue from a primary screen', async ({ page }) 
   expect(report.message).toBe('The exercise button is hidden');
 });
 
+test('lesson feedback carries the exact exercise context', async ({ page }) => {
+  let report: any = null;
+  await mockApi(page, { completed: true });
+  await page.route('**/api/beta/issue', async route => { report = route.request().postDataJSON(); return route.fulfill({ json: { ok: true } }); });
+  await page.goto('/lesson/77');
+  await page.getByRole('button', { name: /Show example/i }).click();
+  await page.getByRole('button', { name: /Start practice/i }).click();
+  await page.getByRole('button', { name: /Report a problem/i }).click();
+  await page.locator('.beta-report-backdrop textarea').fill('This dialogue prompt is unclear');
+  await page.getByRole('button', { name: /^Send$/i }).click();
+  await expect.poll(() => report?.exercise_index).toBe(0);
+  expect(report).toMatchObject({ page: '/lesson/77', lesson_id: 77, exercise_type: 'dialogue', topic: 'konjunktiv_ii' });
+});
+
 for (const [language, heading] of [['ru', 'Твой урок'], ['de', 'Deine Lektion'], ['en', 'Your lesson']] as const) {
   test(`dashboard renders a complete ${language.toUpperCase()} interface`, async ({ page }) => {
     await mockApi(page, { completed: true, language });

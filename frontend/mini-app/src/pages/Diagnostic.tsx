@@ -39,6 +39,7 @@ export const Diagnostic: React.FC = () => {
 
   useEffect(() => {
     if (userId === null) return;
+    void api.trackEvent({ user_id: userId, event_name: 'diagnostic_started', properties: { language: lang } });
     setLoading(true);
     setQuestionError(false);
     setCurrent(0);

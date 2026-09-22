@@ -16,6 +16,8 @@ ALLOWED_EVENTS = {
     "session_finished", "beta_feedback", "level_unlocked", "app_started",
     "reload_loop_detected", "api_failed", "api_slow", "client_error",
     "microphone_failed", "draft_restored", "checkpoint_draft_restored",
+    "invite_claimed", "beta_onboarding_completed", "diagnostic_started",
+    "diagnostic_completed",
 }
 
 

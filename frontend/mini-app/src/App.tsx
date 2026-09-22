@@ -74,6 +74,7 @@ function AppRoutes() {
   const primaryRoutes = ['/dashboard', '/analytics', '/plan', '/tutor', '/profile'];
   const hasBackButton = !['/', ...primaryRoutes].includes(location.pathname);
   const showPrimaryNav = primaryRoutes.includes(location.pathname);
+  const showBetaReporter = showPrimaryNav || location.pathname.startsWith('/lesson/') || location.pathname === '/diagnostic';
   return (
     <div className={`app-frame${hasBackButton ? ' has-back-button' : ''}`}>
       <ConnectionStatus />
@@ -95,7 +96,7 @@ function AppRoutes() {
         </Routes>
       </Suspense>
       {showPrimaryNav && <BottomNav />}
-      {showPrimaryNav && <BetaIssueReporter />}
+      {showBetaReporter && <BetaIssueReporter />}
     </div>
   );
 }

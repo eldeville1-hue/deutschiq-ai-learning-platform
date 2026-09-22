@@ -13,7 +13,7 @@ from app.models.learning import ExerciseAttempt, LearningSession
 from app.models.lesson import Lesson
 from app.models.user import User
 from app.models.beta import BetaEnrollment, BetaInvite
-from app.services.beta_insights import exercise_health, retention_cohorts, summarize_events
+from app.services.beta_insights import exercise_health, retention_cohorts, summarize_events, tester_progress
 
 router = APIRouter(prefix="/api/internal", tags=["internal"])
 
@@ -28,12 +28,30 @@ class InviteRequest(BaseModel):
     max_uses: int = Field(default=1, ge=1, le=500)
 
 
+class InviteBatchRequest(BaseModel):
+    label_prefix: str = Field(default="Beta tester", min_length=1, max_length=64)
+    count: int = Field(default=15, ge=1, le=50)
+
+
 @router.post("/invites", dependencies=[Depends(require_control_key)])
 async def create_invite(payload: InviteRequest, db: Session = Depends(get_db)):
     code = secrets.token_hex(4).upper()
     invite = BetaInvite(code=code, label=payload.label, max_uses=payload.max_uses)
     db.add(invite); db.commit(); db.refresh(invite)
     return {"id": invite.id, "code": invite.code, "label": invite.label, "max_uses": invite.max_uses, "uses": invite.uses, "active": invite.active}
+
+
+@router.post("/invites/batch", dependencies=[Depends(require_control_key)])
+async def create_invite_batch(payload: InviteBatchRequest, db: Session = Depends(get_db)):
+    invites = []
+    for index in range(payload.count):
+        invite = BetaInvite(code=secrets.token_hex(4).upper(), label=f"{payload.label_prefix} {index + 1:02d}", max_uses=1)
+        db.add(invite)
+        invites.append(invite)
+    db.commit()
+    for invite in invites:
+        db.refresh(invite)
+    return {"created": len(invites), "invites": [{"id": item.id, "code": item.code, "label": item.label, "max_uses": 1, "uses": 0, "active": True, "invite_url": f"{settings.WEBAPP_URL}?invite={item.code}"} for item in invites]}
 
 
 @router.delete("/invites/{invite_id}", dependencies=[Depends(require_control_key)])
@@ -58,6 +76,7 @@ async def beta_control_center(
     enrollments = db.query(BetaEnrollment).all()
     invites = db.query(BetaInvite).order_by(BetaInvite.created_at.desc()).all()
     event_summary = summarize_events(events)
+    all_sessions = db.query(LearningSession).all()
     session_users = {item.user_id for item in sessions}
     completed_sessions = [item for item in sessions if item.status in {"passed", "practice_needed"}]
     started_count = event_summary["unique_users"].get("lesson_started", 0)
@@ -76,7 +95,10 @@ async def beta_control_center(
             "languages": languages,
         },
         "funnel": {
-            "diagnostic_completed": sum(1 for item in users if item.diagnostic_completed),
+            "invite_claimed": event_summary["unique_users"].get("invite_claimed", len(enrollments)),
+            "onboarding_completed": event_summary["unique_users"].get("beta_onboarding_completed", sum(1 for item in enrollments if item.consent and item.goal)),
+            "diagnostic_started": event_summary["unique_users"].get("diagnostic_started", 0),
+            "diagnostic_completed": event_summary["unique_users"].get("diagnostic_completed", sum(1 for item in users if item.diagnostic_completed)),
             "lesson_started": started_count,
             "lesson_completed": completed_count,
             "completion_rate": round(completed_count / started_count * 100) if started_count else 0,
@@ -88,10 +110,11 @@ async def beta_control_center(
         },
         "events": event_summary,
         "exercise_health": exercise_health(attempts, {item.id: item.topic for item in lessons}),
-        "retention": retention_cohorts(enrollments, db.query(LearningSession).all(), datetime.now()),
+        "retention": retention_cohorts(enrollments, all_sessions, datetime.now()),
         "beta": {
             "enrolled": len(enrollments),
             "onboarded": sum(1 for item in enrollments if item.consent and item.goal),
             "invites": [{"id": item.id, "code": item.code, "label": item.label, "uses": item.uses, "max_uses": item.max_uses, "active": item.active} for item in invites],
         },
+        "testers": tester_progress(enrollments, users, invites, all_sessions, events, settings.SECRET_KEY),
     }

@@ -44,6 +44,8 @@ export const Lesson: React.FC = () => {
   );
   const introSteps = 2;
   const total = introSteps + exercises.length;
+  const exerciseIndex = step - introSteps;
+  const exercise = exercises[exerciseIndex];
   useEffect(() => {
     Promise.all([
       api.getLesson(Number(id), lang),
@@ -74,6 +76,17 @@ export const Lesson: React.FC = () => {
     if (!sessionId || completedRef.current) return;
     void api.trackEvent({ user_id: getUserId(), event_name: 'lesson_abandoned', properties: { lesson_id: Number(id), step: stepRef.current, duration_seconds: Math.round((Date.now() - openedAtRef.current) / 1000) } });
   }, [id, sessionId]);
+  useEffect(() => {
+    if (!lesson) return;
+    const context = {
+      lesson_id: Number(id),
+      exercise_index: exerciseIndex >= 0 && exercise ? exerciseIndex : undefined,
+      exercise_type: exercise?.type,
+      topic: String(lesson.topic || '').slice(0, 100),
+    };
+    try { sessionStorage.setItem('deutschiq-beta-context', JSON.stringify(context)); } catch { /* Feedback still works without context. */ }
+    return () => { try { sessionStorage.removeItem('deutschiq-beta-context'); } catch { /* Ignore unavailable storage. */ } };
+  }, [exercise, exerciseIndex, id, lesson]);
   if (lesson === null)
     return (
       <div className="app-shell">
@@ -88,8 +101,6 @@ export const Lesson: React.FC = () => {
     );
   const content = lesson.content || {};
   const learningProfile = lesson.learning_profile || { mode: 'balanced', mastery: 0, show_guided_hint: false };
-  const exerciseIndex = step - introSteps;
-  const exercise = exercises[exerciseIndex];
   const resetAnswer = () => {
     setAnswer("");
     setUsedTokens([]);

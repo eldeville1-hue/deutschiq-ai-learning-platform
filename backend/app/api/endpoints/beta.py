@@ -26,6 +26,10 @@ class Issue(BaseModel):
     category: str = Field(default="problem", max_length=40)
     message: str = Field(min_length=1, max_length=800)
     page: str = Field(default="unknown", max_length=120)
+    lesson_id: int | None = None
+    exercise_index: int | None = Field(default=None, ge=0, le=100)
+    exercise_type: str | None = Field(default=None, max_length=40)
+    topic: str | None = Field(default=None, max_length=100)
 
 @router.post("/claim")
 async def claim(data: Claim, db: Session = Depends(get_db), authenticated_id: int = Depends(telegram_user_id)):
@@ -43,6 +47,7 @@ async def claim(data: Claim, db: Session = Depends(get_db), authenticated_id: in
     if not enrollment:
         enrollment = BetaEnrollment(user_id=user.id, invite_id=invite.id)
         db.add(enrollment); invite.uses += 1
+        db.add(ProductEvent(user_id=user.id, event_name="invite_claimed", properties={"invite_label": invite.label}))
     db.commit()
     return {"access": True, "onboarding_completed": bool(enrollment.consent and enrollment.goal)}
 
@@ -54,7 +59,7 @@ async def onboarding(data: Onboarding, db: Session = Depends(get_db), authentica
     enrollment = db.query(BetaEnrollment).filter(BetaEnrollment.user_id == user.id).first() if user else None
     if not enrollment: raise HTTPException(status_code=403, detail="Beta access required")
     enrollment.goal, enrollment.study_minutes, enrollment.consent = data.goal, data.study_minutes, True
-    db.add(ProductEvent(user_id=user.id, event_name="beta_feedback", properties={"message":"Beta onboarding completed","page":"beta_onboarding","language":user.language_code,"goal":data.goal,"study_minutes":data.study_minutes}))
+    db.add(ProductEvent(user_id=user.id, event_name="beta_onboarding_completed", properties={"language":user.language_code,"goal":data.goal,"study_minutes":data.study_minutes}))
     db.commit(); return {"onboarding_completed": True}
 
 @router.post("/issue")
@@ -62,5 +67,10 @@ async def report_issue(data: Issue, db: Session = Depends(get_db), authenticated
     assert_owner(authenticated_id, data.user_id)
     user = db.query(User).filter(User.telegram_id == data.user_id).first()
     if not user: raise HTTPException(status_code=403, detail="Beta access required")
-    db.add(ProductEvent(user_id=user.id, event_name="beta_feedback", properties={"kind":"issue","category":data.category,"message":data.message.strip(),"page":data.page,"language":user.language_code,"release":"beta-readiness"}))
+    properties = {"kind":"issue","category":data.category,"message":data.message.strip(),"page":data.page,"language":user.language_code,"release":"real-closed-beta"}
+    for key in ("lesson_id", "exercise_index", "exercise_type", "topic"):
+        value = getattr(data, key)
+        if value is not None:
+            properties[key] = value
+    db.add(ProductEvent(user_id=user.id, event_name="beta_feedback", properties=properties))
     db.commit(); return {"ok": True}

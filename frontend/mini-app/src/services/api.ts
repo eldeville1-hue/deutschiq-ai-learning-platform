@@ -124,10 +124,11 @@ export const api = {
   deleteUserData: (userId: number) => apiClient.delete(`/api/user-data/${userId}`),
   getBetaControlCenter: (key: string, days = 30) => apiClient.get(`/api/internal/beta?days=${days}`, { headers: { 'X-Control-Key': key }, __telemetry: true } as any).then(r => r.data),
   createBetaInvite: (key: string, payload: { label: string; max_uses: number }) => apiClient.post('/api/internal/invites', payload, { headers: { 'X-Control-Key': key }, __telemetry: true } as any).then(r => r.data),
+  createBetaInviteBatch: (key: string, payload: { label_prefix: string; count: number }) => apiClient.post('/api/internal/invites/batch', payload, { headers: { 'X-Control-Key': key }, __telemetry: true } as any).then(r => r.data),
   deactivateBetaInvite: (key: string, id: number) => apiClient.delete(`/api/internal/invites/${id}`, { headers: { 'X-Control-Key': key }, __telemetry: true } as any).then(r => r.data),
   claimBetaInvite: (payload: { user_id: number; code: string; language: AppLanguage }) => apiClient.post('/api/beta/claim', payload).then(r => { removeCached(userCacheKey('state', payload.user_id)); return r.data; }),
   completeBetaOnboarding: (payload: { user_id: number; goal: string; study_minutes: number; consent: boolean }) => apiClient.put('/api/beta/onboarding', payload).then(r => { removeCached(userCacheKey('state', payload.user_id)); return r.data; }),
-  reportBetaIssue: (payload: { user_id: number; category: string; message: string; page: string }) => apiClient.post('/api/beta/issue', payload).then(r => r.data),
+  reportBetaIssue: (payload: { user_id: number; category: string; message: string; page: string; lesson_id?: number; exercise_index?: number; exercise_type?: string; topic?: string }) => apiClient.post('/api/beta/issue', payload).then(r => r.data),
   // Диагностика
   getQuestions: (lang: AppLanguage = 'en') => {
     return cachedGet(`deutschiq-questions-${lang}`, () => apiClient.get(`/api/diagnostic/questions?lang=${lang}`).then(r => r.data));
