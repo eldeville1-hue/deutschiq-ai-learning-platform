@@ -207,6 +207,7 @@ export const Lesson: React.FC = () => {
           </p>
           <h1>{cleanTitle(topicLabel(content.title || lesson.topic, lang))}</h1>
           <div className="lesson-objective">{content.objective}</div>
+          {content.scenario && <div className="lesson-scenario"><small>{tr(lang, 'СИТУАЦИЯ', 'SITUATION', 'SCENARIO')}</small><span>{content.scenario}</span></div>}
           <div className="rule-card">{content.rule}</div>
           <button className="primary-action" onClick={next}>
             {tr(lang, "Показать пример", "Beispiel zeigen", "Show example")}{" "}

@@ -100,4 +100,12 @@ def validate_roadmap_content(content: dict) -> list[str]:
             errors.append("adaptive:missing_misconception")
         if len(prompts) != len(set(prompts)):
             errors.append("adaptive:duplicate_prompt")
+    if content.get("quality_version", 0) >= 5:
+        if not content.get("scenario"):
+            errors.append("foundation:missing_scenario")
+        if len(set(content.get("examples") or [])) < 3:
+            errors.append("foundation:insufficient_distinct_examples")
+        productions = [item for item in content.get("exercises") or [] if item.get("type") in {"production", "dialogue"}]
+        if any(len(item.get("target_patterns") or []) > 3 for item in productions):
+            errors.append("foundation:overconstrained_production")
     return errors

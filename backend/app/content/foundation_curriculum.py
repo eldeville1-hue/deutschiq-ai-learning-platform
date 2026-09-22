@@ -47,6 +47,52 @@ A2_CURRICULUM = [
     (20,4,"a2_final","mixed","Итоговая задача A2","A2-Abschlussaufgabe","A2 final task","Vergangenheit + Grund + Plan","Letztes Jahr bin ich umgezogen, weil ich eine neue Stelle gefunden habe.","Letztes Jahr ich bin umgezogen, weil ich habe neue Stelle gefunden."),
 ]
 
+# A concrete situation, a second natural model, and minimal language markers
+# for each foundation skill. These keep free production open-ended without
+# accepting unrelated text or forcing learners to copy names and places.
+PRACTICE_VARIANTS = {
+    "greetings": ("Ты встречаешь соседа утром.", "Du triffst morgens deinen Nachbarn.", "You meet your neighbour in the morning.", "Hallo! Ich bin Sara.", ["hallo", "heiße"]),
+    "personal_details": ("Ты знакомишься с участником курса.", "Du lernst jemanden im Kurs kennen.", "You meet someone in your course.", "Ich bin Leo und wohne in Bremen.", ["ich", "komme"]),
+    "main_clause": ("Ты рассказываешь, что делаешь сегодня.", "Du erzählst, was du heute machst.", "You say what you are doing today.", "Am Abend koche ich zu Hause.", ["ich"]),
+    "yes_no_questions": ("Ты уточняешь план друга.", "Du fragst nach dem Plan eines Freundes.", "You check a friend's plan.", "Hast du morgen Zeit?", ["du"]),
+    "w_questions": ("Ты хочешь узнать место встречи.", "Du möchtest den Treffpunkt wissen.", "You want to know the meeting place.", "Wann beginnt der Kurs?", ["wo", "wann"]),
+    "present_regular": ("Ты описываешь вечернюю привычку.", "Du beschreibst eine Abendroutine.", "You describe an evening habit.", "Ich lerne nach der Arbeit Deutsch.", ["lerne", "arbeiten"]),
+    "sein_haben": ("Ты объясняешь своё состояние и время.", "Du erklärst deinen Zustand und deine Zeit.", "You explain how you feel and whether you have time.", "Wir sind bereit und haben noch Zeit.", ["bin", "habe"]),
+    "noun_gender": ("Ты показываешь вещи в комнате.", "Du zeigst Dinge im Zimmer.", "You point out objects in a room.", "Hier sind ein Tisch und eine Tasche.", ["ein", "eine"]),
+    "plural": ("Ты описываешь несколько предметов.", "Du beschreibst mehrere Gegenstände.", "You describe several objects.", "Die Stühle stehen am Fenster.", ["die"]),
+    "negation": ("Ты говоришь, чего у тебя нет.", "Du sagst, was du nicht hast.", "You say what you do not have.", "Ich habe keine Fahrkarte.", ["kein", "keine"]),
+    "accusative_a1": ("Ты заказываешь еду в кафе.", "Du bestellst etwas im Café.", "You order something in a café.", "Ich nehme einen Tee und eine Suppe.", ["einen", "eine"]),
+    "modal_verbs_a1": ("Ты говоришь, что можешь сделать сегодня.", "Du sagst, was du heute tun kannst.", "You say what you can do today.", "Wir müssen jetzt nach Hause gehen.", ["kann", "muss"]),
+    "separable_verbs_a1": ("Ты сообщаешь время начала.", "Du nennst eine Anfangszeit.", "You say when something starts.", "Der Zug kommt um acht Uhr an.", ["an", "auf"]),
+    "time_daily_routine": ("Ты описываешь начало своего дня.", "Du beschreibst den Beginn deines Tages.", "You describe the start of your day.", "Um acht Uhr fahre ich zur Arbeit.", ["uhr"]),
+    "directions": ("Ты ищешь остановку в незнакомом городе.", "Du suchst in einer fremden Stadt die Haltestelle.", "You are looking for a stop in an unfamiliar city.", "Entschuldigung, wie komme ich zum Bahnhof?", ["wo", "wie"]),
+    "shopping": ("Ты покупаешь продукты на рынке.", "Du kaufst auf dem Markt ein.", "You buy groceries at a market.", "Ich möchte bitte zwei Brötchen.", ["möchte", "hätte gern"]),
+    "appointments": ("Ты подтверждаешь запись по телефону.", "Du bestätigst telefonisch einen Termin.", "You confirm an appointment by phone.", "Wir treffen uns am Dienstag um elf Uhr.", ["am", "um"]),
+    "family": ("Ты коротко рассказываешь о родственнике.", "Du erzählst kurz von einem Familienmitglied.", "You briefly describe a family member.", "Mein Bruder lebt mit seiner Familie in Bonn.", ["mein", "meine"]),
+    "simple_past_experience": ("Ты рассказываешь, что делал вчера.", "Du erzählst, was du gestern gemacht hast.", "You say what you did yesterday.", "Gestern habe ich meine Freundin besucht.", ["habe", "bin"]),
+    "a1_final": ("Ты представляешься новой группе.", "Du stellst dich einer neuen Gruppe vor.", "You introduce yourself to a new group.", "Ich bin Omar, komme aus Köln und arbeite im Hotel.", ["ich", "komme"]),
+    "dative_a2": ("Ты передаёшь вещь знакомому.", "Du gibst einer bekannten Person etwas.", "You give something to someone you know.", "Ich bringe meinem Nachbarn ein Paket.", ["meinem", "meiner"]),
+    "dative_accusative": ("Ты объясняешь, кто получает какую вещь.", "Du erklärst, wer welche Sache bekommt.", "You explain who receives which item.", "Ich zeige meiner Kollegin den Plan.", ["meinem", "meiner"]),
+    "two_way_prepositions": ("Ты переставляешь предмет в комнате.", "Du stellst einen Gegenstand im Zimmer um.", "You move an object in a room.", "Ich hänge das Bild an die Wand.", ["auf den", "in die", "an die"]),
+    "dative_prepositions": ("Ты говоришь, с кем или где живёшь.", "Du sagst, mit wem oder wo du wohnst.", "You say whom you live with or where.", "Ich fahre mit meiner Schwester nach Berlin.", ["mit", "seit", "bei"]),
+    "accusative_prepositions": ("Ты объясняешь назначение покупки.", "Du erklärst, für wen ein Kauf ist.", "You explain who a purchase is for.", "Diese Blumen sind für meine Mutter.", ["für", "ohne"]),
+    "perfect_haben": ("Ты рассказываешь о вчерашнем вечере.", "Du erzählst von gestern Abend.", "You talk about yesterday evening.", "Gestern habe ich lange telefoniert.", ["habe", "hat"]),
+    "perfect_sein": ("Ты рассказываешь о поездке.", "Du erzählst von einer Fahrt.", "You talk about a trip.", "Am Samstag bin ich nach Bremen gefahren.", ["bin", "sind"]),
+    "perfect_participles": ("Ты перечисляешь завершённые дела.", "Du nennst erledigte Aufgaben.", "You list completed tasks.", "Ich habe eingekauft und das Essen vorbereitet.", ["ge", "geschrieben"]),
+    "modal_past_a2": ("Ты сравниваешь прошлые обязанности с сегодняшними.", "Du vergleichst frühere Pflichten mit heute.", "You compare past duties with today.", "Als Kind durfte ich lange draußen spielen.", ["musste", "konnte", "durfte"]),
+    "past_sequence": ("Ты рассказываешь два события по порядку.", "Du erzählst zwei Ereignisse in Reihenfolge.", "You narrate two events in order.", "Dann habe ich angerufen, danach bin ich losgefahren.", ["zuerst", "danach"]),
+    "weil_clause": ("Ты объясняешь своё решение.", "Du begründest deine Entscheidung.", "You explain your decision.", "Ich fahre mit dem Bus, weil es regnet.", ["weil"]),
+    "dass_clause": ("Ты передаёшь мнение или информацию.", "Du gibst eine Meinung oder Information weiter.", "You report an opinion or information.", "Ich denke, dass die Prüfung gut läuft.", ["dass"]),
+    "wenn_clause": ("Ты описываешь условие для плана.", "Du nennst eine Bedingung für einen Plan.", "You state a condition for a plan.", "Wenn das Wetter gut ist, gehen wir spazieren.", ["wenn"]),
+    "comparatives": ("Ты сравниваешь два варианта поездки.", "Du vergleichst zwei Reisemöglichkeiten.", "You compare two travel options.", "Das Fahrrad ist günstiger als das Auto.", ["als", "am"]),
+    "reflexive_verbs": ("Ты рассказываешь об интересе или привычке.", "Du sprichst über ein Interesse oder eine Gewohnheit.", "You talk about an interest or habit.", "Wir treffen uns jeden Freitag im Café.", ["mich", "dich", "sich", "uns"]),
+    "requests_a2": ("Ты вежливо просишь о помощи.", "Du bittest höflich um Hilfe.", "You ask politely for help.", "Würden Sie mir bitte kurz helfen?", ["könnten", "würden"]),
+    "formal_message_a2": ("Ты переносишь запись письмом.", "Du verschiebst einen Termin schriftlich.", "You reschedule an appointment in writing.", "Sehr geehrter Herr Wolf, leider kann ich morgen nicht kommen.", ["sehr geehrte", "leider"]),
+    "opinions_a2": ("Ты высказываешь мнение и называешь причину.", "Du äußerst eine Meinung mit Begründung.", "You give an opinion and a reason.", "Ich finde die Wohnung praktisch, weil sie zentral liegt.", ["ich finde", "weil"]),
+    "problem_solution_a2": ("Ты объясняешь проблему сотруднику сервиса.", "Du erklärst einem Servicemitarbeiter ein Problem.", "You explain a problem to service staff.", "Mein Ticket funktioniert nicht. Können Sie mir helfen?", ["deshalb", "können sie"]),
+    "a2_final": ("Ты рассказываешь о перемене и следующем плане.", "Du erzählst von einer Veränderung und deinem nächsten Plan.", "You describe a change and your next plan.", "Vor zwei Monaten habe ich einen Kurs begonnen, weil ich die B1-Prüfung machen möchte.", ["weil", "habe", "bin"]),
+}
+
 
 def _localized(base: dict, ru: dict, de: dict, en: dict) -> dict:
     return {**base, "i18n": {"ru": ru, "de": de, "en": en}}
@@ -64,31 +110,38 @@ def build_foundation_content(row: tuple, level: str) -> dict:
         "de": f"{focus} selbstständig in einer Alltagssituation verwenden.",
         "en": f"Use {focus} independently in an everyday situation.",
     }
-    patterns = [word.casefold().strip(".,;:?!") for word in model.split() if len(word) > 3][:4]
+    scenario_ru, scenario_de, scenario_en, alternate, patterns = PRACTICE_VARIANTS[topic]
+    patterns = patterns[:3]
+    listening_options = list(dict.fromkeys([focus, "Frage", "Vergangenheit", "Zeitangabe"]))[:3]
+    guided_kind = ("error_repair", "reorder", "transform")[(day - 1) % 3]
+    guided_base = {"type":guided_kind,"stage":"guided","question":f"Исправь: {wrong}","answer":model,"accepted_answers":[model,model.rstrip(".")],"hint":rules["ru"],"explanation":rules["ru"],"misconception":"foundation_form"}
+    if guided_kind == "reorder":
+        tokens = model.rstrip(".?!").split()
+        guided_base.update({"question":"Собери фразу для ситуации.", "tokens":tokens[1::2] + tokens[::2]})
     exercises = [
         _localized(
-            {"type":"error_repair","stage":"guided","question":f"Исправь: {wrong}","answer":model,"accepted_answers":[model,model.rstrip(".")],"hint":rules["ru"],"explanation":rules["ru"],"misconception":"foundation_form"},
-            {"question":f"Исправь: {wrong}","hint":rules["ru"],"explanation":rules["ru"]},
-            {"question":f"Korrigiere: {wrong}","hint":rules["de"],"explanation":rules["de"]},
-            {"question":f"Correct: {wrong}","hint":rules["en"],"explanation":rules["en"]},
+            guided_base,
+            {"question": guided_base["question"],"hint":rules["ru"],"explanation":rules["ru"]},
+            {"question":"Bilde den passenden Satz." if guided_kind == "reorder" else f"Korrigiere: {wrong}","hint":rules["de"],"explanation":rules["de"]},
+            {"question":"Build the sentence for the situation." if guided_kind == "reorder" else f"Correct: {wrong}","hint":rules["en"],"explanation":rules["en"]},
         ),
         _localized(
-            {"type":"context_choice","stage":"independent","question":"Выбери фразу, подходящую ситуации.","answer":model,"accepted_answers":[model],"options":[model,wrong,f"{model.rstrip('.')} nicht."],"explanation":rules["ru"],"misconception":"foundation_context"},
-            {"question":"Выбери фразу, подходящую ситуации.","explanation":rules["ru"]},
-            {"question":"Wähle den Satz, der zur Situation passt.","explanation":rules["de"]},
-            {"question":"Choose the sentence that fits the situation.","explanation":rules["en"]},
+            {"type":"context_choice","stage":"independent","question":f"Ситуация: {scenario_ru} Выбери подходящую фразу.","answer":model,"accepted_answers":[model],"options":[model,wrong,"Das weiß ich leider nicht."],"explanation":rules["ru"],"misconception":"foundation_context"},
+            {"question":f"Ситуация: {scenario_ru} Выбери подходящую фразу.","explanation":rules["ru"]},
+            {"question":f"Situation: {scenario_de} Wähle den passenden Satz.","explanation":rules["de"]},
+            {"question":f"Situation: {scenario_en} Choose the sentence that fits.","explanation":rules["en"]},
         ),
         _localized(
-            {"type":"listening_choice","stage":"independent","question":"Прослушай модель. Какую структуру ты слышишь?","answer":focus,"accepted_answers":[focus],"options":[focus,"Begrüßung","Zeitangabe"],"explanation":model,"misconception":"foundation_listening"},
+            {"type":"listening_choice","stage":"independent","question":"Прослушай модель. Какую структуру ты слышишь?","answer":focus,"accepted_answers":[focus],"options":listening_options,"explanation":model,"misconception":"foundation_listening"},
             {"question":"Прослушай модель. Какую структуру ты слышишь?","explanation":model},
             {"question":"Höre das Modell. Welche Struktur hörst du?","explanation":model},
             {"question":"Listen to the model. Which pattern do you hear?","explanation":model},
         ),
         _localized(
-            {"type":"dialogue","stage":"transfer","question":goals["ru"],"answer":model,"model_answer":model,"accepted_answers":[model,model.rstrip(".")],"target_patterns":patterns,"hint":rules["ru"],"explanation":"Сравни свой ответ с моделью.","misconception":"foundation_transfer"},
-            {"question":goals["ru"],"hint":rules["ru"],"explanation":"Сравни свой ответ с моделью."},
-            {"question":goals["de"],"hint":rules["de"],"explanation":"Vergleiche deine Antwort mit dem Modell."},
-            {"question":goals["en"],"hint":rules["en"],"explanation":"Compare your response with the model."},
+            {"type":"dialogue","stage":"transfer","question":f"{scenario_ru} {goals['ru']}","answer":model,"model_answer":model,"accepted_answers":[model,model.rstrip(".")],"target_patterns":patterns,"hint":rules["ru"],"explanation":"Сравни смысл и структуру с моделью — слова могут отличаться.","misconception":"foundation_transfer"},
+            {"question":f"{scenario_ru} {goals['ru']}","hint":rules["ru"],"explanation":"Сравни смысл и структуру с моделью — слова могут отличаться."},
+            {"question":f"{scenario_de} {goals['de']}","hint":rules["de"],"explanation":"Vergleiche Bedeutung und Struktur; deine Wörter dürfen anders sein."},
+            {"question":f"{scenario_en} {goals['en']}","hint":rules["en"],"explanation":"Compare meaning and structure; your wording may differ."},
         ),
         _localized(
             {"type":"repeat","stage":"transfer","question":"Произнеси модель вслух.","answer":model,"accepted_answers":[model,model.rstrip(".")],"explanation":"Повтори спокойно и чётко.","misconception":"foundation_fluency"},
@@ -98,11 +151,11 @@ def build_foundation_content(row: tuple, level: str) -> dict:
         ),
     ]
     return {
-        "day":day,"week":module,"track":level,"module":module,"quality_version":4,
+        "day":day,"week":module,"track":level,"module":module,"quality_version":5,
         "learning_method":"notice_build_use_reflect","title":title_ru,"objective":goals["ru"],
-        "communication_goal":goals["ru"],"rule":rules["ru"],"examples":[model,model.rstrip("."),f"{level}-Muster: {model}"],
+        "communication_goal":goals["ru"],"scenario":scenario_ru,"rule":rules["ru"],"examples":[model,alternate,"Das ist heute wichtig für mich." if level == "A1" else "In dieser Situation würde ich ähnlich reagieren."],
         "audio_text":model,"cefr":level,"prerequisites":[],"common_mistakes":[f"❌ {wrong}",f"✅ {model}"],
         "recall_prompt":"Закрой пример, назови правило и создай собственную фразу.",
-        "i18n":{"ru":{"title":title_ru,"rule":rules["ru"],"objective":goals["ru"]},"de":{"title":title_de,"rule":rules["de"],"objective":goals["de"]},"en":{"title":title_en,"rule":rules["en"],"objective":goals["en"]}},
+        "i18n":{"ru":{"title":title_ru,"rule":rules["ru"],"objective":goals["ru"],"scenario":scenario_ru},"de":{"title":title_de,"rule":rules["de"],"objective":goals["de"],"scenario":scenario_de},"en":{"title":title_en,"rule":rules["en"],"objective":goals["en"],"scenario":scenario_en}},
         "exercises":exercises,
     }

@@ -113,6 +113,7 @@ class ContentQualityTests(unittest.TestCase):
                 self.assertTrue(all("i18n" not in exercise for exercise in localized["exercises"]))
 
     def test_a1_and_a2_have_complete_multilingual_learning_loops(self):
+        guided_types = set()
         for level, curriculum in (("A1", A1_CURRICULUM), ("A2", A2_CURRICULUM)):
             self.assertEqual(20, len(curriculum))
             self.assertEqual({1, 2, 3, 4}, {row[1] for row in curriculum})
@@ -120,13 +121,19 @@ class ContentQualityTests(unittest.TestCase):
                 content = build_foundation_content(row, level)
                 self.assertEqual([], validate_roadmap_content(content), f"{level} day {row[0]}")
                 self.assertEqual(level, content["track"])
+                self.assertEqual(5, content["quality_version"])
                 self.assertEqual(5, len(content["exercises"]))
-                self.assertEqual({"error_repair", "context_choice", "listening_choice", "dialogue", "repeat"}, {item["type"] for item in content["exercises"]})
+                guided_types.add(content["exercises"][0]["type"])
+                self.assertEqual({"context_choice", "listening_choice", "dialogue", "repeat"}, {item["type"] for item in content["exercises"][1:]})
+                self.assertEqual(3, len(set(content["examples"])))
+                self.assertLessEqual(len(content["exercises"][3]["target_patterns"]), 3)
                 for language in ("ru", "de", "en"):
                     localized = localize_lesson_content(content, language)
                     self.assertTrue(localized["title"])
                     self.assertTrue(localized["objective"])
+                    self.assertTrue(localized["scenario"])
                     self.assertTrue(all("i18n" not in item for item in localized["exercises"]))
+        self.assertEqual({"error_repair", "reorder", "transform"}, guided_types)
 
     def test_quality_v4_rejects_repetitive_or_unmapped_practice(self):
         content = {
@@ -143,6 +150,14 @@ class ContentQualityTests(unittest.TestCase):
         self.assertIn("adaptive:insufficient_variety", errors)
         self.assertIn("adaptive:missing_misconception", errors)
         self.assertIn("adaptive:duplicate_prompt", errors)
+
+    def test_quality_v5_requires_context_and_open_production(self):
+        content = build_foundation_content(A1_CURRICULUM[0], "A1")
+        content.pop("scenario")
+        content["exercises"][3]["target_patterns"] = ["a", "b", "c", "d"]
+        errors = validate_roadmap_content(content)
+        self.assertIn("foundation:missing_scenario", errors)
+        self.assertIn("foundation:overconstrained_production", errors)
 
 
 if __name__ == "__main__":
