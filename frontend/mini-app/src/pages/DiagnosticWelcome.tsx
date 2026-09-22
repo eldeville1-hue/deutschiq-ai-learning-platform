@@ -18,7 +18,7 @@ export const DiagnosticWelcome: React.FC = () => {
         <h1>{tr(lang, 'Немецкий, который подстраивается под тебя.', 'Deutsch, das sich an dich anpasst.', 'German that adapts to you.')}</h1>
         <p>{tr(lang, 'Определим твой уровень и построим первый маршрут.', 'Wir bestimmen dein Niveau und erstellen deinen ersten Lernweg.', 'Find your level and get a personal learning path.')}</p>
       </div>
-      <p className="diagnostic-meta intro-step intro-step-4">15 {tr(lang, 'вопросов', 'Fragen', 'questions')}</p>
+      <p className="diagnostic-meta intro-step intro-step-4">16 {tr(lang, 'вопросов', 'Fragen', 'questions')}</p>
       <button className="primary-action intro-step intro-step-5" onClick={() => navigate(withUser('/diagnostic'))}>
         {tr(lang, 'Определить уровень', 'Niveau bestimmen', 'Find my level')} <FaArrowRight />
       </button>

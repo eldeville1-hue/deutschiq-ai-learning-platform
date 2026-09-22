@@ -208,7 +208,7 @@ export const Lesson: React.FC = () => {
           : learningProfile.mode === 'challenge'
             ? tr(lang, "Самостоятельный вызов", "Selbstständige Herausforderung", "Independent challenge")
             : tr(lang, "Сбалансированный", "Ausgewogen", "Balanced")}</strong>
-        <small>{tr(lang, `Освоение темы: ${learningProfile.mastery}%`, `Themenkenntnis: ${learningProfile.mastery}%`, `Topic mastery: ${learningProfile.mastery}%`)}</small>
+        <small>{tr(lang, `До урока: ${learningProfile.mastery}%`, `Vor der Lektion: ${learningProfile.mastery}%`, `Before lesson: ${learningProfile.mastery}%`)}</small>
       </div>
       {step === 0 && (
         <section className="lesson-step">
@@ -249,7 +249,7 @@ export const Lesson: React.FC = () => {
           {(content.common_mistakes || []).length > 0 && (
             <div className="mistake-contrast compact">
               {(content.common_mistakes || []).slice(0, 2).map((item: string, index: number) => (
-                <div key={index} className={item.includes("❌") ? "bad" : "good"}>{item}</div>
+                <div key={index} className={item.includes("❌") ? "bad" : "good"}>{item.includes("❌") ? <FaTimes /> : <FaCheck />}<span>{item.replace(/^[❌✅]\s*/, '')}</span></div>
               ))}
             </div>
           )}
@@ -453,6 +453,7 @@ export const Lesson: React.FC = () => {
               ? tr(lang, "НУЖНО ЕЩЁ ЗАКРЕПИТЬ", "NOCH EINMAL FESTIGEN", "MORE PRACTICE NEEDED")
               : tr(lang, "УРОК ОСВОЕН", "LEKTION GESCHAFFT", "LESSON COMPLETE")}
           </p>
+          <small className="lesson-result-score-label">{tr(lang, 'РЕЗУЛЬТАТ ЗАДАНИЙ', 'ÜBUNGSERGEBNIS', 'EXERCISE SCORE')}</small>
           <h1>{outcome ? `${outcome.score}%` : "…"}</h1>
           <div className="lesson-score">
             <span>

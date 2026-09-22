@@ -70,6 +70,10 @@ def _local_scores(answer: str, exercise: dict, cefr: str) -> tuple[dict[str, int
 def local_feedback(answer: str, exercise: dict, rule: str, lang: str = "en", cefr: str = "A1") -> dict[str, Any]:
     cefr = str(cefr or "A1").upper()
     scores, blocking_error = _local_scores(answer, exercise, cefr)
+    model = exercise.get("model_answer") or exercise.get("answer", "")
+    if cefr in {"A1", "A2", "B1"} and model and normalize_text(answer) == normalize_text(str(model)):
+        scores = {name: 100 for name in DIMENSIONS}
+        blocking_error = None
     score = _overall(scores)
     threshold = PASS_MARKS.get(cefr, 70)
     passed = blocking_error is None and score >= threshold and scores["task_completion"] >= 60 and scores["grammar"] >= 50
@@ -81,7 +85,6 @@ def local_feedback(answer: str, exercise: dict, rule: str, lang: str = "en", cef
     improvement = copy[improvement_key]
     if not passed and weakest == "task_completion" and rule:
         improvement = f"{improvement} {rule}"
-    model = exercise.get("model_answer") or exercise.get("answer", "")
     corrected = answer.strip() if passed else model
     diff = word_diff(answer, model)
     return {
@@ -134,6 +137,9 @@ async def evaluate_production(answer: str, exercise: dict, lesson_content: dict,
     from app.core.config import settings
 
     fallback = local_feedback(answer, exercise, lesson_content.get("rule", ""), lang, lesson_content.get("cefr", "A2"))
+    model = exercise.get("model_answer") or exercise.get("answer", "")
+    if model and normalize_text(answer) == normalize_text(str(model)):
+        return fallback
     if not settings.OPENAI_API_KEY:
         return fallback
     try:
