@@ -23,6 +23,7 @@ from app.services.misconception_feedback import misconception_feedback
 from app.services.learning_route import next_cefr_track, normalize_cefr
 from app.services.answer_intelligence import evaluate_structured_answer
 from app.services.lesson_coaching import learning_profile, repair_plan
+from app.services.assessment_insights import evidence_gate
 
 router = APIRouter(prefix="/api/lesson", tags=["lesson"])
 
@@ -259,7 +260,8 @@ async def complete_lesson(data: CompleteLessonRequest, db: Session = Depends(get
         mastery_values = [float(row.mastery or 0) for row in db.query(TopicMastery).filter(TopicMastery.user_id == user.id).all() if row.topic in track_topics]
         completion_percent = round(completed_count / len(track_lessons) * 100) if track_lessons else 0
         average_mastery = round(sum(mastery_values) / len(mastery_values)) if mastery_values else 0
-        checkpoint_ready = bool(next_cefr_track(current_track) and completion_percent >= 80 and average_mastery >= 70)
+        production_attempts = db.query(ExerciseAttempt).filter(ExerciseAttempt.user_id == user.id, ExerciseAttempt.topic.in_(track_topics), ExerciseAttempt.assessment.isnot(None)).order_by(ExerciseAttempt.created_at.desc()).limit(100).all()
+        checkpoint_ready = bool(next_cefr_track(current_track) and completion_percent >= 80 and average_mastery >= 70 and evidence_gate(production_attempts)["eligible"])
     db.commit()
     if passed:
         schedule_review(db, user.id, lesson.id)

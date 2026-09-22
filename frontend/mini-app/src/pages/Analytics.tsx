@@ -49,8 +49,13 @@ export const Analytics: React.FC = () => {
   const strongest = [...stats].filter(skill => skill.hasData).sort((a, b) => b.score - a.score)[0];
   const missing = stats.filter(skill => !skill.hasData);
   const errors = (data?.weaknesses || []).slice(0, 3);
+  const assessment = learning?.assessment;
+  const productionDimensions = assessment?.dimensions || {};
+  const dimensionLabel = (key: string) => ({ task_completion: tr(lang, 'Выполнение задачи', 'Aufgabenerfüllung', 'Task completion'), grammar: tr(lang, 'Грамматика', 'Grammatik', 'Grammar'), vocabulary: tr(lang, 'Лексика', 'Wortschatz', 'Vocabulary'), coherence: tr(lang, 'Связность', 'Kohärenz', 'Coherence'), register: tr(lang, 'Регистр', 'Register', 'Register') } as Record<string, string>)[key] || key;
   const radarStats = stats.slice(0, 4);
-  const nextFocus = missing.length
+  const nextFocus = assessment?.weakest_dimension
+    ? tr(lang, `Фокус: ${dimensionLabel(assessment.weakest_dimension)}`, `Fokus: ${dimensionLabel(assessment.weakest_dimension)}`, `Focus: ${dimensionLabel(assessment.weakest_dimension)}`)
+    : missing.length
     ? tr(lang, `Сначала: ${topicLabel(missing[0].key, lang)}`, `Zuerst: ${topicLabel(missing[0].key, lang)}`, `Start with: ${topicLabel(missing[0].key, lang)}`)
     : errors.length
       ? tr(lang, `Фокус: ${topicLabel(String(errors[0].name), lang)}`, `Fokus: ${topicLabel(String(errors[0].name), lang)}`, `Focus: ${topicLabel(String(errors[0].name), lang)}`)
@@ -83,6 +88,8 @@ export const Analytics: React.FC = () => {
         <header><div><small>{tr(lang, 'НАВЫКИ', 'FÄHIGKEITEN', 'SKILLS')}</small><h2>{tr(lang, 'Профиль навыков', 'Fähigkeitsprofil', 'Skill profile')}</h2></div>{strongest && <span><FaChartLine /> {topicLabel(strongest.key, lang)}</span>}</header>
         <div className="rc-skill-visual"><div className="rc-skill-grid">{radarStats.map(skill => <div className={`rc-skill-tile${skill.hasData ? '' : ' locked'}`} key={skill.key}><span>{topicLabel(skill.key, lang)}</span><b>{skill.hasData ? `${skill.score}%` : <><FaLock aria-hidden="true" /> {tr(lang, 'Нет данных', 'Keine Daten', 'No data')}</>}</b><div className="rc-meter"><i style={{ width: `${skill.hasData ? skill.score : 0}%` }} /></div></div>)}</div></div>
       </section>
+
+      {Object.keys(productionDimensions).length > 0 && <section className="production-profile"><header><div><small>{tr(lang, 'СВОБОДНЫЕ ОТВЕТЫ', 'FREIE ANTWORTEN', 'OPEN RESPONSES')}</small><h2>{tr(lang, 'Как ты используешь язык', 'Wie du Sprache anwendest', 'How you use the language')}</h2></div><span>{assessment.samples} {tr(lang, 'ответов', 'Antworten', 'responses')}</span></header><div>{Object.entries(productionDimensions).map(([key, value]: any) => <article className={key === assessment.weakest_dimension ? 'weak' : ''} key={key}><span><strong>{dimensionLabel(key)}</strong><small>{value.samples} {tr(lang, 'оценок', 'Bewertungen', 'scores')}</small></span><b>{value.score}%</b><i><em style={{ width: `${value.score}%` }} /></i></article>)}</div>{assessment.priority_topics?.[0] && <button type="button" onClick={() => navigate(withUser('/review'))}><span><small>{tr(lang, 'ПЕРСОНАЛЬНАЯ ПРАКТИКА', 'PERSONALISIERTE ÜBUNG', 'PERSONALISED PRACTICE')}</small><strong>{dimensionLabel(assessment.priority_topics[0].dimension)} · {topicLabel(assessment.priority_topics[0].topic, lang)}</strong></span><FaArrowRight /></button>}</section>}
 
       <div className="rc-insight-grid">
         <details className="rc-analysis-detail"><summary><span><small>{tr(lang, 'ПАМЯТЬ', 'GEDÄCHTNIS', 'MEMORY')}</small><strong>{tr(lang, 'Удержание знаний', 'Wissensspeicherung', 'Knowledge retention')}</strong></span><FaChevronDown /></summary><div className="rc-detail-content">{learning?.retention_summary?.learned > 0 && <p>{tr(lang, `Удерживается ${learning.retention_summary.retained} из ${learning.retention_summary.learned} навыков · под риском ${learning.retention_summary.at_risk}`, `${learning.retention_summary.retained} von ${learning.retention_summary.learned} Fähigkeiten behalten · ${learning.retention_summary.at_risk} gefährdet`, `${learning.retention_summary.retained} of ${learning.retention_summary.learned} skills retained · ${learning.retention_summary.at_risk} at risk`)}</p>}{learning?.mastery?.length ? learning.mastery.slice(0, 4).map((item: any) => <div className="rc-detail-row" key={item.topic}><span><strong>{topicLabel(item.topic, lang)}</strong><small>{item.attempts} {tr(lang, 'попыток', 'Versuche', 'attempts')}</small></span><b>{item.retention}%</b></div>) : <p>{tr(lang, 'Появится после практики и повторений.', 'Erscheint nach Übungen und Wiederholungen.', 'Appears after practice and review.')}</p>}</div></details>

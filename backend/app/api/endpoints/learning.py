@@ -16,6 +16,7 @@ from app.services.learning_route import lesson_blockers, select_recommended_less
 from app.services.skill_graph import skill_for
 from app.services.content_quality import normalize_lesson_content
 from app.services.content_i18n import localize_lesson_content, normalize_language
+from app.services.assessment_insights import assessment_insights
 
 router = APIRouter(prefix="/api/learning", tags=["learning"])
 
@@ -52,6 +53,11 @@ async def today(user_id: int, lang: str | None = None, db: Session = Depends(get
     diagnostic = db.query(DiagnosticResult).filter(DiagnosticResult.user_id == user.id).order_by(DiagnosticResult.created_at.desc()).first()
     weak_points = diagnostic.weak_points if diagnostic and diagnostic.weak_points else {}
     next_lesson = select_recommended_lesson(plan, completed_ids, mastery_map, weak_points)
+    production_attempts = db.query(ExerciseAttempt).filter(
+        ExerciseAttempt.user_id == user.id, ExerciseAttempt.assessment.isnot(None)
+    ).order_by(ExerciseAttempt.created_at.desc()).limit(100).all()
+    assessment = assessment_insights(production_attempts)
+    repair_focus = assessment["priority_topics"][0] if assessment["priority_topics"] else None
     language = normalize_language(lang or user.language_code)
     next_content = localize_lesson_content(normalize_lesson_content(next_lesson.content or {}, next_lesson.topic, next_lesson.level), language) if next_lesson else {}
     due_count = len(due)
@@ -61,7 +67,10 @@ async def today(user_id: int, lang: str | None = None, db: Session = Depends(get
         phases.append({"kind": "review", "count": review_count, "minutes": max(2, review_count * 2), "reason": "due"})
     if next_lesson:
         weakest = mastery[0] if mastery else None
-        if weakest and weakest.mastery < 70 and weakest.topic not in {item.topic for item in due[:5]}:
+        if repair_focus and repair_focus["score"] < 70:
+            repair_lesson = next((item for item in plan if item.topic == repair_focus["topic"]), None)
+            phases.append({"kind": "repair", "count": 1, "minutes": 4, "topic": repair_focus["topic"], "dimension": repair_focus["dimension"], "score": repair_focus["score"], "lesson_id": repair_lesson.id if repair_lesson else None, "reason": "weak_assessment_dimension"})
+        elif weakest and weakest.mastery < 70 and weakest.topic not in {item.topic for item in due[:5]}:
             phases.append({"kind": "repair", "count": 1, "minutes": 3, "topic": weakest.topic, "reason": "weak_mastery"})
         phases.append({
             "kind": "learn",
@@ -94,6 +103,7 @@ async def today(user_id: int, lang: str | None = None, db: Session = Depends(get
         } for item in mastery[:8]],
         "retention_summary": {"learned": len(mastery), "retained": len(retained), "at_risk": len(at_risk)},
         "mistake_patterns": mistake_patterns,
+        "assessment": assessment,
         "next_lesson": ({
             "id": next_lesson.id,
             "topic": next_lesson.topic,
@@ -119,6 +129,13 @@ async def reviews(user_id: int, lang: str | None = None, db: Session = Depends(g
         raise HTTPException(status_code=404, detail="User not found")
     now = datetime.now(timezone.utc)
     rows = db.query(TopicMastery).filter(TopicMastery.user_id == user.id, TopicMastery.next_review_at <= now).order_by(TopicMastery.mastery.asc()).limit(5).all()
+    production_attempts = db.query(ExerciseAttempt).filter(ExerciseAttempt.user_id == user.id, ExerciseAttempt.assessment.isnot(None)).order_by(ExerciseAttempt.created_at.desc()).limit(100).all()
+    assessment = assessment_insights(production_attempts)
+    repair_focus = assessment["priority_topics"][0] if assessment["priority_topics"] else None
+    if repair_focus and repair_focus["score"] < 70 and repair_focus["topic"] not in {row.topic for row in rows}:
+        repair_mastery = db.query(TopicMastery).filter(TopicMastery.user_id == user.id, TopicMastery.topic == repair_focus["topic"]).first()
+        if repair_mastery:
+            rows = [repair_mastery, *rows][:5]
     result = []
     for row in rows:
         lesson = db.query(Lesson).filter(Lesson.topic == row.topic, Lesson.is_active == True).first()
@@ -126,7 +143,9 @@ async def reviews(user_id: int, lang: str | None = None, db: Session = Depends(g
         exercises = content.get("exercises", [])
         if lesson and exercises:
             # Повторение проверяет самостоятельное извлечение, а не этап с подсказкой.
-            exercise_index = 1 if len(exercises) > 1 else 0
+            repair_dimension = repair_focus["dimension"] if repair_focus and row.topic == repair_focus["topic"] else None
+            preferred_types = {"grammar": {"error_repair", "transform"}, "task_completion": {"dialogue", "production"}, "vocabulary": {"dialogue", "production"}, "coherence": {"dialogue", "production"}, "register": {"dialogue", "production"}}.get(repair_dimension, set())
+            exercise_index = next((index for index, item in enumerate(exercises) if item.get("type") in preferred_types), 1 if len(exercises) > 1 else 0)
             exercise = exercises[exercise_index]
-            result.append({"topic": row.topic, "mastery": round(row.mastery), "lesson_id": lesson.id, "exercise_index": exercise_index, "question": exercise.get("question", ""), "type": exercise.get("type", "fill"), "options": exercise.get("options", []), "tokens": exercise.get("tokens", [])})
-    return {"reviews": result}
+            result.append({"topic": row.topic, "mastery": round(row.mastery), "lesson_id": lesson.id, "exercise_index": exercise_index, "question": exercise.get("question", ""), "type": exercise.get("type", "fill"), "options": exercise.get("options", []), "tokens": exercise.get("tokens", []), "repair_dimension": repair_dimension, "repair_score": repair_focus["score"] if repair_dimension else None})
+    return {"reviews": result, "assessment": assessment}

@@ -6,10 +6,11 @@ from app.core.telegram_auth import telegram_user_id, assert_owner
 from app.models.user import User
 from app.models.lesson import Lesson
 from app.models.progress import UserProgress
-from app.models.learning import TopicMastery
+from app.models.learning import ExerciseAttempt, TopicMastery
 from app.services.answer_intelligence import evaluate_structured_answer
 from app.services.content_i18n import localize_lesson_content, normalize_language
 from app.services.learning_route import next_cefr_track, normalize_cefr
+from app.services.assessment_insights import evidence_gate
 
 router = APIRouter(prefix="/api/checkpoint", tags=["checkpoint"])
 
@@ -29,7 +30,9 @@ def eligibility(db: Session, user: User, level: str) -> dict:
     values = [float(row.mastery or 0) for row in db.query(TopicMastery).filter(TopicMastery.user_id == user.id).all() if row.topic in topics]
     completion = round(completed / len(lessons) * 100) if lessons else 0
     mastery = round(sum(values) / len(values)) if values else 0
-    return {"eligible": completion >= 80 and mastery >= 70, "completion": completion, "mastery": mastery}
+    attempts = db.query(ExerciseAttempt).filter(ExerciseAttempt.user_id == user.id, ExerciseAttempt.topic.in_(topics), ExerciseAttempt.assessment.isnot(None)).order_by(ExerciseAttempt.created_at.desc()).limit(100).all() if topics else []
+    evidence = evidence_gate(attempts)
+    return {"eligible": completion >= 80 and mastery >= 70 and evidence["eligible"], "completion": completion, "mastery": mastery, "evidence": evidence}
 
 @router.get("/{user_id}/{level}")
 async def get_checkpoint(user_id: int, level: str, lang: str = "en", db: Session = Depends(get_db), authenticated_id: int = Depends(telegram_user_id)):
