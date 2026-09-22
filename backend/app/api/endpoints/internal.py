@@ -14,6 +14,7 @@ from app.models.lesson import Lesson
 from app.models.user import User
 from app.models.beta import BetaEnrollment, BetaInvite
 from app.services.beta_insights import exercise_health, retention_cohorts, summarize_events, tester_progress
+from app.services.bot_links import telegram_beta_invite_url
 
 router = APIRouter(prefix="/api/internal", tags=["internal"])
 
@@ -51,7 +52,7 @@ async def create_invite_batch(payload: InviteBatchRequest, db: Session = Depends
     db.commit()
     for invite in invites:
         db.refresh(invite)
-    return {"created": len(invites), "invites": [{"id": item.id, "code": item.code, "label": item.label, "max_uses": 1, "uses": 0, "active": True, "invite_url": f"{settings.WEBAPP_URL}?invite={item.code}"} for item in invites]}
+    return {"created": len(invites), "invites": [{"id": item.id, "code": item.code, "label": item.label, "max_uses": 1, "uses": 0, "active": True, "invite_url": telegram_beta_invite_url(settings.TELEGRAM_BOT_USERNAME, item.code)} for item in invites]}
 
 
 @router.delete("/invites/{invite_id}", dependencies=[Depends(require_control_key)])

@@ -1,7 +1,6 @@
 # backend/app/bot/main.py
 import asyncio
 import json
-from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
 import logging
 from datetime import datetime, timedelta
 from aiogram import Bot, Dispatcher, F
@@ -12,6 +11,7 @@ from app.models.user import User
 from app.core.database import SessionLocal
 from app.bot.scheduler import schedule_daily_reminders
 from app.core.single_instance import acquire_bot_lock
+from app.services.bot_links import build_web_app_url as compose_web_app_url, invite_code_from_payload, parse_start_payload
 
 _start_cooldowns: dict[int, datetime] = {}
 
@@ -22,13 +22,10 @@ def normalize_language(value: str | None) -> str:
 def tr(lang: str, ru: str, de: str, en: str) -> str:
     return {"ru": ru, "de": de, "en": en}[normalize_language(lang)]
 
-def build_web_app_url(user_id: int, route: str = "") -> str:
-    parts = urlsplit(settings.WEBAPP_URL)
-    query = dict(parse_qsl(parts.query, keep_blank_values=True))
-    path = route if route else parts.path
-    return urlunsplit((parts.scheme, parts.netloc, path, urlencode(query), parts.fragment))
+def build_web_app_url(user_id: int, route: str = "", **query_updates: str) -> str:
+    return compose_web_app_url(settings.WEBAPP_URL, route, **query_updates)
 
-def main_keyboard(user_id: int, lang: str = "ru") -> ReplyKeyboardMarkup:
+def main_keyboard(user_id: int, lang: str = "ru", invite_code: str | None = None) -> ReplyKeyboardMarkup:
     open_text = tr(lang, "🇩🇪 Открыть DeutschIQ", "🇩🇪 DeutschIQ öffnen", "🇩🇪 Open DeutschIQ")
     progress_text = tr(lang, "📊 Мой прогресс", "📊 Mein Fortschritt", "📊 My progress")
     plan_text = tr(lang, "🗓 Мой план", "🗓 Mein Lernplan", "🗓 My plan")
@@ -37,7 +34,7 @@ def main_keyboard(user_id: int, lang: str = "ru") -> ReplyKeyboardMarkup:
     placeholder = tr(lang, "Выберите действие", "Aktion auswählen", "Choose an action")
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text=open_text, web_app=WebAppInfo(url=build_web_app_url(user_id)))],
+            [KeyboardButton(text=open_text, web_app=WebAppInfo(url=build_web_app_url(user_id, invite=invite_code or "")))],
             [KeyboardButton(text=progress_text), KeyboardButton(text=plan_text, web_app=WebAppInfo(url=build_web_app_url(user_id, "/plan")))],
             [KeyboardButton(text=diagnostic_text, web_app=WebAppInfo(url=build_web_app_url(user_id, "/diagnostic"))), KeyboardButton(text=help_text)],
         ],
@@ -73,24 +70,32 @@ async def cmd_start(message: Message):
         db.commit()
     lang = user_language(user)
     db.close()
-    if (message.text or "").strip().lower().endswith(" subscribe"):
+    payload = parse_start_payload(message.text)
+    if payload.lower() == "subscribe":
         await cmd_subscribe(message)
         return
+    invite_code = invite_code_from_payload(payload)
+    launch_url = build_web_app_url(user_id, invite=invite_code or "")
     await bot.set_chat_menu_button(
         chat_id=message.chat.id,
         menu_button=MenuButtonWebApp(
             text=tr(lang, "Открыть DeutschIQ", "DeutschIQ öffnen", "Open DeutschIQ"),
-            web_app=WebAppInfo(url=build_web_app_url(user_id)),
+            web_app=WebAppInfo(url=launch_url),
         ),
     )
-    start_text = tr(lang, "Добро пожаловать в DeutschIQ!\n\nОпредели уровень и начни персональный план.", "Willkommen bei DeutschIQ!\n\nBestimme dein Niveau und starte deinen persönlichen Lernplan.", "Welcome to DeutschIQ!\n\nFind your level and start your personal learning plan.")
+    if invite_code:
+        start_text = tr(lang, "Твоё приглашение в закрытую бету готово.\n\nОткрой DeutschIQ внутри Telegram и активируй место.", "Deine Einladung zur geschlossenen Beta ist bereit.\n\nÖffne DeutschIQ in Telegram und aktiviere deinen Platz.", "Your closed-beta invitation is ready.\n\nOpen DeutschIQ inside Telegram and activate your place.")
+        open_text = tr(lang, "Открыть приглашение", "Einladung öffnen", "Open invitation")
+    else:
+        start_text = tr(lang, "Добро пожаловать в DeutschIQ!\n\nОпредели уровень и начни персональный план.", "Willkommen bei DeutschIQ!\n\nBestimme dein Niveau und starte deinen persönlichen Lernplan.", "Welcome to DeutschIQ!\n\nFind your level and start your personal learning plan.")
+        open_text = tr(lang, "Открыть DeutschIQ", "DeutschIQ öffnen", "Open DeutschIQ")
     await message.answer(
         start_text,
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text=tr(lang, "Открыть DeutschIQ", "DeutschIQ öffnen", "Open DeutschIQ"), web_app=WebAppInfo(url=build_web_app_url(user_id)))]
+            [InlineKeyboardButton(text=open_text, web_app=WebAppInfo(url=launch_url))]
         ])
     )
-    await message.answer(tr(lang, "Меню:", "Menü:", "Menu:"), reply_markup=main_keyboard(user_id, lang))
+    await message.answer(tr(lang, "Меню:", "Menü:", "Menu:"), reply_markup=main_keyboard(user_id, lang, invite_code))
 
 @dp.message(Command("subscribe"))
 async def cmd_subscribe(message: Message):

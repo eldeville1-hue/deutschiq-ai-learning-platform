@@ -26,6 +26,7 @@ if env_path:
 
 class Settings:
     BOT_TOKEN = os.getenv("BOT_TOKEN")
+    TELEGRAM_BOT_USERNAME = os.getenv("TELEGRAM_BOT_USERNAME", "DeutschIQ_bot").strip().lstrip("@")
     DATABASE_URL = os.getenv("DATABASE_URL")
     REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
