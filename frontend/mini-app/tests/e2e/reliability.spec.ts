@@ -161,10 +161,10 @@ test('stale dashboard cache survives a bounded network failure without reload lo
   await mockApi(page, { completed: true });
   await page.route('**/api/dashboard/**', async route => { dashboardRequests += 1; await route.abort('failed'); });
   await page.goto('/dashboard');
-  await expect(page.getByText('321 XP')).toBeVisible();
+  await expect(page.locator('.rc-home-stats small')).toHaveText('321 XP');
   await expect.poll(() => dashboardRequests).toBe(2);
   await page.reload();
-  await expect(page.getByText('321 XP')).toBeVisible();
+  await expect(page.locator('.rc-home-stats small')).toHaveText('321 XP');
   expect(dashboardRequests).toBeLessThanOrEqual(4);
 });
 
@@ -172,7 +172,7 @@ test('Telegram BackButton owns nested navigation without duplicate browser contr
   await page.addInitScript(() => {
     const calls = { shown: 0, hidden: 0, handler: null as null | (() => void) };
     (window as any).__backCalls = calls;
-    (window as any).Telegram = { WebApp: { platform: 'android', ready() {}, expand() {}, BackButton: { show() { calls.shown += 1; }, hide() { calls.hidden += 1; }, onClick(handler: () => void) { calls.handler = handler; }, offClick() { calls.handler = null; } } } };
+    Object.defineProperty(window, 'Telegram', { configurable: false, writable: false, value: { WebApp: { platform: 'android', ready() {}, expand() {}, BackButton: { show() { calls.shown += 1; }, hide() { calls.hidden += 1; }, onClick(handler: () => void) { calls.handler = handler; }, offClick() { calls.handler = null; } } } } });
   });
   await mockApi(page, { completed: true });
   await page.goto('/lesson/77');
