@@ -40,3 +40,13 @@ async def delete_data(user_id: int, db: Session = Depends(get_db), authenticated
     db.delete(user)
     db.commit()
     return Response(status_code=204)
+
+
+@router.post("/{user_id}/reset-test", status_code=204)
+async def reset_test_journey(user_id: int, db: Session = Depends(get_db), authenticated_id: int = Depends(telegram_user_id)):
+    """Return the authenticated beta tester to a clean first-launch state."""
+    assert_owner(authenticated_id, user_id)
+    user = _user(db, user_id)
+    db.delete(user)
+    db.commit()
+    return Response(status_code=204)

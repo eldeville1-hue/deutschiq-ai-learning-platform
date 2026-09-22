@@ -122,6 +122,7 @@ export const api = {
     }),
   exportUserData: (userId: number) => apiClient.get(`/api/user-data/${userId}`).then(r => r.data),
   deleteUserData: (userId: number) => apiClient.delete(`/api/user-data/${userId}`),
+  resetTestJourney: (userId: number) => apiClient.post(`/api/user-data/${userId}/reset-test`),
   getBetaControlCenter: (key: string, days = 30) => apiClient.get(`/api/internal/beta?days=${days}`, { headers: { 'X-Control-Key': key }, __telemetry: true } as any).then(r => r.data),
   createBetaInvite: (key: string, payload: { label: string; max_uses: number }) => apiClient.post('/api/internal/invites', payload, { headers: { 'X-Control-Key': key }, __telemetry: true } as any).then(r => r.data),
   createBetaInviteBatch: (key: string, payload: { label_prefix: string; count: number }) => apiClient.post('/api/internal/invites/batch', payload, { headers: { 'X-Control-Key': key }, __telemetry: true } as any).then(r => r.data),

@@ -54,6 +54,21 @@ export const Profile: React.FC = () => {
       window.location.assign('/');
     } catch { setActionStatus(tr(lang, 'Не удалось удалить данные. Попробуй позже.', 'Daten konnten nicht gelöscht werden. Versuche es später erneut.', 'Could not delete your data. Try again later.')); }
   };
+  const resetTestJourney = async () => {
+    const ok = window.confirm(tr(lang, 'Начать тестирование как новый пользователь? Текущий учебный прогресс будет удалён.', 'Test als neue Person starten? Dein aktueller Lernfortschritt wird gelöscht.', 'Restart testing as a new user? Your current learning progress will be deleted.'));
+    if (!ok) return;
+    try {
+      setActionStatus(tr(lang, 'Сбрасываем тестовый путь…', 'Testverlauf wird zurückgesetzt…', 'Resetting the test journey…'));
+      await api.resetTestJourney(getUserId());
+      const savedLanguage = localStorage.getItem('deutschiq_lang');
+      const savedTheme = localStorage.getItem('deutschiq_theme');
+      localStorage.clear();
+      if (savedLanguage) localStorage.setItem('deutschiq_lang', savedLanguage);
+      if (savedTheme) localStorage.setItem('deutschiq_theme', savedTheme);
+      sessionStorage.clear();
+      window.location.assign('/');
+    } catch { setActionStatus(tr(lang, 'Не удалось сбросить путь.', 'Testverlauf konnte nicht zurückgesetzt werden.', 'Could not reset the test journey.')); }
+  };
   const sendFeedback = async () => {
     const message = feedbackText.trim();
     if (!message) return;
@@ -78,6 +93,7 @@ export const Profile: React.FC = () => {
       <section className="achievement-section page-stagger-3"><header><small>{tr(lang, 'ДОСТИЖЕНИЯ', 'ERFOLGE', 'ACHIEVEMENTS')}</small><span>1 / 8</span></header><button type="button" className="achievement-card" onClick={() => navigate(withUser('/analytics'))}><FaMedal /><span><b>{tr(lang, 'Первый шаг', 'Erster Schritt', 'First step')}</b><small>{tr(lang, 'Диагностика завершена', 'Diagnose abgeschlossen', 'Placement test completed')} <FaCheck /></small></span><FaChevronRight /></button></section>
       <section className="profile-settings page-stagger-4"><div className="profile-language"><strong>{tr(lang, 'Язык интерфейса', 'App-Sprache', 'App language')}</strong><LanguagePicker compact /></div><button onClick={toggleTheme}><span>{theme === 'dark' ? <FaMoon /> : <FaSun />}{tr(lang, 'Оформление', 'Darstellung', 'Appearance')}</span><small>{theme === 'dark' ? tr(lang, 'Тёмное', 'Dunkel', 'Dark') : tr(lang, 'Светлое', 'Hell', 'Light')}</small></button><button onClick={share}><span><FaShareAlt />{tr(lang, 'Пригласить друга', 'Freund einladen', 'Invite a friend')}</span><FaChevronRight /></button></section>
       <button className="retake-link" onClick={retake}><FaRedo /> {tr(lang, 'Пройти диагностику заново', 'Diagnose wiederholen', 'Retake placement test')}</button>
+      <button className="retake-link" onClick={resetTestJourney}><FaRedo /> {tr(lang, 'Начать тестовый путь заново', 'Testverlauf neu starten', 'Restart test journey')}</button>
       <nav className="legal-links"><a href="/privacy">{tr(lang, 'Конфиденциальность', 'Datenschutz', 'Privacy')}</a><a href="/imprint">{tr(lang, 'Информация', 'Impressum', 'Legal')}</a><a href="/terms">{tr(lang, 'Условия', 'Nutzung', 'Terms')}</a></nav>
       <section className="data-controls"><button onClick={exportData}><FaDownload />{tr(lang, 'Скачать мои данные', 'Meine Daten herunterladen', 'Download my data')}</button><button className="danger" onClick={deleteData}><FaTrash />{tr(lang, 'Удалить аккаунт и данные', 'Konto und Daten löschen', 'Delete account and data')}</button></section>
       {actionStatus && <p className="profile-action-status" role="status">{actionStatus}</p>}

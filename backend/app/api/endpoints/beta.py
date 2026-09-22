@@ -56,7 +56,13 @@ async def onboarding(data: Onboarding, db: Session = Depends(get_db), authentica
     assert_owner(authenticated_id, data.user_id)
     if not data.consent: raise HTTPException(status_code=422, detail="Consent is required")
     user = db.query(User).filter(User.telegram_id == data.user_id).first()
+    if not user and not settings.BETA_INVITE_REQUIRED:
+        user = User(telegram_id=data.user_id, language_code="en")
+        db.add(user); db.flush()
     enrollment = db.query(BetaEnrollment).filter(BetaEnrollment.user_id == user.id).first() if user else None
+    if not enrollment and user and not settings.BETA_INVITE_REQUIRED:
+        enrollment = BetaEnrollment(user_id=user.id)
+        db.add(enrollment)
     if not enrollment: raise HTTPException(status_code=403, detail="Beta access required")
     enrollment.goal, enrollment.study_minutes, enrollment.consent = data.goal, data.study_minutes, True
     db.add(ProductEvent(user_id=user.id, event_name="beta_onboarding_completed", properties={"language":user.language_code,"goal":data.goal,"study_minutes":data.study_minutes}))

@@ -10,6 +10,22 @@ from app.core.cloud_runtime import secret_matches
 router = APIRouter(tags=["telegram"])
 
 
+@router.get("/api/health/telegram", include_in_schema=False)
+async def telegram_health():
+    """Expose non-secret Bot API state so production webhook failures are diagnosable."""
+    identity = await bot.get_me()
+    webhook = await bot.get_webhook_info()
+    return {
+        "status": "ok" if webhook.url and not webhook.last_error_message else "degraded",
+        "bot_username": identity.username,
+        "webhook_url": webhook.url,
+        "pending_updates": webhook.pending_update_count,
+        "last_error_date": webhook.last_error_date.isoformat() if webhook.last_error_date else None,
+        "last_error_message": webhook.last_error_message,
+        "allowed_updates": webhook.allowed_updates,
+    }
+
+
 @router.post(settings.TELEGRAM_WEBHOOK_PATH, include_in_schema=False)
 async def telegram_webhook(
     request: Request,

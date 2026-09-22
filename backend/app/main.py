@@ -14,13 +14,13 @@ from app.core.config import settings
 from app.core.database import engine
 from sqlalchemy import text
 from aiogram.types import MenuButtonWebApp, WebAppInfo
-from app.bot.main import bot
+from app.bot.main import bot, dp
 from app.core.cloud_runtime import cache_control_for_path, public_origin
 from app.core.logging_config import configure_logging
 
 configure_logging()
 logger = logging.getLogger("deutschiq.api")
-VERSION = "51.2.0"
+VERSION = "52.0.0"
 BUILD_COMMIT = os.getenv("RENDER_GIT_COMMIT", os.getenv("GIT_COMMIT", "local"))[:12]
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -30,6 +30,7 @@ async def lifespan(_: FastAPI):
             url=f"{base_url}{settings.TELEGRAM_WEBHOOK_PATH}",
             secret_token=settings.TELEGRAM_WEBHOOK_SECRET,
             drop_pending_updates=False,
+            allowed_updates=dp.resolve_used_update_types(),
         )
         await bot.set_chat_menu_button(
             menu_button=MenuButtonWebApp(
@@ -68,7 +69,7 @@ async def request_logging(request: Request, call_next):
 
 @app.get("/api/version")
 async def version():
-    return {"version": VERSION, "release": "telegram-beta-links", "commit": BUILD_COMMIT}
+    return {"version": VERSION, "release": "self-test-mode", "commit": BUILD_COMMIT}
 
 @app.get("/api/health/live")
 async def liveness():
