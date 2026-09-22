@@ -83,6 +83,7 @@ def localize_lesson_content(content: dict, language: str) -> dict:
             "objective": objective,
             "communication_goal": objective,
             "scenario": localized.get("scenario", value.get("scenario")),
+            "assessment_rubric": localized.get("assessment_rubric", value.get("assessment_rubric")),
         })
         recall = {
             "ru": "Закрой пример, назови правило и создай новую фразу.",

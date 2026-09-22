@@ -19,6 +19,25 @@ B2_CURRICULUM = [
     (70, 4, "b2_final", "mixed", "Итоговая задача B2", "B2-Abschlussaufgabe", "B2 final task", "abwägen und begründen", "Insgesamt überwiegen die Vorteile, sofern Datenschutz und Zugänglichkeit gewährleistet sind."),
 ]
 
+B2_TRANSFER = {
+    "advanced_connectors": ("Для отчёта объясни рост спроса и его последствие.", "Erkläre in einem Bericht den Nachfrageanstieg und seine Folge.", "Explain the rise in demand and its consequence in a report.", ["Da mehrere Firmen teilnahmen, musste der Kurs erweitert werden.", "Die Nachfrage wuchs, sodass ein zweiter Termin angeboten wurde."], ["da", "sodass"]),
+    "concessive_connectors": ("Оцени дорогую, но перспективную меру на совещании.", "Bewerte in einer Sitzung eine teure, aber zukunftsfähige Maßnahme.", "Assess an expensive but promising measure in a meeting.", ["Obwohl der Umbau aufwendig ist, verbessert er die Abläufe.", "Die Umsetzung ist komplex; dennoch sollten wir sie prüfen."], ["obwohl", "dennoch"]),
+    "paired_connectors_b2": ("Объясни команде связь между планированием и ошибками.", "Erkläre dem Team den Zusammenhang zwischen Planung und Fehlern.", "Explain the link between planning and errors to the team.", ["Je früher wir beginnen, desto flexibler können wir reagieren.", "Je klarer die Zuständigkeiten sind, desto schneller fällt die Entscheidung."], ["je", "desto"]),
+    "participle_clauses": ("Кратко представь недавно опубликованное исследование.", "Stelle eine kürzlich veröffentlichte Studie knapp vor.", "Briefly introduce a recently published study.", ["Die von der Universität erhobenen Daten sind öffentlich zugänglich.", "Der im Bericht beschriebene Trend betrifft vor allem Städte."], ["partizip", "attribut"]),
+    "nominal_style": ("Переформулируй вывод для официального отчёта.", "Formuliere ein Ergebnis für einen offiziellen Bericht um.", "Rephrase a finding for an official report.", ["Die Senkung der Kosten ermöglichte weitere Investitionen.", "Nach der Einführung des Modells stieg die Beteiligung."], ["nominalisierung", "genitiv"]),
+    "passive_alternatives": ("В служебной записке покажи, что проблема решаема.", "Zeige in einer Notiz, dass das Problem lösbar ist.", "Show in a memo that the problem can be solved.", ["Die Frist lässt sich unter diesen Bedingungen einhalten.", "Die Ergebnisse sind leicht zu überprüfen."], ["lässt sich", "zu"]),
+    "reported_speech": ("Нейтрально передай заявление министра в новостной заметке.", "Gib die Aussage der Ministerin in einer Meldung neutral wieder.", "Report the minister's statement neutrally in a news brief.", ["Der Sprecher betonte, die Finanzierung sei gesichert.", "Die Behörde teilte mit, es gebe keine neuen Risiken."], ["sei", "gebe"]),
+    "subjective_modals_b2": ("Осторожно оцени вероятные последствия изменения.", "Schätze die wahrscheinlichen Folgen einer Änderung vorsichtig ein.", "Carefully assess the likely effects of a change.", ["Der Engpass dürfte sich im Herbst verschärfen.", "Die Entscheidung muss intern bereits gefallen sein."], ["dürfte", "muss"]),
+    "formal_register": ("Попроси организатора письменно подтвердить участие.", "Bitte den Veranstalter schriftlich um eine Teilnahmebestätigung.", "Ask the organiser to confirm participation in writing.", ["Für eine kurze Rückmeldung wäre ich Ihnen sehr dankbar.", "Bitte teilen Sie mir mit, ob meine Anmeldung eingegangen ist."], ["ich möchte sie", "bitten"]),
+    "argument_structure": ("Обоснуй на форуме, почему город должен расширить велодорожки.", "Begründe in einem Forum, warum die Stadt Radwege ausbauen sollte.", "Argue in a forum why the city should expand cycle lanes.", ["Ein Ausbau ist sinnvoll, weil dadurch nachweislich Unfälle vermieden werden.", "Dafür spricht, dass sichere Wege mehr Menschen zum Umsteigen bewegen."], ["these", "grund", "beleg"]),
+    "counterargument": ("Ответь на возражение о высокой стоимости проекта.", "Entkräfte den Einwand, das Projekt sei zu teuer.", "Address the objection that the project is too expensive.", ["Zwar ist die Investition hoch, jedoch sinken dadurch die laufenden Kosten.", "Der Einwand ist nachvollziehbar; langfristig rechnet sich die Maßnahme dennoch."], ["zwar", "jedoch"]),
+    "data_description": ("Опиши для презентации изменение доли пользователей за пять лет.", "Beschreibe für eine Präsentation die Nutzerentwicklung über fünf Jahre.", "Describe the change in user share over five years for a presentation.", ["Zwischen 2020 und 2025 nahm der Anteil kontinuierlich zu.", "Nach einem leichten Rückgang stieg der Wert auf 48 Prozent."], ["anstieg", "zeitraum"]),
+    "discussion_language": ("В дискуссии вежливо не согласись с обобщением коллеги.", "Widersprich in einer Diskussion höflich einer pauschalen Aussage.", "Politely challenge a colleague's generalisation in a discussion.", ["Dem ersten Punkt stimme ich zu, beim zweiten sehe ich es anders.", "Dein Argument ist nachvollziehbar, berücksichtigt aber nicht alle Gruppen."], ["einwand", "aber"]),
+    "presentation_structure": ("Открой короткую презентацию и обозначь её структуру.", "Eröffne eine Kurzpräsentation und kündige ihre Struktur an.", "Open a short presentation and signpost its structure.", ["Zuerst stelle ich die Daten vor; danach bewerte ich zwei Lösungswege.", "Abschließend fasse ich die wichtigsten Ergebnisse zusammen."], ["zunächst", "anschließend", "abschließend"]),
+    "text_cohesion": ("Свяжи два абзаца отчёта логическим переходом.", "Verbinde zwei Absätze eines Berichts mit einem logischen Übergang.", "Connect two report paragraphs with a logical transition.", ["Diese Entwicklung senkt die Kosten. Zugleich entstehen neue Anforderungen.", "Das Modell ist wirksam; darüber hinaus ist es leicht übertragbar."], ["darüber hinaus", "dieser"]),
+    "b2_final": ("На экзамене взвесь плюсы и минусы цифровых госуслуг и сделай вывод.", "Wäge in einer Prüfung Vor- und Nachteile digitaler Behördendienste ab.", "In an exam, weigh the pros and cons of digital public services.", ["Einerseits erleichtern digitale Dienste den Zugang, andererseits dürfen sie niemanden ausschließen.", "Unter klaren Datenschutzregeln halte ich die Digitalisierung insgesamt für sinnvoll."], ["abwägung", "begründung", "schluss"]),
+}
+
 
 def _localized(base: dict, ru: dict, de: dict, en: dict) -> dict:
     return {**base, "i18n": {"ru": ru, "de": de, "en": en}}
@@ -36,20 +55,31 @@ def build_b2_content(row: tuple) -> dict:
         "de": f"{focus} selbstständig in einer begründeten Antwort anwenden.",
         "en": f"Use {focus} independently in a reasoned response.",
     }
-    wrong = model.replace(",", "", 1)
-    patterns = [word.casefold().strip(".,;:?!") for word in model.split() if len(word) > 4][:4]
+    scenario_ru, scenario_de, scenario_en, alternatives, patterns = B2_TRANSFER[topic]
+    wrong = model.replace(",", "", 1) if "," in model else model[:1].lower() + model[1:]
+    rubric = {
+        "ru": ["Задача полностью выполнена и позиция ясна.", "Аргументы логично связаны и развиты.", "Регистр и грамматика соответствуют уровню B2."],
+        "de": ["Die Aufgabe ist vollständig erfüllt und die Position klar.", "Die Argumente sind logisch verknüpft und entwickelt.", "Register und Grammatik entsprechen dem B2-Niveau."],
+        "en": ["The task is fully addressed and the position is clear.", "Arguments are logically connected and developed.", "Register and grammar are appropriate for B2."],
+    }
+    guided_type = "error_repair" if day % 2 else "transform"
+    guided_questions = {
+        "ru": f"Исправь: {wrong}" if guided_type == "error_repair" else f"Переформулируй для официального контекста: {wrong}",
+        "de": f"Korrigiere: {wrong}" if guided_type == "error_repair" else f"Formuliere für einen formellen Kontext um: {wrong}",
+        "en": f"Correct: {wrong}" if guided_type == "error_repair" else f"Rephrase for a formal context: {wrong}",
+    }
     exercises = [
         _localized(
-            {"type": "error_repair", "stage": "guided", "question": f"Исправь: {wrong}", "answer": model, "accepted_answers": [model, model.rstrip(".")], "hint": rule["ru"], "explanation": rule["ru"], "misconception": "b2_structure"},
-            {"question": f"Исправь: {wrong}", "hint": rule["ru"], "explanation": rule["ru"]},
-            {"question": f"Korrigiere: {wrong}", "hint": rule["de"], "explanation": rule["de"]},
-            {"question": f"Correct: {wrong}", "hint": rule["en"], "explanation": rule["en"]},
+            {"type": guided_type, "stage": "guided", "question": guided_questions["ru"], "answer": model, "accepted_answers": [model, model.rstrip(".")], "hint": rule["ru"], "explanation": rule["ru"], "misconception": "b2_structure"},
+            {"question": guided_questions["ru"], "hint": rule["ru"], "explanation": rule["ru"]},
+            {"question": guided_questions["de"], "hint": rule["de"], "explanation": rule["de"]},
+            {"question": guided_questions["en"], "hint": rule["en"], "explanation": rule["en"]},
         ),
         _localized(
-            {"type": "context_choice", "stage": "independent", "question": "Выбери подходящую формулировку для формального текста.", "answer": model, "accepted_answers": [model], "options": [model, wrong, f"Also, {model}"], "explanation": rule["ru"], "misconception": "register"},
-            {"question": "Выбери подходящую формулировку для формального текста.", "explanation": rule["ru"]},
-            {"question": "Wähle die passende Formulierung für einen formellen Text.", "explanation": rule["de"]},
-            {"question": "Choose the suitable wording for a formal text.", "explanation": rule["en"]},
+            {"type": "context_choice", "stage": "independent", "question": scenario_ru, "answer": model, "accepted_answers": [model], "options": [model, wrong, "Das ist halt so und irgendwie auch gut."], "explanation": rule["ru"], "misconception": "register"},
+            {"question": scenario_ru, "explanation": rule["ru"]},
+            {"question": scenario_de, "explanation": rule["de"]},
+            {"question": scenario_en, "explanation": rule["en"]},
         ),
         _localized(
             {"type": "listening_choice", "stage": "independent", "question": "Какую функцию выполняет фраза?", "answer": focus, "accepted_answers": [focus], "options": [focus, "Beispiel", "Begrüßung"], "explanation": model, "misconception": "discourse_function"},
@@ -58,10 +88,10 @@ def build_b2_content(row: tuple) -> dict:
             {"question": "What function does the sentence serve?", "explanation": model},
         ),
         _localized(
-            {"type": "dialogue", "stage": "transfer", "question": objective["ru"], "answer": model, "model_answer": model, "accepted_answers": [model, model.rstrip(".")], "target_patterns": patterns, "hint": rule["ru"], "explanation": "Сравни структуру и регистр с моделью.", "misconception": "transfer"},
-            {"question": objective["ru"], "hint": rule["ru"], "explanation": "Сравни структуру и регистр с моделью."},
-            {"question": objective["de"], "hint": rule["de"], "explanation": "Vergleiche Struktur und Register mit dem Modell."},
-            {"question": objective["en"], "hint": rule["en"], "explanation": "Compare your structure and register with the model."},
+            {"type": "dialogue", "stage": "transfer", "question": f"Сформулируй собственный ответ: {scenario_ru}", "answer": model, "model_answer": model, "accepted_answers": [model, model.rstrip(".")], "target_patterns": patterns, "hint": rule["ru"], "explanation": "Ответ может отличаться от модели: оцени выполнение задачи, связность и регистр.", "misconception": "transfer"},
+            {"question": f"Сформулируй собственный ответ: {scenario_ru}", "hint": rule["ru"], "explanation": "Ответ может отличаться от модели: оцени выполнение задачи, связность и регистр."},
+            {"question": f"Formuliere eine eigene Antwort: {scenario_de}", "hint": rule["de"], "explanation": "Die Antwort darf abweichen: Prüfe Aufgabenerfüllung, Kohärenz und Register."},
+            {"question": f"Give your own response: {scenario_en}", "hint": rule["en"], "explanation": "The response may differ: check task completion, coherence, and register."},
         ),
         _localized(
             {"type": "repeat", "stage": "transfer", "question": "Произнеси модель вслух.", "answer": model, "accepted_answers": [model, model.rstrip(".")], "explanation": "Сохраняй логическое ударение и темп.", "misconception": "fluency"},
@@ -72,16 +102,16 @@ def build_b2_content(row: tuple) -> dict:
     ]
     return {
         "day": day, "week": module, "track": "B2", "module": module,
-        "quality_version": 4, "learning_method": "notice_build_use_reflect",
+        "quality_version": 5, "learning_method": "notice_build_use_reflect",
         "title": title_ru, "objective": objective["ru"], "communication_goal": objective["ru"],
-        "rule": rule["ru"], "examples": [model, model.rstrip("."), f"B2-Muster: {model}"],
+        "rule": rule["ru"], "scenario": scenario_ru, "assessment_rubric": rubric["ru"], "examples": [model, *alternatives],
         "audio_text": model, "cefr": "B2", "prerequisites": [],
         "common_mistakes": [f"❌ {wrong}", f"✅ {model}"],
         "recall_prompt": "Закрой пример, назови функцию структуры и создай собственный аргумент.",
         "i18n": {
-            "ru": {"title": title_ru, "rule": rule["ru"], "objective": objective["ru"]},
-            "de": {"title": title_de, "rule": rule["de"], "objective": objective["de"]},
-            "en": {"title": title_en, "rule": rule["en"], "objective": objective["en"]},
+            "ru": {"title": title_ru, "rule": rule["ru"], "objective": objective["ru"], "scenario": scenario_ru, "assessment_rubric": rubric["ru"]},
+            "de": {"title": title_de, "rule": rule["de"], "objective": objective["de"], "scenario": scenario_de, "assessment_rubric": rubric["de"]},
+            "en": {"title": title_en, "rule": rule["en"], "objective": objective["en"], "scenario": scenario_en, "assessment_rubric": rubric["en"]},
         },
         "exercises": exercises,
     }

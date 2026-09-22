@@ -54,6 +54,33 @@ B1_TASKS = {
     "b1_final": ("Großstadt ist besser, weil ja.", "Ты участвуешь в B1-дискуссии о жизни в большом городе.", "Du nimmst an einer B1-Diskussion über das Leben in der Großstadt teil.", "You are taking part in a B1 discussion about life in a large city.", "Position mit Abwägung", ["Antwort ohne Grund", "reine Beschreibung"], "cohesion"),
 }
 
+B1_TRANSFER = {
+    "subordinate_clauses": (["Obwohl ich müde bin, gehe ich zum Kurs.", "Wir fahren mit dem Rad, obwohl es kalt ist."], ["obwohl", "verb_final"]),
+    "temporal_clauses": (["Als ich nach Berlin zog, kannte ich niemanden.", "Wenn ich frei habe, besuche ich meine Freunde."], ["als", "wenn"]),
+    "indirect_questions": (["Könnten Sie mir sagen, wann der Zug fährt?", "Ich möchte wissen, ob noch Plätze frei sind."], ["ob", "verb_final"]),
+    "purpose_clauses": (["Ich rufe an, um den Termin zu bestätigen.", "Ich schreibe alles auf, damit mein Kollege informiert ist."], ["um zu", "damit"]),
+    "relative_clauses": (["Das ist die Kollegin, mit der ich arbeite.", "Ich suche einen Kurs, der abends stattfindet."], ["relativpronomen", "verb_final"]),
+    "double_connectors": (["Er ist nicht nur zuverlässig, sondern auch kreativ.", "Wir können entweder heute oder morgen beginnen."], ["nicht nur", "sondern auch"]),
+    "passive_voice": (["Die Anträge werden online bearbeitet.", "Der Eingang wird gerade renoviert."], ["werden", "partizip"]),
+    "passive_past": (["Die Brücke wurde im Mai eröffnet.", "Die Ergebnisse wurden gestern veröffentlicht."], ["wurde", "partizip"]),
+    "modal_past": (["Damals konnte ich noch nicht gut Deutsch.", "Im Praktikum musste ich früh anfangen."], ["musste", "konnte"]),
+    "konjunktiv_ii": (["Du könntest öfter eine Pause machen.", "An deiner Stelle würde ich früher schlafen."], ["könntest", "würde"]),
+    "lassen": (["Ich lasse mein Fahrrad reparieren.", "Wir lassen die Dokumente übersetzen."], ["lassen", "infinitiv"]),
+    "subjective_modals": (["Die Firma soll neue Stellen planen.", "Er muss den Termin vergessen haben."], ["soll", "infinitiv"]),
+    "adjective_declension": (["Sie arbeitet mit einer erfahrenen Kollegin.", "Wir suchen einen zuverlässigen Mitarbeiter."], ["adjektivendung", "kasus"]),
+    "verb_prepositions": (["Ich freue mich auf das Wochenende.", "Wir sprechen über das neue Projekt."], ["verb", "präposition"]),
+    "noun_verb_connections": (["Die Leitung trifft morgen eine Entscheidung.", "Bitte nehmen Sie mit uns Kontakt auf."], ["feste verbindung"]),
+    "genitive_prepositions": (["Wegen des Streiks fahren weniger Züge.", "Während der Besprechung blieb das Handy aus."], ["genitiv", "präposition"]),
+    "pronoun_adverbs": (["Ich freue mich darauf, dich wiederzusehen.", "Wir sprechen darüber, wie es weitergeht."], ["darauf", "darüber"]),
+    "nominalization": (["Nach der Einführung des Systems sank die Fehlerzahl.", "Aufgrund der Verspätung begann die Sitzung später."], ["nomen", "genitiv"]),
+    "formal_email": (["Wären Sie so freundlich, mir den Termin zu bestätigen?", "Ich bitte Sie um eine kurze Rückmeldung."], ["könnten sie", "bitte"]),
+    "opinion": (["Ich bin dafür, weil flexible Arbeit Familien entlastet.", "Meines Erachtens sollte der Nahverkehr günstiger sein."], ["meinung", "begründung"]),
+    "argumentation": (["Einerseits spart das Angebot Zeit, andererseits fehlt der persönliche Kontakt.", "Zwar ist die Lösung praktisch, sie verursacht jedoch hohe Kosten."], ["einerseits", "andererseits"]),
+    "listening_attitude": (["Die Sprecherin stimmt nur teilweise zu.", "Der Kollege äußert deutliche Zweifel an dem Vorschlag."], ["haltung", "signalwort"]),
+    "spoken_narrative": (["Zuerst fiel der Zug aus, danach nahm ich einen Bus und schließlich kam ich an.", "Am Anfang war ich nervös, später wurde das Gespräch aber angenehm."], ["zuerst", "danach", "schließlich"]),
+    "b1_final": (["Für das Stadtleben spricht das große Angebot, dagegen sind die Mieten oft hoch.", "Ich würde eine kleinere Stadt wählen, weil dort der Alltag ruhiger ist."], ["position", "grund", "schluss"]),
+}
+
 
 def _localized_exercise(base: dict, ru: dict, de: dict, en: dict) -> dict:
     return {**base, "i18n": {"ru": ru, "de": de, "en": en}}
@@ -67,6 +94,12 @@ def build_b1_content(row):
         "en": {"title": title_en, "rule": rule_en, "objective": goal_en, "prompt": prompt_en},
     }
     wrong, scenario_ru, scenario_de, scenario_en, meaning, meaning_distractors, misconception = B1_TASKS[topic]
+    alternatives, patterns = B1_TRANSFER[topic]
+    rubric = {
+        "ru": ["Ответ соответствует ситуации.", "Целевая структура употреблена понятно.", "Мысль связана и понятна на уровне B1."],
+        "de": ["Die Antwort passt zur Situation.", "Die Zielstruktur wird verständlich verwendet.", "Der Gedanke ist auf B1-Niveau verbunden und klar."],
+        "en": ["The response fits the situation.", "The target structure is used clearly.", "The idea is connected and clear at B1 level."],
+    }
     guided_type = "error_repair" if day % 2 else "transform"
     guided_prompts = {
         "ru": f"Исправь фразу: {wrong}" if guided_type == "error_repair" else prompt_ru,
@@ -80,7 +113,6 @@ def build_b1_content(row):
         {"question": guided_prompts["en"], "hint": rule_en, "explanation": rule_en},
     )
     context_options = list(dict.fromkeys([answer, wrong, f"{answer.rstrip('.?!')} nicht."]))
-    patterns = [word.casefold().strip(".,?!") for word in answer.split() if len(word) > 3][:4]
     exercises = [
         guided,
         _localized_exercise(
@@ -96,10 +128,10 @@ def build_b1_content(row):
             {"question": "Listen. What function does the sentence express?", "hint": "Listen for the relationship in meaning.", "explanation": f"{meaning}: {answer}"},
         ),
         _localized_exercise(
-            {"type": "dialogue", "stage": "transfer", "question": f"Ответь самостоятельно: {scenario_ru}", "answer": answer, "model_answer": answer, "accepted_answers": [answer, answer.rstrip(".?!")], "target_patterns": patterns, "hint": rule_ru, "explanation": "Сравни свою реакцию с моделью.", "misconception": misconception},
-            {"question": f"Ответь самостоятельно: {scenario_ru}", "hint": rule_ru, "explanation": "Сравни свою реакцию с моделью."},
-            {"question": f"Antworte selbstständig: {scenario_de}", "hint": rule_de, "explanation": "Vergleiche deine Reaktion mit dem Modell."},
-            {"question": f"Respond independently: {scenario_en}", "hint": rule_en, "explanation": "Compare your response with the model."},
+            {"type": "dialogue", "stage": "transfer", "question": f"Ответь самостоятельно: {scenario_ru}", "answer": answer, "model_answer": answer, "accepted_answers": [answer, answer.rstrip(".?!")], "target_patterns": patterns, "hint": rule_ru, "explanation": "Формулировка может отличаться от модели: проверь задачу, структуру и связность.", "misconception": misconception},
+            {"question": f"Ответь самостоятельно: {scenario_ru}", "hint": rule_ru, "explanation": "Формулировка может отличаться от модели: проверь задачу, структуру и связность."},
+            {"question": f"Antworte selbstständig: {scenario_de}", "hint": rule_de, "explanation": "Deine Formulierung darf abweichen: Prüfe Aufgabe, Struktur und Zusammenhang."},
+            {"question": f"Respond independently: {scenario_en}", "hint": rule_en, "explanation": "Your wording may differ: check the task, structure, and coherence."},
         ),
         _localized_exercise(
             {"type": "repeat", "stage": "transfer", "question": "Произнеси модель вслух.", "answer": answer, "accepted_answers": [answer, answer.rstrip(".?!")], "explanation": "Повтори спокойно и связно.", "misconception": misconception},
@@ -108,4 +140,7 @@ def build_b1_content(row):
             {"question": "Say the model aloud.", "explanation": "Speak calmly and connect the sentence naturally."},
         ),
     ]
-    return {"day": day, "week": module, "track": "B1", "module": module, "quality_version": 4, "learning_method": "notice_build_use_reflect", "title": title_ru, "objective": goal_ru, "communication_goal": goal_ru, "rule": rule_ru, "examples": [answer, answer.rstrip(".?!"), f"Das Zielmuster lautet: {answer}"], "audio_text": answer, "cefr": "B1", "prerequisites": [], "common_mistakes": [f"❌ {wrong}", f"✅ {answer}"], "recall_prompt": "Закрой пример, назови правило и создай новую фразу.", "i18n": languages, "exercises": exercises}
+    languages["ru"].update({"scenario": scenario_ru, "assessment_rubric": rubric["ru"]})
+    languages["de"].update({"scenario": scenario_de, "assessment_rubric": rubric["de"]})
+    languages["en"].update({"scenario": scenario_en, "assessment_rubric": rubric["en"]})
+    return {"day": day, "week": module, "track": "B1", "module": module, "quality_version": 5, "learning_method": "notice_build_use_reflect", "title": title_ru, "objective": goal_ru, "communication_goal": goal_ru, "rule": rule_ru, "scenario": scenario_ru, "assessment_rubric": rubric["ru"], "examples": [answer, *alternatives], "audio_text": answer, "cefr": "B1", "prerequisites": [], "common_mistakes": [f"❌ {wrong}", f"✅ {answer}"], "recall_prompt": "Закрой пример, назови правило и создай новую фразу.", "i18n": languages, "exercises": exercises}

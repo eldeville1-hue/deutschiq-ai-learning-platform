@@ -54,6 +54,7 @@ def _ai_feedback(answer: str, exercise: dict, lesson_content: dict, lang: str) -
         "rule": lesson_content.get("rule", ""),
         "task": exercise.get("question", ""),
         "target_patterns": exercise.get("target_patterns", []),
+        "assessment_rubric": lesson_content.get("assessment_rubric", []),
         "model_answer": exercise.get("model_answer") or exercise.get("answer", ""),
         "learner_answer": answer,
     }

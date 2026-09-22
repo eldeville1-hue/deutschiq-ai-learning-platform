@@ -108,4 +108,6 @@ def validate_roadmap_content(content: dict) -> list[str]:
         productions = [item for item in content.get("exercises") or [] if item.get("type") in {"production", "dialogue"}]
         if any(len(item.get("target_patterns") or []) > 3 for item in productions):
             errors.append("foundation:overconstrained_production")
+        if content.get("cefr") in {"B1", "B2"} and len(content.get("assessment_rubric") or []) < 3:
+            errors.append("advanced:missing_assessment_rubric")
     return errors

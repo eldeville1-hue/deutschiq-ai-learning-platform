@@ -73,6 +73,10 @@ class ContentQualityTests(unittest.TestCase):
             self.assertEqual([], validate_roadmap_content(content), f"day {row[0]}")
             self.assertEqual("B1", content["track"])
             self.assertEqual("B1", content["cefr"])
+            self.assertEqual(5, content["quality_version"])
+            self.assertEqual(3, len(content["assessment_rubric"]))
+            self.assertEqual(3, len(set(content["examples"])))
+            self.assertLessEqual(len(content["exercises"][3]["target_patterns"]), 3)
             self.assertEqual(5, len(content["exercises"]))
             self.assertEqual("notice_build_use_reflect", content["learning_method"])
             guided_types.add(content["exercises"][0]["type"])
@@ -86,6 +90,8 @@ class ContentQualityTests(unittest.TestCase):
                 self.assertTrue(localized["title"])
                 self.assertTrue(localized["rule"])
                 self.assertTrue(localized["objective"])
+                self.assertTrue(localized["scenario"])
+                self.assertEqual(3, len(localized["assessment_rubric"]))
                 self.assertNotIn("i18n", localized)
                 self.assertTrue(all("i18n" not in exercise for exercise in localized["exercises"]))
                 if language != "ru":
@@ -105,11 +111,17 @@ class ContentQualityTests(unittest.TestCase):
             content = build_b2_content(row)
             self.assertEqual([], validate_roadmap_content(content), f"day {row[0]}")
             self.assertEqual("B2", content["track"])
+            self.assertEqual(5, content["quality_version"])
             self.assertEqual(5, len(content["exercises"]))
+            self.assertEqual(3, len(content["assessment_rubric"]))
+            self.assertEqual(3, len(set(content["examples"])))
+            self.assertLessEqual(len(content["exercises"][3]["target_patterns"]), 3)
             for language in ("ru", "de", "en"):
                 localized = localize_lesson_content(content, language)
                 self.assertTrue(localized["title"])
                 self.assertTrue(localized["rule"])
+                self.assertTrue(localized["scenario"])
+                self.assertEqual(3, len(localized["assessment_rubric"]))
                 self.assertTrue(all("i18n" not in exercise for exercise in localized["exercises"]))
 
     def test_a1_and_a2_have_complete_multilingual_learning_loops(self):
