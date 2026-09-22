@@ -39,6 +39,20 @@ def mastery_update(
     return max(0.0, min(100.0, current + delta))
 
 
+def mastery_update_from_evidence(
+    current: float,
+    score: int,
+    confidence: str | None,
+    response_ms: int | None = None,
+) -> float:
+    """Use rubric evidence for open production instead of reducing it to a binary answer."""
+    bounded = max(0, min(100, int(score)))
+    correct = bounded >= 70
+    binary_target = mastery_update(current, correct, confidence, response_ms)
+    evidence_target = current + ((bounded - 60) / 5 if correct else -((70 - bounded) / 4 + 4))
+    return max(0.0, min(100.0, binary_target * .45 + evidence_target * .55))
+
+
 def review_interval(correct: bool, streak: int) -> int:
     if not correct:
         return 1

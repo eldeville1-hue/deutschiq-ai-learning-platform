@@ -13,7 +13,7 @@ import uuid
 from app.core.telegram_auth import telegram_user_id, assert_owner
 from app.services.srs import schedule_review
 from app.models.learning import ExerciseAttempt, TopicMastery, LearningSession
-from app.services.learning_engine import mastery_update, next_stability, review_interval, retention_score, summarize_attempts
+from app.services.learning_engine import mastery_update, mastery_update_from_evidence, next_stability, review_interval, retention_score, summarize_attempts
 from app.services.skill_graph import skill_for
 from app.services.content_quality import normalize_lesson_content
 from app.services.content_i18n import localize_lesson_content, normalize_language
@@ -117,14 +117,25 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
     if not session:
         raise HTTPException(status_code=409, detail="Learning session is missing or closed")
     topic = lesson.topic
-    db.add(ExerciseAttempt(user_id=user.id, lesson_id=lesson.id, session_id=session.id, exercise_index=data.exercise_index, topic=topic, answer=data.answer, correct=correct, confidence=data.confidence, response_ms=data.response_ms))
+    db.add(ExerciseAttempt(
+        user_id=user.id, lesson_id=lesson.id, session_id=session.id, exercise_index=data.exercise_index,
+        topic=topic, answer=data.answer, correct=correct, confidence=data.confidence, response_ms=data.response_ms,
+        production_score=(production_feedback or {}).get("score"),
+        assessment={
+            "dimensions": (production_feedback or {}).get("dimension_scores", {}),
+            "cefr": (production_feedback or {}).get("cefr_standard"),
+            "source": (production_feedback or {}).get("source"),
+        } if production_feedback else None,
+    ))
     mastery = db.query(TopicMastery).filter(TopicMastery.user_id == user.id, TopicMastery.topic == topic).first()
     if not mastery:
         mastery = TopicMastery(user_id=user.id, topic=topic, mastery=0, attempts=0, correct_streak=0)
         db.add(mastery)
     mastery.attempts = (mastery.attempts or 0) + 1
     mastery.correct_streak = (mastery.correct_streak or 0) + 1 if correct else 0
-    mastery.mastery = mastery_update(mastery.mastery or 0, correct, data.confidence, data.response_ms)
+    mastery.mastery = mastery_update_from_evidence(
+        mastery.mastery or 0, production_feedback["score"], data.confidence, data.response_ms
+    ) if production_feedback else mastery_update(mastery.mastery or 0, correct, data.confidence, data.response_ms)
     mastery.correct_total = (mastery.correct_total or 0) + (1 if correct else 0)
     mastery.lapse_count = (mastery.lapse_count or 0) + (0 if correct else 1)
     mastery.stability_days = next_stability(mastery.stability_days or 1, correct, data.confidence)
@@ -143,6 +154,10 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
         "correct_answer": production_feedback["corrected_answer"] if production_feedback else accepted[0],
         "explanation": production_feedback["feedback"] if production_feedback else exercise.get("explanation", ""),
         "production_score": production_feedback["score"] if production_feedback else None,
+        "dimension_scores": production_feedback.get("dimension_scores") if production_feedback else None,
+        "improvement": production_feedback.get("improvement") if production_feedback else None,
+        "cefr_standard": production_feedback.get("cefr_standard") if production_feedback else None,
+        "pass_mark": production_feedback.get("pass_mark") if production_feedback else None,
         "feedback_source": production_feedback["source"] if production_feedback else "rules",
         "mastery": round(mastery.mastery),
         "retention": retention_score(mastery.mastery, mastery.stability_days),

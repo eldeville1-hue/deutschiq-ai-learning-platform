@@ -25,6 +25,29 @@ class ProductionFeedbackTests(unittest.TestCase):
         )
         self.assertTrue(result["correct"])
         self.assertGreaterEqual(result["score"], 70)
+        self.assertEqual(
+            {"task_completion", "grammar", "vocabulary", "coherence", "register"},
+            set(result["dimension_scores"]),
+        )
+
+    def test_independent_wording_can_pass_without_model_match(self):
+        result = local_feedback(
+            "Obwohl es heute stark regnet, fahre ich trotzdem mit dem Fahrrad zur Arbeit.",
+            {"target_patterns": ["obwohl"], "model_answer": "Obwohl es regnet, gehe ich spazieren."},
+            "Im obwohl-Satz steht das Verb am Ende.", "de", "B1",
+        )
+        self.assertTrue(result["correct"])
+        self.assertEqual(result["corrected_answer"], "Obwohl es heute stark regnet, fahre ich trotzdem mit dem Fahrrad zur Arbeit.")
+
+    def test_same_short_answer_is_judged_more_strictly_at_b2(self):
+        exercise = {"target_patterns": ["weil"], "model_answer": "Ich stimme zu, weil der Vorschlag sinnvoll ist."}
+        self.assertTrue(local_feedback("Ich stimme zu, weil der Vorschlag sinnvoll ist.", exercise, "x", "de", "A2")["correct"])
+        self.assertFalse(local_feedback("Ich stimme zu, weil der Vorschlag sinnvoll ist.", exercise, "x", "de", "B2")["correct"])
+
+    def test_off_topic_english_answer_does_not_pass(self):
+        result = local_feedback("This is a long but unrelated English answer for the task.", {"target_patterns": ["obwohl"], "model_answer": "Obwohl es regnet, gehe ich."}, "x", "en", "B1")
+        self.assertFalse(result["correct"])
+        self.assertEqual("off_topic", result["error_type"])
 
     def test_short_fragment_does_not_pass(self):
         result = local_feedback(

@@ -1,6 +1,6 @@
 import unittest
 from types import SimpleNamespace
-from app.services.learning_engine import mastery_update, next_stability, retention_score, review_interval, session_score, summarize_attempts
+from app.services.learning_engine import mastery_update, mastery_update_from_evidence, next_stability, retention_score, review_interval, session_score, summarize_attempts
 from app.services.skill_graph import blocked_by, prerequisites_met
 from app.services.learning_route import lesson_blockers, select_recommended_lesson
 
@@ -26,6 +26,10 @@ class LearningEngineTests(unittest.TestCase):
         self.assertEqual(mastery_update(95, True, "sure"), 100)
         self.assertLess(mastery_update(50, True, "guess"), mastery_update(50, True, "sure"))
         self.assertEqual(mastery_update(3, False, "okay"), 0)
+
+    def test_production_mastery_uses_rubric_strength(self):
+        self.assertGreater(mastery_update_from_evidence(50, 92, "okay"), mastery_update_from_evidence(50, 72, "okay"))
+        self.assertLess(mastery_update_from_evidence(50, 45, "okay"), 50)
 
     def test_review_intervals_expand(self):
         self.assertEqual(review_interval(False, 8), 1)

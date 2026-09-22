@@ -403,12 +403,18 @@ export const Lesson: React.FC = () => {
                   </ol>}
                 </div>}
                 {feedback?.production && (
-                  <small>
-                    {tr(lang,
-                      `${feedback.production_score != null ? `Оценка фразы: ${feedback.production_score}% · ` : ""}Исправленный вариант: ${feedback.correct_answer}`,
-                      `${feedback.production_score != null ? `Satzbewertung: ${feedback.production_score}% · ` : ""}Korrigiertes Modell: ${feedback.correct_answer}`,
-                      `${feedback.production_score != null ? `Sentence score: ${feedback.production_score}% · ` : ""}Corrected model: ${feedback.correct_answer}`)}
-                  </small>
+                  <div className="production-assessment">
+                    <header><small>{tr(lang, `${feedback.cefr_standard || ''} ОЦЕНКА`, `${feedback.cefr_standard || ''} BEWERTUNG`, `${feedback.cefr_standard || ''} ASSESSMENT`)}</small><strong>{feedback.production_score}%</strong><span>{tr(lang, `проходной ${feedback.pass_mark}%`, `Bestanden ab ${feedback.pass_mark}%`, `pass mark ${feedback.pass_mark}%`)}</span></header>
+                    {feedback.dimension_scores && <div className="assessment-grid">{[
+                      ['task_completion', tr(lang, 'Задача', 'Aufgabe', 'Task')],
+                      ['grammar', tr(lang, 'Грамматика', 'Grammatik', 'Grammar')],
+                      ['vocabulary', tr(lang, 'Лексика', 'Wortschatz', 'Vocabulary')],
+                      ['coherence', tr(lang, 'Связность', 'Kohärenz', 'Coherence')],
+                      ['register', tr(lang, 'Регистр', 'Register', 'Register')],
+                    ].map(([key, label]) => <span key={key}><small>{label}</small><b>{feedback.dimension_scores[key]}%</b></span>)}</div>}
+                    {feedback.improvement && <p><b>{tr(lang, 'Следующий шаг:', 'Nächster Schritt:', 'Next step:')}</b> {feedback.improvement}</p>}
+                    {!checked && feedback.correct_answer && <small>{tr(lang, 'Возможный вариант:', 'Mögliche Fassung:', 'Possible revision:')} {feedback.correct_answer}</small>}
+                  </div>
                 )}
                 {!checked && !retried[exerciseIndex] && (
                   <small>
