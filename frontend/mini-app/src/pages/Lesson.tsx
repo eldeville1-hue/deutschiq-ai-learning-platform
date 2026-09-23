@@ -6,6 +6,7 @@ import { useLanguage } from "../context/LanguageContext";
 import { topicLabel } from "../i18n/topics";
 import { getUserId, withUser } from "../utils/user";
 import { ExerciseInteraction } from "../components/learning/ExerciseInteraction";
+import { exerciseKind } from "../learning/exercises";
 import { tr } from "../i18n/language";
 
 export const cleanTitle = (value: string) => value.replace(/^(?:tag|day|день)\s*\d+\s*[:·—-]\s*/i, "").trim();
@@ -45,6 +46,15 @@ export const Lesson: React.FC = () => {
   const total = introSteps + exercises.length;
   const exerciseIndex = step - introSteps;
   const exercise = exercises[exerciseIndex];
+  const activityLabel = exercise ? ({
+    choice: tr(lang, "Выбери", "Wähle", "Choose"),
+    cloze: tr(lang, "Допиши", "Ergänze", "Complete"),
+    reorder: tr(lang, "Собери", "Ordne", "Build"),
+    repair: tr(lang, "Исправь", "Korrigiere", "Fix"),
+    listen_choice: tr(lang, "Послушай", "Höre", "Listen"),
+    speak: tr(lang, "Скажи", "Sprich", "Speak"),
+    write: tr(lang, "Напиши", "Schreibe", "Write"),
+  } as const)[exerciseKind(exercise)] : "";
   useEffect(() => {
     Promise.all([
       api.getLesson(Number(id), lang),
@@ -255,22 +265,12 @@ export const Lesson: React.FC = () => {
       )}
       {exercise && (
         <section className="lesson-step exercise-step">
-          <div className="exercise-stage-row"><p className="eyebrow">
-            {exercise.stage === "guided"
-              ? tr(lang, "С ПОДСКАЗКОЙ", "MIT HILFE", "GUIDED")
-              : exercise.stage === "transfer"
-                ? tr(lang, "ТВОЯ ФРАЗА", "DEIN SATZ", "YOUR SENTENCE")
-                : tr(lang, "САМОСТОЯТЕЛЬНО", "SELBSTSTÄNDIG", "INDEPENDENT")}
-            {retried[exerciseIndex]
-              ? tr(lang, " · вторая попытка", " · zweiter Versuch", " · second attempt")
-              : ""}
-          </p><span>{exerciseIndex + 1}/{exercises.length}</span></div>
-          <div className="exercise-prompt"><small>{tr(lang, 'ЗАДАНИЕ', 'AUFGABE', 'TASK')}</small><h1>{exercise.type === "repeat" ? tr(lang, "Повтори фразу", "Sprich den Satz nach", "Repeat the sentence") : exercise.question}</h1></div>
-          {exercise.type === "repeat" && <div className="example-sentence">{exercise.audio_text || exercise.model_answer || exercise.answer || content.audio_text || content.examples?.[0]}</div>}
+          <div className="exercise-stage-row"><p className="eyebrow">{activityLabel}{retried[exerciseIndex] ? tr(lang, " · ещё раз", " · noch einmal", " · try again") : ""}</p><span>{exerciseIndex + 1}/{exercises.length}</span></div>
+          <div className="exercise-prompt"><h1>{exercise.type === "repeat" ? tr(lang, "Произнеси фразу", "Sprich den Satz", "Say the sentence") : exercise.question}</h1></div>
           {(exercise.type === "listening" || exercise.type === "listening_choice") && (
-            <div className="listening-challenge">
-              <button type="button" onClick={() => speak(0.9, exercise.audio_text)}><FaVolumeUp /> {tr(lang, "Прослушать", "Anhören", "Listen")}</button>
-              <button type="button" onClick={() => speak(0.7, exercise.audio_text)}><FaVolumeUp /> {tr(lang, "Медленнее", "Langsamer", "Slower")}</button>
+            <div className="listening-challenge simple">
+              <button type="button" className="listen-main" onClick={() => speak(0.9, exercise.audio_text)}><FaVolumeUp /> {tr(lang, "Слушать", "Anhören", "Listen")}</button>
+              <button type="button" className="listen-slow" onClick={() => speak(0.7, exercise.audio_text)}>{tr(lang, "Медленно", "Langsam", "Slow")}</button>
             </div>
           )}
           <ExerciseInteraction exercise={{ ...exercise, id: `${id}-${exerciseIndex}` }} answer={answer} onAnswer={setAnswer} disabled={checked !== null} lang={lang} onAudio={sessionId ? transcribe : undefined} />
@@ -303,21 +303,20 @@ export const Lesson: React.FC = () => {
                     ? tr(lang, "Верно", "Richtig", "Correct")
                     : tr(lang, "Попробуй ещё раз", "Noch einmal", "Try again")}
                 </b>
-                <p>{feedback?.explanation}</p>
+                {checked && <p>{feedback?.explanation}</p>}
                 {!checked && feedback?.correct_answer && (
                   <div className="corrected-model">
                     <small>{tr(lang, 'ПРАВИЛЬНАЯ МОДЕЛЬ', 'RICHTIGES MODELL', 'CORRECT MODEL')}</small>
                     <strong>{feedback.correct_answer}</strong>
                   </div>
                 )}
-                {!checked && feedback?.error_type && <div className="error-diagnosis">
-                  <small>{tr(lang, 'ПОДСКАЗКА', 'HINWEIS', 'TIP')}</small>
+                {!checked && feedback?.error_type && <details className="error-diagnosis"><summary>{tr(lang, 'Почему?', 'Warum?', 'Why?')}</summary>
                   {Array.isArray(feedback.contrast) && feedback.contrast.map((line: string, index: number) => <p key={index}>{line}</p>)}
                   <em>{feedback.retry_instruction || tr(lang, 'Сначала назови правило, затем составь ответ заново.', 'Nenne zuerst die Regel und bilde die Antwort dann neu.', 'State the rule first, then build the answer again.')}</em>
                   {Array.isArray(feedback.repair_steps) && feedback.repair_steps.length > 0 && <ol className="repair-steps">
                     {feedback.repair_steps.map((line: string, index: number) => <li key={index}>{line}</li>)}
                   </ol>}
-                </div>}
+                </details>}
                 {feedback?.production && (
                   <div className="production-assessment">
                     <header><small>{tr(lang, `${feedback.cefr_standard || ''} ОЦЕНКА`, `${feedback.cefr_standard || ''} BEWERTUNG`, `${feedback.cefr_standard || ''} ASSESSMENT`)}</small><strong>{feedback.production_score}%</strong><span>{tr(lang, `проходной ${feedback.pass_mark}%`, `Bestanden ab ${feedback.pass_mark}%`, `pass mark ${feedback.pass_mark}%`)}</span></header>
@@ -339,7 +338,7 @@ export const Lesson: React.FC = () => {
                 )}
               </div>
               <button onClick={next}>
-                <FaArrowRight />
+                <span>{!checked && !retried[exerciseIndex] ? tr(lang, "Исправить", "Korrigieren", "Fix it") : tr(lang, "Дальше", "Weiter", "Next")}</span><FaArrowRight />
               </button>
             </div>
           )}

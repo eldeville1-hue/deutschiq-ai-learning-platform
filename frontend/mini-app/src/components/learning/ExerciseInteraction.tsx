@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { FaCheck, FaMicrophone, FaTimes } from 'react-icons/fa';
+import { FaCheck, FaMicrophone, FaTimes, FaUndo } from 'react-icons/fa';
 import type { AppLanguage } from '../../i18n/language';
 import { tr } from '../../i18n/language';
 import { exerciseKind, type LearningExercise } from '../../learning/exercises';
@@ -37,10 +37,10 @@ export const ExerciseInteraction: React.FC<Props> = ({ exercise, answer, onAnswe
 
   if (kind === 'choice' || kind === 'listen_choice') return (
     <div className="exercise-choice" role="radiogroup">
-      {(exercise.options || []).map((option, index) => {
+      {(exercise.options || []).map((option) => {
         const active = answer === option;
         return <button type="button" role="radio" aria-checked={active} key={option} disabled={disabled} className={active ? 'active' : ''} onClick={() => onAnswer(option)}>
-          <span className="option-letter">{String.fromCharCode(65 + index)}</span><span>{option}</span>{active && <FaCheck />}
+          <span className="option-dot">{active && <FaCheck />}</span><span>{option}</span>
         </button>;
       })}
     </div>
@@ -52,7 +52,7 @@ export const ExerciseInteraction: React.FC<Props> = ({ exercise, answer, onAnswe
         {selectedTokens.length ? selectedTokens.map((tokenIndex, position) => <button type="button" key={`${tokenIndex}-${position}`} disabled={disabled} onClick={() => undoToken(position)}>{tokens[tokenIndex]} <FaTimes /></button>) : <span>{tr(lang, 'Нажимай слова в правильном порядке', 'Tippe die Wörter in der richtigen Reihenfolge an', 'Tap the words in the correct order')}</span>}
       </div>
       <div className="reorder-bank">{tokens.map((token, index) => <button type="button" key={`${token}-${index}`} disabled={disabled || selectedTokens.includes(index)} onClick={() => chooseToken(token, index)}>{token}</button>)}</div>
-      {selectedTokens.length > 0 && !disabled && <button type="button" className="reorder-clear" onClick={clearTokens}>{tr(lang, 'Сбросить', 'Zurücksetzen', 'Reset')}</button>}
+      {selectedTokens.length > 0 && !disabled && <button type="button" className="reorder-clear" onClick={clearTokens}><FaUndo /> {tr(lang, 'Начать заново', 'Neu beginnen', 'Start again')}</button>}
     </div>
   );
 
@@ -60,7 +60,6 @@ export const ExerciseInteraction: React.FC<Props> = ({ exercise, answer, onAnswe
     <label className="exercise-text-answer">
       <span>{tr(lang, 'Одна короткая фраза', 'Ein kurzer Satz', 'One short sentence')}</span>
       <textarea rows={3} value={answer} disabled={disabled} onChange={event => onAnswer(event.target.value)} placeholder={tr(lang, 'Напиши по-немецки…', 'Schreibe auf Deutsch…', 'Write in German…')} />
-      <small>{answer.trim().split(/\s+/).filter(Boolean).length} {tr(lang, 'слов', 'Wörter', 'words')}</small>
       {!disabled && onAudio && <VoiceRecorder compact lang={lang} onAudio={onAudio} />}
     </label>
   );
@@ -68,10 +67,10 @@ export const ExerciseInteraction: React.FC<Props> = ({ exercise, answer, onAnswe
   if (kind === 'speak') return (
     <div className="exercise-speak">
       <FaMicrophone />
-      <strong>{tr(lang, 'Произнеси фразу', 'Sprich den Satz', 'Say the sentence')}</strong>
+      <strong>{tr(lang, 'Прочитай вслух', 'Lies laut vor', 'Read aloud')}</strong>
       <span>{exercise.audio_text || exercise.model_answer || exercise.answer}</span>
       {!disabled && onAudio && <VoiceRecorder lang={lang} onAudio={onAudio} />}
-      <label><small>{tr(lang, 'Или напиши ответ', 'Oder Antwort schreiben', 'Or type the answer')}</small><input value={answer} disabled={disabled} onChange={event => onAnswer(event.target.value)} /></label>
+      {!disabled && <details className="speak-fallback"><summary>{tr(lang, 'Не работает микрофон?', 'Mikrofon funktioniert nicht?', 'Microphone not working?')}</summary><label><small>{tr(lang, 'Напиши фразу', 'Satz schreiben', 'Type the sentence')}</small><input value={answer} onChange={event => onAnswer(event.target.value)} /></label></details>}
     </div>
   );
 

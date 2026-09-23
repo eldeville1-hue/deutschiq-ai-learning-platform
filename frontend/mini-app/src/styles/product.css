@@ -643,3 +643,67 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .exercise-short-answer,.exercise-text-answer{display:grid;gap:7px}.exercise-short-answer>span,.exercise-text-answer>span{color:var(--dq-muted);font-size:10px;font-weight:800;letter-spacing:.08em}.exercise-short-answer>input,.exercise-text-answer>textarea,.exercise-speak input{width:100%;min-height:54px;padding:13px 14px;border:1px solid var(--dq-border-strong);border-radius:14px;background:var(--dq-surface);color:var(--dq-text);font:inherit;font-size:14px}.exercise-text-answer>textarea{min-height:92px;resize:none}.exercise-short-answer>input:focus,.exercise-text-answer>textarea:focus,.exercise-speak input:focus{outline:0;border-color:var(--dq-blue);box-shadow:0 0 0 3px rgba(130,174,248,.1)}.exercise-text-answer>small{color:var(--dq-muted);font-size:10px;text-align:right}
 .exercise-speak{display:grid;justify-items:center;gap:8px;padding:16px;border:1px solid rgba(130,174,248,.24);border-radius:16px;background:rgba(130,174,248,.05);text-align:center}.exercise-speak>svg{color:var(--dq-blue);font-size:22px}.exercise-speak>span{color:var(--dq-muted);font-size:13px;line-height:1.45}.exercise-speak>.voice-recorder{width:100%}.exercise-speak>label{width:100%;display:grid;gap:6px;text-align:left}.exercise-speak>label small{color:var(--dq-muted);font-size:10px}
 @media(max-width:360px){.exercise-choice>button{min-height:50px}.reorder-built{min-height:58px}}
+
+/* R2 phone-first practice: calm, obvious, thumb-friendly. */
+.precision-lesson .exercise-step{gap:18px;padding-top:14px;padding-bottom:max(10px,env(safe-area-inset-bottom))}
+.precision-lesson .exercise-stage-row .eyebrow{color:var(--dq-gold);font-size:11px;letter-spacing:.08em;text-transform:none}
+.precision-lesson .exercise-stage-row>span{padding:0;border:0;background:transparent;font-size:12px}
+.precision-lesson .exercise-prompt{padding:0}
+.precision-lesson .exercise-prompt h1{max-width:32rem;font-size:clamp(21px,6.2vw,28px);line-height:1.22;letter-spacing:-.03em}
+
+.exercise-choice{gap:11px}
+.exercise-choice>button{min-height:62px;grid-template-columns:26px minmax(0,1fr);gap:12px;padding:13px 15px;border-color:rgba(255,255,255,.1);border-radius:17px;background:rgba(255,255,255,.035);font-size:15px;line-height:1.35}
+.exercise-choice .option-dot{width:24px;height:24px;display:grid;place-items:center;border:2px solid rgba(255,255,255,.22);border-radius:50%;color:#10151e;font-size:10px}
+.exercise-choice>button.active{border-color:var(--dq-gold);background:rgba(244,191,85,.1);box-shadow:0 0 0 1px rgba(244,191,85,.1)}
+.exercise-choice>button.active .option-dot{border-color:var(--dq-gold);background:var(--dq-gold)}
+
+.exercise-reorder{gap:14px}
+.reorder-built{min-height:82px;gap:8px;padding:13px;border:1px solid rgba(244,191,85,.24);border-radius:17px;background:rgba(244,191,85,.045)}
+.reorder-built.empty{color:var(--dq-muted);font-size:13px}
+.reorder-built>button,.reorder-bank>button{min-height:46px;padding:9px 13px;border-radius:13px;font-size:14px}
+.reorder-built>button{border-color:rgba(244,191,85,.3);background:rgba(244,191,85,.09)}
+.reorder-bank{gap:9px}
+.reorder-clear{display:flex;align-items:center;gap:7px;min-height:38px;font-size:12px}
+
+.exercise-short-answer,.exercise-text-answer{gap:9px}
+.exercise-short-answer>span,.exercise-text-answer>span{font-size:12px;letter-spacing:0;text-transform:none}
+.exercise-short-answer>input,.exercise-text-answer>textarea,.exercise-speak input{min-height:58px;padding:15px 16px;border-radius:17px;background:rgba(255,255,255,.035);font-size:16px}
+.exercise-text-answer>textarea{min-height:112px;line-height:1.45}
+
+.exercise-speak{gap:12px;padding:20px 16px;border-color:rgba(244,191,85,.2);border-radius:19px;background:rgba(244,191,85,.045)}
+.exercise-speak>svg{color:var(--dq-gold);font-size:25px}
+.exercise-speak>strong{font-size:13px;color:var(--dq-muted)}
+.exercise-speak>span{color:var(--dq-text);font-size:18px;line-height:1.45;font-weight:700}
+.speak-fallback{width:100%;color:var(--dq-muted);font-size:12px;text-align:left}
+.speak-fallback summary{padding:8px 0;text-align:center;cursor:pointer}
+.speak-fallback label{display:grid;gap:7px;margin-top:8px}
+
+.listening-challenge.simple{display:grid;grid-template-columns:1fr auto;gap:9px;padding:0;border:0;background:transparent}
+.listening-challenge.simple button{min-height:54px;border-radius:16px;font:inherit;font-weight:800}
+.listening-challenge .listen-main{border:0;background:var(--dq-gold);color:#10151e}
+.listening-challenge .listen-slow{padding:0 16px;border:1px solid var(--dq-border);background:var(--dq-surface);color:var(--dq-muted)}
+
+.precision-lesson .exercise-step>.primary-action{min-height:58px;margin-top:auto;border-radius:17px;font-size:15px}
+.precision-lesson .answer-feedback{grid-template-columns:28px minmax(0,1fr);gap:10px;padding:15px;border-radius:18px}
+.precision-lesson .answer-feedback>svg{align-self:start;margin-top:2px}
+.precision-lesson .answer-feedback>div{min-width:0}
+.precision-lesson .answer-feedback>div>b{font-size:16px}
+.precision-lesson .answer-feedback p{margin:5px 0 0}
+.precision-lesson .answer-feedback>button{grid-column:1/-1;width:100%;min-height:52px;height:auto;display:flex;align-items:center;justify-content:center;gap:9px;margin-top:3px;border-radius:14px;font:inherit;font-size:14px;font-weight:850;color:#10151e}
+.precision-lesson .answer-feedback>button svg{color:#10151e}
+.corrected-model{margin-top:10px;padding:11px 12px;border-radius:12px}
+.corrected-model small{font-size:9px}
+.corrected-model strong{font-size:14px;line-height:1.4}
+.error-diagnosis{margin-top:9px;padding:0;border:0;background:transparent;color:var(--dq-muted)}
+.error-diagnosis summary{cursor:pointer;color:var(--dq-blue);font-size:12px;font-weight:800}
+.error-diagnosis[open]{padding:10px 0 0}
+.error-diagnosis em{display:block;margin-top:6px;font-size:12px;line-height:1.4}
+
+@media(max-height:700px){
+  .precision-lesson .exercise-step{gap:11px;padding-top:10px}
+  .precision-lesson .exercise-prompt{padding:0}
+  .precision-lesson .exercise-prompt h1{font-size:20px}
+  .exercise-choice{gap:7px}
+  .exercise-choice>button{min-height:52px;padding:9px 12px;font-size:13px}
+  .reorder-built{min-height:62px}
+}
