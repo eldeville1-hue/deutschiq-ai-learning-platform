@@ -109,37 +109,42 @@ def build_b1_content(row):
     guided_tokens = answer.rstrip(".?!").split()
     guided_tokens = guided_tokens[2:] + guided_tokens[:2] if len(guided_tokens) > 3 else list(reversed(guided_tokens))
     guided = _localized_exercise(
-        {"type": guided_type, "stage": "guided", "question": guided_prompts["ru"], "answer": answer.rstrip(".?!"), "accepted_answers": [answer, answer.rstrip(".?!")], "tokens": guided_tokens if guided_type == "reorder" else [], "hint": rule_ru, "explanation": rule_ru, "misconception": misconception},
+        {"id": f"{topic}-guided", "type": guided_type, "stage": "guided", "question": guided_prompts["ru"], "answer": answer.rstrip(".?!"), "accepted_answers": [answer, answer.rstrip(".?!")], "tokens": guided_tokens if guided_type == "reorder" else [], "hint": rule_ru, "explanation": rule_ru, "misconception": misconception, "accessibility_label": guided_prompts["ru"]},
         {"question": guided_prompts["ru"], "hint": rule_ru, "explanation": rule_ru},
         {"question": guided_prompts["de"], "hint": rule_de, "explanation": rule_de},
         {"question": guided_prompts["en"], "hint": rule_en, "explanation": rule_en},
     )
-    context_options = list(dict.fromkeys([answer, wrong, f"{answer.rstrip('.?!')} nicht."]))
+    context_options = list(dict.fromkeys([answer, wrong, alternatives[0]]))
+    listening_labels = {
+        "ru": ("Целевая структура", ["Другая связь", "Нейтральное описание"]),
+        "de": ("Zielstruktur", ["Andere Beziehung", "Neutrale Beschreibung"]),
+        "en": ("Target structure", ["Different relationship", "Neutral description"]),
+    }
     exercises = [
         guided,
         _localized_exercise(
-            {"type": "context_choice", "stage": "independent", "question": scenario_ru, "answer": answer, "accepted_answers": [answer], "options": context_options, "hint": "Выбери фразу, которая и по смыслу, и по форме подходит ситуации.", "explanation": rule_ru, "misconception": misconception},
+            {"id": f"{topic}-choice", "type": "context_choice", "stage": "independent", "question": scenario_ru, "answer": answer, "accepted_answers": [answer], "options": context_options, "hint": "Выбери фразу, которая и по смыслу, и по форме подходит ситуации.", "explanation": rule_ru, "misconception": misconception, "accessibility_label": scenario_ru},
             {"question": scenario_ru, "hint": "Проверь смысл и форму.", "explanation": rule_ru},
             {"question": scenario_de, "hint": "Prüfe Bedeutung und Form.", "explanation": rule_de},
             {"question": scenario_en, "hint": "Check both meaning and form.", "explanation": rule_en},
         ),
         _localized_exercise(
-            {"type": "listening_choice", "stage": "independent", "question": "Прослушай фразу. Какую функцию она выражает?", "answer": meaning, "accepted_answers": [meaning], "options": [meaning, *meaning_distractors], "hint": "Слушай не каждое слово, а смысовую связь.", "explanation": f"{meaning}: {answer}", "misconception": misconception},
-            {"question": "Прослушай фразу. Какую функцию она выражает?", "hint": "Улови смысовую связь.", "explanation": f"{meaning}: {answer}"},
-            {"question": "Höre zu. Welche Funktion drückt der Satz aus?", "hint": "Achte auf die Bedeutungsbeziehung.", "explanation": f"{meaning}: {answer}"},
-            {"question": "Listen. What function does the sentence express?", "hint": "Listen for the relationship in meaning.", "explanation": f"{meaning}: {answer}"},
+            {"id": f"{topic}-listen", "type": "listening_choice", "stage": "independent", "question": "Прослушай новую фразу. Используется ли в ней структура урока?", "audio_text": alternatives[0], "answer": listening_labels["ru"][0], "accepted_answers": [listening_labels["ru"][0]], "options": [listening_labels["ru"][0], *listening_labels["ru"][1]], "hint": "Слушай структуру целиком, а не отдельные слова.", "explanation": f"{listening_labels['ru'][0]}: {alternatives[0]}", "misconception": misconception, "accessibility_label": "Прослушать новую немецкую фразу и определить структуру."},
+            {"question": "Прослушай новую фразу. Используется ли в ней структура урока?", "answer": listening_labels["ru"][0], "accepted_answers": [listening_labels["ru"][0]], "options": [listening_labels["ru"][0], *listening_labels["ru"][1]], "hint": "Слушай структуру целиком, а не отдельные слова.", "explanation": f"{listening_labels['ru'][0]}: {alternatives[0]}"},
+            {"question": "Höre den neuen Satz. Verwendet er die Zielstruktur?", "answer": listening_labels["de"][0], "accepted_answers": [listening_labels["de"][0]], "options": [listening_labels["de"][0], *listening_labels["de"][1]], "hint": "Achte auf die ganze Struktur, nicht auf einzelne Wörter.", "explanation": f"{listening_labels['de'][0]}: {alternatives[0]}"},
+            {"question": "Listen to the new sentence. Does it use the target structure?", "answer": listening_labels["en"][0], "accepted_answers": [listening_labels["en"][0]], "options": [listening_labels["en"][0], *listening_labels["en"][1]], "hint": "Listen for the complete structure, not isolated words.", "explanation": f"{listening_labels['en'][0]}: {alternatives[0]}"},
         ),
         _localized_exercise(
-            {"type": "dialogue", "stage": "transfer", "question": f"Ответь самостоятельно: {scenario_ru}", "answer": answer, "model_answer": answer, "accepted_answers": [answer, answer.rstrip(".?!")], "target_patterns": patterns, "hint": rule_ru, "explanation": "Формулировка может отличаться от модели: проверь задачу, структуру и связность.", "misconception": misconception},
+            {"id": f"{topic}-write", "type": "dialogue", "stage": "transfer", "question": f"Ответь самостоятельно: {scenario_ru}", "answer": answer, "model_answer": answer, "accepted_answers": [answer, answer.rstrip(".?!")], "target_patterns": patterns, "hint": rule_ru, "explanation": "Формулировка может отличаться от модели: проверь задачу, структуру и связность.", "misconception": misconception, "accessibility_label": scenario_ru},
             {"question": f"Ответь самостоятельно: {scenario_ru}", "hint": rule_ru, "explanation": "Формулировка может отличаться от модели: проверь задачу, структуру и связность."},
             {"question": f"Antworte selbstständig: {scenario_de}", "hint": rule_de, "explanation": "Deine Formulierung darf abweichen: Prüfe Aufgabe, Struktur und Zusammenhang."},
             {"question": f"Respond independently: {scenario_en}", "hint": rule_en, "explanation": "Your wording may differ: check the task, structure, and coherence."},
         ),
         _localized_exercise(
-            {"type": "repeat", "stage": "transfer", "question": "Произнеси модель вслух.", "answer": answer, "accepted_answers": [answer, answer.rstrip(".?!")], "explanation": "Повтори спокойно и связно.", "misconception": misconception},
-            {"question": "Произнеси модель вслух.", "explanation": "Повтори спокойно и связно."},
-            {"question": "Sprich das Modell laut nach.", "explanation": "Sprich ruhig und zusammenhängend."},
-            {"question": "Say the model aloud.", "explanation": "Speak calmly and connect the sentence naturally."},
+            {"id": f"{topic}-speak", "type": "repeat", "stage": "transfer", "question": "Произнеси новую полезную фразу вслух.", "audio_text": alternatives[1], "answer": alternatives[1], "accepted_answers": [alternatives[1], alternatives[1].rstrip(".?!")], "explanation": "Произнеси новую фразу спокойно и связно.", "misconception": "fluency", "accessibility_label": "Произнести короткую немецкую фразу."},
+            {"question": "Произнеси новую полезную фразу вслух.", "explanation": "Произнеси новую фразу спокойно и связно."},
+            {"question": "Sprich den neuen nützlichen Satz laut.", "explanation": "Sprich den neuen Satz ruhig und zusammenhängend."},
+            {"question": "Say the new useful sentence aloud.", "explanation": "Say the new sentence calmly and naturally."},
         ),
     ]
     if topic == "genitive_prepositions":
@@ -175,6 +180,9 @@ def build_b1_content(row):
                 {"question": "Say the useful sentence aloud.", "explanation": "Aufgrund + genitive is useful for formal explanations."},
             ),
         ]
+    for index, exercise in enumerate(exercises):
+        exercise.setdefault("id", f"{topic}-{index + 1}")
+        exercise.setdefault("accessibility_label", exercise.get("question", ""))
     languages["ru"].update({"scenario": scenario_ru, "assessment_rubric": rubric["ru"]})
     languages["de"].update({"scenario": scenario_de, "assessment_rubric": rubric["de"]})
     languages["en"].update({"scenario": scenario_en, "assessment_rubric": rubric["en"]})

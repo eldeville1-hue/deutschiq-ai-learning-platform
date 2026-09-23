@@ -79,6 +79,11 @@ class ContentQualityTests(unittest.TestCase):
             self.assertLessEqual(len(content["exercises"][3]["target_patterns"]), 3)
             self.assertEqual(5, len(content["exercises"]))
             self.assertEqual("notice_build_use_reflect", content["learning_method"])
+            self.assertEqual(5, len({exercise["id"] for exercise in content["exercises"]}))
+            self.assertTrue(all(exercise.get("accessibility_label") for exercise in content["exercises"]))
+            self.assertTrue(content["exercises"][2].get("audio_text"))
+            self.assertTrue(content["exercises"][4].get("audio_text"))
+            self.assertNotEqual(content["exercises"][2].get("audio_text"), content["exercises"][4].get("audio_text"))
             guided_types.add(content["exercises"][0]["type"])
             self.assertTrue(all(exercise.get("misconception") for exercise in content["exercises"]))
             self.assertEqual(
