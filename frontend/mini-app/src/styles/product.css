@@ -618,10 +618,10 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 @media(max-width:360px){.rc-module-strip{grid-template-columns:1fr}.assessment-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 /* Phone-native lesson interaction: one clear task and one primary action. */
-.precision-lesson .exercise-step{gap:12px;padding-top:14px}
+.precision-lesson .exercise-step{gap:14px;padding-top:18px}
 .exercise-stage-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .exercise-stage-row>span{flex:0 0 auto;padding:5px 8px;border:1px solid var(--dq-border);border-radius:999px;color:var(--dq-muted);font-size:10px;font-weight:800}
-.precision-lesson .exercise-prompt{display:grid;gap:7px;padding:15px 16px;border:1px solid var(--dq-border);border-radius:17px;background:linear-gradient(145deg,rgba(130,174,248,.08),rgba(255,255,255,.02))}
+.precision-lesson .exercise-prompt{display:grid;gap:8px;padding:3px 0 5px}
 .precision-lesson .exercise-prompt>small{color:var(--dq-blue);font-size:9px;font-weight:850;letter-spacing:.14em}
 .precision-lesson .exercise-prompt h1{font-size:clamp(20px,5.8vw,26px);line-height:1.25;letter-spacing:-.025em}
 .precision-lesson .lesson-options{gap:8px}
@@ -633,12 +633,6 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .precision-lesson .compact-answer{width:100%;min-height:54px;height:54px;padding:0 14px;border:1px solid var(--dq-border-strong);border-radius:15px;background:var(--dq-surface);color:var(--dq-text);font:inherit;font-size:14px}
 .precision-lesson .compact-answer:focus,.precision-lesson .production-answer:focus{outline:0;border-color:var(--dq-blue);box-shadow:0 0 0 3px rgba(130,174,248,.1)}
 .precision-lesson .production-answer{min-height:86px}
-.precision-lesson .exercise-step>.primary-action{position:sticky;bottom:0;z-index:4;margin-top:auto;box-shadow:0 -14px 28px var(--dq-bg),0 10px 25px rgba(244,191,85,.12)}
+.precision-lesson .exercise-step>.primary-action{margin-top:auto;box-shadow:0 10px 25px rgba(244,191,85,.12)}
 .precision-lesson .answer-feedback{border-radius:16px}
 @media(max-height:700px){.precision-lesson .exercise-prompt{padding:12px 14px}.precision-lesson .lesson-options button{min-height:48px}.precision-lesson .exercise-step{gap:9px}}
-.guided-builder{display:grid;gap:7px;padding:10px 12px;border:1px solid var(--dq-border);border-radius:14px;background:rgba(255,255,255,.018)}
-.guided-builder>small{color:var(--dq-muted);font-size:8px;font-weight:850;letter-spacing:.12em}
-.guided-builder>div{display:flex;flex-wrap:wrap;gap:6px}
-.guided-builder>div button{min-height:34px;padding:0 10px;border:1px solid var(--dq-border);border-radius:10px;background:var(--dq-surface);color:var(--dq-text);font-size:12px}
-.guided-builder>div button:disabled{opacity:.28}
-.guided-builder>.builder-clear{width:max-content;padding:3px 0;border:0;background:transparent;color:var(--dq-blue);font-size:10px}

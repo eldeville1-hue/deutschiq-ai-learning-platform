@@ -100,14 +100,16 @@ def build_b1_content(row):
         "de": ["Die Antwort passt zur Situation.", "Die Zielstruktur wird verständlich verwendet.", "Der Gedanke ist auf B1-Niveau verbunden und klar."],
         "en": ["The response fits the situation.", "The target structure is used clearly.", "The idea is connected and clear at B1 level."],
     }
-    guided_type = "error_repair" if day % 2 else "transform"
+    guided_type = "error_repair" if day % 2 else "reorder"
     guided_prompts = {
-        "ru": f"Исправь фразу: {wrong}" if guided_type == "error_repair" else prompt_ru,
-        "de": f"Korrigiere den Satz: {wrong}" if guided_type == "error_repair" else prompt_de,
-        "en": f"Repair the sentence: {wrong}" if guided_type == "error_repair" else prompt_en,
+        "ru": f"Исправь фразу: {wrong}" if guided_type == "error_repair" else "Собери правильное немецкое предложение.",
+        "de": f"Korrigiere den Satz: {wrong}" if guided_type == "error_repair" else "Baue den richtigen deutschen Satz.",
+        "en": f"Repair the sentence: {wrong}" if guided_type == "error_repair" else "Build the correct German sentence.",
     }
+    guided_tokens = answer.rstrip(".?!").split()
+    guided_tokens = guided_tokens[2:] + guided_tokens[:2] if len(guided_tokens) > 3 else list(reversed(guided_tokens))
     guided = _localized_exercise(
-        {"type": guided_type, "stage": "guided", "question": guided_prompts["ru"], "answer": answer, "accepted_answers": [answer, answer.rstrip(".?!")], "hint": rule_ru, "explanation": rule_ru, "misconception": misconception},
+        {"type": guided_type, "stage": "guided", "question": guided_prompts["ru"], "answer": answer.rstrip(".?!"), "accepted_answers": [answer, answer.rstrip(".?!")], "tokens": guided_tokens if guided_type == "reorder" else [], "hint": rule_ru, "explanation": rule_ru, "misconception": misconception},
         {"question": guided_prompts["ru"], "hint": rule_ru, "explanation": rule_ru},
         {"question": guided_prompts["de"], "hint": rule_de, "explanation": rule_de},
         {"question": guided_prompts["en"], "hint": rule_en, "explanation": rule_en},

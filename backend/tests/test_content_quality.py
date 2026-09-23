@@ -102,7 +102,7 @@ class ContentQualityTests(unittest.TestCase):
                         *(exercise.get("explanation", "") for exercise in localized["exercises"]),
                     ])
                     self.assertIsNone(re.search(r"[А-Яа-яЁё]", visible), f"Cyrillic leaked into {language} day {row[0]}")
-        self.assertEqual({"error_repair", "transform"}, guided_types)
+        self.assertEqual({"error_repair", "reorder"}, guided_types)
 
     def test_b2_track_has_16_multilingual_lessons(self):
         self.assertEqual(16, len(B2_CURRICULUM))

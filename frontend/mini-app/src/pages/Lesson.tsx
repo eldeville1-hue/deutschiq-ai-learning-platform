@@ -188,9 +188,6 @@ export const Lesson: React.FC = () => {
     setUsedTokens((value) => [...value, index]);
     setAnswer((value) => `${value}${value ? " " : ""}${token}`);
   };
-  const guidedTokens = exercise?.stage === 'guided' && !exercise?.options?.length
-    ? String(exercise.answer || '').trim().split(/\s+/).reverse()
-    : [];
   return (
     <main className="lesson-flow precision-lesson rc-lesson fade-up">
       <header>
@@ -347,11 +344,6 @@ export const Lesson: React.FC = () => {
               }
               disabled={checked !== null}
             />}
-            {checked === null && guidedTokens.length > 0 && <div className="guided-builder">
-              <small>{tr(lang, 'ИЛИ СОБЕРИ ОТВЕТ', 'ODER ANTWORT BAUEN', 'OR BUILD THE ANSWER')}</small>
-              <div>{guidedTokens.map((token: string, index: number) => <button type="button" key={`${token}-${index}`} disabled={usedTokens.includes(index)} onClick={() => addToken(token, index)}>{token}</button>)}</div>
-              {usedTokens.length > 0 && <button type="button" className="builder-clear" onClick={() => { setAnswer(''); setUsedTokens([]); }}>{tr(lang, 'Очистить', 'Löschen', 'Clear')}</button>}
-            </div>}
             {(exercise.type === "production" || exercise.type === "dialogue" || exercise.type === "repeat") && checked === null && (
               <VoiceRecorder lang={lang} disabled={!sessionId} onAudio={transcribe} />
             )}
