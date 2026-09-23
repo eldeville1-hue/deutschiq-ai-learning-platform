@@ -28,6 +28,7 @@ export const Lesson: React.FC = () => {
   const [confidence, setConfidence] = useState<"guess" | "okay" | "sure">(initialDraft.current?.confidence || "okay");
   const [startedAt, setStartedAt] = useState(() => Date.now());
   const [retried, setRetried] = useState<Record<number, boolean>>({});
+  const [retryExercises, setRetryExercises] = useState<Record<number, any>>({});
   const [outcome, setOutcome] = useState<any>(null);
   const [sessionId, setSessionId] = useState("");
   const [speechResult, setSpeechResult] = useState<any>(null);
@@ -46,7 +47,8 @@ export const Lesson: React.FC = () => {
   const total = introSteps + exercises.length;
   const exerciseIndex = step - introSteps;
   const exercise = exercises[exerciseIndex];
-  const activityLabel = exercise ? ({
+  const activeExercise = retried[exerciseIndex] && retryExercises[exerciseIndex] ? retryExercises[exerciseIndex] : exercise;
+  const activityLabel = activeExercise ? ({
     choice: tr(lang, "Выбери", "Wähle", "Choose"),
     cloze: tr(lang, "Допиши", "Ergänze", "Complete"),
     reorder: tr(lang, "Собери", "Ordne", "Build"),
@@ -54,7 +56,7 @@ export const Lesson: React.FC = () => {
     listen_choice: tr(lang, "Послушай", "Höre", "Listen"),
     speak: tr(lang, "Скажи", "Sprich", "Speak"),
     write: tr(lang, "Напиши", "Schreibe", "Write"),
-  } as const)[exerciseKind(exercise)] : "";
+  } as const)[exerciseKind(activeExercise)] : "";
   useEffect(() => {
     Promise.all([
       api.getLesson(Number(id), lang),
@@ -124,6 +126,7 @@ export const Lesson: React.FC = () => {
     if (exercise && checked === false && !retried[exerciseIndex]) {
       void api.trackEvent({ user_id: getUserId(), event_name: 'exercise_retried', properties: { lesson_id: Number(id), exercise_index: exerciseIndex } });
       setRetried((value) => ({ ...value, [exerciseIndex]: true }));
+      if (feedback?.retry_exercise) setRetryExercises((value) => ({ ...value, [exerciseIndex]: feedback.retry_exercise }));
       resetAnswer();
       return;
     }
@@ -152,7 +155,7 @@ export const Lesson: React.FC = () => {
     if (!answer.trim() || !sessionId || checking) return;
     setChecking(true); setCheckError('');
     try {
-      const result = await api.checkLessonAnswer({ user_id: getUserId(), lesson_id: Number(id), exercise_index: exerciseIndex, answer, session_id: sessionId, language: lang, confidence, response_ms: Date.now() - startedAt });
+      const result = await api.checkLessonAnswer({ user_id: getUserId(), lesson_id: Number(id), exercise_index: exerciseIndex, answer, session_id: sessionId, language: lang, confidence, response_ms: Date.now() - startedAt, retry: Boolean(retried[exerciseIndex]) });
       setChecked(Boolean(result.correct)); setFeedback(result);
       void api.trackEvent({ user_id: getUserId(), event_name: 'exercise_answered', properties: { lesson_id: Number(id), exercise_index: exerciseIndex, correct: Boolean(result.correct), confidence, misconception: String(result.error_type || ''), learning_mode: String(learningProfile.mode) } });
     } catch {
@@ -263,17 +266,17 @@ export const Lesson: React.FC = () => {
           </button>
         </section>
       )}
-      {exercise && (
+      {activeExercise && (
         <section className="lesson-step exercise-step">
           <div className="exercise-stage-row"><p className="eyebrow">{activityLabel}{retried[exerciseIndex] ? tr(lang, " · ещё раз", " · noch einmal", " · try again") : ""}</p><span>{exerciseIndex + 1}/{exercises.length}</span></div>
-          <div className="exercise-prompt"><h1>{exercise.type === "repeat" ? tr(lang, "Произнеси фразу", "Sprich den Satz", "Say the sentence") : exercise.question}</h1></div>
-          {(exercise.type === "listening" || exercise.type === "listening_choice") && (
+          <div className="exercise-prompt"><h1>{activeExercise.type === "repeat" ? tr(lang, "Произнеси фразу", "Sprich den Satz", "Say the sentence") : activeExercise.question}</h1></div>
+          {(activeExercise.type === "listening" || activeExercise.type === "listening_choice") && (
             <div className="listening-challenge simple">
-              <button type="button" className="listen-main" onClick={() => speak(0.9, exercise.audio_text)}><FaVolumeUp /> {tr(lang, "Слушать", "Anhören", "Listen")}</button>
-              <button type="button" className="listen-slow" onClick={() => speak(0.7, exercise.audio_text)}>{tr(lang, "Медленно", "Langsam", "Slow")}</button>
+              <button type="button" className="listen-main" onClick={() => speak(0.9, activeExercise.audio_text)}><FaVolumeUp /> {tr(lang, "Слушать", "Anhören", "Listen")}</button>
+              <button type="button" className="listen-slow" onClick={() => speak(0.7, activeExercise.audio_text)}>{tr(lang, "Медленно", "Langsam", "Slow")}</button>
             </div>
           )}
-          <ExerciseInteraction exercise={{ ...exercise, id: `${id}-${exerciseIndex}` }} answer={answer} onAnswer={setAnswer} disabled={checked !== null} lang={lang} onAudio={sessionId ? transcribe : undefined} />
+          <ExerciseInteraction exercise={{ ...activeExercise, id: `${id}-${exerciseIndex}-${retried[exerciseIndex] ? 'retry' : 'first'}` }} answer={answer} onAnswer={setAnswer} disabled={checked !== null} lang={lang} onAudio={sessionId ? transcribe : undefined} />
             {speechResult?.transcript && (
               <div className="speech-result">
                 <small>{tr(lang, "РАСПОЗНАНО", "ERKANNT", "RECOGNISED")}</small>
@@ -282,10 +285,10 @@ export const Lesson: React.FC = () => {
                 <em>{tr(lang, "Это оценка распознанных слов, не акцента или фонетики.", "Bewertet werden erkannte Wörter, nicht Akzent oder Phonetik.", "This measures recognised words, not accent or phonetics.")}</em>
               </div>
             )}
-          {checked === null && exercise.stage === "guided" && (learningProfile.show_guided_hint || showHint) && (
-            <div className="guided-hint">{exercise.hint}</div>
+          {checked === null && activeExercise.stage === "guided" && (learningProfile.show_guided_hint || showHint || retried[exerciseIndex]) && (
+            <div className="guided-hint">{activeExercise.hint}</div>
           )}
-          {checked === null && exercise.stage === "guided" && !learningProfile.show_guided_hint && !showHint && (
+          {checked === null && activeExercise.stage === "guided" && !retried[exerciseIndex] && !learningProfile.show_guided_hint && !showHint && (
             <button type="button" className="lesson-hint-toggle" onClick={() => setShowHint(true)}>
               {tr(lang, "Показать подсказку", "Hinweis anzeigen", "Show hint")}
             </button>

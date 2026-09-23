@@ -22,7 +22,7 @@ from pathlib import Path
 from app.services.misconception_feedback import misconception_feedback
 from app.services.learning_route import next_cefr_track, normalize_cefr
 from app.services.answer_intelligence import evaluate_structured_answer
-from app.services.lesson_coaching import learning_profile, repair_plan
+from app.services.lesson_coaching import learning_profile, repair_plan, supported_retry_exercise
 from app.services.assessment_insights import evidence_gate
 
 router = APIRouter(prefix="/api/lesson", tags=["lesson"])
@@ -88,6 +88,7 @@ class CheckAnswerRequest(BaseModel):
     response_ms: int | None = None
     session_id: str
     language: str = "en"
+    retry: bool = False
 
 def normalize_answer(value: str) -> str:
     value = re.sub(r"[.!?;,]+$", "", value.strip().lower())
@@ -101,7 +102,8 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
     exercises = lesson_content.get("exercises", [])
     if data.exercise_index < 0 or data.exercise_index >= len(exercises):
         raise HTTPException(status_code=404, detail="Exercise not found")
-    exercise = exercises[data.exercise_index]
+    original_exercise = exercises[data.exercise_index]
+    exercise = supported_retry_exercise(original_exercise, lesson_content, data.language) if data.retry else original_exercise
     accepted = exercise.get("accepted_answers") or [exercise.get("answer", "")]
     production_feedback = None
     structured_feedback = None
@@ -148,6 +150,10 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
     common_mistakes = lesson_content.get("common_mistakes") or []
     error_type = None if correct else ((production_feedback or {}).get("error_type") or (structured_feedback or {}).get("error_type") or exercise.get("misconception") or exercise.get("error_type") or skill.pillar)
     retry_copy = misconception_feedback(error_type, normalize_language(data.language)) if not correct else None
+    retry_exercise = supported_retry_exercise(original_exercise, lesson_content, data.language) if not correct and not data.retry else None
+    if retry_exercise:
+        retry_exercise = {key: value for key, value in retry_exercise.items() if key not in {"answer", "accepted_answers", "explanation"}}
+        retry_exercise["hint"] = retry_copy or retry_exercise.get("hint")
     missing_words = (production_feedback or {}).get("missing_words", []) if production_feedback else (structured_feedback or {}).get("missing_words", [])
     extra_words = (production_feedback or {}).get("extra_words", []) if production_feedback else (structured_feedback or {}).get("extra_words", [])
     return {
@@ -167,6 +173,7 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
         "error_type": error_type,
         "contrast": common_mistakes[:2] if not correct else [],
         "retry_instruction": retry_copy,
+        "retry_exercise": retry_exercise,
         "production": exercise.get("type") in {"production", "dialogue"},
         "missing_words": missing_words,
         "extra_words": extra_words,

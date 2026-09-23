@@ -1,5 +1,40 @@
 """Explainable adaptation and repair guidance for a learning session."""
 
+from app.services.content_i18n import normalize_language
+
+
+def supported_retry_exercise(exercise: dict, lesson_content: dict, language: str) -> dict:
+    """Build a fresh, easier phone task without exposing the answer key."""
+    examples = [str(item).strip() for item in lesson_content.get("examples", []) if str(item).strip()]
+    original_answers = set(exercise.get("accepted_answers") or [exercise.get("answer", "")])
+    model = next((item for item in examples[1:] if item not in original_answers), examples[0] if examples else str(exercise.get("answer", "")))
+    model = model.rstrip(".?!")
+    tokens = model.split()
+    tokens = tokens[2:] + tokens[:2] if len(tokens) > 3 else list(reversed(tokens))
+    lang = normalize_language(language)
+    questions = {
+        "ru": "Попробуй на новом примере. Собери фразу.",
+        "de": "Versuche es mit einem neuen Beispiel. Baue den Satz.",
+        "en": "Try a new example. Build the sentence.",
+    }
+    hints = {
+        "ru": "Нажимай слова по порядку. Нажми слово в ответе, чтобы убрать его.",
+        "de": "Tippe die Wörter der Reihe nach an. Tippe oben auf ein Wort, um es zu entfernen.",
+        "en": "Tap the words in order. Tap a word above to remove it.",
+    }
+    return {
+        "id": f"{exercise.get('id', 'exercise')}-retry",
+        "type": "reorder",
+        "stage": "guided",
+        "question": questions[lang],
+        "answer": model,
+        "accepted_answers": [model, f"{model}."],
+        "tokens": tokens,
+        "hint": hints[lang],
+        "explanation": str(exercise.get("explanation", "")),
+        "misconception": exercise.get("misconception"),
+    }
+
 
 def learning_profile(mastery: float, recent_correct: list[bool], correct_streak: int = 0) -> dict:
     recent = recent_correct[-4:]
@@ -53,4 +88,3 @@ def repair_plan(error_type: str | None, missing_words: list[str], extra_words: l
         steps.append(copy["build"])
     steps.append(copy["check"])
     return steps
-
