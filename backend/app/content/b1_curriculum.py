@@ -142,6 +142,39 @@ def build_b1_content(row):
             {"question": "Say the model aloud.", "explanation": "Speak calmly and connect the sentence naturally."},
         ),
     ]
+    if topic == "genitive_prepositions":
+        exercises = [
+            _localized_exercise(
+                {"id": "genitive-build", "type": "reorder", "stage": "guided", "question": "Собери предложение о концерте.", "answer": "Trotz des Regens findet das Konzert statt", "accepted_answers": ["Trotz des Regens findet das Konzert statt", "Trotz des Regens findet das Konzert statt."], "tokens": ["das", "Konzert", "des", "statt", "Regens", "findet", "Trotz"], "hint": "trotz + Genitiv: trotz des Regens", "explanation": "После trotz в стандартном немецком здесь используется Genitiv: des Regens.", "misconception": "case_ending"},
+                {"question": "Собери предложение о концерте.", "hint": "trotz + Genitiv: trotz des Regens", "explanation": "После trotz в стандартном немецком здесь используется Genitiv: des Regens."},
+                {"question": "Baue den Satz über das Konzert.", "hint": "trotz + Genitiv: trotz des Regens", "explanation": "Nach trotz steht hier in der Standardsprache der Genitiv: des Regens."},
+                {"question": "Build the sentence about the concert.", "hint": "trotz + genitive: trotz des Regens", "explanation": "In standard German, trotz takes the genitive here: des Regens."},
+            ),
+            _localized_exercise(
+                {"id": "genitive-choice", "type": "context_choice", "stage": "independent", "question": "Поезд опаздывает из-за забастовки. Какая фраза подходит?", "answer": "Wegen des Streiks kommt der Zug später.", "accepted_answers": ["Wegen des Streiks kommt der Zug später."], "options": ["Wegen des Streiks kommt der Zug später.", "Wegen dem Streik kommt der Zug später.", "Trotz des Streiks kommt der Zug pünktlich."], "hint": "Причина выражается с wegen; в стандартном языке — Genitiv.", "explanation": "Wegen des Streiks называет причину и использует Genitiv.", "misconception": "preposition_meaning"},
+                {"question": "Поезд опаздывает из-за забастовки. Какая фраза подходит?", "hint": "Причина выражается с wegen; в стандартном языке — Genitiv.", "explanation": "Wegen des Streiks называет причину и использует Genitiv."},
+                {"question": "Der Zug verspätet sich wegen eines Streiks. Welcher Satz passt?", "hint": "Ein Grund steht mit wegen; standardsprachlich folgt der Genitiv.", "explanation": "Wegen des Streiks nennt den Grund und verwendet den Genitiv."},
+                {"question": "The train is late because of a strike. Which sentence fits?", "hint": "Use wegen for a reason; standard German uses the genitive.", "explanation": "Wegen des Streiks gives the reason and uses the genitive."},
+            ),
+            _localized_exercise(
+                {"id": "genitive-listen", "type": "listening_choice", "stage": "independent", "question": "Какую связь выражает услышанная фраза?", "audio_text": "Während der Besprechung blieb das Handy aus.", "answer": "Время действия", "accepted_answers": ["Время действия"], "options": ["Время действия", "Причина", "Уступка"], "hint": "Обрати внимание на während.", "explanation": "Während der Besprechung обозначает период времени и требует Genitiv.", "misconception": "preposition_meaning"},
+                {"question": "Какую связь выражает услышанная фраза?", "hint": "Обрати внимание на während.", "explanation": "Während der Besprechung обозначает период времени и требует Genitiv."},
+                {"question": "Welche Beziehung drückt der gehörte Satz aus?", "answer": "Zeitangabe", "accepted_answers": ["Zeitangabe"], "options": ["Zeitangabe", "Grund", "Gegensatz"], "hint": "Achte auf während.", "explanation": "Während der Besprechung bezeichnet einen Zeitraum und steht mit Genitiv."},
+                {"question": "What relationship does the sentence express?", "answer": "Time relationship", "accepted_answers": ["Time relationship"], "options": ["Time relationship", "Reason", "Concession"], "hint": "Listen for während.", "explanation": "Während der Besprechung marks a period of time and uses the genitive."},
+            ),
+            _localized_exercise(
+                {"id": "genitive-write", "type": "dialogue", "stage": "transfer", "question": "Поездку отменили из-за сильного шторма. Объясни это одним предложением.", "answer": "Wegen des starken Sturms wurde die Reise abgesagt.", "model_answer": "Wegen des starken Sturms wurde die Reise abgesagt.", "accepted_answers": ["Wegen des starken Sturms wurde die Reise abgesagt."], "target_patterns": ["wegen", "des starken Sturms"], "hint": "Начни с Wegen + Genitiv.", "explanation": "Самостоятельная фраза может отличаться, если причина и Genitiv выражены правильно.", "misconception": "case_ending"},
+                {"question": "Поездку отменили из-за сильного шторма. Объясни это одним предложением.", "hint": "Начни с Wegen + Genitiv.", "explanation": "Самостоятельная фраза может отличаться, если причина и Genitiv выражены правильно."},
+                {"question": "Die Reise wurde wegen eines starken Sturms abgesagt. Erkläre das in einem Satz.", "hint": "Beginne mit Wegen + Genitiv.", "explanation": "Dein Satz darf abweichen, wenn Grund und Genitiv korrekt ausgedrückt sind."},
+                {"question": "The trip was cancelled because of a strong storm. Explain it in one sentence.", "hint": "Start with Wegen + genitive.", "explanation": "Your sentence may differ if the reason and genitive are expressed correctly."},
+            ),
+            _localized_exercise(
+                {"id": "genitive-speak", "type": "repeat", "stage": "transfer", "question": "Произнеси полезную фразу.", "audio_text": "Aufgrund eines technischen Problems beginnt der Kurs später.", "answer": "Aufgrund eines technischen Problems beginnt der Kurs später.", "model_answer": "Aufgrund eines technischen Problems beginnt der Kurs später.", "accepted_answers": ["Aufgrund eines technischen Problems beginnt der Kurs später."], "explanation": "Aufgrund + Genitiv удобно для формальных объяснений.", "misconception": "fluency"},
+                {"question": "Произнеси полезную фразу.", "explanation": "Aufgrund + Genitiv удобно для формальных объяснений."},
+                {"question": "Sprich den nützlichen Satz laut.", "explanation": "Aufgrund + Genitiv eignet sich gut für formelle Erklärungen."},
+                {"question": "Say the useful sentence aloud.", "explanation": "Aufgrund + genitive is useful for formal explanations."},
+            ),
+        ]
     languages["ru"].update({"scenario": scenario_ru, "assessment_rubric": rubric["ru"]})
     languages["de"].update({"scenario": scenario_de, "assessment_rubric": rubric["de"]})
     languages["en"].update({"scenario": scenario_en, "assessment_rubric": rubric["en"]})

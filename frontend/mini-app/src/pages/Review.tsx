@@ -6,6 +6,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { topicLabel } from '../i18n/topics';
 import { getUserId, withUser } from '../utils/user';
 import { tr } from '../i18n/language';
+import { ExerciseInteraction } from '../components/learning/ExerciseInteraction';
 
 export const Review: React.FC = () => {
   const { lang } = useLanguage();
@@ -62,9 +63,7 @@ export const Review: React.FC = () => {
         {item.repair_dimension && <div className="rc-repair-target">{tr(lang, 'Фокус', 'Fokus', 'Focus')}: {({ task_completion: tr(lang, 'выполнение задачи', 'Aufgabenerfüllung', 'task completion'), grammar: tr(lang, 'грамматика', 'Grammatik', 'grammar'), vocabulary: tr(lang, 'лексика', 'Wortschatz', 'vocabulary'), coherence: tr(lang, 'связность', 'Kohärenz', 'coherence'), register: tr(lang, 'регистр', 'Register', 'register') } as Record<string,string>)[item.repair_dimension]} · {item.repair_score}%</div>}
         <h1>{item.question}</h1>
 
-        {!feedback && (item.type === 'choose' && item.options?.length
-          ? <div className="rc-review-options">{item.options.map((option: string) => <button type="button" key={option} className={answer === option ? 'selected' : ''} onClick={() => setAnswer(option)}><span>{option}</span>{answer === option && <FaCheck />}</button>)}</div>
-          : <label className="rc-review-input"><span>{tr(lang, 'Твой ответ', 'Deine Antwort', 'Your answer')}</span><input value={answer} onChange={event => setAnswer(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') void check(); }} placeholder={tr(lang, 'Напиши по памяти…', 'Aus dem Gedächtnis…', 'Type from memory…')} /></label>)}
+        {!feedback && <ExerciseInteraction exercise={{ ...item, id: `review-${item.lesson_id}-${item.exercise_index}` }} answer={answer} onAnswer={setAnswer} lang={lang} />}
 
         {error && <div className="rc-notice error"><span>{error}</span></div>}
 

@@ -5,7 +5,7 @@ import { api } from "../services/api";
 import { useLanguage } from "../context/LanguageContext";
 import { topicLabel } from "../i18n/topics";
 import { getUserId, withUser } from "../utils/user";
-import { VoiceRecorder } from "../components/VoiceRecorder";
+import { ExerciseInteraction } from "../components/learning/ExerciseInteraction";
 import { tr } from "../i18n/language";
 
 export const cleanTitle = (value: string) => value.replace(/^(?:tag|day|день)\s*\d+\s*[:·—-]\s*/i, "").trim();
@@ -29,7 +29,6 @@ export const Lesson: React.FC = () => {
   const [retried, setRetried] = useState<Record<number, boolean>>({});
   const [outcome, setOutcome] = useState<any>(null);
   const [sessionId, setSessionId] = useState("");
-  const [usedTokens, setUsedTokens] = useState<number[]>(() => initialDraft.current?.usedTokens || []);
   const [speechResult, setSpeechResult] = useState<any>(null);
   const [checking, setChecking] = useState(false);
   const [checkError, setCheckError] = useState('');
@@ -64,8 +63,8 @@ export const Lesson: React.FC = () => {
   }, [id, lang]);
   useEffect(() => {
     if (!lesson || step >= total) return;
-    try { localStorage.setItem(draftKey, JSON.stringify({ step, answer, confidence, usedTokens, savedAt: Date.now() })); } catch { /* Recovery is best-effort. */ }
-  }, [answer, confidence, draftKey, lesson, step, total, usedTokens]);
+    try { localStorage.setItem(draftKey, JSON.stringify({ step, answer, confidence, savedAt: Date.now() })); } catch { /* Recovery is best-effort. */ }
+  }, [answer, confidence, draftKey, lesson, step, total]);
   useEffect(() => {
     if (!lesson || !sessionId) return;
     const stage = step === 0 ? 'learn' : step === 1 ? 'model' : step >= total ? 'result' : exercises[step - introSteps]?.stage || 'practice';
@@ -103,7 +102,6 @@ export const Lesson: React.FC = () => {
   const learningProfile = lesson.learning_profile || { mode: 'balanced', mastery: 0, show_guided_hint: false };
   const resetAnswer = () => {
     setAnswer("");
-    setUsedTokens([]);
     setChecked(null);
     setFeedback(null);
     setConfidence("okay");
@@ -160,8 +158,8 @@ export const Lesson: React.FC = () => {
     localStorage.setItem(`deutschiq-beta-milestone-${getUserId()}`, '1');
     setMilestoneSent(true);
   };
-  const speak = (rate = 0.9) => {
-    if (content.audio_url) {
+  const speak = (rate = 0.9, text?: string) => {
+    if (!text && content.audio_url) {
       const audio = new Audio(content.audio_url);
       audio.playbackRate = rate;
       void audio.play();
@@ -170,7 +168,7 @@ export const Lesson: React.FC = () => {
     if (!("speechSynthesis" in window)) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(
-      content.audio_text || content.examples?.[0] || "",
+      text || content.audio_text || content.examples?.[0] || "",
     );
     utterance.lang = "de-DE";
     utterance.rate = rate;
@@ -183,10 +181,6 @@ export const Lesson: React.FC = () => {
     });
     setAnswer(result.transcript || "");
     setSpeechResult(result);
-  };
-  const addToken = (token: string, index: number) => {
-    setUsedTokens((value) => [...value, index]);
-    setAnswer((value) => `${value}${value ? " " : ""}${token}`);
   };
   return (
     <main className="lesson-flow precision-lesson rc-lesson fade-up">
@@ -272,81 +266,14 @@ export const Lesson: React.FC = () => {
               : ""}
           </p><span>{exerciseIndex + 1}/{exercises.length}</span></div>
           <div className="exercise-prompt"><small>{tr(lang, 'ЗАДАНИЕ', 'AUFGABE', 'TASK')}</small><h1>{exercise.type === "repeat" ? tr(lang, "Повтори фразу", "Sprich den Satz nach", "Repeat the sentence") : exercise.question}</h1></div>
-          {exercise.type === "repeat" && <div className="example-sentence">{content.audio_text || content.examples?.[0]}</div>}
+          {exercise.type === "repeat" && <div className="example-sentence">{exercise.audio_text || exercise.model_answer || exercise.answer || content.audio_text || content.examples?.[0]}</div>}
           {(exercise.type === "listening" || exercise.type === "listening_choice") && (
             <div className="listening-challenge">
-              <button type="button" onClick={() => speak(0.9)}><FaVolumeUp /> {tr(lang, "Прослушать", "Anhören", "Listen")}</button>
-              <button type="button" onClick={() => speak(0.7)}><FaVolumeUp /> {tr(lang, "Медленнее", "Langsamer", "Slower")}</button>
+              <button type="button" onClick={() => speak(0.9, exercise.audio_text)}><FaVolumeUp /> {tr(lang, "Прослушать", "Anhören", "Listen")}</button>
+              <button type="button" onClick={() => speak(0.7, exercise.audio_text)}><FaVolumeUp /> {tr(lang, "Медленнее", "Langsamer", "Slower")}</button>
             </div>
           )}
-          {Array.isArray(exercise.options) && exercise.options.length > 0 ? (
-            <div className="lesson-options">
-              {exercise.options.map((option: string, optionIndex: number) => (
-                <button
-                  key={option}
-                  onClick={() => setAnswer(option)}
-                  className={answer === option ? "active" : ""}
-                >
-                  <span className="option-letter">{String.fromCharCode(65 + optionIndex)}</span><span>{option}</span>{answer === option && <FaCheck />}
-                </button>
-              ))}
-            </div>
-          ) : exercise.type === "reorder" ? (
-            <>
-              <div className="reorder-answer">
-                {answer ||
-                  tr(lang, "Нажимай слова по порядку", "Wörter antippen", "Tap the words in order")}
-              </div>
-              <div className="word-tokens">
-                {(exercise.tokens || []).map((token: string, index: number) => (
-                  <button
-                    key={`${token}-${index}`}
-                    onClick={() => addToken(token, index)}
-                    disabled={checked !== null || usedTokens.includes(index)}
-                  >
-                    {token}
-                  </button>
-                ))}
-              </div>
-              <button
-                className="clear-answer"
-                  onClick={() => {
-                    setAnswer("");
-                    setUsedTokens([]);
-                  }}
-                disabled={checked !== null}
-              >
-                {tr(lang, "Сбросить", "Löschen", "Clear")}
-              </button>
-            </>
-          ) : (
-            <>
-            {exercise.type === "production" || exercise.type === "dialogue" ? <textarea
-              className="lesson-answer production-answer"
-              value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
-              placeholder={tr(lang, "Напиши одну короткую немецкую фразу…", "Schreibe einen kurzen deutschen Satz…", "Write one short German sentence…")}
-              disabled={checked !== null}
-              rows={3}
-            /> : <input
-              className="lesson-answer compact-answer"
-              value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter' && answer.trim() && sessionId && !checking) void check(); }}
-              placeholder={
-                exercise.type === "production" || exercise.type === "dialogue"
-                  ? tr(lang, "Напиши свою немецкую фразу…", "Schreibe deinen eigenen Satz…", "Write your own German sentence…")
-                  : exercise.type === "listening" || exercise.type === "listening_choice"
-                    ? tr(lang, "Напиши, что услышал…", "Schreibe, was du hörst…", "Type what you hear…")
-                    : exercise.type === "error_repair"
-                      ? tr(lang, "Напиши исправленную фразу…", "Schreibe den korrigierten Satz…", "Write the corrected sentence…")
-                    : tr(lang, "Введи ответ", "Antwort eingeben", "Enter your answer")
-              }
-              disabled={checked !== null}
-            />}
-            {(exercise.type === "production" || exercise.type === "dialogue" || exercise.type === "repeat") && checked === null && (
-              <VoiceRecorder lang={lang} disabled={!sessionId} onAudio={transcribe} />
-            )}
+          <ExerciseInteraction exercise={{ ...exercise, id: `${id}-${exerciseIndex}` }} answer={answer} onAnswer={setAnswer} disabled={checked !== null} lang={lang} onAudio={sessionId ? transcribe : undefined} />
             {speechResult?.transcript && (
               <div className="speech-result">
                 <small>{tr(lang, "РАСПОЗНАНО", "ERKANNT", "RECOGNISED")}</small>
@@ -355,8 +282,6 @@ export const Lesson: React.FC = () => {
                 <em>{tr(lang, "Это оценка распознанных слов, не акцента или фонетики.", "Bewertet werden erkannte Wörter, nicht Akzent oder Phonetik.", "This measures recognised words, not accent or phonetics.")}</em>
               </div>
             )}
-            </>
-          )}
           {checked === null && exercise.stage === "guided" && (learningProfile.show_guided_hint || showHint) && (
             <div className="guided-hint">{exercise.hint}</div>
           )}

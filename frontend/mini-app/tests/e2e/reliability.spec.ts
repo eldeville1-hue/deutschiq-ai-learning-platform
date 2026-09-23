@@ -155,6 +155,32 @@ test('learner completes a production exercise and sees CEFR evidence', async ({ 
   await expectNoHorizontalOverflow(page);
 });
 
+test('practical reorder exercise is usable without mobile overflow', async ({ page }) => {
+  await mockApi(page, { completed: true });
+  await page.route('**/api/lesson/77', route => route.fulfill({ json: {
+    ...lesson,
+    content: {
+      ...lesson.content,
+      exercises: [{
+        id: 'genitive-build', type: 'reorder', stage: 'guided',
+        question: 'Build the sentence about the concert.',
+        tokens: ['das', 'Konzert', 'des', 'statt', 'Regens', 'findet', 'Trotz'],
+        hint: 'trotz + genitive: trotz des Regens',
+      }],
+    },
+  }}));
+  await page.goto('/lesson/77');
+  await page.getByRole('button', { name: /Show example/i }).click();
+  await page.getByRole('button', { name: /Start practice/i }).click();
+  await expect(page.getByText('Tap the words in the correct order')).toBeVisible();
+  for (const token of ['Trotz', 'des', 'Regens', 'findet', 'das', 'Konzert', 'statt']) {
+    await page.locator('.reorder-bank').getByRole('button', { name: token, exact: true }).click();
+  }
+  await expect(page.locator('.reorder-built')).toContainText('Trotz des Regens findet das Konzert statt');
+  await expect(page.getByRole('button', { name: /^Check$/i })).toBeEnabled();
+  await expectNoHorizontalOverflow(page);
+});
+
 test('stale dashboard cache survives a bounded network failure without reload loops', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('deutschiq-dashboard-9001', JSON.stringify({ savedAt: Date.now() - 60_000, value: { level: 'B1', targetLevel: 'B2', xp: 321, streak: 4, weaknesses: [] } })));
   let dashboardRequests = 0;

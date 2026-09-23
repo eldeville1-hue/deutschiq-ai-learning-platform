@@ -61,9 +61,13 @@ class FrontendInternationalizationTests(unittest.TestCase):
 
     def test_lesson_supports_context_listening_dialogue_and_error_repair(self):
         lesson = self.read("pages/Lesson.tsx")
-        self.assertIn('"listening_choice"', lesson)
-        self.assertIn('"dialogue"', lesson)
-        self.assertIn('"error_repair"', lesson)
+        exercise_types = self.read("learning/exercises.ts")
+        interaction = self.read("components/learning/ExerciseInteraction.tsx")
+        self.assertIn("listening_choice", exercise_types)
+        self.assertIn("dialogue", exercise_types)
+        self.assertIn("error_repair", exercise_types)
+        self.assertIn("ExerciseInteraction", lesson)
+        self.assertIn("exerciseKind", interaction)
         self.assertIn("slice(0, 5)", lesson)
 
 

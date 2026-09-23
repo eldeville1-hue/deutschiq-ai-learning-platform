@@ -104,6 +104,31 @@ class ContentQualityTests(unittest.TestCase):
                     self.assertIsNone(re.search(r"[А-Яа-яЁё]", visible), f"Cyrillic leaked into {language} day {row[0]}")
         self.assertEqual({"error_repair", "reorder"}, guided_types)
 
+    def test_b1_genitive_reference_lesson_has_five_practical_interactions(self):
+        row = next(item for item in B1_CURRICULUM if item[2] == "genitive_prepositions")
+        content = build_b1_content(row)
+        exercises = content["exercises"]
+
+        self.assertEqual(
+            ["reorder", "context_choice", "listening_choice", "dialogue", "repeat"],
+            [exercise["type"] for exercise in exercises],
+        )
+        self.assertEqual(5, len({exercise["id"] for exercise in exercises}))
+        self.assertTrue(all(exercise.get("stage") for exercise in exercises))
+        self.assertIn("Während der Besprechung", exercises[2]["audio_text"])
+        self.assertIn("Aufgrund eines technischen Problems", exercises[4]["audio_text"])
+
+        localized_answers = {
+            "ru": "Время действия",
+            "de": "Zeitangabe",
+            "en": "Time relationship",
+        }
+        for language, expected in localized_answers.items():
+            localized = localize_lesson_content(content, language)
+            listening = localized["exercises"][2]
+            self.assertEqual(expected, listening["answer"])
+            self.assertIn(expected, listening["options"])
+
     def test_b2_track_has_16_multilingual_lessons(self):
         self.assertEqual(16, len(B2_CURRICULUM))
         self.assertEqual({1, 2, 3, 4}, {row[1] for row in B2_CURRICULUM})
