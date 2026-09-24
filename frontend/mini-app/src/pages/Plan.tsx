@@ -55,10 +55,10 @@ export const Plan: React.FC = () => {
     tr(lang, 'Придаточные', 'Nebensätze', 'Subordinate clauses'),
     tr(lang, 'Самостоятельная речь', 'Selbstständig sprechen', 'Independent communication'),
   ] : [
-    tr(lang, 'Порядок слов', 'Satzbau', 'Word order'),
-    tr(lang, 'Падежи', 'Fälle', 'Cases'),
-    tr(lang, 'Артикли', 'Artikel', 'Articles'),
-    tr(lang, 'Прошедшее время', 'Vergangenheit', 'Past tense'),
+    tr(lang, 'Первый разговор', 'Das erste Gespräch', 'Your first conversation'),
+    tr(lang, 'Мой день', 'Mein Tag', 'My day'),
+    tr(lang, 'В городе', 'In der Stadt', 'In the city'),
+    tr(lang, 'Решаем дела', 'Alltag erledigen', 'Getting things done'),
   ];
 
   if (!dashboard) return <main className="app-shell rc-page"><div className="skeleton rc-hero-skeleton" /></main>;
@@ -73,22 +73,21 @@ export const Plan: React.FC = () => {
 
       {loadError && <div className="rc-notice error"><span>{tr(lang, 'Не удалось полностью обновить маршрут', 'Die Route konnte nicht vollständig aktualisiert werden', 'The learning path could not be fully refreshed')}</span><button type="button" onClick={load}>{tr(lang, 'Обновить', 'Aktualisieren', 'Refresh')}</button></div>}
 
-      <section className="cefr-journey" aria-label={tr(lang, 'Путь по уровням', 'Niveaureise', 'Level journey')}>
-        <header><div><small>{tr(lang, 'ТВОЙ ПУТЬ', 'DEIN WEG', 'YOUR JOURNEY')}</small><h2>{tr(lang, 'Уровни немецкого', 'Deine Deutschniveaus', 'Your German levels')}</h2></div><span>{tr(lang, 'Освоение, не спешка', 'Können statt Tempo', 'Mastery over speed')}</span></header>
-        <div className="cefr-levels">{(journey?.levels || []).map((item: any) => {
+      <section className="cefr-journey compact" aria-label={tr(lang, 'Путь по уровням', 'Niveaureise', 'Level journey')}>
+        <header><div><small>{tr(lang, 'УРОВЕНЬ', 'NIVEAU', 'LEVEL')}</small><h2>{tr(lang, 'Выбери доступный маршрут', 'Wähle einen verfügbaren Weg', 'Choose an available path')}</h2></div></header>
+        <div className="cefr-levels">{(journey?.levels || []).filter((item: any) => item.total_lessons > 0).map((item: any) => {
           const accessible = ['active', 'review', 'completed'].includes(item.state);
           const label = item.state === 'active' ? tr(lang, 'Активный', 'Aktiv', 'Active') : item.state === 'review' ? tr(lang, 'Повторение', 'Wiederholen', 'Review') : item.state === 'completed' ? tr(lang, 'Пройден', 'Abgeschlossen', 'Completed') : item.state === 'coming_soon' ? tr(lang, 'Позже', 'Demnächst', 'Coming later') : tr(lang, 'Закрыт', 'Gesperrt', 'Locked');
           return <button type="button" key={item.level} className={`cefr-level ${item.state}${track === item.level ? ' selected' : ''}`} disabled={!accessible} onClick={() => accessible && setSelectedTrack(item.level)}>
-            <span className="cefr-code">{item.level}</span><span><strong>{label}</strong><small>{item.total_lessons ? `${item.completed_lessons}/${item.total_lessons} · ${item.mastery}%` : '—'}</small></span>{accessible ? item.state === 'completed' ? <FaCheck /> : <FaPlay /> : <FaLock />}
+            <span className="cefr-code">{item.level}</span><span><strong>{label}</strong><small>{item.total_lessons ? `${item.completed_lessons}/${item.total_lessons} ${tr(lang, 'уроков', 'Lektionen', 'lessons')}` : '—'}</small></span>{accessible ? item.state === 'completed' ? <FaCheck /> : <FaPlay /> : <FaLock />}
           </button>;
         })}</div>
-        <p>{tr(lang, 'Нижние уровни доступны для повторения. Следующий уровень откроется после 80% уроков и 70% освоения.', 'Frühere Niveaus bleiben zum Wiederholen offen. Das nächste Niveau öffnet sich nach 80 % der Lektionen und 70 % Beherrschung.', 'Earlier levels remain open for review. The next level unlocks after 80% lesson completion and 70% mastery.')}</p>
         {(() => { const active = (journey?.levels || []).find((item: any) => item.state === 'active'); return active && active.completion >= 80 && active.mastery >= 70 ? <button type="button" className="rc-primary checkpoint-cta" onClick={() => navigate(withUser(`/checkpoint/${active.level}`))}>{tr(lang, `Пройти финальный тест ${active.level}`, `${active.level}-Abschlusstest starten`, `Take the ${active.level} final checkpoint`)}</button> : null; })()}
       </section>
 
       <section className="rc-plan-now">
-        <header><span>{tr(lang, 'СЛЕДУЮЩИЙ УРОК', 'NÄCHSTE LEKTION', 'NEXT LESSON')}</span></header>
-        <div><small>{tr(lang, 'РЕКОМЕНДОВАНО', 'EMPFOHLEN', 'RECOMMENDED')}</small><h2>{current?.title || topicLabel(current?.topic || 'word_order', lang)}</h2></div>
+        <header><span>{tr(lang, 'ПРОДОЛЖИТЬ МАРШРУТ', 'WEG FORTSETZEN', 'CONTINUE YOUR PATH')}</span><small>{tr(lang, `Модуль ${week} из 4`, `Modul ${week} von 4`, `Module ${week} of 4`)}</small></header>
+        <div><small>{moduleNames[week - 1]}</small><h2>{current?.title || topicLabel(current?.topic || 'word_order', lang)}</h2></div>
         <button type="button" className="rc-primary" disabled={!current?.id} onClick={() => current?.id && navigate(withUser(`/lesson/${current.id}`))}><span><FaPlay /> {current?.id ? tr(lang, 'Начать', 'Starten', 'Start') : tr(lang, 'Загрузка…', 'Laden…', 'Loading…')}</span></button>
       </section>
 

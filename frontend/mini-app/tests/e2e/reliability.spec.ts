@@ -151,7 +151,7 @@ test('learner completes a production exercise and sees CEFR evidence', async ({ 
   await expect(page.getByText('82%')).toBeVisible();
   await page.locator('.answer-feedback > button').click();
   await expect(page.getByText('LESSON COMPLETE')).toBeVisible();
-  await expect(page.getByRole('heading', { name: '100%' })).toBeVisible();
+  await expect(page.getByText('100%')).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
 

@@ -367,15 +367,17 @@ export const Lesson: React.FC = () => {
               ? tr(lang, "НУЖНО ЕЩЁ ЗАКРЕПИТЬ", "NOCH EINMAL FESTIGEN", "MORE PRACTICE NEEDED")
               : tr(lang, "УРОК ОСВОЕН", "LEKTION GESCHAFFT", "LESSON COMPLETE")}
           </p>
-          <small className="lesson-result-score-label">{tr(lang, 'РЕЗУЛЬТАТ ЗАДАНИЙ', 'ÜBUNGSERGEBNIS', 'EXERCISE SCORE')}</small>
-          <h1>{outcome ? `${outcome.score}%` : "…"}</h1>
-          <div className="lesson-score">
+          <h1>{outcome?.passed === false ? tr(lang, 'Закрепим это ещё раз', 'Wir festigen das noch einmal', 'Let’s strengthen this once more') : (content.can_do || content.objective || tr(lang, 'Новый навык готов к использованию', 'Die neue Fähigkeit ist einsatzbereit', 'Your new skill is ready to use'))}</h1>
+          <div className="lesson-proof">
             <span>
-              {tr(lang, "Освоение темы", "Themenkenntnis", "Topic mastery")}
+              {tr(lang, 'Задания', 'Aufgaben', 'Exercises')}
+              <b>{outcome ? `${outcome.score}%` : '…'}</b>
+            </span><span>
+              {tr(lang, "Освоение", "Beherrschung", "Mastery")}
               <b>{outcome?.mastery || 0}%</b>
             </span>
             <span>
-              {tr(lang, "Получено", "Erhalten", "Earned")}
+              {tr(lang, "Награда", "Belohnung", "Reward")}
               <b>+{outcome?.xp_gained || 0} XP</b>
             </span>
           </div>

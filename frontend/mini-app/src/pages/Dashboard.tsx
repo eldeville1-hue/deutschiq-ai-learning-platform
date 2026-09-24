@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { FaArrowRight, FaBrain, FaFire, FaPlay, FaRedoAlt } from 'react-icons/fa';
+import { FaArrowRight, FaCheck, FaComments, FaFire, FaPlay, FaRedoAlt, FaVolumeUp } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
@@ -72,16 +72,17 @@ export const Dashboard: React.FC = () => {
       </header>
 
       <section className="rc-focus-card">
-        <header><span><FaBrain /> {tr(lang, 'ГЛАВНАЯ ТЕМА', 'DEIN THEMA', 'YOUR FOCUS')}</span><b>{data.level || selectedLesson?.level || 'A1'}</b></header>
+        <header><span>{selectedLesson?.module_title || tr(lang, 'СЛЕДУЮЩИЙ ШАГ', 'NÄCHSTER SCHRITT', 'NEXT STEP')}{selectedLesson?.module_step && selectedLesson?.module_size ? ` · ${selectedLesson.module_step}/${selectedLesson.module_size}` : ''}</span><b>{data.level || selectedLesson?.level || 'A1'}</b></header>
         <h2>{selectedLesson?.title || topicLabel(topic, lang)}</h2>
-        <p>{selectedLesson?.reason === 'review_due'
-          ? tr(lang, 'Пора закрепить эту тему.', 'Zeit, dieses Thema zu festigen.', 'Time to strengthen this skill.')
-          : tr(lang, 'Выбрано по твоему прогрессу.', 'Passend zu deinem Fortschritt.', 'Selected from your progress.')}</p>
+        <div className="rc-focus-outcome"><FaCheck /><span><small>{tr(lang, 'ПОСЛЕ УРОКА', 'NACH DER LEKTION', 'AFTER THIS LESSON')}</small><strong>{selectedLesson?.can_do || tr(lang, 'Ты применишь навык в короткой реальной ситуации.', 'Du nutzt die Fähigkeit in einer kurzen Alltagssituation.', 'You will use the skill in a short real-life situation.')}</strong></span></div>
+        {learning?.session?.phases?.length > 0 && <div className="rc-session-path" aria-label={tr(lang, 'План занятия', 'Ablauf', 'Session path')}>
+          {(learning.session.phases as any[]).filter(phase => ['review','learn','speak'].includes(phase.kind)).map((phase, index) => <span key={`${phase.kind}-${index}`}>{phase.kind === 'review' ? <FaRedoAlt /> : phase.kind === 'speak' ? <FaComments /> : <FaVolumeUp />}<small>{phase.kind === 'review' ? tr(lang, 'Повторить', 'Wiederholen', 'Review') : phase.kind === 'speak' ? tr(lang, 'Сказать', 'Sprechen', 'Speak') : tr(lang, 'Освоить', 'Lernen', 'Learn')}</small></span>)}
+        </div>}
         <button type="button" className="rc-primary" onClick={startLesson}><span><FaPlay /> {selectedLesson?.id ? (learning?.due_count ? tr(lang, 'Начать с повторения', 'Mit Wiederholung starten', 'Start with review') : tr(lang, 'Начать', 'Starten', 'Start')) : tr(lang, 'Открыть план', 'Plan öffnen', 'Open plan')}</span><FaArrowRight /></button>
       </section>
 
-      <section className="rc-today-secondary" aria-label={tr(lang, 'После урока', 'Nach der Lektion', 'After the lesson')}>
-        <div><FaRedoAlt /><span><strong>{learning?.due_count || 0}</strong><small>{tr(lang, 'на повторение', 'zu wiederholen', 'due for review')}</small></span></div>
+      <section className={`rc-today-secondary${learning?.due_count ? ' has-review' : ''}`} aria-label={tr(lang, 'После урока', 'Nach der Lektion', 'After the lesson')}>
+        <div>{learning?.due_count ? <FaRedoAlt /> : <FaCheck />}<span><strong>{learning?.due_count ? learning.due_count : tr(lang, 'На сегодня всё готово', 'Für heute ist alles bereit', 'Everything is ready for today')}</strong><small>{learning?.due_count ? tr(lang, 'коротких повторений перед уроком', 'kurze Wiederholungen vor der Lektion', 'short reviews before the lesson') : tr(lang, 'один понятный следующий шаг', 'ein klarer nächster Schritt', 'one clear next step')}</small></span></div>
         <button type="button" onClick={() => navigate(withUser('/analytics'))}>{tr(lang, 'Посмотреть прогресс', 'Fortschritt ansehen', 'View progress')} <FaArrowRight /></button>
       </section>
     </main>
