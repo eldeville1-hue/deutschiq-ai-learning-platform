@@ -163,7 +163,7 @@ class ContentQualityTests(unittest.TestCase):
                 content = build_foundation_content(row, level)
                 self.assertEqual([], validate_roadmap_content(content), f"{level} day {row[0]}")
                 self.assertEqual(level, content["track"])
-                self.assertEqual(5, content["quality_version"])
+                self.assertGreaterEqual(content["quality_version"], 5)
                 self.assertEqual(5, len(content["exercises"]))
                 guided_types.add(content["exercises"][0]["type"])
                 self.assertEqual({"context_choice", "listening_choice", "dialogue", "repeat"}, {item["type"] for item in content["exercises"][1:]})
@@ -176,6 +176,34 @@ class ContentQualityTests(unittest.TestCase):
                     self.assertTrue(localized["scenario"])
                     self.assertTrue(all("i18n" not in item for item in localized["exercises"]))
         self.assertEqual({"error_repair", "reorder", "transform"}, guided_types)
+
+    def test_a1_first_conversation_is_a_connected_five_lesson_module(self):
+        lessons = [build_foundation_content(row, "A1") for row in A1_CURRICULUM[:5]]
+
+        self.assertEqual([1, 2, 3, 4, 5], [item["module_step"] for item in lessons])
+        self.assertTrue(all(item["module_size"] == 5 for item in lessons))
+        self.assertTrue(all(item["quality_version"] == 6 for item in lessons))
+        self.assertTrue(all(item["module_title"] == "Первый разговор" for item in lessons))
+        self.assertTrue(all(item.get("can_do") for item in lessons))
+        self.assertFalse(any(item.get("checkpoint") for item in lessons[:-1]))
+        self.assertTrue(lessons[-1]["checkpoint"])
+        self.assertEqual([], lessons[0]["prerequisites"])
+        self.assertEqual(["greetings"], lessons[1]["prerequisites"])
+
+        for content in lessons:
+            self.assertEqual([], validate_roadmap_content(content))
+            self.assertEqual(
+                ["reorder", "context_choice", "listening_choice", "dialogue", "repeat"],
+                [exercise["type"] for exercise in content["exercises"]],
+            )
+            self.assertEqual(5, len({exercise["id"] for exercise in content["exercises"]}))
+            self.assertTrue(all(exercise.get("accessibility_label") for exercise in content["exercises"]))
+            for language in ("ru", "de", "en"):
+                localized = localize_lesson_content(content, language)
+                self.assertTrue(localized["module_title"])
+                self.assertTrue(localized["can_do"])
+                self.assertTrue(localized["communication_goal"])
+                self.assertTrue(all(exercise.get("accessibility_label") for exercise in localized["exercises"]))
 
     def test_quality_v4_rejects_repetitive_or_unmapped_practice(self):
         content = {

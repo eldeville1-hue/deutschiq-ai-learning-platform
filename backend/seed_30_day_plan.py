@@ -208,6 +208,7 @@ def seed():
             for row in curriculum:
                 day, _module, topic, pillar, *_copy = row
                 content = build_foundation_content(row, level)
+                estimated_time = 7 if level == "A1" and day <= 5 else (14 if level == "A1" else 16)
                 existing = next((item for item in existing_lessons if isinstance(item.content, dict) and item.content.get("track") == level and item.content.get("day") == day), None)
                 if existing:
                     existing.topic = topic
@@ -215,11 +216,11 @@ def seed():
                     existing.pillar = pillar
                     existing.weak_point_tags = [topic]
                     existing.content = content
-                    existing.estimated_time = 14 if level == "A1" else 16
+                    existing.estimated_time = estimated_time
                     existing.xp_reward = 50 if level == "A1" else 60
                     existing.is_active = True
                 else:
-                    db.add(Lesson(level=level, pillar=pillar, topic=topic, weak_point_tags=[topic], content=content, xp_reward=50 if level == "A1" else 60, estimated_time=14 if level == "A1" else 16, is_active=True))
+                    db.add(Lesson(level=level, pillar=pillar, topic=topic, weak_point_tags=[topic], content=content, xp_reward=50 if level == "A1" else 60, estimated_time=estimated_time, is_active=True))
         for row in B2_CURRICULUM:
             day, _module, topic, pillar, *_copy = row
             content = build_b2_content(row)

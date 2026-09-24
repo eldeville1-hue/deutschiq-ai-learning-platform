@@ -208,6 +208,10 @@ export const Lesson: React.FC = () => {
           />
         </div>
       </header>
+      {content.module_title && step < total && <div className="lesson-module-strip">
+        <div><small>{tr(lang, "МОДУЛЬ", "MODUL", "MODULE")}</small><strong>{content.module_title}</strong></div>
+        <span>{content.module_step}/{content.module_size}</span>
+      </div>}
       {step === 0 && <div className={`lesson-coach-mode ${learningProfile.mode}`}>
         <span>{tr(lang, "РЕЖИМ УРОКА", "LEKTIONSMODUS", "LESSON MODE")}</span>
         <strong>{learningProfile.mode === 'supported'
@@ -224,10 +228,13 @@ export const Lesson: React.FC = () => {
             {content.cefr || lesson.level}
           </p>
           <h1>{cleanTitle(topicLabel(content.title || lesson.topic, lang))}</h1>
-          <div className="lesson-objective">{content.objective}</div>
+          <div className="lesson-can-do"><small>{tr(lang, "ПОСЛЕ УРОКА", "NACH DER LEKTION", "AFTER THIS LESSON")}</small><strong>{content.can_do || content.objective}</strong></div>
           {content.scenario && <div className="lesson-scenario"><small>{tr(lang, 'СИТУАЦИЯ', 'SITUATION', 'SCENARIO')}</small><span>{content.scenario}</span></div>}
           {content.assessment_rubric?.length > 0 && <div className="lesson-rubric"><small>{tr(lang, 'КРИТЕРИИ ОТВЕТА', 'ANTWORTKRITERIEN', 'RESPONSE CRITERIA')}</small><ul>{content.assessment_rubric.map((criterion: string) => <li key={criterion}>{criterion}</li>)}</ul></div>}
           <div className="rule-card">{content.rule}</div>
+          {content.module_size === 5 && <div className="lesson-practice-path" aria-label={tr(lang, 'Путь урока', 'Lektionsweg', 'Lesson path')}>
+            {[tr(lang, 'Понять', 'Verstehen', 'Understand'), tr(lang, 'Выбрать', 'Wählen', 'Choose'), tr(lang, 'Собрать', 'Bauen', 'Build'), tr(lang, 'Сказать', 'Sprechen', 'Speak')].map((label, index) => <span key={label}><i>{index + 1}</i>{label}</span>)}
+          </div>}
           <button className="primary-action" onClick={next}>
             {tr(lang, "Показать пример", "Beispiel zeigen", "Show example")}{" "}
             <FaArrowRight />
@@ -373,6 +380,7 @@ export const Lesson: React.FC = () => {
             </span>
           </div>
           {outcome && <div className="lesson-result-next"><small>{tr(lang, 'ДАЛЬШЕ', 'ALS NÄCHSTES', 'NEXT')}</small><strong>{outcome.needs_review > 0 ? tr(lang, 'Закрепим ошибку в повторении', 'Den Fehler in der Wiederholung festigen', 'Review the point that needs practice') : tr(lang, 'Продолжить твой маршрут', 'Deinen Lernweg fortsetzen', 'Continue your learning path')}</strong></div>}
+          {content.checkpoint && outcome?.passed !== false && <div className="module-checkpoint-complete"><small>{tr(lang, 'МОДУЛЬ ЗАВЕРШЁН', 'MODUL ABGESCHLOSSEN', 'MODULE COMPLETE')}</small><strong>{content.module_title}</strong><span>{tr(lang, 'Теперь ты можешь провести короткий первый разговор.', 'Du kannst jetzt ein kurzes erstes Gespräch führen.', 'You can now have a short first conversation.')}</span></div>}
           {outcome?.unlocked_level && <div className="level-unlocked"><small>{tr(lang, 'НОВЫЙ УРОВЕНЬ', 'NEUES NIVEAU', 'NEW LEVEL')}</small><strong>{outcome.unlocked_level}</strong><span>{tr(lang, 'Твой следующий маршрут открыт.', 'Dein nächster Lernweg ist jetzt offen.', 'Your next learning path is now open.')}</span></div>}
           {outcome && !milestoneSent && <details className="beta-milestone compact"><summary>{tr(lang,'Оценить урок','Lektion bewerten','Rate lesson')}</summary><div><button onClick={()=>sendMilestone('hard')}>{tr(lang,'Сложно','Schwer','Hard')}</button><button onClick={()=>sendMilestone('good')}>{tr(lang,'Хорошо','Gut','Good')}</button><button onClick={()=>sendMilestone('easy')}>{tr(lang,'Легко','Leicht','Easy')}</button></div></details>}
           <button className="primary-action" onClick={finish}>

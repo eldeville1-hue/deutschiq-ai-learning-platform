@@ -81,16 +81,18 @@ def localize_lesson_content(content: dict, language: str) -> dict:
             "title": localized.get("title", value.get("title")),
             "rule": localized.get("rule", value.get("rule")),
             "objective": objective,
-            "communication_goal": objective,
+            "communication_goal": localized.get("communication_goal", objective),
             "scenario": localized.get("scenario", value.get("scenario")),
             "assessment_rubric": localized.get("assessment_rubric", value.get("assessment_rubric")),
+            "module_title": localized.get("module_title", value.get("module_title")),
+            "can_do": localized.get("can_do", value.get("can_do", objective)),
         })
         recall = {
             "ru": "Закрой пример, назови правило и создай новую фразу.",
             "de": "Schließe das Beispiel, nenne die Regel und bilde einen neuen Satz.",
             "en": "Close the example, state the rule, and create a new sentence.",
         }
-        value["recall_prompt"] = recall[lang]
+        value["recall_prompt"] = localized.get("recall_prompt", recall[lang])
         for exercise in value.get("exercises") or []:
             exercise.update((exercise.get("i18n") or {}).get(lang, {}))
             exercise.pop("i18n", None)
