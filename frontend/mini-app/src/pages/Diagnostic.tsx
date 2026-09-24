@@ -1,6 +1,6 @@
 // frontend/mini-app/src/pages/Diagnostic.tsx
 import React, { useState, useEffect } from 'react';
-import { FaVolumeUp } from 'react-icons/fa';
+import { FaBrain, FaComments, FaHeadphones, FaLanguage, FaVolumeUp } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { getText } from '../i18n/translations';
@@ -106,12 +106,18 @@ export const Diagnostic: React.FC = () => {
 
   const q = questions[current];
   const progress = ((current + 1) / questions.length) * 100;
+  const pillar = ({
+    grammar: { icon: <FaLanguage />, label: tr(lang, 'Грамматика', 'Grammatik', 'Grammar') },
+    vocabulary: { icon: <FaBrain />, label: tr(lang, 'Словарь', 'Wortschatz', 'Vocabulary') },
+    listening: { icon: <FaHeadphones />, label: tr(lang, 'Аудирование', 'Hörverstehen', 'Listening') },
+    speaking: { icon: <FaComments />, label: tr(lang, 'Использование языка', 'Sprachgebrauch', 'Language use') },
+  } as Record<string, { icon: React.ReactNode; label: string }>)[q.pillar] || { icon: <FaBrain />, label: tr(lang, 'Немецкий язык', 'Deutsch', 'German') };
 
   return (
     <main className="diagnostic-shell diagnostic-page precision-diagnostic page-enter">
       <header className="diagnostic-header">
       <span className="diagnostic-index">{String(current + 1).padStart(2, '0')}</span>
-      <div><h2>{t.diagnostic.title}</h2><p>
+      <div><small>{tr(lang, 'АДАПТИВНАЯ ДИАГНОСТИКА', 'ADAPTIVE EINSTUFUNG', 'ADAPTIVE PLACEMENT')}</small><h2>{t.diagnostic.title}</h2><p>
         {t.diagnostic.question.replace('{current}', String(current + 1)).replace('{total}', String(questions.length))}
       </p></div></header>
       <div className="progress-bar diagnostic-progress">
@@ -119,7 +125,7 @@ export const Diagnostic: React.FC = () => {
       </div>
 
       <section className="diagnostic-question" key={q.id}>
-        <span className="difficulty-pill">{q.difficulty}</span>
+        <div className="diagnostic-skill"><span>{pillar.icon}{pillar.label}</span><small>{tr(lang, 'Сложность меняется по твоим ответам', 'Die Schwierigkeit passt sich deinen Antworten an', 'Difficulty adapts to your answers')}</small></div>
         <h1>{q.text}</h1>
         {q.pillar === 'listening' && <button type="button" className="diagnostic-listen" onClick={playListeningPrompt}><FaVolumeUp />{tr(lang, 'Прослушать ещё раз', 'Noch einmal anhören', 'Listen again')}</button>}
         <div className="diagnostic-options">
@@ -145,11 +151,6 @@ export const Diagnostic: React.FC = () => {
 
       {submitError && <p className="diagnostic-error">{submitError}</p>}
 
-      {current === questions.length - 1 && (
-        <button onClick={() => submitTest(answers)} disabled={submitting} className="primary-action diagnostic-finish">
-          {submitting ? tr(lang, 'Анализируем…', 'Wird ausgewertet…', 'Analysing…') : t.diagnostic.finish}
-        </button>
-      )}
     </main>
   );
 };

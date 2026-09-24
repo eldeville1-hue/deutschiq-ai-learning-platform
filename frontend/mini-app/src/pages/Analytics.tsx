@@ -42,6 +42,13 @@ export const Analytics: React.FC = () => {
   useEffect(() => { void load(); }, [load]);
 
   const progress = Math.max(0, Math.min(100, Math.round(data?.targetProgress || 0)));
+  const progressBand = progress < 25
+    ? tr(lang, 'Начало уровня', 'Niveaustart', 'Starting this level')
+    : progress < 60
+      ? tr(lang, 'Навык формируется', 'Fähigkeit wächst', 'Building the skill')
+      : progress < 85
+        ? tr(lang, 'Уверенный прогресс', 'Sicherer Fortschritt', 'Strong progress')
+        : tr(lang, 'Почти готово к проверке', 'Fast bereit für den Check', 'Nearly ready for assessment');
   const stats: Skill[] = useMemo(() => (data?.stats || []).map((item: any) => ({
     key: skillKey(String(item.label)),
     score: Math.max(0, Math.min(100, Math.round(Number(item.value || 0) * (Number(item.value || 0) <= 10 ? 10 : 1)))),
@@ -76,9 +83,9 @@ export const Analytics: React.FC = () => {
 
       <section className="rc-analysis-overview" aria-label={tr(lang, 'Общий прогресс', 'Gesamtfortschritt', 'Overall progress')}>
         <div className="rc-level-block"><small>{tr(lang, 'СЕЙЧАС', 'JETZT', 'CURRENT')}</small><strong>{data?.level || 'A1'}</strong><span>{tr(lang, `цель ${data?.targetLevel || 'A2'}`, `Ziel ${data?.targetLevel || 'A2'}`, `goal ${data?.targetLevel || 'A2'}`)}</span></div>
-        <div className="rc-score-ring" style={{ '--score': `${progress * 3.6}deg` } as React.CSSProperties}><span><strong>{progress}</strong>%</span></div>
+        <div className="rc-score-ring" style={{ '--score': `${progress * 3.6}deg` } as React.CSSProperties}><span><strong>{data?.level || 'A1'}</strong><small>{progressBand}</small></span></div>
         <div className="rc-journey"><span>{data?.level || 'A1'}</span><div><i style={{ width: `${progress}%` }} /></div><span>{data?.targetLevel || 'A2'}</span></div>
-        <p>{tr(lang, 'Оценка обновляется после заданий.', 'Die Bewertung aktualisiert sich nach Aufgaben.', 'Your score updates after completed exercises.')}</p>
+        <p>{tr(lang, 'Это направление прогресса, а не экзаменационная оценка. Оно уточняется после новых заданий.', 'Das ist eine Lernrichtung, keine Prüfungsnote. Sie wird nach neuen Aufgaben genauer.', 'This is a learning direction, not an exam score. It becomes clearer after new tasks.')}</p>
       </section>
 
       <button type="button" className="rc-next-action" onClick={() => navigate(withUser('/plan'))}>

@@ -58,6 +58,7 @@
   color: var(--diag-muted);
   font-size: .78rem;
 }
+.diagnostic-header small{display:block;margin-bottom:4px;color:var(--diag-gold);font-size:.58rem;font-weight:850;letter-spacing:.13em}
 
 .diagnostic-progress {
   height: 5px;
@@ -95,6 +96,7 @@
   letter-spacing: .08em;
   text-transform: uppercase;
 }
+.diagnostic-skill{display:grid;gap:6px;padding-bottom:15px;border-bottom:1px solid var(--diag-line)}.diagnostic-skill>span{display:flex;align-items:center;gap:8px;color:var(--diag-gold);font-size:.76rem;font-weight:800}.diagnostic-skill svg{font-size:.9rem}.diagnostic-skill small{color:var(--diag-muted);font-size:.7rem;line-height:1.35}
 
 .diagnostic-question h1 {
   margin: 17px 0 24px;
