@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { FaArrowRight, FaBrain, FaExclamationCircle, FaFire, FaPlay, FaRedoAlt } from 'react-icons/fa';
+import { FaArrowRight, FaBrain, FaFire, FaPlay, FaRedoAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
@@ -43,14 +43,6 @@ export const Dashboard: React.FC = () => {
   if (!data) return <main className="app-shell rc-page"><div className="skeleton rc-hero-skeleton" /></main>;
   const selectedLesson = learning?.next_lesson || lesson;
   const topic = selectedLesson?.topic || data.weaknesses?.[0]?.name || 'haben_conjugation';
-  const weak = data.weaknesses?.[0];
-  const assessment = learning?.assessment;
-  const weakestDimension = assessment?.weakest_dimension;
-  const dimensionLabel = (key: string) => ({
-    task_completion: tr(lang, 'Выполнение задачи', 'Aufgabenerfüllung', 'Task completion'),
-    grammar: tr(lang, 'Грамматика', 'Grammatik', 'Grammar'), vocabulary: tr(lang, 'Лексика', 'Wortschatz', 'Vocabulary'),
-    coherence: tr(lang, 'Связность', 'Kohärenz', 'Coherence'), register: tr(lang, 'Регистр', 'Register', 'Register'),
-  } as Record<string, string>)[key] || key;
   const hour = new Date().getHours();
   const greeting = hour < 12
     ? tr(lang, 'Доброе утро', 'Guten Morgen', 'Good morning')
@@ -66,7 +58,7 @@ export const Dashboard: React.FC = () => {
   };
 
   return (
-    <main className="app-shell rc-page rc-home page-enter">
+    <main className={`app-shell rc-page rc-home page-enter level-${String(data.level || 'a1').toLowerCase()}`}>
       <header className="rc-home-bar">
         <div className="rc-identity"><BrandMark label="DeutschIQ" /><div><small>{greeting}</small><strong>DeutschIQ</strong></div></div>
         <div className="rc-home-stats"><span><b>{data.level || 'A1'}</b><small>{data.xp || 0} XP</small></span><span><FaFire /><b>{data.streak || 0}</b></span></div>
@@ -88,21 +80,9 @@ export const Dashboard: React.FC = () => {
         <button type="button" className="rc-primary" onClick={startLesson}><span><FaPlay /> {selectedLesson?.id ? (learning?.due_count ? tr(lang, 'Начать с повторения', 'Mit Wiederholung starten', 'Start with review') : tr(lang, 'Начать', 'Starten', 'Start')) : tr(lang, 'Открыть план', 'Plan öffnen', 'Open plan')}</span><FaArrowRight /></button>
       </section>
 
-      {weakestDimension && <section className="assessment-focus"><div><small>{tr(lang, 'ЧТО УЛУЧШИТЬ', 'NÄCHSTER FOKUS', 'WHAT TO IMPROVE')}</small><strong>{dimensionLabel(weakestDimension)}</strong><span>{tr(lang, 'По твоим письменным и устным ответам', 'Aus deinen Schreib- und Sprechaufgaben', 'From your written and spoken answers')}</span></div><b>{assessment.weakest_score}%</b><button type="button" onClick={() => navigate(withUser('/review'))}>{tr(lang, 'Короткая практика', 'Kurz üben', 'Quick practice')} <FaArrowRight /></button></section>}
-
-      {learning?.session?.phases?.length > 0 && <section className="daily-session"><header><span>{tr(lang,'СЕГОДНЯШНЯЯ СЕССИЯ','HEUTIGE SESSION','TODAY’S SESSION')}</span><b>{learning.session.minutes} {tr(lang,'мин','Min.','min')}</b></header><div>{learning.session.phases.map((phase:any,index:number)=><span key={`${phase.kind}-${index}`}><small>0{index+1}</small><strong>{phase.kind==='review'?tr(lang,'Повторение','Wiederholen','Review'):phase.kind==='repair'?(phase.dimension?dimensionLabel(phase.dimension):tr(lang,'Слабое место','Schwachstelle','Weak skill')):phase.kind==='speak'?tr(lang,'Говорение','Sprechen','Speaking'):tr(lang,'Новый урок','Neue Lektion','New lesson')}</strong><em>{phase.minutes} {tr(lang,'мин','Min.','min')}</em></span>)}</div></section>}
-
-      <section className="rc-home-actions" aria-label={tr(lang, 'Дополнительные действия', 'Weitere Aktionen', 'More actions')}>
-        <button type="button" onClick={() => navigate(withUser('/review'))}>
-          <span className="rc-action-icon"><FaRedoAlt /></span>
-          <span><small>{tr(lang, 'ПОВТОРИТЬ', 'WIEDERHOLEN', 'REVIEW')}</small><strong>{learning?.due_count ? `${learning.due_count} ${tr(lang, 'темы', 'Themen', 'topics')}` : tr(lang, 'Всё готово', 'Alles erledigt', 'All done')}</strong></span>
-          <FaArrowRight />
-        </button>
-        <button type="button" onClick={() => navigate(withUser('/mistakes'))} disabled={!weak}>
-          <span className="rc-action-icon danger"><FaExclamationCircle /></span>
-          <span><small>{tr(lang, 'ОШИБКИ', 'FEHLER', 'MISTAKES')}</small><strong>{weak ? topicLabel(String(weak.name), lang) : tr(lang, 'Ошибок нет', 'Keine Fehler', 'No mistakes')}</strong></span>
-          <FaArrowRight />
-        </button>
+      <section className="rc-today-secondary" aria-label={tr(lang, 'После урока', 'Nach der Lektion', 'After the lesson')}>
+        <div><FaRedoAlt /><span><strong>{learning?.due_count || 0}</strong><small>{tr(lang, 'на повторение', 'zu wiederholen', 'due for review')}</small></span></div>
+        <button type="button" onClick={() => navigate(withUser('/analytics'))}>{tr(lang, 'Посмотреть прогресс', 'Fortschritt ansehen', 'View progress')} <FaArrowRight /></button>
       </section>
     </main>
   );

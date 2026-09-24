@@ -64,7 +64,7 @@ export const Plan: React.FC = () => {
   if (!dashboard) return <main className="app-shell rc-page"><div className="skeleton rc-hero-skeleton" /></main>;
 
   return (
-    <main className="app-shell rc-page rc-plan page-enter">
+    <main className={`app-shell rc-page rc-plan page-enter level-${String(track).toLowerCase()}`}>
       <header className="rc-page-title">
         <p>{tr(lang, 'ПЛАН', 'PLAN', 'PLAN')}</p>
         <h1>{dashboard.level || 'A1'} <span>→</span> {dashboard.targetLevel || 'A2'}</h1>

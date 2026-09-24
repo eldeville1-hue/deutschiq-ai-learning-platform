@@ -135,7 +135,7 @@ for (const [language, heading] of [['ru', 'Твой урок'], ['de', 'Deine Le
     await page.goto('/dashboard');
     await expect(page.getByRole('heading', { name: heading })).toBeVisible();
     await expect(page.locator('html')).toHaveAttribute('lang', language);
-    await expect(page.getByText(/WHAT TO IMPROVE|ЧТО УЛУЧШИТЬ|NÄCHSTER FOKUS/)).toBeVisible();
+    await expect(page.getByText(/View progress|Посмотреть прогресс|Fortschritt ansehen/)).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
 }

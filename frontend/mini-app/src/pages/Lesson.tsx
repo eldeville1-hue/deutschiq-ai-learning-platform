@@ -196,7 +196,7 @@ export const Lesson: React.FC = () => {
     setSpeechResult(result);
   };
   return (
-    <main className="lesson-flow precision-lesson rc-lesson fade-up">
+    <main className={`lesson-flow precision-lesson rc-lesson fade-up level-${String(lesson.level || 'a1').toLowerCase()}`}>
       <header>
         <span>
           {Math.min(step + 1, total)} {tr(lang, "из", "von", "of")} {total}
@@ -372,20 +372,9 @@ export const Lesson: React.FC = () => {
               <b>+{outcome?.xp_gained || 0} XP</b>
             </span>
           </div>
-          {outcome && (
-            <div className="session-summary">
-              <span><b>{outcome.first_try_correct || 0}</b>{tr(lang, 'С первой попытки', 'Sofort richtig', 'Correct first try')}</span>
-              <span><b>{outcome.corrected_retries || 0}</b>{tr(lang, 'Исправлено', 'Verbessert', 'Corrected')}</span>
-              <span><b>{outcome.needs_review || 0}</b>{tr(lang, 'На повтор', 'Zum Wiederholen', 'To review')}</span>
-            </div>
-          )}
+          {outcome && <div className="lesson-result-next"><small>{tr(lang, 'ДАЛЬШЕ', 'ALS NÄCHSTES', 'NEXT')}</small><strong>{outcome.needs_review > 0 ? tr(lang, 'Закрепим ошибку в повторении', 'Den Fehler in der Wiederholung festigen', 'Review the point that needs practice') : tr(lang, 'Продолжить твой маршрут', 'Deinen Lernweg fortsetzen', 'Continue your learning path')}</strong></div>}
           {outcome?.unlocked_level && <div className="level-unlocked"><small>{tr(lang, 'НОВЫЙ УРОВЕНЬ', 'NEUES NIVEAU', 'NEW LEVEL')}</small><strong>{outcome.unlocked_level}</strong><span>{tr(lang, 'Твой следующий маршрут открыт.', 'Dein nächster Lernweg ist jetzt offen.', 'Your next learning path is now open.')}</span></div>}
-          {outcome && !milestoneSent && <div className="beta-milestone"><small>{tr(lang,'БЫСТРЫЙ ОТЗЫВ','KURZES FEEDBACK','QUICK FEEDBACK')}</small><strong>{tr(lang,'Как прошёл первый урок?','Wie war deine erste Lektion?','How was your first lesson?')}</strong><div><button onClick={()=>sendMilestone('hard')}>{tr(lang,'Сложно','Schwer','Hard')}</button><button onClick={()=>sendMilestone('good')}>{tr(lang,'Хорошо','Gut','Good')}</button><button onClick={()=>sendMilestone('easy')}>{tr(lang,'Легко','Leicht','Easy')}</button></div></div>}
-          <p>
-            {outcome?.passed === false
-              ? tr(lang, "Урок не завершён: повтори задания и набери 70%.", "Die Lektion bleibt offen. Wiederhole sie und erreiche 70%.", "The lesson remains open. Repeat it and reach 70%.")
-              : tr(lang, "Результат рассчитан по твоим реальным ответам.", "Das Ergebnis basiert auf deinen echten Antworten.", "Your result is based on your actual answers.")}
-          </p>
+          {outcome && !milestoneSent && <details className="beta-milestone compact"><summary>{tr(lang,'Оценить урок','Lektion bewerten','Rate lesson')}</summary><div><button onClick={()=>sendMilestone('hard')}>{tr(lang,'Сложно','Schwer','Hard')}</button><button onClick={()=>sendMilestone('good')}>{tr(lang,'Хорошо','Gut','Good')}</button><button onClick={()=>sendMilestone('easy')}>{tr(lang,'Легко','Leicht','Easy')}</button></div></details>}
           <button className="primary-action" onClick={finish}>
             {outcome?.passed === false
               ? tr(lang, "Повторить урок", "Lektion wiederholen", "Repeat lesson")
