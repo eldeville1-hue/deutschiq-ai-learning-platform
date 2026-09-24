@@ -189,6 +189,10 @@ class ContentQualityTests(unittest.TestCase):
         self.assertTrue(lessons[-1]["checkpoint"])
         self.assertEqual([], lessons[0]["prerequisites"])
         self.assertEqual(["greetings"], lessons[1]["prerequisites"])
+        checkpoint_exercise = lessons[-1]["exercises"][3]
+        self.assertEqual(3, len(checkpoint_exercise["conversation_turns"]))
+        self.assertEqual(["heiße", "woher", "wo"], checkpoint_exercise["target_patterns"])
+        self.assertIn("Woher kommst du?", checkpoint_exercise["model_answer"])
 
         for content in lessons:
             self.assertEqual([], validate_roadmap_content(content))
@@ -204,6 +208,8 @@ class ContentQualityTests(unittest.TestCase):
                 self.assertTrue(localized["can_do"])
                 self.assertTrue(localized["communication_goal"])
                 self.assertTrue(all(exercise.get("accessibility_label") for exercise in localized["exercises"]))
+                if content.get("checkpoint"):
+                    self.assertEqual(3, len(localized["exercises"][3]["conversation_turns"]))
 
     def test_quality_v4_rejects_repetitive_or_unmapped_practice(self):
         content = {

@@ -212,10 +212,23 @@ def build_foundation_content(row: tuple, level: str) -> dict:
                 {"question":"Listen. What is the speaker doing?","answer":listen_en,"accepted_answers":[listen_en],"options":list(options_en),"accessibility_label":"Listen and choose the meaning"},
             ),
             _localized(
-                {"id":f"a1-{day}-use","type":"dialogue","stage":"transfer","question":task_ru,"answer":model,"model_answer":model,"accepted_answers":[model,model.rstrip(".?!")],"target_patterns":starter["patterns"],"hint":rule_ru,"explanation":"Смысл должен подходить ситуации. Личные данные могут отличаться.","misconception":"a1_first_conversation_transfer","accessibility_label":"Дай свой ответ по-немецки"},
+                {"id":f"a1-{day}-use","type":"dialogue","stage":"transfer","question":task_ru,"answer":("Hallo! Ich heiße Alex.\nWoher kommst du?\nWo wohnst du?" if starter.get("checkpoint") else model),"model_answer":("Hallo! Ich heiße Alex.\nWoher kommst du?\nWo wohnst du?" if starter.get("checkpoint") else model),"accepted_answers":[model,model.rstrip(".?!")],"target_patterns":(["heiße","woher","wo"] if starter.get("checkpoint") else starter["patterns"]),"hint":rule_ru,"explanation":"Смысл должен подходить ситуации. Личные данные могут отличаться.","misconception":"a1_first_conversation_transfer","accessibility_label":"Дай свой ответ по-немецки",
+                 **({"conversation_turns":[
+                    {"partner":"Guten Morgen! Ich heiße Lena. Wie heißt du?","goal":"Поздоровайся и назови своё имя.","placeholder":"Hallo! Ich heiße …","model":"Hallo! Ich heiße Alex."},
+                    {"partner":"Freut mich! Frag mich, woher ich komme.","goal":"Задай вопрос с Woher.","placeholder":"Woher …?","model":"Woher kommst du?"},
+                    {"partner":"Ich komme aus Köln. Frag mich jetzt, wo ich wohne.","goal":"Задай вопрос с Wo.","placeholder":"Wo …?","model":"Wo wohnst du?"},
+                 ]} if starter.get("checkpoint") else {})},
                 {"question":task_ru,"hint":rule_ru,"explanation":"Смысл должен подходить ситуации. Личные данные могут отличаться.","accessibility_label":"Дай свой ответ по-немецки"},
-                {"question":task_de,"hint":rule_de,"explanation":"Die Antwort muss zur Situation passen. Persönliche Angaben dürfen anders sein.","accessibility_label":"Eigene Antwort auf Deutsch geben"},
-                {"question":task_en,"hint":rule_en,"explanation":"The answer must fit the situation. Personal details may be different.","accessibility_label":"Give your own answer in German"},
+                {"question":task_de,"hint":rule_de,"explanation":"Die Antwort muss zur Situation passen. Persönliche Angaben dürfen anders sein.","accessibility_label":"Eigene Antwort auf Deutsch geben",**({"conversation_turns":[
+                    {"partner":"Guten Morgen! Ich heiße Lena. Wie heißt du?","goal":"Begrüße die Person und sage deinen Namen.","placeholder":"Hallo! Ich heiße …","model":"Hallo! Ich heiße Alex."},
+                    {"partner":"Freut mich! Frag mich, woher ich komme.","goal":"Stelle eine Frage mit Woher.","placeholder":"Woher …?","model":"Woher kommst du?"},
+                    {"partner":"Ich komme aus Köln. Frag mich jetzt, wo ich wohne.","goal":"Stelle eine Frage mit Wo.","placeholder":"Wo …?","model":"Wo wohnst du?"},
+                 ]} if starter.get("checkpoint") else {})},
+                {"question":task_en,"hint":rule_en,"explanation":"The answer must fit the situation. Personal details may be different.","accessibility_label":"Give your own answer in German",**({"conversation_turns":[
+                    {"partner":"Guten Morgen! Ich heiße Lena. Wie heißt du?","goal":"Greet the person and say your name.","placeholder":"Hallo! Ich heiße …","model":"Hallo! Ich heiße Alex."},
+                    {"partner":"Freut mich! Frag mich, woher ich komme.","goal":"Ask a question with Woher.","placeholder":"Woher …?","model":"Woher kommst du?"},
+                    {"partner":"Ich komme aus Köln. Frag mich jetzt, wo ich wohne.","goal":"Ask a question with Wo.","placeholder":"Wo …?","model":"Wo wohnst du?"},
+                 ]} if starter.get("checkpoint") else {})},
             ),
             _localized(
                 {"id":f"a1-{day}-speak","type":"repeat","stage":"transfer","question":"Скажи фразу вслух.","answer":starter["alternate"],"accepted_answers":[starter["alternate"],starter["alternate"].rstrip(".?!")],"audio_text":starter["alternate"],"explanation":"Говори спокойно. Важно, чтобы ключевые слова были понятны.","misconception":"a1_first_conversation_fluency","accessibility_label":"Повтори немецкую фразу"},

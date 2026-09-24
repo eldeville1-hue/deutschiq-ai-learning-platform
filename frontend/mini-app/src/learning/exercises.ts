@@ -20,6 +20,12 @@ export type LearningExercise = {
   hint?: string;
   model_answer?: string;
   audio_text?: string;
+  conversation_turns?: Array<{
+    partner: string;
+    goal: string;
+    placeholder?: string;
+    model?: string;
+  }>;
 };
 
 export const exerciseKind = (exercise: LearningExercise): ExerciseKind => {

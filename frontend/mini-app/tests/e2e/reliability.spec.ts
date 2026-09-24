@@ -181,6 +181,45 @@ test('practical reorder exercise is usable without mobile overflow', async ({ pa
   await expectNoHorizontalOverflow(page);
 });
 
+test('A1 checkpoint becomes a complete three-turn phone conversation', async ({ page }) => {
+  let submittedAnswer = '';
+  await mockApi(page, { completed: true });
+  await page.route('**/api/lesson/77', route => route.fulfill({ json: {
+    ...lesson,
+    level: 'A1',
+    content: {
+      ...lesson.content,
+      title: 'Keep the conversation going',
+      examples: ['Wo wohnst du?'],
+      exercises: [{
+        id: 'first-conversation', type: 'dialogue', stage: 'transfer',
+        question: 'Have a short first conversation.', answer: 'Hallo! Ich heiße Alex.\nWoher kommst du?\nWo wohnst du?',
+        conversation_turns: [
+          { partner: 'Guten Morgen! Ich heiße Lena. Wie heißt du?', goal: 'Greet the person and say your name.', placeholder: 'Hallo! Ich heiße …' },
+          { partner: 'Freut mich! Frag mich, woher ich komme.', goal: 'Ask a question with Woher.', placeholder: 'Woher …?' },
+          { partner: 'Ich komme aus Köln. Frag mich jetzt, wo ich wohne.', goal: 'Ask a question with Wo.', placeholder: 'Wo …?' },
+        ],
+      }],
+    },
+  }}));
+  await page.route('**/api/lesson/check-answer', async route => {
+    submittedAnswer = route.request().postDataJSON().answer;
+    return route.fulfill({ json: { correct: true, explanation: 'Conversation completed.', correct_answer: submittedAnswer } });
+  });
+  await page.goto('/lesson/77');
+  await page.getByRole('button', { name: /Show example/i }).click();
+  await page.getByRole('button', { name: /Start practice/i }).click();
+  for (const reply of ['Hallo! Ich heiße Alex.', 'Woher kommst du?', 'Wo wohnst du?']) {
+    await page.getByPlaceholder(/Hallo!|Woher|Wo …/).fill(reply);
+    await page.getByRole('button', { name: /Send reply|Finish dialogue/i }).click();
+  }
+  await expect(page.getByText('Dialogue ready to check')).toBeVisible();
+  await page.getByRole('button', { name: /^Check$/i }).click();
+  await expect.poll(() => submittedAnswer).toContain('Woher kommst du?');
+  expect(submittedAnswer.split('\n')).toHaveLength(3);
+  await expectNoHorizontalOverflow(page);
+});
+
 test('stale dashboard cache survives a bounded network failure without reload loops', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('deutschiq-dashboard-9001', JSON.stringify({ savedAt: Date.now() - 60_000, value: { level: 'B1', targetLevel: 'B2', xp: 321, streak: 4, weaknesses: [] } })));
   let dashboardRequests = 0;

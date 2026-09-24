@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { FaCheck, FaMicrophone, FaTimes, FaUndo } from 'react-icons/fa';
+import { FaArrowRight, FaCheck, FaMicrophone, FaRedo, FaTimes, FaUndo } from 'react-icons/fa';
 import type { AppLanguage } from '../../i18n/language';
 import { tr } from '../../i18n/language';
 import { exerciseKind, type LearningExercise } from '../../learning/exercises';
@@ -17,9 +17,18 @@ type Props = {
 export const ExerciseInteraction: React.FC<Props> = ({ exercise, answer, onAnswer, disabled = false, lang, onAudio }) => {
   const kind = exerciseKind(exercise);
   const [selectedTokens, setSelectedTokens] = useState<number[]>([]);
+  const [conversationStep, setConversationStep] = useState(0);
+  const [conversationDraft, setConversationDraft] = useState('');
+  const [conversationReplies, setConversationReplies] = useState<string[]>([]);
   const tokens = useMemo(() => Array.isArray(exercise.tokens) ? exercise.tokens : [], [exercise.tokens]);
+  const turns = useMemo(() => Array.isArray(exercise.conversation_turns) ? exercise.conversation_turns : [], [exercise.conversation_turns]);
 
-  useEffect(() => { setSelectedTokens([]); }, [exercise.id, exercise.question]);
+  useEffect(() => {
+    setSelectedTokens([]);
+    setConversationStep(0);
+    setConversationDraft('');
+    setConversationReplies([]);
+  }, [exercise.id, exercise.question]);
 
   const chooseToken = (_token: string, index: number) => {
     if (disabled || selectedTokens.includes(index)) return;
@@ -34,6 +43,22 @@ export const ExerciseInteraction: React.FC<Props> = ({ exercise, answer, onAnswe
     onAnswer(next.map(item => tokens[item]).join(' '));
   };
   const clearTokens = () => { setSelectedTokens([]); onAnswer(''); };
+
+  const addConversationReply = () => {
+    const reply = conversationDraft.trim();
+    if (!reply) return;
+    const next = [...conversationReplies, reply];
+    setConversationReplies(next);
+    setConversationDraft('');
+    if (next.length >= turns.length) onAnswer(next.join('\n'));
+    else setConversationStep(next.length);
+  };
+  const resetConversation = () => {
+    setConversationStep(0);
+    setConversationDraft('');
+    setConversationReplies([]);
+    onAnswer('');
+  };
 
   if (kind === 'choice' || kind === 'listen_choice') return (
     <div className="exercise-choice" role="radiogroup">
@@ -53,6 +78,24 @@ export const ExerciseInteraction: React.FC<Props> = ({ exercise, answer, onAnswe
       </div>
       <div className="reorder-bank">{tokens.map((token, index) => <button type="button" key={`${token}-${index}`} disabled={disabled || selectedTokens.includes(index)} onClick={() => chooseToken(token, index)}>{token}</button>)}</div>
       {selectedTokens.length > 0 && !disabled && <button type="button" className="reorder-clear" onClick={clearTokens}><FaUndo /> {tr(lang, 'Начать заново', 'Neu beginnen', 'Start again')}</button>}
+    </div>
+  );
+
+  if (kind === 'write' && turns.length > 0) return (
+    <div className="exercise-conversation" aria-label={tr(lang, 'Разговор', 'Gespräch', 'Conversation')}>
+      <div className="conversation-progress"><span>{tr(lang, 'МИНИ-ДИАЛОГ', 'MINI-DIALOG', 'MINI DIALOGUE')}</span><b>{Math.min(conversationReplies.length + 1, turns.length)}/{turns.length}</b></div>
+      <div className="conversation-thread" aria-live="polite">
+        {turns.map((turn, index) => index <= conversationStep ? <React.Fragment key={`${turn.partner}-${index}`}>
+          <div className="conversation-bubble partner"><small>{tr(lang, 'СОБЕСЕДНИК', 'GESPRÄCHSPARTNER', 'PARTNER')}</small><p>{turn.partner}</p></div>
+          {conversationReplies[index] && <div className="conversation-bubble learner"><small>{tr(lang, 'ТЫ', 'DU', 'YOU')}</small><p>{conversationReplies[index]}</p></div>}
+        </React.Fragment> : null)}
+      </div>
+      {!disabled && conversationReplies.length < turns.length && <div className="conversation-compose">
+        <small>{turns[conversationStep]?.goal}</small>
+        <textarea rows={2} value={conversationDraft} onChange={event => setConversationDraft(event.target.value)} placeholder={turns[conversationStep]?.placeholder || tr(lang, 'Ответь по-немецки…', 'Antworte auf Deutsch…', 'Reply in German…')} />
+        <button type="button" onClick={addConversationReply} disabled={!conversationDraft.trim()}>{conversationStep + 1 === turns.length ? tr(lang, 'Завершить диалог', 'Dialog abschließen', 'Finish dialogue') : tr(lang, 'Отправить ответ', 'Antwort senden', 'Send reply')} <FaArrowRight /></button>
+      </div>}
+      {!disabled && conversationReplies.length === turns.length && <div className="conversation-ready"><FaCheck /><span>{tr(lang, 'Диалог готов к проверке', 'Dialog ist bereit zur Prüfung', 'Dialogue ready to check')}</span><button type="button" onClick={resetConversation}><FaRedo /> {tr(lang, 'Начать заново', 'Neu beginnen', 'Restart')}</button></div>}
     </div>
   );
 
