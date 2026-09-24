@@ -206,3 +206,32 @@ test('Telegram BackButton owns nested navigation without duplicate browser contr
   await expect(page.locator('.app-back-button')).toHaveCount(0);
   await expect.poll(() => page.evaluate(() => (window as any).__backCalls.shown)).toBeGreaterThan(0);
 });
+
+test('owner can inspect every lesson state without changing learner progress', async ({ page }) => {
+  const writes: string[] = [];
+  await page.route('**/api/**', async route => {
+    const { pathname } = new URL(route.request().url());
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(route.request().method())) writes.push(pathname);
+    if (pathname === '/api/internal/beta') return route.fulfill({ json: {
+      audience: {}, funnel: {}, sessions: {}, events: {}, exercise_health: [], retention: {}, beta: { invites: [] }, testers: [],
+    }});
+    if (pathname === '/api/internal/curriculum') return route.fulfill({ json: [{ id: 91, level: 'A1', day: 1, title: 'First conversation', exercise_count: 1 }] });
+    if (pathname === '/api/internal/curriculum/91') return route.fulfill({ json: {
+      id: 91, level: 'A1', pillar: 'speaking', topic: 'greetings', preview: true,
+      content: { title: 'First conversation', objective: 'Greet someone confidently.', rule: 'Use Hallo.', examples: ['Hallo!'], exercises: [{ id: 'hello-listen', type: 'listening_choice', question: 'What did you hear?', audio_text: 'Hallo!', options: ['Hallo!', 'Tschüss!'], answer: 'Hallo!', explanation: 'Hallo is the greeting.' }] },
+    }});
+    return route.fulfill({ json: {} });
+  });
+  await page.goto('/control-center');
+  await page.getByPlaceholder('Access key').fill('test-control-key');
+  await page.getByRole('button', { name: 'Open dashboard' }).click();
+  await expect(page.getByRole('heading', { name: 'Curriculum laboratory' })).toBeVisible();
+  await page.getByLabel('Phone').selectOption('320');
+  await page.getByRole('button', { name: 'practice' }).click();
+  await expect(page.getByText('What did you hear?')).toBeVisible();
+  await page.getByRole('button', { name: 'wrong' }).click();
+  await expect(page.getByText('Needs repair')).toBeVisible();
+  await page.getByRole('button', { name: 'complete' }).click();
+  await expect(page.getByText('Preview completion does not change learner progress.')).toBeVisible();
+  expect(writes).toEqual([]);
+});

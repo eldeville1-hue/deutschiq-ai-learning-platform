@@ -124,6 +124,8 @@ export const api = {
   deleteUserData: (userId: number) => apiClient.delete(`/api/user-data/${userId}`),
   resetTestJourney: (userId: number) => apiClient.post(`/api/user-data/${userId}/reset-test`),
   getBetaControlCenter: (key: string, days = 30) => apiClient.get(`/api/internal/beta?days=${days}`, { headers: { 'X-Control-Key': key }, __telemetry: true } as any).then(r => r.data),
+  getCurriculumPreview: (key: string) => apiClient.get('/api/internal/curriculum', { headers: { 'X-Control-Key': key }, __telemetry: true } as any).then(r => r.data),
+  getCurriculumPreviewLesson: (key: string, lessonId: number, lang: AppLanguage) => apiClient.get(`/api/internal/curriculum/${lessonId}?lang=${lang}`, { headers: { 'X-Control-Key': key }, __telemetry: true } as any).then(r => r.data),
   createBetaInvite: (key: string, payload: { label: string; max_uses: number }) => apiClient.post('/api/internal/invites', payload, { headers: { 'X-Control-Key': key }, __telemetry: true } as any).then(r => r.data),
   createBetaInviteBatch: (key: string, payload: { label_prefix: string; count: number }) => apiClient.post('/api/internal/invites/batch', payload, { headers: { 'X-Control-Key': key }, __telemetry: true } as any).then(r => r.data),
   deactivateBetaInvite: (key: string, id: number) => apiClient.delete(`/api/internal/invites/${id}`, { headers: { 'X-Control-Key': key }, __telemetry: true } as any).then(r => r.data),

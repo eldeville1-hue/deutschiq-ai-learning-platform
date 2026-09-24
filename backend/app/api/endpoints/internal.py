@@ -15,6 +15,8 @@ from app.models.user import User
 from app.models.beta import BetaEnrollment, BetaInvite
 from app.services.beta_insights import exercise_health, retention_cohorts, summarize_events, tester_progress
 from app.services.bot_links import telegram_beta_invite_url
+from app.services.content_i18n import localize_lesson_content, normalize_language
+from app.services.content_quality import normalize_lesson_content
 
 router = APIRouter(prefix="/api/internal", tags=["internal"])
 
@@ -32,6 +34,52 @@ class InviteRequest(BaseModel):
 class InviteBatchRequest(BaseModel):
     label_prefix: str = Field(default="Beta tester", min_length=1, max_length=64)
     count: int = Field(default=15, ge=1, le=50)
+
+
+@router.get("/curriculum", dependencies=[Depends(require_control_key)])
+async def curriculum_preview_catalog(db: Session = Depends(get_db)):
+    lessons = db.query(Lesson).filter(Lesson.is_active == True).all()
+
+    def order(item: Lesson):
+        content = item.content if isinstance(item.content, dict) else {}
+        return (item.level, int(content.get("day") or 999), item.id)
+
+    return [{
+        "id": item.id,
+        "level": item.level,
+        "pillar": item.pillar,
+        "topic": item.topic,
+        "day": int((item.content or {}).get("day") or 0),
+        "module": int((item.content or {}).get("module") or (item.content or {}).get("week") or 0),
+        "title": (item.content or {}).get("title") or item.topic,
+        "quality_version": int((item.content or {}).get("quality_version") or 0),
+        "exercise_count": len((item.content or {}).get("exercises") or []),
+    } for item in sorted(lessons, key=order)]
+
+
+@router.get("/curriculum/{lesson_id}", dependencies=[Depends(require_control_key)])
+async def curriculum_preview_lesson(
+    lesson_id: int,
+    lang: str = Query(default="ru", pattern="^(ru|de|en)$"),
+    db: Session = Depends(get_db),
+):
+    lesson = db.query(Lesson).filter(Lesson.id == lesson_id, Lesson.is_active == True).first()
+    if not lesson:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+    content = localize_lesson_content(
+        normalize_lesson_content(lesson.content or {}, lesson.topic, lesson.level),
+        normalize_language(lang),
+    )
+    return {
+        "id": lesson.id,
+        "level": lesson.level,
+        "pillar": lesson.pillar,
+        "topic": lesson.topic,
+        "estimated_time": lesson.estimated_time,
+        "xp_reward": lesson.xp_reward,
+        "content": content,
+        "preview": True,
+    }
 
 
 @router.post("/invites", dependencies=[Depends(require_control_key)])
