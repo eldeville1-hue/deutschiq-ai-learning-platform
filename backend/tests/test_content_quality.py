@@ -166,7 +166,8 @@ class ContentQualityTests(unittest.TestCase):
                 self.assertGreaterEqual(content["quality_version"], 5)
                 self.assertEqual(5, len(content["exercises"]))
                 guided_types.add(content["exercises"][0]["type"])
-                self.assertEqual({"context_choice", "listening_choice", "dialogue", "repeat"}, {item["type"] for item in content["exercises"][1:]})
+                expected_transfer = "analogy_choice" if level == "A1" and row[0] <= 5 else "context_choice"
+                self.assertEqual({expected_transfer, "listening_choice", "dialogue", "repeat"}, {item["type"] for item in content["exercises"][1:]})
                 self.assertEqual(3, len(set(content["examples"])))
                 self.assertLessEqual(len(content["exercises"][3]["target_patterns"]), 3)
                 for language in ("ru", "de", "en"):
@@ -197,7 +198,7 @@ class ContentQualityTests(unittest.TestCase):
         for content in lessons:
             self.assertEqual([], validate_roadmap_content(content))
             self.assertEqual(
-                ["reorder", "context_choice", "listening_choice", "dialogue", "repeat"],
+                ["reorder", "analogy_choice", "listening_choice", "dialogue", "repeat"],
                 [exercise["type"] for exercise in content["exercises"]],
             )
             self.assertEqual(5, len({exercise["id"] for exercise in content["exercises"]}))
@@ -208,6 +209,10 @@ class ContentQualityTests(unittest.TestCase):
                 self.assertTrue(localized["can_do"])
                 self.assertTrue(localized["communication_goal"])
                 self.assertTrue(all(exercise.get("accessibility_label") for exercise in localized["exercises"]))
+                analogy = localized["exercises"][1]
+                self.assertTrue(analogy.get("analogy_source"))
+                self.assertTrue(analogy.get("analogy_target"))
+                self.assertTrue(analogy.get("pattern_label"))
                 if content.get("checkpoint"):
                     self.assertEqual(3, len(localized["exercises"][3]["conversation_turns"]))
 

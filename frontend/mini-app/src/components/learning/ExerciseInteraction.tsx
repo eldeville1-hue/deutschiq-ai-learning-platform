@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { FaArrowRight, FaCheck, FaMicrophone, FaRedo, FaTimes, FaUndo } from 'react-icons/fa';
+import { FaArrowRight, FaCheck, FaExchangeAlt, FaMicrophone, FaRedo, FaTimes, FaUndo } from 'react-icons/fa';
 import type { AppLanguage } from '../../i18n/language';
 import { tr } from '../../i18n/language';
 import { exerciseKind, type LearningExercise } from '../../learning/exercises';
@@ -59,6 +59,25 @@ export const ExerciseInteraction: React.FC<Props> = ({ exercise, answer, onAnswe
     setConversationReplies([]);
     onAnswer('');
   };
+
+  if (kind === 'analogy') return (
+    <div className="exercise-analogy">
+      <div className="analogy-bridge">
+        <div><small>{tr(lang, 'ЗНАКОМАЯ МОДЕЛЬ', 'BEKANNTES MODELL', 'KNOWN MODEL')}</small><strong>{exercise.analogy_source}</strong></div>
+        <FaExchangeAlt aria-hidden="true" />
+        <div><small>{tr(lang, 'НОВАЯ СИТУАЦИЯ', 'NEUE SITUATION', 'NEW SITUATION')}</small><strong>{exercise.analogy_target}</strong></div>
+      </div>
+      <p>{exercise.pattern_label || tr(lang, 'Сохрани структуру, но измени смысл под ситуацию.', 'Behalte das Muster und passe die Bedeutung an.', 'Keep the pattern and adapt the meaning.')}</p>
+      <div className="exercise-choice" role="radiogroup">
+        {(exercise.options || []).map((option) => {
+          const active = answer === option;
+          return <button type="button" role="radio" aria-checked={active} key={option} disabled={disabled} className={active ? 'active' : ''} onClick={() => onAnswer(option)}>
+            <span className="option-dot">{active && <FaCheck />}</span><span>{option}</span>
+          </button>;
+        })}
+      </div>
+    </div>
+  );
 
   if (kind === 'choice' || kind === 'listen_choice') return (
     <div className="exercise-choice" role="radiogroup">

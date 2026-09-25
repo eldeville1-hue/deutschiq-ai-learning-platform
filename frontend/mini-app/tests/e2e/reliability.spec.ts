@@ -181,6 +181,36 @@ test('practical reorder exercise is usable without mobile overflow', async ({ pa
   await expectNoHorizontalOverflow(page);
 });
 
+test('A1 analogy exercise transfers a known pattern on a small phone', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 700 });
+  await mockApi(page, { completed: true });
+  await page.route('**/api/lesson/77', route => route.fulfill({ json: {
+    ...lesson,
+    level: 'A1',
+    content: {
+      ...lesson.content,
+      title: 'Greet someone',
+      examples: ['Hallo! Ich heiße Amir.'],
+      exercises: [{
+        id: 'a1-analogy', type: 'analogy_choice', stage: 'independent',
+        question: 'What do you say to the teacher?',
+        analogy_source: 'Hallo! Ich heiße Amir.',
+        analogy_target: 'It is your first day in a language course.',
+        pattern_label: 'Same pattern — new situation',
+        options: ['Guten Morgen! Ich heiße Mia.', 'Guten Morgen! Ich heißen Mia.', 'Danke, gleichfalls!'],
+      }],
+    },
+  }}));
+  await page.goto('/lesson/77');
+  await page.getByRole('button', { name: /Show example/i }).click();
+  await page.getByRole('button', { name: /Start practice/i }).click();
+  await expect(page.getByText('KNOWN MODEL')).toBeVisible();
+  await expect(page.getByText('NEW SITUATION')).toBeVisible();
+  await page.getByRole('radio', { name: 'Guten Morgen! Ich heiße Mia.' }).click();
+  await expect(page.getByRole('button', { name: /^Check$/i })).toBeEnabled();
+  await expectNoHorizontalOverflow(page);
+});
+
 test('A1 checkpoint becomes a complete three-turn phone conversation', async ({ page }) => {
   let submittedAnswer = '';
   await mockApi(page, { completed: true });

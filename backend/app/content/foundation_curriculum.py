@@ -200,10 +200,10 @@ def build_foundation_content(row: tuple, level: str) -> dict:
                 {"question":"Build the useful sentence.","hint":rule_en,"explanation":rule_en,"accessibility_label":"Build the German sentence"},
             ),
             _localized(
-                {"id":f"a1-{day}-choose","type":"context_choice","stage":"independent","question":starter["choice"][0],"answer":model,"accepted_answers":[model],"options":choices,"explanation":rule_ru,"misconception":"a1_first_conversation_context","accessibility_label":"Выбери подходящую фразу"},
-                {"question":starter["choice"][0],"explanation":rule_ru,"accessibility_label":"Выбери подходящую фразу"},
-                {"question":starter["choice"][1],"explanation":rule_de,"accessibility_label":"Passenden Satz wählen"},
-                {"question":starter["choice"][2],"explanation":rule_en,"accessibility_label":"Choose the matching sentence"},
+                {"id":f"a1-{day}-analogy","type":"analogy_choice","stage":"independent","question":starter["choice"][0],"answer":model,"accepted_answers":[model],"options":choices,"analogy_source":starter["alternate"],"analogy_target":scenario_ru,"pattern_label":"Та же структура — новая ситуация","explanation":rule_ru,"misconception":"a1_first_conversation_transfer","accessibility_label":"Перенеси знакомую структуру в новую ситуацию"},
+                {"question":starter["choice"][0],"analogy_target":scenario_ru,"pattern_label":"Та же структура — новая ситуация","explanation":rule_ru,"accessibility_label":"Перенеси знакомую структуру в новую ситуацию"},
+                {"question":starter["choice"][1],"analogy_target":scenario_de,"pattern_label":"Gleiches Muster – neue Situation","explanation":rule_de,"accessibility_label":"Bekanntes Muster auf eine neue Situation übertragen"},
+                {"question":starter["choice"][2],"analogy_target":scenario_en,"pattern_label":"Same pattern — new situation","explanation":rule_en,"accessibility_label":"Transfer a familiar pattern to a new situation"},
             ),
             _localized(
                 {"id":f"a1-{day}-listen","type":"listening_choice","stage":"independent","question":"Послушай. Что делает говорящий?","answer":listen_ru,"accepted_answers":[listen_ru],"options":list(options_ru),"audio_text":model,"explanation":model,"misconception":"a1_first_conversation_listening","accessibility_label":"Послушай и выбери смысл"},

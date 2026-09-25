@@ -791,3 +791,14 @@ button:disabled { cursor: not-allowed; opacity: .45; }
   .rc-today-secondary{align-items:flex-start;flex-direction:column}
   .rc-today-secondary button{min-height:32px}
 }
+
+/* Release 55 — analogy transfer is a distinct, phone-first learning action. */
+.exercise-analogy{display:grid;gap:12px}
+.analogy-bridge{display:grid;grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr);align-items:stretch;gap:7px}
+.analogy-bridge>div{min-width:0;display:grid;align-content:center;gap:6px;padding:12px;border:1px solid var(--dq-border);border-radius:15px;background:var(--dq-surface)}
+.analogy-bridge>div:last-child{border-color:color-mix(in srgb,var(--dq-level) 30%,var(--dq-border));background:color-mix(in srgb,var(--dq-level) 7%,var(--dq-surface))}
+.analogy-bridge small{color:var(--dq-muted);font-size:7px;font-weight:900;letter-spacing:.11em}
+.analogy-bridge strong{font-size:12px;line-height:1.38;overflow-wrap:anywhere}
+.analogy-bridge>svg{align-self:center;justify-self:center;color:var(--dq-level);font-size:12px}
+.exercise-analogy>p{margin:0;color:var(--dq-level);font-size:10px;font-weight:800;text-align:center}
+@media(max-width:350px){.analogy-bridge{grid-template-columns:1fr}.analogy-bridge>svg{transform:rotate(90deg)}.analogy-bridge>div{padding:10px}}

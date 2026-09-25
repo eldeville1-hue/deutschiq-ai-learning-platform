@@ -50,6 +50,7 @@ export const Lesson: React.FC = () => {
   const activeExercise = retried[exerciseIndex] && retryExercises[exerciseIndex] ? retryExercises[exerciseIndex] : exercise;
   const activityLabel = activeExercise ? ({
     choice: tr(lang, "Выбери", "Wähle", "Choose"),
+    analogy: tr(lang, "Перенеси", "Übertrage", "Transfer"),
     cloze: tr(lang, "Допиши", "Ergänze", "Complete"),
     reorder: tr(lang, "Собери", "Ordne", "Build"),
     repair: tr(lang, "Исправь", "Korrigiere", "Fix"),

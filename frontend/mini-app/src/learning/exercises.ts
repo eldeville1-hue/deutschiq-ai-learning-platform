@@ -2,6 +2,7 @@ export type ExerciseStage = 'guided' | 'independent' | 'transfer' | 'review' | '
 
 export type ExerciseKind =
   | 'choice'
+  | 'analogy'
   | 'cloze'
   | 'reorder'
   | 'repair'
@@ -20,6 +21,9 @@ export type LearningExercise = {
   hint?: string;
   model_answer?: string;
   audio_text?: string;
+  analogy_source?: string;
+  analogy_target?: string;
+  pattern_label?: string;
   conversation_turns?: Array<{
     partner: string;
     goal: string;
@@ -30,6 +34,7 @@ export type LearningExercise = {
 
 export const exerciseKind = (exercise: LearningExercise): ExerciseKind => {
   if (exercise.type === 'reorder') return 'reorder';
+  if (exercise.type === 'analogy_choice') return 'analogy';
   if (exercise.type === 'listening_choice') return 'listen_choice';
   if (['context_choice', 'choose', 'choice'].includes(exercise.type)) return 'choice';
   if (exercise.type === 'repeat' || exercise.type === 'speak') return 'speak';

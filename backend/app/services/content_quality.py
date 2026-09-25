@@ -1,6 +1,6 @@
 ALLOWED_EXERCISE_TYPES = {
     "choose", "fill", "translate", "reorder", "listening", "production", "recall", "repeat",
-    "error_repair", "transform", "context_choice", "listening_choice", "dialogue",
+    "error_repair", "transform", "context_choice", "analogy_choice", "listening_choice", "dialogue",
 }
 
 
