@@ -209,10 +209,9 @@ export const Lesson: React.FC = () => {
   };
   return (
     <main className={`lesson-flow precision-lesson rc-lesson fade-up level-${String(lesson.level || 'a1').toLowerCase()}`}>
-      <header>
-        <span>
-          {Math.min(step + 1, total)} {tr(lang, "из", "von", "of")} {total}
-        </span>
+      <header className="lesson-progress-head">
+        <small>{step < introSteps ? tr(lang, "ПОДГОТОВКА", "VORBEREITUNG", "PREPARE") : step < total ? activityLabel : tr(lang, "ГОТОВО", "GESCHAFFT", "COMPLETE")}</small>
+        <span>{Math.min(step + 1, total)}/{total}</span>
         <div className="progress-bar">
           <div
             className="progress-bar-fill"
@@ -220,18 +219,9 @@ export const Lesson: React.FC = () => {
           />
         </div>
       </header>
-      {content.module_title && step < total && <div className="lesson-module-strip">
+      {content.module_title && step === 0 && <div className="lesson-module-strip">
         <div><small>{tr(lang, "МОДУЛЬ", "MODUL", "MODULE")}</small><strong>{content.module_title}</strong></div>
         <span>{content.module_step}/{content.module_size}</span>
-      </div>}
-      {step === 0 && <div className={`lesson-coach-mode ${learningProfile.mode}`}>
-        <span>{tr(lang, "РЕЖИМ УРОКА", "LEKTIONSMODUS", "LESSON MODE")}</span>
-        <strong>{learningProfile.mode === 'supported'
-          ? tr(lang, "С поддержкой", "Mit Unterstützung", "Supported")
-          : learningProfile.mode === 'challenge'
-            ? tr(lang, "Самостоятельный вызов", "Selbstständige Herausforderung", "Independent challenge")
-            : tr(lang, "Сбалансированный", "Ausgewogen", "Balanced")}</strong>
-        <small>{tr(lang, `До урока: ${learningProfile.mastery}%`, `Vor der Lektion: ${learningProfile.mastery}%`, `Before lesson: ${learningProfile.mastery}%`)}</small>
       </div>}
       {step === 0 && (
         <section className="lesson-step">
@@ -240,8 +230,13 @@ export const Lesson: React.FC = () => {
             {content.cefr || lesson.level}
           </p>
           <h1>{cleanTitle(topicLabel(content.title || lesson.topic, lang))}</h1>
+          <div className={`lesson-mode-pill ${learningProfile.mode}`}><span>{learningProfile.mode === 'supported'
+            ? tr(lang, "С подсказками", "Mit Hinweisen", "Guided")
+            : learningProfile.mode === 'challenge'
+              ? tr(lang, "Самостоятельно", "Selbstständig", "Challenge")
+              : tr(lang, "Сбалансировано", "Ausgewogen", "Balanced")}</span><small>{exercises.length} {tr(lang, 'заданий', 'Aufgaben', 'tasks')}</small></div>
           <div className="lesson-can-do"><small>{tr(lang, "ПОСЛЕ УРОКА", "NACH DER LEKTION", "AFTER THIS LESSON")}</small><strong>{content.can_do || content.objective}</strong></div>
-          {content.scenario && <div className="lesson-scenario"><small>{tr(lang, 'СИТУАЦИЯ', 'SITUATION', 'SCENARIO')}</small><span>{content.scenario}</span></div>}
+          {content.scenario && <details className="lesson-context"><summary>{tr(lang, 'Где это пригодится', 'Wo du das brauchst', 'Where you will use it')}</summary><div>{content.scenario}</div></details>}
           <details className="lesson-optional-rule"><summary>{tr(lang, 'Короткое правило', 'Kurze Regel', 'Quick rule')}</summary><div>{content.rule}</div></details>
           {content.module_size === 5 && <div className="lesson-practice-path" aria-label={tr(lang, 'Путь урока', 'Lektionsweg', 'Lesson path')}>
             {[tr(lang, 'Понять', 'Verstehen', 'Understand'), tr(lang, 'Выбрать', 'Wählen', 'Choose'), tr(lang, 'Собрать', 'Bauen', 'Build'), tr(lang, 'Сказать', 'Sprechen', 'Speak')].map((label, index) => <span key={label}><i>{index + 1}</i>{label}</span>)}
@@ -288,6 +283,7 @@ export const Lesson: React.FC = () => {
         <section className="lesson-step exercise-step">
           <div className="exercise-stage-row"><p className="eyebrow">{activityLabel}{retried[exerciseIndex] ? tr(lang, " · ещё раз", " · noch einmal", " · try again") : ""}</p><span>{exerciseIndex + 1}/{exercises.length}</span></div>
           <div className="exercise-prompt"><h1>{activeExercise.type === "repeat" ? tr(lang, "Произнеси фразу", "Sprich den Satz", "Say the sentence") : activeExercise.question}</h1></div>
+          <div className="lesson-task-surface">
           {(activeExercise.type === "listening" || activeExercise.type === "listening_choice") && (
             <div className="listening-challenge simple">
               <button type="button" className="listen-main" onClick={() => speak(0.9, activeExercise.audio_text)}><FaVolumeUp /> {tr(lang, "Слушать", "Anhören", "Listen")}</button>
@@ -296,6 +292,7 @@ export const Lesson: React.FC = () => {
           )}
           {(showTranscript || easyMode) && activeExercise.audio_text && <div className="listening-transcript"><small>{tr(lang, 'ТЕКСТ', 'TEXT', 'TRANSCRIPT')}</small><span>{activeExercise.audio_text}</span></div>}
           <ExerciseInteraction exercise={{ ...activeExercise, id: `${id}-${exerciseIndex}-${retried[exerciseIndex] ? 'retry' : 'first'}` }} answer={answer} onAnswer={setAnswer} disabled={checked !== null} lang={lang} onAudio={sessionId ? transcribe : undefined} guided={easyMode || exerciseKind(activeExercise) === 'repair'} />
+          </div>
             {speechResult?.transcript && (
               <div className="speech-result">
                 <small>{tr(lang, "РАСПОЗНАНО", "ERKANNT", "RECOGNISED")}</small>
@@ -307,16 +304,16 @@ export const Lesson: React.FC = () => {
           {checked === null && (learningProfile.show_guided_hint || showHint || easyMode || retried[exerciseIndex]) && activeExercise.hint && (
             <div className="guided-hint">{activeExercise.hint}</div>
           )}
-          {checked === null && <div className="lesson-support-row">
+          {checked === null && <div className="lesson-support-row" aria-label={tr(lang, 'Помощь с заданием', 'Hilfe zur Aufgabe', 'Exercise help')}>
             {activeExercise.hint && !showHint && !learningProfile.show_guided_hint && <button type="button" onClick={() => setShowHint(true)}>{tr(lang, 'Подсказка', 'Hinweis', 'Hint')}</button>}
             {!easyMode && <button type="button" onClick={() => { setEasyMode(true); setShowHint(true); }}>{tr(lang, 'Сделать проще', 'Einfacher machen', 'Make easier')}</button>}
             {(activeExercise.type === 'listening' || activeExercise.type === 'listening_choice') && !showTranscript && <button type="button" onClick={() => setShowTranscript(true)}>{tr(lang, 'Не могу слушать', 'Kann gerade nicht hören', "I can't listen")}</button>}
             <button type="button" className="skip" onClick={() => void skipExercise('learner_choice')}>{tr(lang, 'Пропустить', 'Jetzt überspringen', 'Skip for now')}</button>
           </div>}
           {checked === null ? (
-            <button className="primary-action" onClick={check} disabled={!answer.trim() || !sessionId || checking}>
+            <div className="lesson-action-dock"><button className="primary-action" onClick={check} disabled={!answer.trim() || !sessionId || checking}>
               {checking ? tr(lang, 'Проверяем…', 'Wird geprüft…', 'Checking…') : tr(lang, "Проверить", "Prüfen", "Check")}
-            </button>
+            </button></div>
           ) : (
             <div className={`answer-feedback ${checked ? "correct" : "wrong"}`}>
               {checked ? <FaCheck /> : <FaTimes />}
