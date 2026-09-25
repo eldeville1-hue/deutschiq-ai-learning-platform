@@ -20,7 +20,7 @@ from app.core.logging_config import configure_logging
 
 configure_logging()
 logger = logging.getLogger("deutschiq.api")
-VERSION = "56.0.0"
+VERSION = "57.0.0"
 BUILD_COMMIT = os.getenv("RENDER_GIT_COMMIT", os.getenv("GIT_COMMIT", "local"))[:12]
 @asynccontextmanager
 async def lifespan(_: FastAPI):

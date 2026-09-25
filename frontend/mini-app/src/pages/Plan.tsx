@@ -71,9 +71,9 @@ export const Plan: React.FC = () => {
         <span>{tr(lang, 'Твой маршрут по навыкам', 'Dein Weg nach Fähigkeiten', 'Your skill-based path')}</span>
       </header>
 
-      {loadError && <div className="rc-notice error"><span>{tr(lang, 'Не удалось полностью обновить маршрут', 'Die Route konnte nicht vollständig aktualisiert werden', 'The learning path could not be fully refreshed')}</span><button type="button" onClick={load}>{tr(lang, 'Обновить', 'Aktualisieren', 'Refresh')}</button></div>}
+      {loadError && <div className="rc-notice saved"><span>{tr(lang, 'Показываем сохранённый маршрут', 'Gespeicherter Lernweg wird angezeigt', 'Showing your saved path')}</span><button type="button" onClick={load}>{tr(lang, 'Обновить', 'Aktualisieren', 'Refresh')}</button></div>}
 
-      <section className="cefr-journey compact" aria-label={tr(lang, 'Путь по уровням', 'Niveaureise', 'Level journey')}>
+      {(journey?.levels || []).some((item: any) => item.total_lessons > 0) && <section className="cefr-journey compact" aria-label={tr(lang, 'Путь по уровням', 'Niveaureise', 'Level journey')}>
         <header><div><small>{tr(lang, 'УРОВЕНЬ', 'NIVEAU', 'LEVEL')}</small><h2>{tr(lang, 'Выбери доступный маршрут', 'Wähle einen verfügbaren Weg', 'Choose an available path')}</h2></div></header>
         <div className="cefr-levels">{(journey?.levels || []).filter((item: any) => item.total_lessons > 0).map((item: any) => {
           const accessible = ['active', 'review', 'completed'].includes(item.state);
@@ -83,7 +83,7 @@ export const Plan: React.FC = () => {
           </button>;
         })}</div>
         {(() => { const active = (journey?.levels || []).find((item: any) => item.state === 'active'); return active && active.completion >= 80 && active.mastery >= 70 ? <button type="button" className="rc-primary checkpoint-cta" onClick={() => navigate(withUser(`/checkpoint/${active.level}`))}>{tr(lang, `Пройти финальный тест ${active.level}`, `${active.level}-Abschlusstest starten`, `Take the ${active.level} final checkpoint`)}</button> : null; })()}
-      </section>
+      </section>}
 
       <section className="rc-plan-now">
         <header><span>{tr(lang, 'ПРОДОЛЖИТЬ МАРШРУТ', 'WEG FORTSETZEN', 'CONTINUE YOUR PATH')}</span><small>{tr(lang, `Модуль ${week} из 4`, `Modul ${week} von 4`, `Module ${week} of 4`)}</small></header>

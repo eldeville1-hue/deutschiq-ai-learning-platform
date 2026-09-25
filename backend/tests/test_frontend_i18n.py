@@ -70,6 +70,16 @@ class FrontendInternationalizationTests(unittest.TestCase):
         self.assertIn("exerciseKind", interaction)
         self.assertIn("slice(0, 5)", lesson)
 
+    def test_lesson_offers_low_pressure_mobile_alternatives(self):
+        lesson = self.read("pages/Lesson.tsx")
+        interaction = self.read("components/learning/ExerciseInteraction.tsx")
+        self.assertIn("Make easier", lesson)
+        self.assertIn("Skip for now", lesson)
+        self.assertIn("I can't listen", lesson)
+        self.assertIn("exercise_skipped", lesson)
+        self.assertIn("Build the corrected sentence", interaction)
+        self.assertIn("USE AS A STARTER", interaction)
+
 
 if __name__ == "__main__":
     unittest.main()

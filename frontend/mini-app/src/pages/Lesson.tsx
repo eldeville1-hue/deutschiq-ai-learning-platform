@@ -36,6 +36,8 @@ export const Lesson: React.FC = () => {
   const [checkError, setCheckError] = useState('');
   const [milestoneSent, setMilestoneSent] = useState(() => localStorage.getItem(`deutschiq-beta-milestone-${getUserId()}`) === '1');
   const [showHint, setShowHint] = useState(false);
+  const [easyMode, setEasyMode] = useState(false);
+  const [showTranscript, setShowTranscript] = useState(false);
   const completedRef = useRef(false);
   const openedAtRef = useRef(Date.now());
   const stepRef = useRef(0);
@@ -122,15 +124,10 @@ export const Lesson: React.FC = () => {
     setSpeechResult(null);
     setCheckError('');
     setShowHint(false);
+    setEasyMode(false);
+    setShowTranscript(false);
   };
-  const next = async () => {
-    if (exercise && checked === false && !retried[exerciseIndex]) {
-      void api.trackEvent({ user_id: getUserId(), event_name: 'exercise_retried', properties: { lesson_id: Number(id), exercise_index: exerciseIndex } });
-      setRetried((value) => ({ ...value, [exerciseIndex]: true }));
-      if (feedback?.retry_exercise) setRetryExercises((value) => ({ ...value, [exerciseIndex]: feedback.retry_exercise }));
-      resetAnswer();
-      return;
-    }
+  const advance = async () => {
     const nextStep = Math.min(step + 1, total);
     setStep(nextStep);
     resetAnswer();
@@ -151,6 +148,20 @@ export const Lesson: React.FC = () => {
         if (result.unlocked_level) void api.trackEvent({ user_id: getUserId(), event_name: 'level_unlocked', properties: { level: String(result.unlocked_level) } });
       }
     }
+  };
+  const next = async () => {
+    if (exercise && checked === false && !retried[exerciseIndex]) {
+      void api.trackEvent({ user_id: getUserId(), event_name: 'exercise_retried', properties: { lesson_id: Number(id), exercise_index: exerciseIndex } });
+      setRetried((value) => ({ ...value, [exerciseIndex]: true }));
+      if (feedback?.retry_exercise) setRetryExercises((value) => ({ ...value, [exerciseIndex]: feedback.retry_exercise }));
+      resetAnswer();
+      return;
+    }
+    await advance();
+  };
+  const skipExercise = async (reason: string) => {
+    void api.trackEvent({ user_id: getUserId(), event_name: 'exercise_skipped', properties: { lesson_id: Number(id), exercise_index: exerciseIndex, exercise_type: activeExercise?.type, reason } });
+    await advance();
   };
   const check = async () => {
     if (!answer.trim() || !sessionId || checking) return;
@@ -231,8 +242,7 @@ export const Lesson: React.FC = () => {
           <h1>{cleanTitle(topicLabel(content.title || lesson.topic, lang))}</h1>
           <div className="lesson-can-do"><small>{tr(lang, "ПОСЛЕ УРОКА", "NACH DER LEKTION", "AFTER THIS LESSON")}</small><strong>{content.can_do || content.objective}</strong></div>
           {content.scenario && <div className="lesson-scenario"><small>{tr(lang, 'СИТУАЦИЯ', 'SITUATION', 'SCENARIO')}</small><span>{content.scenario}</span></div>}
-          {content.assessment_rubric?.length > 0 && <div className="lesson-rubric"><small>{tr(lang, 'КРИТЕРИИ ОТВЕТА', 'ANTWORTKRITERIEN', 'RESPONSE CRITERIA')}</small><ul>{content.assessment_rubric.map((criterion: string) => <li key={criterion}>{criterion}</li>)}</ul></div>}
-          <div className="rule-card">{content.rule}</div>
+          <details className="lesson-optional-rule"><summary>{tr(lang, 'Короткое правило', 'Kurze Regel', 'Quick rule')}</summary><div>{content.rule}</div></details>
           {content.module_size === 5 && <div className="lesson-practice-path" aria-label={tr(lang, 'Путь урока', 'Lektionsweg', 'Lesson path')}>
             {[tr(lang, 'Понять', 'Verstehen', 'Understand'), tr(lang, 'Выбрать', 'Wählen', 'Choose'), tr(lang, 'Собрать', 'Bauen', 'Build'), tr(lang, 'Сказать', 'Sprechen', 'Speak')].map((label, index) => <span key={label}><i>{index + 1}</i>{label}</span>)}
           </div>}
@@ -284,7 +294,8 @@ export const Lesson: React.FC = () => {
               <button type="button" className="listen-slow" onClick={() => speak(0.7, activeExercise.audio_text)}>{tr(lang, "Медленно", "Langsam", "Slow")}</button>
             </div>
           )}
-          <ExerciseInteraction exercise={{ ...activeExercise, id: `${id}-${exerciseIndex}-${retried[exerciseIndex] ? 'retry' : 'first'}` }} answer={answer} onAnswer={setAnswer} disabled={checked !== null} lang={lang} onAudio={sessionId ? transcribe : undefined} />
+          {(showTranscript || easyMode) && activeExercise.audio_text && <div className="listening-transcript"><small>{tr(lang, 'ТЕКСТ', 'TEXT', 'TRANSCRIPT')}</small><span>{activeExercise.audio_text}</span></div>}
+          <ExerciseInteraction exercise={{ ...activeExercise, id: `${id}-${exerciseIndex}-${retried[exerciseIndex] ? 'retry' : 'first'}` }} answer={answer} onAnswer={setAnswer} disabled={checked !== null} lang={lang} onAudio={sessionId ? transcribe : undefined} guided={easyMode || exerciseKind(activeExercise) === 'repair'} />
             {speechResult?.transcript && (
               <div className="speech-result">
                 <small>{tr(lang, "РАСПОЗНАНО", "ERKANNT", "RECOGNISED")}</small>
@@ -293,14 +304,15 @@ export const Lesson: React.FC = () => {
                 <em>{tr(lang, "Это оценка распознанных слов, не акцента или фонетики.", "Bewertet werden erkannte Wörter, nicht Akzent oder Phonetik.", "This measures recognised words, not accent or phonetics.")}</em>
               </div>
             )}
-          {checked === null && activeExercise.stage === "guided" && (learningProfile.show_guided_hint || showHint || retried[exerciseIndex]) && (
+          {checked === null && (learningProfile.show_guided_hint || showHint || easyMode || retried[exerciseIndex]) && activeExercise.hint && (
             <div className="guided-hint">{activeExercise.hint}</div>
           )}
-          {checked === null && activeExercise.stage === "guided" && !retried[exerciseIndex] && !learningProfile.show_guided_hint && !showHint && (
-            <button type="button" className="lesson-hint-toggle" onClick={() => setShowHint(true)}>
-              {tr(lang, "Показать подсказку", "Hinweis anzeigen", "Show hint")}
-            </button>
-          )}
+          {checked === null && <div className="lesson-support-row">
+            {activeExercise.hint && !showHint && !learningProfile.show_guided_hint && <button type="button" onClick={() => setShowHint(true)}>{tr(lang, 'Подсказка', 'Hinweis', 'Hint')}</button>}
+            {!easyMode && <button type="button" onClick={() => { setEasyMode(true); setShowHint(true); }}>{tr(lang, 'Сделать проще', 'Einfacher machen', 'Make easier')}</button>}
+            {(activeExercise.type === 'listening' || activeExercise.type === 'listening_choice') && !showTranscript && <button type="button" onClick={() => setShowTranscript(true)}>{tr(lang, 'Не могу слушать', 'Kann gerade nicht hören', "I can't listen")}</button>}
+            <button type="button" className="skip" onClick={() => void skipExercise('learner_choice')}>{tr(lang, 'Пропустить', 'Jetzt überspringen', 'Skip for now')}</button>
+          </div>}
           {checked === null ? (
             <button className="primary-action" onClick={check} disabled={!answer.trim() || !sessionId || checking}>
               {checking ? tr(lang, 'Проверяем…', 'Wird geprüft…', 'Checking…') : tr(lang, "Проверить", "Prüfen", "Check")}
@@ -312,7 +324,7 @@ export const Lesson: React.FC = () => {
                 <b>
                   {checked
                     ? tr(lang, "Верно", "Richtig", "Correct")
-                    : tr(lang, "Попробуй ещё раз", "Noch einmal", "Try again")}
+                    : tr(lang, "Почти", "Fast richtig", "Almost")}
                 </b>
                 {checked && <p>{feedback?.explanation}</p>}
                 {!checked && feedback?.correct_answer && (
@@ -342,15 +354,12 @@ export const Lesson: React.FC = () => {
                     {!checked && feedback.correct_answer && <small>{tr(lang, 'Возможный вариант:', 'Mögliche Fassung:', 'Possible revision:')} {feedback.correct_answer}</small>}
                   </div>
                 )}
-                {!checked && !retried[exerciseIndex] && (
-                  <small>
-                    {tr(lang, "Исправь ответ и попробуй снова.", "Korrigiere die Antwort und versuche es erneut.", "Correct your answer and try again.")}
-                  </small>
-                )}
+                {!checked && !retried[exerciseIndex] && <small>{tr(lang, 'Давай соберём ответ с поддержкой.', 'Bauen wir die Antwort mit Hilfe neu.', "Let's rebuild it with support.")}</small>}
               </div>
               <button onClick={next}>
-                <span>{!checked && !retried[exerciseIndex] ? tr(lang, "Исправить", "Korrigieren", "Fix it") : tr(lang, "Дальше", "Weiter", "Next")}</span><FaArrowRight />
+                <span>{!checked && !retried[exerciseIndex] ? tr(lang, "Исправить по словам", "Mit Wörtern korrigieren", "Fix with word tiles") : tr(lang, "Дальше", "Weiter", "Next")}</span><FaArrowRight />
               </button>
+              {!checked && <button type="button" className="feedback-skip" onClick={() => void skipExercise('after_feedback')}>{tr(lang, 'Продолжить пока', 'Vorerst weiter', 'Continue for now')}</button>}
             </div>
           )}
           {checkError && <div className="lesson-check-error" role="alert">{checkError}</div>}

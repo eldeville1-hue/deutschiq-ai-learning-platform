@@ -12,9 +12,10 @@ type Props = {
   disabled?: boolean;
   lang: AppLanguage;
   onAudio?: (blob: Blob) => Promise<void>;
+  guided?: boolean;
 };
 
-export const ExerciseInteraction: React.FC<Props> = ({ exercise, answer, onAnswer, disabled = false, lang, onAudio }) => {
+export const ExerciseInteraction: React.FC<Props> = ({ exercise, answer, onAnswer, disabled = false, lang, onAudio, guided = false }) => {
   const kind = exerciseKind(exercise);
   const [selectedTokens, setSelectedTokens] = useState<number[]>([]);
   const [conversationStep, setConversationStep] = useState(0);
@@ -43,6 +44,15 @@ export const ExerciseInteraction: React.FC<Props> = ({ exercise, answer, onAnswe
     onAnswer(next.map(item => tokens[item]).join(' '));
   };
   const clearTokens = () => { setSelectedTokens([]); onAnswer(''); };
+
+  const guidedRepairTokens = useMemo(() => {
+    if (kind !== 'repair' || !guided) return [];
+    const model = String(exercise.model_answer || exercise.answer || '').trim();
+    const words = model.split(/\s+/).filter(Boolean);
+    if (words.length < 2) return words;
+    const pivot = Math.ceil(words.length / 2);
+    return [...words.slice(pivot), ...words.slice(0, pivot)];
+  }, [exercise.answer, exercise.model_answer, guided, kind]);
 
   const addConversationReply = () => {
     const reply = conversationDraft.trim();
@@ -100,6 +110,29 @@ export const ExerciseInteraction: React.FC<Props> = ({ exercise, answer, onAnswe
     </div>
   );
 
+  if (kind === 'repair' && guided && guidedRepairTokens.length > 0) {
+    const built = answer ? answer.split(' ') : [];
+    const remaining = guidedRepairTokens.map((token, index) => ({ token, index })).filter(({ index }) => !selectedTokens.includes(index));
+    const chooseRepairToken = (token: string, index: number) => {
+      if (disabled) return;
+      const next = [...selectedTokens, index];
+      setSelectedTokens(next);
+      onAnswer([...built, token].join(' '));
+    };
+    const undoRepairToken = () => {
+      if (disabled || !built.length) return;
+      setSelectedTokens(value => value.slice(0, -1));
+      onAnswer(built.slice(0, -1).join(' '));
+    };
+    return <div className="exercise-reorder guided-repair">
+      <div className={`reorder-built${built.length ? '' : ' empty'}`} aria-live="polite">
+        {built.length ? built.map((token, index) => <span key={`${token}-${index}`}>{token}</span>) : <span>{tr(lang, 'Собери исправленное предложение', 'Baue den korrigierten Satz', 'Build the corrected sentence')}</span>}
+      </div>
+      <div className="reorder-bank">{remaining.map(({ token, index }) => <button type="button" key={`${token}-${index}`} disabled={disabled} onClick={() => chooseRepairToken(token, index)}>{token}</button>)}</div>
+      {built.length > 0 && !disabled && <div className="guided-repair-actions"><button type="button" className="reorder-clear" onClick={undoRepairToken}><FaUndo /> {tr(lang, 'Последнее слово', 'Letztes Wort', 'Undo word')}</button><button type="button" className="reorder-clear" onClick={clearTokens}>{tr(lang, 'Сначала', 'Neu', 'Reset')}</button></div>}
+    </div>;
+  }
+
   if (kind === 'write' && turns.length > 0) return (
     <div className="exercise-conversation" aria-label={tr(lang, 'Разговор', 'Gespräch', 'Conversation')}>
       <div className="conversation-progress"><span>{tr(lang, 'МИНИ-ДИАЛОГ', 'MINI-DIALOG', 'MINI DIALOGUE')}</span><b>{Math.min(conversationReplies.length + 1, turns.length)}/{turns.length}</b></div>
@@ -121,6 +154,7 @@ export const ExerciseInteraction: React.FC<Props> = ({ exercise, answer, onAnswe
   if (kind === 'write') return (
     <label className="exercise-text-answer">
       <span>{tr(lang, 'Одна короткая фраза', 'Ein kurzer Satz', 'One short sentence')}</span>
+      {guided && (exercise.model_answer || exercise.answer) && <div className="guided-writing-starter"><small>{tr(lang, 'МОЖНО ВЗЯТЬ ЗА ОСНОВУ', 'ALS HILFE', 'USE AS A STARTER')}</small><strong>{exercise.model_answer || exercise.answer}</strong></div>}
       <textarea rows={3} value={answer} disabled={disabled} onChange={event => onAnswer(event.target.value)} placeholder={tr(lang, 'Напиши по-немецки…', 'Schreibe auf Deutsch…', 'Write in German…')} />
       {!disabled && onAudio && <VoiceRecorder compact lang={lang} onAudio={onAudio} />}
     </label>
@@ -139,6 +173,7 @@ export const ExerciseInteraction: React.FC<Props> = ({ exercise, answer, onAnswe
   return (
     <label className="exercise-short-answer">
       <span>{kind === 'repair' ? tr(lang, 'Исправленный вариант', 'Korrigierte Fassung', 'Corrected version') : tr(lang, 'Твой ответ', 'Deine Antwort', 'Your answer')}</span>
+      {guided && (exercise.model_answer || exercise.answer) && <div className="guided-writing-starter"><small>{tr(lang, 'ПОДСКАЗКА-МОДЕЛЬ', 'SATZMODELL', 'ANSWER MODEL')}</small><strong>{exercise.model_answer || exercise.answer}</strong></div>}
       <input value={answer} disabled={disabled} onChange={event => onAnswer(event.target.value)} placeholder={kind === 'repair' ? tr(lang, 'Исправь только ошибку…', 'Korrigiere den Fehler…', 'Correct the error…') : tr(lang, 'Короткий ответ…', 'Kurze Antwort…', 'Short answer…')} />
     </label>
   );

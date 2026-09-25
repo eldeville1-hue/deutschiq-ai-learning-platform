@@ -68,17 +68,18 @@ export const Dashboard: React.FC = () => {
 
       <header className="rc-page-title rc-home-title">
         <p>{tr(lang, 'СЕГОДНЯ', 'HEUTE', 'TODAY')}</p>
-        <h1>{tr(lang, 'Твой урок', 'Deine Lektion', 'Your lesson')}</h1>
+        <h1>{tr(lang, 'Практика на сегодня', 'Deine Übung heute', "Today's practice")}</h1>
       </header>
 
       <section className="rc-focus-card">
         <header><span>{selectedLesson?.module_title || tr(lang, 'СЛЕДУЮЩИЙ ШАГ', 'NÄCHSTER SCHRITT', 'NEXT STEP')}{selectedLesson?.module_step && selectedLesson?.module_size ? ` · ${selectedLesson.module_step}/${selectedLesson.module_size}` : ''}</span><b>{data.level || selectedLesson?.level || 'A1'}</b></header>
         <h2>{selectedLesson?.title || topicLabel(topic, lang)}</h2>
+        <div className="rc-lesson-meta"><span>{Math.max(1, Number(learning?.session?.phases?.length || 1))} {tr(lang, 'коротких шага', 'kurze Schritte', 'short steps')}</span><span>≈ {Math.min(10, Number(learning?.session?.minutes || selectedLesson?.minutes || 6))} {tr(lang, 'мин', 'Min.', 'min')}</span></div>
         <div className="rc-focus-outcome"><FaCheck /><span><small>{tr(lang, 'ПОСЛЕ УРОКА', 'NACH DER LEKTION', 'AFTER THIS LESSON')}</small><strong>{selectedLesson?.can_do || tr(lang, 'Ты применишь навык в короткой реальной ситуации.', 'Du nutzt die Fähigkeit in einer kurzen Alltagssituation.', 'You will use the skill in a short real-life situation.')}</strong></span></div>
         {learning?.session?.phases?.length > 0 && <div className="rc-session-path" aria-label={tr(lang, 'План занятия', 'Ablauf', 'Session path')}>
           {(learning.session.phases as any[]).filter(phase => ['review','learn','speak'].includes(phase.kind)).map((phase, index) => <span key={`${phase.kind}-${index}`}>{phase.kind === 'review' ? <FaRedoAlt /> : phase.kind === 'speak' ? <FaComments /> : <FaVolumeUp />}<small>{phase.kind === 'review' ? tr(lang, 'Повторить', 'Wiederholen', 'Review') : phase.kind === 'speak' ? tr(lang, 'Сказать', 'Sprechen', 'Speak') : tr(lang, 'Освоить', 'Lernen', 'Learn')}</small></span>)}
         </div>}
-        <button type="button" className="rc-primary" onClick={startLesson}><span><FaPlay /> {selectedLesson?.id ? (learning?.due_count ? tr(lang, 'Начать с повторения', 'Mit Wiederholung starten', 'Start with review') : tr(lang, 'Начать', 'Starten', 'Start')) : tr(lang, 'Открыть план', 'Plan öffnen', 'Open plan')}</span><FaArrowRight /></button>
+        <button type="button" className="rc-primary" onClick={startLesson}><span><FaPlay /> {selectedLesson?.id ? (learning?.due_count ? tr(lang, 'Начать с повторения', 'Mit Wiederholung starten', 'Start with review') : tr(lang, 'Продолжить урок', 'Lektion fortsetzen', 'Continue lesson')) : tr(lang, 'Открыть план', 'Plan öffnen', 'Open plan')}</span><FaArrowRight /></button>
       </section>
 
       <section className={`rc-today-secondary${learning?.due_count ? ' has-review' : ''}`} aria-label={tr(lang, 'После урока', 'Nach der Lektion', 'After the lesson')}>
