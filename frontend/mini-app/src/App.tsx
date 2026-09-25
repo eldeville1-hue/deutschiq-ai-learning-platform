@@ -8,7 +8,6 @@ import { BottomNav } from './components/BottomNav';
 import { BetaIssueReporter } from './components/BetaIssueReporter';
 import { getTelegramUser, hasTelegramIdentity } from './utils/user';
 import { normalizeLanguage, tr } from './i18n/language';
-import './styles/global.css';
 
 const Entry = lazy(() => import('./pages/Entry').then(module => ({ default: module.Entry })));
 const Dashboard = lazy(() => import('./pages/Dashboard').then(module => ({ default: module.Dashboard })));
@@ -74,7 +73,7 @@ function AppRoutes() {
   const primaryRoutes = ['/dashboard', '/analytics', '/plan', '/tutor', '/profile'];
   const hasBackButton = !['/', ...primaryRoutes].includes(location.pathname);
   const showPrimaryNav = primaryRoutes.includes(location.pathname);
-  const showBetaReporter = location.pathname === '/diagnostic';
+  const showBetaReporter = showPrimaryNav || location.pathname.startsWith('/lesson/') || location.pathname === '/diagnostic';
   return (
     <div className={`app-frame${hasBackButton ? ' has-back-button' : ''}`}>
       <ConnectionStatus />
