@@ -66,13 +66,20 @@ export const Dashboard: React.FC = () => {
 
       {loadError && <div className="rc-notice error"><span>{tr(lang, 'Показываем сохранённые данные', 'Gespeicherte Daten werden angezeigt', 'Showing saved data')}</span><button type="button" onClick={load}>{tr(lang, 'Обновить', 'Aktualisieren', 'Refresh')}</button></div>}
 
-      <header className="rc-page-title rc-home-title">
-        <p>{tr(lang, 'СЕГОДНЯ', 'HEUTE', 'TODAY')}</p>
-        <h1>{tr(lang, 'Практика на сегодня', 'Deine Übung heute', "Today's practice")}</h1>
-      </header>
+      <section className="rc-home-hero">
+        <header className="rc-page-title rc-home-title">
+          <p>{tr(lang, 'ТВОЙ НЕМЕЦКИЙ СЕГОДНЯ', 'DEIN DEUTSCH HEUTE', 'YOUR GERMAN TODAY')}</p>
+          <h1>{tr(lang, 'Один навык. Один ясный шаг.', 'Eine Fähigkeit. Ein klarer Schritt.', 'One skill. One clear step.')}</h1>
+        </header>
+        <div className="rc-home-level" aria-label={tr(lang, 'Текущий уровень', 'Aktuelles Niveau', 'Current level')}>
+          <span>{data.level || 'A1'}</span>
+          <i><b /></i>
+          <small>{data.targetLevel || 'A2'}</small>
+        </div>
+      </section>
 
       <section className="rc-focus-card">
-        <header><span>{selectedLesson?.module_title || tr(lang, 'СЛЕДУЮЩИЙ ШАГ', 'NÄCHSTER SCHRITT', 'NEXT STEP')}{selectedLesson?.module_step && selectedLesson?.module_size ? ` · ${selectedLesson.module_step}/${selectedLesson.module_size}` : ''}</span><b>{data.level || selectedLesson?.level || 'A1'}</b></header>
+        <header><span>{selectedLesson?.module_title || tr(lang, 'СЛЕДУЮЩИЙ ШАГ', 'NÄCHSTER SCHRITT', 'NEXT STEP')}{selectedLesson?.module_step && selectedLesson?.module_size ? ` · ${selectedLesson.module_step}/${selectedLesson.module_size}` : ''}</span><b>{tr(lang, '≈ 10 МИН', '≈ 10 MIN', '≈ 10 MIN')}</b></header>
         <h2>{selectedLesson?.title || topicLabel(topic, lang)}</h2>
         <div className="rc-lesson-meta"><span>{Math.max(1, Number(learning?.session?.phases?.length || 1))} {tr(lang, 'коротких шага', 'kurze Schritte', 'short steps')}</span><span>≈ {Math.min(10, Number(learning?.session?.minutes || selectedLesson?.minutes || 6))} {tr(lang, 'мин', 'Min.', 'min')}</span></div>
         <div className="rc-focus-outcome"><FaCheck /><span><small>{tr(lang, 'ПОСЛЕ УРОКА', 'NACH DER LEKTION', 'AFTER THIS LESSON')}</small><strong>{selectedLesson?.can_do || tr(lang, 'Ты применишь навык в короткой реальной ситуации.', 'Du nutzt die Fähigkeit in einer kurzen Alltagssituation.', 'You will use the skill in a short real-life situation.')}</strong></span></div>
