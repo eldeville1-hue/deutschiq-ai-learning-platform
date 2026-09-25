@@ -37,6 +37,8 @@ class BalancedPlacementTests(unittest.TestCase):
         result = calculate_level_and_scores(answers, self.all_questions)
         self.assertEqual(result["level"], "B2")
         self.assertEqual(result["pillar_attempts"]["listening"], 4)
+        self.assertEqual(result["confidence"], "high")
+        self.assertIsNone(result["pillars"]["pronunciation"])
 
 
 if __name__ == "__main__":

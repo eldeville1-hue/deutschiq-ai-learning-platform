@@ -66,6 +66,13 @@ class LearningEngineTests(unittest.TestCase):
         lesson = SimpleNamespace(id=8, topic="dative_case", content={"day": 8}, weak_point_tags=["dative_case"])
         self.assertEqual(lesson_blockers(lesson, [lesson], {8}, {"word_order": 0}), [])
 
+    def test_declared_curriculum_prerequisite_is_actually_enforced(self):
+        first = SimpleNamespace(id=1, topic="greetings", content={"day": 1, "track": "A1", "prerequisites": []}, weak_point_tags=["greetings"])
+        second = SimpleNamespace(id=2, topic="personal_details", content={"day": 2, "track": "A1", "prerequisites": ["greetings"]}, weak_point_tags=["personal_details"])
+        self.assertEqual(["previous_step"], lesson_blockers(second, [first, second], set(), {}))
+        self.assertEqual([], lesson_blockers(second, [first, second], {1}, {}))
+        self.assertEqual([], lesson_blockers(second, [first, second], set(), {"greetings": 72}))
+
     def test_recommendation_adapts_without_reordering_route(self):
         first = SimpleNamespace(id=1, topic="word_order", content={"day": 1}, weak_point_tags=["word_order"])
         articles = SimpleNamespace(id=2, topic="articles", content={"day": 15}, weak_point_tags=["articles"])

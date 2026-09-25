@@ -178,6 +178,13 @@ class ContentQualityTests(unittest.TestCase):
                     self.assertTrue(all("i18n" not in item for item in localized["exercises"]))
         self.assertEqual({"error_repair", "reorder", "transform"}, guided_types)
 
+    def test_a1_and_a2_foundations_are_sequentially_prerequisite_gated(self):
+        for level, curriculum in (("A1", A1_CURRICULUM), ("A2", A2_CURRICULUM)):
+            lessons = [build_foundation_content(row, level) for row in curriculum]
+            self.assertEqual([], lessons[0]["prerequisites"])
+            for index, lesson in enumerate(lessons[1:], start=1):
+                self.assertEqual([curriculum[index - 1][2]], lesson["prerequisites"])
+
     def test_a1_first_conversation_is_a_connected_five_lesson_module(self):
         lessons = [build_foundation_content(row, "A1") for row in A1_CURRICULUM[:5]]
 

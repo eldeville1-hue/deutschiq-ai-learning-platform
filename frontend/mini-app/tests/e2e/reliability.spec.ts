@@ -41,6 +41,29 @@ test('new user sees onboarding and can enter diagnostics', async ({ page }) => {
   await expectNoHorizontalOverflow(page);
 });
 
+test('diagnostic keeps answers and retries when persistence fails', async ({ page }) => {
+  let submissions = 0;
+  await page.route('**/api/**', async route => {
+    const { pathname } = new URL(route.request().url());
+    if (pathname.includes('/api/user/state/')) return route.fulfill({ json: userState(false) });
+    if (pathname === '/api/diagnostic/questions') return route.fulfill({ json: [{ id: 1, pillar: 'grammar', text: 'Ich ___ hier.', options: ['wohne', 'wohnt'] }] });
+    if (pathname === '/api/diagnostic/submit') {
+      submissions += 1;
+      return route.fulfill({ json: { persisted: submissions > 1, estimated: true, confidence: 'low', level: 'A1', overall_score: 100, pillars: { grammar: 10, vocabulary: null, listening: null, pronunciation: null }, skill_status: { grammar: 'assessed', vocabulary: 'not_assessed', listening: 'not_assessed', pronunciation: 'not_assessed' }, mistakes: [] } });
+    }
+    if (pathname === '/api/events') return route.fulfill({ status: 204 });
+    return route.fulfill({ json: {} });
+  });
+  await page.goto('/diagnostic');
+  await page.getByRole('button', { name: /wohne/i }).click();
+  await expect(page.getByText(/calculated but not saved/i)).toBeVisible();
+  await page.getByRole('button', { name: /Retry saving/i }).click();
+  await expect(page).toHaveURL(/\/result/);
+  await expect(page.getByText('Speaking sample')).toBeVisible();
+  await expect(page.getByText('Not assessed').first()).toBeVisible();
+  expect(submissions).toBe(2);
+});
+
 test('returning user stays out of diagnostics after reload', async ({ page }) => {
   await mockApi(page, { completed: true });
   await page.goto('/');

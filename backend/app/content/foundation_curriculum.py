@@ -304,11 +304,13 @@ def build_foundation_content(row: tuple, level: str) -> dict:
             {"question":"Say the model aloud.","explanation":"Speak calmly and clearly."},
         ),
     ]
+    track_curriculum = A1_CURRICULUM if level == "A1" else A2_CURRICULUM
+    prerequisites = [] if day == 1 else [track_curriculum[day - 2][2]]
     return {
         "day":day,"week":module,"track":level,"module":module,"quality_version":5,
         "learning_method":"notice_build_use_reflect","title":title_ru,"objective":goals["ru"],
         "communication_goal":goals["ru"],"scenario":scenario_ru,"rule":rules["ru"],"examples":[model,alternate,"Das ist heute wichtig für mich." if level == "A1" else "In dieser Situation würde ich ähnlich reagieren."],
-        "audio_text":model,"cefr":level,"prerequisites":[],"common_mistakes":[f"❌ {wrong}",f"✅ {model}"],
+        "audio_text":model,"cefr":level,"prerequisites":prerequisites,"common_mistakes":[f"❌ {wrong}",f"✅ {model}"],
         "recall_prompt":"Закрой пример, назови правило и создай собственную фразу.",
         "i18n":{"ru":{"title":title_ru,"rule":rules["ru"],"objective":goals["ru"],"scenario":scenario_ru},"de":{"title":title_de,"rule":rules["de"],"objective":goals["de"],"scenario":scenario_de},"en":{"title":title_en,"rule":rules["en"],"objective":goals["en"],"scenario":scenario_en}},
         "exercises":exercises,

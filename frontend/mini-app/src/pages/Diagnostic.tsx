@@ -23,6 +23,7 @@ export const Diagnostic: React.FC = () => {
   const [submitError, setSubmitError] = useState('');
   const [questionError, setQuestionError] = useState(false);
   const [questionRetry, setQuestionRetry] = useState(0);
+  const [pendingRecovery, setPendingRecovery] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -46,7 +47,21 @@ export const Diagnostic: React.FC = () => {
     setAnswers({});
     setAnswerLocked(false);
     api.getQuestions(lang)
-      .then(data => { setQuestions(Array.isArray(data) ? data : []); setLoading(false); })
+      .then(data => {
+        const loaded = Array.isArray(data) ? data : [];
+        setQuestions(loaded);
+        try {
+          const pending = JSON.parse(localStorage.getItem(`deutschiq-pending-diagnostic-${userId}`) || 'null');
+          if (pending?.answers && Object.keys(pending.answers).length === loaded.length) {
+            setAnswers(pending.answers);
+            setCurrent(Math.max(0, loaded.length - 1));
+            setAnswerLocked(true);
+            setPendingRecovery(true);
+            setSubmitError(tr(lang, 'Результат ещё не сохранён. Ответы восстановлены.', 'Das Ergebnis ist noch nicht gespeichert. Deine Antworten wurden wiederhergestellt.', 'The result is not saved yet. Your answers were restored.'));
+          }
+        } catch { /* A damaged recovery draft should not block a fresh test. */ }
+        setLoading(false);
+      })
       .catch(() => { setQuestions([]); setQuestionError(true); setLoading(false); });
   }, [userId, lang, questionRetry]);
 
@@ -54,11 +69,22 @@ export const Diagnostic: React.FC = () => {
     if (!userId || submitting) return;
     setSubmitting(true);
     setSubmitError('');
+    try { localStorage.setItem(`deutschiq-pending-diagnostic-${userId}`, JSON.stringify({ answers: finalAnswers, savedAt: Date.now() })); } catch { /* Retry still works in memory. */ }
     try {
       const result = await api.submitDiagnostic({ user_id: userId, answers: finalAnswers, language: lang });
+      if (!result?.persisted) {
+        setPendingRecovery(true);
+        setSubmitError(tr(lang, 'Результат рассчитан, но не сохранён.', 'Das Ergebnis wurde berechnet, aber nicht gespeichert.', 'The result was calculated but not saved.'));
+        setSubmitting(false);
+        setAnswerLocked(true);
+        return;
+      }
+      try { localStorage.removeItem(`deutschiq-pending-diagnostic-${userId}`); } catch { /* Ignore unavailable storage. */ }
+      setPendingRecovery(false);
       sessionStorage.setItem(`deutschiq-result-${userId}`, JSON.stringify(result));
       navigate(withUser('/result'), { replace: true, state: { result } });
     } catch {
+      setPendingRecovery(true);
       setSubmitError(tr(lang, 'Не удалось отправить тест. Проверь соединение и попробуй ещё раз.', 'Die Auswertung konnte nicht geladen werden. Bitte versuche es erneut.', 'Could not submit the test. Check your connection and try again.'));
       setSubmitting(false);
       setAnswerLocked(false);
@@ -150,6 +176,7 @@ export const Diagnostic: React.FC = () => {
       )}
 
       {submitError && <p className="diagnostic-error">{submitError}</p>}
+      {submitError && pendingRecovery && <button type="button" className="primary-action diagnostic-save-retry" disabled={submitting} onClick={() => submitTest(answers)}>{submitting ? tr(lang, 'Сохраняем…', 'Wird gespeichert…', 'Saving…') : tr(lang, 'Повторить сохранение', 'Speichern erneut versuchen', 'Retry saving')}</button>}
 
     </main>
   );

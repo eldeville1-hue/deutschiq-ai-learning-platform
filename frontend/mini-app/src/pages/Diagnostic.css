@@ -234,3 +234,5 @@
   .diagnostic-shell *::before,
   .diagnostic-shell *::after { animation: none !important; transition: none !important; }
 }
+
+.diagnostic-save-retry { width: 100%; margin-top: 10px; }

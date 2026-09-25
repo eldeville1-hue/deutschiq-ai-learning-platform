@@ -127,7 +127,7 @@ async def submit_diagnostic(data: SubmitAnswers, db: Session = Depends(get_db), 
             grammar_score=result["pillars"]["grammar"],
             vocabulary_score=result["pillars"]["vocabulary"],
             listening_score=result["pillars"]["listening"],
-            pronunciation_score=result["pillars"]["pronunciation"],
+            pronunciation_score=None,
             weak_points=result["weak_points"]
         )
         db.add(diag)
@@ -158,7 +158,9 @@ async def submit_diagnostic(data: SubmitAnswers, db: Session = Depends(get_db), 
             pillar: "assessed" if result["pillar_attempts"].get(pillar, 0) else "not_assessed"
             for pillar in ("grammar", "vocabulary", "listening", "pronunciation")
         },
-        "confidence": "medium",
+        "confidence": result["confidence"],
+        "estimated": True,
+        "evidence": result["evidence"],
         "weak_points": result["weak_points"],
         "weak_tags": list(result["weak_points"].keys()),
         "level_scores": result["level_scores"],

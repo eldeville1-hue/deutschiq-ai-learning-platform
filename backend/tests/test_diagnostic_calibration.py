@@ -39,6 +39,8 @@ class DiagnosticCalibrationTests(unittest.TestCase):
         result = calculate_level_and_scores({1: "answer-1"}, QUESTIONS)
         self.assertEqual(result["overall_score"], 100)
         self.assertEqual(result["level"], "A1")
+        self.assertEqual(result["confidence"], "low")
+        self.assertIsNone(result["pillars"]["pronunciation"])
 
     def test_wrong_higher_band_cannot_be_hidden_by_easy_items(self):
         answers = self.answers_through(14)
@@ -46,6 +48,13 @@ class DiagnosticCalibrationTests(unittest.TestCase):
             answers[question_id] = "wrong"
         result = calculate_level_and_scores(answers, QUESTIONS)
         self.assertEqual(result["level"], "A2")
+
+    def test_full_grammar_only_evidence_does_not_claim_high_confidence(self):
+        result = calculate_level_and_scores(self.answers_through(18), QUESTIONS)
+        self.assertEqual(result["confidence"], "medium")
+        self.assertEqual(result["evidence"]["answered"], 18)
+        self.assertEqual(result["evidence"]["speaking_items"], 0)
+        self.assertIsNone(result["pillars"]["pronunciation"])
 
 
 if __name__ == "__main__":

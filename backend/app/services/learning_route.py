@@ -73,6 +73,18 @@ def lesson_blockers(lesson, lessons, completed_ids: set[int], mastery: dict[str,
     if lesson.id in completed_ids:
         return []
     blockers = list(blocked_by(lesson.topic, mastery))
+    content = lesson.content if isinstance(lesson.content, dict) else {}
+    track = content.get("track")
+    for prerequisite in content.get("prerequisites") or []:
+        prerequisite_lessons = [
+            item for item in lessons
+            if item.topic == prerequisite and (item.content or {}).get("track") == track
+        ]
+        completed = any(item.id in completed_ids for item in prerequisite_lessons)
+        demonstrated = float(mastery.get(prerequisite, 0) or 0) >= 70
+        if not completed and not demonstrated:
+            blockers.append("previous_step")
+            break
     earlier_same_skill = next((
         item for item in lessons
         if item.topic == lesson.topic
@@ -81,7 +93,7 @@ def lesson_blockers(lesson, lessons, completed_ids: set[int], mastery: dict[str,
     ), None)
     if earlier_same_skill:
         blockers.append("previous_step")
-    return blockers
+    return list(dict.fromkeys(blockers))
 
 
 def select_recommended_lesson(lessons, completed_ids: set[int], mastery: dict[str, float], weak_points: dict):
