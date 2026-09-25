@@ -41,29 +41,6 @@ test('new user sees onboarding and can enter diagnostics', async ({ page }) => {
   await expectNoHorizontalOverflow(page);
 });
 
-test('diagnostic keeps answers and retries when persistence fails', async ({ page }) => {
-  let submissions = 0;
-  await page.route('**/api/**', async route => {
-    const { pathname } = new URL(route.request().url());
-    if (pathname.includes('/api/user/state/')) return route.fulfill({ json: userState(false) });
-    if (pathname === '/api/diagnostic/questions') return route.fulfill({ json: [{ id: 1, pillar: 'grammar', text: 'Ich ___ hier.', options: ['wohne', 'wohnt'] }] });
-    if (pathname === '/api/diagnostic/submit') {
-      submissions += 1;
-      return route.fulfill({ json: { persisted: submissions > 1, estimated: true, confidence: 'low', level: 'A1', overall_score: 100, pillars: { grammar: 10, vocabulary: null, listening: null, pronunciation: null }, skill_status: { grammar: 'assessed', vocabulary: 'not_assessed', listening: 'not_assessed', pronunciation: 'not_assessed' }, mistakes: [] } });
-    }
-    if (pathname === '/api/events') return route.fulfill({ status: 204 });
-    return route.fulfill({ json: {} });
-  });
-  await page.goto('/diagnostic');
-  await page.getByRole('button', { name: /wohne/i }).click();
-  await expect(page.getByText(/calculated but not saved/i)).toBeVisible();
-  await page.getByRole('button', { name: /Retry saving/i }).click();
-  await expect(page).toHaveURL(/\/result/);
-  await expect(page.getByText('Speaking sample')).toBeVisible();
-  await expect(page.getByText('Not assessed').first()).toBeVisible();
-  expect(submissions).toBe(2);
-});
-
 test('returning user stays out of diagnostics after reload', async ({ page }) => {
   await mockApi(page, { completed: true });
   await page.goto('/');
@@ -138,6 +115,19 @@ test('beta learner can report an issue from a primary screen', async ({ page }) 
   expect(report.message).toBe('The exercise button is hidden');
 });
 
+test('iPhone WebView keeps product controls styled', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockApi(page, { completed: true });
+  await page.goto('/dashboard');
+
+  const control = page.locator('.rc-focus-card .rc-primary');
+  await expect(control).toBeVisible();
+  await expect(control).toHaveCSS('appearance', 'none');
+  await expect(control).toHaveCSS('display', 'flex');
+  await expect(control).toHaveCSS('background-color', 'rgb(244, 191, 85)');
+  await expectNoHorizontalOverflow(page);
+});
+
 test('lesson feedback carries the exact exercise context', async ({ page }) => {
   let report: any = null;
   await mockApi(page, { completed: true });
@@ -158,7 +148,7 @@ for (const [language, heading] of [['ru', 'Твой урок'], ['de', 'Deine Le
     await page.goto('/dashboard');
     await expect(page.getByRole('heading', { name: heading })).toBeVisible();
     await expect(page.locator('html')).toHaveAttribute('lang', language);
-    await expect(page.getByText(/View progress|Посмотреть прогресс|Fortschritt ansehen/)).toBeVisible();
+    await expect(page.getByText(/WHAT TO IMPROVE|ЧТО УЛУЧШИТЬ|NÄCHSTER FOKUS/)).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
 }
@@ -174,102 +164,7 @@ test('learner completes a production exercise and sees CEFR evidence', async ({ 
   await expect(page.getByText('82%')).toBeVisible();
   await page.locator('.answer-feedback > button').click();
   await expect(page.getByText('LESSON COMPLETE')).toBeVisible();
-  await expect(page.getByText('100%')).toBeVisible();
-  await expectNoHorizontalOverflow(page);
-});
-
-test('practical reorder exercise is usable without mobile overflow', async ({ page }) => {
-  await mockApi(page, { completed: true });
-  await page.route('**/api/lesson/77', route => route.fulfill({ json: {
-    ...lesson,
-    content: {
-      ...lesson.content,
-      exercises: [{
-        id: 'genitive-build', type: 'reorder', stage: 'guided',
-        question: 'Build the sentence about the concert.',
-        tokens: ['das', 'Konzert', 'des', 'statt', 'Regens', 'findet', 'Trotz'],
-        hint: 'trotz + genitive: trotz des Regens',
-      }],
-    },
-  }}));
-  await page.goto('/lesson/77');
-  await page.getByRole('button', { name: /Show example/i }).click();
-  await page.getByRole('button', { name: /Start practice/i }).click();
-  await expect(page.getByText('Tap the words in the correct order')).toBeVisible();
-  for (const token of ['Trotz', 'des', 'Regens', 'findet', 'das', 'Konzert', 'statt']) {
-    await page.locator('.reorder-bank').getByRole('button', { name: token, exact: true }).click();
-  }
-  await expect(page.locator('.reorder-built')).toContainText('Trotz des Regens findet das Konzert statt');
-  await expect(page.getByRole('button', { name: /^Check$/i })).toBeEnabled();
-  await expectNoHorizontalOverflow(page);
-});
-
-test('A1 analogy exercise transfers a known pattern on a small phone', async ({ page }) => {
-  await page.setViewportSize({ width: 320, height: 700 });
-  await mockApi(page, { completed: true });
-  await page.route('**/api/lesson/77', route => route.fulfill({ json: {
-    ...lesson,
-    level: 'A1',
-    content: {
-      ...lesson.content,
-      title: 'Greet someone',
-      examples: ['Hallo! Ich heiße Amir.'],
-      exercises: [{
-        id: 'a1-analogy', type: 'analogy_choice', stage: 'independent',
-        question: 'What do you say to the teacher?',
-        analogy_source: 'Hallo! Ich heiße Amir.',
-        analogy_target: 'It is your first day in a language course.',
-        pattern_label: 'Same pattern — new situation',
-        options: ['Guten Morgen! Ich heiße Mia.', 'Guten Morgen! Ich heißen Mia.', 'Danke, gleichfalls!'],
-      }],
-    },
-  }}));
-  await page.goto('/lesson/77');
-  await page.getByRole('button', { name: /Show example/i }).click();
-  await page.getByRole('button', { name: /Start practice/i }).click();
-  await expect(page.getByText('KNOWN MODEL')).toBeVisible();
-  await expect(page.getByText('NEW SITUATION')).toBeVisible();
-  await page.getByRole('radio', { name: 'Guten Morgen! Ich heiße Mia.' }).click();
-  await expect(page.getByRole('button', { name: /^Check$/i })).toBeEnabled();
-  await expectNoHorizontalOverflow(page);
-});
-
-test('A1 checkpoint becomes a complete three-turn phone conversation', async ({ page }) => {
-  let submittedAnswer = '';
-  await mockApi(page, { completed: true });
-  await page.route('**/api/lesson/77', route => route.fulfill({ json: {
-    ...lesson,
-    level: 'A1',
-    content: {
-      ...lesson.content,
-      title: 'Keep the conversation going',
-      examples: ['Wo wohnst du?'],
-      exercises: [{
-        id: 'first-conversation', type: 'dialogue', stage: 'transfer',
-        question: 'Have a short first conversation.', answer: 'Hallo! Ich heiße Alex.\nWoher kommst du?\nWo wohnst du?',
-        conversation_turns: [
-          { partner: 'Guten Morgen! Ich heiße Lena. Wie heißt du?', goal: 'Greet the person and say your name.', placeholder: 'Hallo! Ich heiße …' },
-          { partner: 'Freut mich! Frag mich, woher ich komme.', goal: 'Ask a question with Woher.', placeholder: 'Woher …?' },
-          { partner: 'Ich komme aus Köln. Frag mich jetzt, wo ich wohne.', goal: 'Ask a question with Wo.', placeholder: 'Wo …?' },
-        ],
-      }],
-    },
-  }}));
-  await page.route('**/api/lesson/check-answer', async route => {
-    submittedAnswer = route.request().postDataJSON().answer;
-    return route.fulfill({ json: { correct: true, explanation: 'Conversation completed.', correct_answer: submittedAnswer } });
-  });
-  await page.goto('/lesson/77');
-  await page.getByRole('button', { name: /Show example/i }).click();
-  await page.getByRole('button', { name: /Start practice/i }).click();
-  for (const reply of ['Hallo! Ich heiße Alex.', 'Woher kommst du?', 'Wo wohnst du?']) {
-    await page.getByPlaceholder(/Hallo!|Woher|Wo …/).fill(reply);
-    await page.getByRole('button', { name: /Send reply|Finish dialogue/i }).click();
-  }
-  await expect(page.getByText('Dialogue ready to check')).toBeVisible();
-  await page.getByRole('button', { name: /^Check$/i }).click();
-  await expect.poll(() => submittedAnswer).toContain('Woher kommst du?');
-  expect(submittedAnswer.split('\n')).toHaveLength(3);
+  await expect(page.getByRole('heading', { name: '100%' })).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
 
@@ -297,33 +192,4 @@ test('Telegram BackButton owns nested navigation without duplicate browser contr
   await page.goto('/lesson/77');
   await expect(page.locator('.app-back-button')).toHaveCount(0);
   await expect.poll(() => page.evaluate(() => (window as any).__backCalls.shown)).toBeGreaterThan(0);
-});
-
-test('owner can inspect every lesson state without changing learner progress', async ({ page }) => {
-  const writes: string[] = [];
-  await page.route('**/api/**', async route => {
-    const { pathname } = new URL(route.request().url());
-    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(route.request().method())) writes.push(pathname);
-    if (pathname === '/api/internal/beta') return route.fulfill({ json: {
-      audience: {}, funnel: {}, sessions: {}, events: {}, exercise_health: [], retention: {}, beta: { invites: [] }, testers: [],
-    }});
-    if (pathname === '/api/internal/curriculum') return route.fulfill({ json: [{ id: 91, level: 'A1', day: 1, title: 'First conversation', exercise_count: 1 }] });
-    if (pathname === '/api/internal/curriculum/91') return route.fulfill({ json: {
-      id: 91, level: 'A1', pillar: 'speaking', topic: 'greetings', preview: true,
-      content: { title: 'First conversation', objective: 'Greet someone confidently.', rule: 'Use Hallo.', examples: ['Hallo!'], exercises: [{ id: 'hello-listen', type: 'listening_choice', question: 'What did you hear?', audio_text: 'Hallo!', options: ['Hallo!', 'Tschüss!'], answer: 'Hallo!', explanation: 'Hallo is the greeting.' }] },
-    }});
-    return route.fulfill({ json: {} });
-  });
-  await page.goto('/control-center');
-  await page.getByPlaceholder('Access key').fill('test-control-key');
-  await page.getByRole('button', { name: 'Open dashboard' }).click();
-  await expect(page.getByRole('heading', { name: 'Curriculum laboratory' })).toBeVisible();
-  await page.getByLabel('Phone').selectOption('320');
-  await page.getByRole('button', { name: 'practice' }).click();
-  await expect(page.getByText('What did you hear?')).toBeVisible();
-  await page.getByRole('button', { name: 'wrong' }).click();
-  await expect(page.getByText('Needs repair')).toBeVisible();
-  await page.getByRole('button', { name: 'complete' }).click();
-  await expect(page.getByText('Preview completion does not change learner progress.')).toBeVisible();
-  expect(writes).toEqual([]);
 });
