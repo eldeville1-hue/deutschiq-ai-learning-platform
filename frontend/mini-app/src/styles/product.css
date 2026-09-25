@@ -805,6 +805,55 @@ button:disabled { cursor: not-allowed; opacity: .45; }
   .rc-today-secondary button{min-height:32px}
 }
 
+/* Release 59 — visible product redesign, not a maintenance patch. */
+.rc-home{gap:15px;background:radial-gradient(circle at 82% 6%,color-mix(in srgb,var(--dq-level) 15%,transparent),transparent 30%)}
+.rc-home-bar{padding:7px 0 2px;border:0}
+.rc-identity .dq-brand-mark{width:36px;height:36px;border-radius:12px}
+.rc-identity small{font-size:9px;letter-spacing:.02em}.rc-identity strong{font-size:14px}
+.rc-home-stats{gap:7px}.rc-home-stats>span{min-height:38px;padding:5px 10px;border:1px solid var(--dq-border);border-radius:12px;background:rgba(255,255,255,.025)}
+.rc-home-hero{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 58px;align-items:end;gap:14px;padding:18px 0 8px}
+.rc-home-title{padding:0}.rc-home-title p{color:var(--dq-level);font-size:9px}.rc-home-title h1{max-width:320px;font-size:clamp(30px,9vw,40px);line-height:.98}
+.rc-home-level{display:grid;justify-items:center;gap:6px;padding:10px 7px;border:1px solid color-mix(in srgb,var(--dq-level) 30%,var(--dq-border));border-radius:18px;background:color-mix(in srgb,var(--dq-level) 7%,var(--dq-surface));box-shadow:0 12px 30px rgba(0,0,0,.18)}
+.rc-home-level span{color:var(--dq-level);font-size:18px;font-weight:900}.rc-home-level small{color:var(--dq-muted);font-size:9px;font-weight:850}
+.rc-home-level i{width:4px;height:28px;position:relative;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}.rc-home-level b{position:absolute;inset:auto 0 0;height:44%;background:var(--dq-level)}
+.rc-focus-card{padding:21px;border:1px solid color-mix(in srgb,var(--dq-level) 30%,var(--dq-border));border-radius:26px;background:radial-gradient(circle at 100% 0,color-mix(in srgb,var(--dq-level) 15%,transparent),transparent 40%),linear-gradient(145deg,#151f2d,#0e151f);box-shadow:0 22px 55px rgba(0,0,0,.32)}
+.rc-focus-card>header{margin-bottom:18px}.rc-focus-card>header>span{font-size:9px;letter-spacing:.14em}.rc-focus-card>header>b{padding:6px 8px;border-radius:8px;background:color-mix(in srgb,var(--dq-level) 12%,transparent);color:var(--dq-level);font-size:8px}
+.rc-focus-card h2{max-width:340px;margin:0;font-size:clamp(27px,8vw,36px);line-height:1.04;letter-spacing:-.045em}
+.rc-lesson-meta{margin:12px 0 0}.rc-lesson-meta span{padding:0;background:transparent;font-size:10px}.rc-lesson-meta span+span:before{content:'·';margin-right:8px;color:var(--dq-subtle)}
+.rc-focus-outcome{margin:20px 0;padding:14px;border-color:rgba(255,255,255,.08);background:rgba(4,8,14,.3)}
+.rc-session-path{margin-bottom:13px}.rc-session-path span{min-height:38px;border:1px solid rgba(255,255,255,.055);background:rgba(255,255,255,.025)}
+.rc-focus-card .rc-primary{min-height:58px;border-radius:17px}
+.rc-today-secondary{min-height:0;padding:13px 2px;border:0;border-top:1px solid var(--dq-border);border-radius:0;background:transparent}
+
+.rc-analytics{gap:15px;background:radial-gradient(circle at 90% 4%,rgba(130,174,248,.1),transparent 29%)}
+.rc-analytics>.rc-page-title{padding-top:15px}.rc-analysis-overview{display:grid;grid-template-columns:1fr 102px;align-items:center;gap:14px;padding:21px;border:1px solid rgba(130,174,248,.2);background:radial-gradient(circle at 100% 0,rgba(130,174,248,.12),transparent 45%),var(--dq-surface)}
+.rc-analysis-overview .rc-level-block{align-self:center}.rc-analysis-overview .rc-journey,.rc-analysis-overview>p{grid-column:1/-1}.rc-analysis-overview>p{margin:0;padding-top:12px;border-top:1px solid var(--dq-border)}
+.rc-next-action{border:0;background:linear-gradient(135deg,var(--dq-gold-soft),var(--dq-gold));color:#10151e}.rc-next-action small,.rc-next-action em,.rc-next-action strong{color:#10151e}
+.rc-evidence-toggle{background:transparent;border-style:dashed}
+
+.rc-plan{gap:15px;background:radial-gradient(circle at 16% 2%,color-mix(in srgb,var(--dq-level) 11%,transparent),transparent 30%)}
+.rc-plan>.rc-page-title{padding-top:15px}.rc-plan-now{padding:21px;border-radius:24px;box-shadow:0 18px 45px rgba(0,0,0,.24)}
+.rc-plan-now h2{font-size:clamp(25px,7.4vw,34px);line-height:1.05}.rc-plan-progress{padding:16px;border-radius:18px;background:rgba(255,255,255,.025)}
+.rc-module-strip{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}.rc-module-strip span{min-height:42px;display:grid;place-items:center;padding:6px;font-size:0}.rc-module-strip span:before{font-size:11px}.rc-module-strip span:nth-child(1):before{content:'01'}.rc-module-strip span:nth-child(2):before{content:'02'}.rc-module-strip span:nth-child(3):before{content:'03'}.rc-module-strip span:nth-child(4):before{content:'04'}
+.rc-route{border-radius:22px}.rc-route-row{min-height:64px}
+
+.precision-tutor{background:radial-gradient(circle at 50% 4%,rgba(244,191,85,.09),transparent 30%)}
+.precision-tutor .page-header{padding-top:15px}.precision-tutor .feature-icon{width:54px;height:54px;border-radius:18px}.precision-tutor .chat-empty h2{max-width:320px;font-size:clamp(25px,7vw,32px)}
+.precision-tutor .chat-empty p{font-size:12px}.precision-tutor .quick-actions button{border-color:rgba(244,191,85,.16);background:rgba(244,191,85,.045)}
+.precision-tutor .tutor-dock{margin-top:auto}.precision-tutor .chat-composer{border-color:rgba(244,191,85,.22);background:#0d141f}
+
+.precision-profile{gap:15px;background:radial-gradient(circle at 86% 3%,rgba(244,191,85,.11),transparent 29%)}
+.profile-masthead{padding-top:15px}.profile-passport{padding:18px;border:1px solid var(--dq-border);border-radius:22px;background:rgba(255,255,255,.025)}
+.profile-learning-pass{padding:21px;border-radius:24px;box-shadow:0 18px 45px rgba(0,0,0,.25)}
+.profile-learning-pass h2{font-size:24px;letter-spacing:-.03em}.profile-learning-pass>button{min-height:54px;margin-top:4px}
+.streak-section,.achievement-section,.profile-settings{padding:18px!important;border:1px solid var(--dq-border)!important;background:rgba(255,255,255,.02)!important}
+
+@media(max-width:380px){
+  .rc-home-hero{grid-template-columns:minmax(0,1fr) 52px}.rc-home-title h1{font-size:29px}.rc-home-level{padding:9px 6px}
+  .rc-analysis-overview{grid-template-columns:1fr 88px}.rc-score-ring{width:82px;height:82px}.rc-score-ring::before{width:69px;height:69px}
+  .rc-module-strip{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+
 /* Release 55 — analogy transfer is a distinct, phone-first learning action. */
 .exercise-analogy{display:grid;gap:12px}
 .analogy-bridge{display:grid;grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr);align-items:stretch;gap:7px}
