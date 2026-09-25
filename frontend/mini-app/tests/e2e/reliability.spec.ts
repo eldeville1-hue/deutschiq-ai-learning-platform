@@ -168,6 +168,24 @@ test('learner completes a production exercise and sees CEFR evidence', async ({ 
   await expectNoHorizontalOverflow(page);
 });
 
+for (const width of [320, 375, 390, 430]) {
+  test(`lesson v2 stays focused and usable at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 740 });
+    await mockApi(page, { completed: true });
+    await page.goto('/lesson/77');
+    await expectNoHorizontalOverflow(page);
+    await page.getByRole('button', { name: /Show example/i }).click();
+    await page.getByRole('button', { name: /Start practice/i }).click();
+    await expect(page.locator('.lesson-task-surface')).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Check$/i })).toBeVisible();
+    await page.getByRole('textbox').fill('Du solltest früher schlafen gehen.');
+    await page.getByRole('button', { name: /^Check$/i }).click();
+    await expect(page.locator('.answer-feedback')).toBeVisible();
+    await expect(page.locator('.lesson-task-surface')).toBeHidden();
+    await expectNoHorizontalOverflow(page);
+  });
+}
+
 test('stale dashboard cache survives a bounded network failure without reload loops', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('deutschiq-dashboard-9001', JSON.stringify({ savedAt: Date.now() - 60_000, value: { level: 'B1', targetLevel: 'B2', xp: 321, streak: 4, weaknesses: [] } })));
   let dashboardRequests = 0;
