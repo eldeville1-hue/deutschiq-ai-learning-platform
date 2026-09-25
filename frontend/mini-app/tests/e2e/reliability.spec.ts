@@ -128,6 +128,22 @@ test('iPhone WebView keeps product controls styled', async ({ page }) => {
   await expectNoHorizontalOverflow(page);
 });
 
+test('iPhone tutor stays compact above navigation', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockApi(page, { completed: true });
+  await page.goto('/tutor');
+  await expect(page.getByRole('heading', { name: 'AI Tutor' })).toBeVisible();
+  await expect(page.locator('.quick-actions button')).toHaveCount(3);
+  await expect(page.locator('.beta-report-trigger')).toBeHidden();
+  await expect(page.locator('.chat-composer')).toBeVisible();
+  await expect.poll(async () => page.evaluate(() => {
+    const composer = document.querySelector('.chat-composer')?.getBoundingClientRect();
+    const nav = document.querySelector('.bottom-nav')?.getBoundingClientRect();
+    return Boolean(composer && nav && composer.bottom < nav.top);
+  })).toBe(true);
+  await expectNoHorizontalOverflow(page);
+});
+
 test('lesson feedback carries the exact exercise context', async ({ page }) => {
   let report: any = null;
   await mockApi(page, { completed: true });
