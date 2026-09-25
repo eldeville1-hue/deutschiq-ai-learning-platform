@@ -65,11 +65,11 @@ export const Tutor: React.FC = () => {
   };
   return (
     <main className="app-shell tutor-page precision-tutor v30-page v30-tutor page-enter">
-      <header className="page-header"><div><p className="eyebrow">{tr(lang, 'ИИ-ПОМОЩНИК', 'KI-HILFE', 'AI TUTOR')}</p><h1>{tr(lang, 'Репетитор', 'Tutor', 'Tutor')}</h1></div><span className="quota">BETA</span></header>
+      <header className="page-header"><div><p className="eyebrow">DEUTSCHIQ</p><h1>{tr(lang, 'ИИ-репетитор', 'KI-Tutor', 'AI Tutor')}</h1></div><span className="quota">BETA</span></header>
       {!ready && <div className="rc-notice"><span>{tr(lang, 'Подготавливаем репетитора…', 'Tutor wird vorbereitet…', 'Preparing your tutor…')}</span></div>}
       {loadError && <div className="rc-notice error"><span>{tr(lang, 'Не удалось загрузить историю', 'Verlauf konnte nicht geladen werden', 'Could not load chat history')}</span><button type="button" onClick={loadTutor}>{tr(lang, 'Повторить', 'Erneut laden', 'Try again')}</button></div>}
       <section className={`tutor-workspace${messages.length ? ' has-messages' : ''}`}>
-        {!messages.length && <div className="chat-empty"><span className="feature-icon"><FaRobot /></span><h2>{tr(lang, 'Что разберём?', 'Was möchtest du klären?', 'What should we work on?')}</h2><p>{tr(lang, 'Выбери быстрый вариант или задай свой вопрос.', 'Wähle einen Einstieg oder stelle deine eigene Frage.', 'Choose a quick start or ask your own question.')}</p><div className="quick-actions">{quick.map(item => <button type="button" key={item.title} disabled={!ready || loading} onClick={() => send(item.prompt)}>{item.title}</button>)}</div></div>}
+        {!messages.length && <div className="chat-empty"><span className="feature-icon"><FaRobot /></span><h2>{tr(lang, 'Что потренируем?', 'Was üben wir?', 'What shall we practise?')}</h2><p>{tr(lang, 'Выбери вариант или задай свой вопрос.', 'Wähle einen Einstieg oder stelle deine Frage.', 'Choose an option or ask your own question.')}</p><div className="quick-actions">{quick.map(item => <button type="button" key={item.title} disabled={!ready || loading} onClick={() => send(item.prompt)}>{item.title}</button>)}</div></div>}
         <div className="chat-messages" aria-live="polite">{messages.map((m, i) => <div key={i} className={`message ${m.role}`}>{m.content}{m.role === 'assistant' && <button type="button" className="message-audio" onClick={() => speak(m.content)} aria-label={tr(lang, 'Прослушать ответ', 'Antwort anhören', 'Listen to answer')}><FaVolumeUp /></button>}</div>)}{loading && <div className="message assistant typing">•••</div>}<div ref={conversationEnd} /></div>
       </section>
       <section className="tutor-dock">
