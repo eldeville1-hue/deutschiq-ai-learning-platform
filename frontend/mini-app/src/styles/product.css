@@ -805,6 +805,71 @@ button:disabled { cursor: not-allowed; opacity: .45; }
   .rc-today-secondary button{min-height:32px}
 }
 
+/* Release 60 — Mobile Lesson System v2. */
+.lesson-flow.precision-lesson{padding:calc(14px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));background:radial-gradient(circle at 50% 0,color-mix(in srgb,var(--dq-level) 9%,transparent),transparent 28%),var(--dq-bg)}
+.precision-lesson .lesson-progress-head{min-height:36px;display:grid;grid-template-columns:1fr auto;align-items:center;gap:7px 12px;padding:0}
+.precision-lesson .lesson-progress-head small{color:var(--dq-level);font-size:9px;font-weight:900;letter-spacing:.14em}
+.precision-lesson .lesson-progress-head>span{color:var(--dq-muted);font-size:10px;font-weight:850}
+.precision-lesson .lesson-progress-head .progress-bar{grid-column:1/-1;height:4px}
+.lesson-module-strip{margin-top:10px;padding:9px 11px;border:0;background:rgba(255,255,255,.025)}
+.lesson-module-strip small{display:none}.lesson-module-strip strong{font-size:11px}.lesson-module-strip>span{min-width:38px;padding:5px 7px}
+.precision-lesson .lesson-step{gap:16px;padding-top:20px;padding-bottom:2px}
+.precision-lesson .lesson-step>.eyebrow{font-size:9px;letter-spacing:.13em}
+.precision-lesson .lesson-step>h1,.precision-lesson .exercise-prompt h1{font-size:clamp(23px,6.8vw,30px);line-height:1.16;letter-spacing:-.035em}
+.lesson-mode-pill{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:-5px;color:var(--dq-muted);font-size:10px}
+.lesson-mode-pill span{padding:6px 9px;border-radius:999px;background:color-mix(in srgb,var(--dq-level) 10%,transparent);color:var(--dq-level);font-weight:850}
+.lesson-mode-pill small{font-size:10px}
+.lesson-can-do{padding:15px;border-radius:17px}.lesson-can-do strong{font-size:15px;line-height:1.4}
+.lesson-context,.lesson-optional-rule{border:1px solid var(--dq-border);border-radius:14px;background:rgba(255,255,255,.018);overflow:hidden}
+.lesson-context summary,.lesson-optional-rule summary{min-height:46px;display:flex;align-items:center;padding:0 13px;color:var(--dq-blue);font-size:11px;font-weight:800;cursor:pointer}
+.lesson-context>div,.lesson-optional-rule>div{padding:0 13px 13px;color:var(--dq-muted);font-size:12px;line-height:1.5}
+.lesson-practice-path{margin-top:2px}
+
+.precision-lesson .exercise-step{gap:14px;padding-top:16px}
+.exercise-stage-row{min-height:24px}.precision-lesson .exercise-stage-row .eyebrow{font-size:10px}.precision-lesson .exercise-stage-row>span{font-size:10px}
+.precision-lesson .exercise-prompt{padding:0 0 2px}
+.lesson-task-surface{display:grid;gap:12px;padding:14px;border:1px solid rgba(255,255,255,.085);border-radius:20px;background:rgba(255,255,255,.025);box-shadow:0 16px 38px rgba(0,0,0,.18)}
+.lesson-task-surface>.exercise-choice{margin:-2px}.lesson-task-surface .exercise-choice>button{min-height:58px;background:rgba(6,10,16,.38)}
+.lesson-task-surface .exercise-short-answer>input,.lesson-task-surface .exercise-text-answer>textarea,.lesson-task-surface .exercise-speak input{background:#090f18}
+.lesson-task-surface .exercise-reorder{gap:12px}.lesson-task-surface .reorder-built{background:rgba(244,191,85,.035)}
+.lesson-support-row{gap:6px;margin:0}.lesson-support-row button{min-height:34px;padding:0 10px;border-radius:10px;background:transparent;font-size:10px}.lesson-support-row button.skip{margin-left:auto;border-color:transparent;color:var(--dq-subtle)}
+.lesson-action-dock{margin-top:auto;padding-top:4px;background:linear-gradient(180deg,transparent,var(--dq-bg) 24%)}
+.lesson-action-dock .primary-action{min-height:58px;margin:0}
+
+.precision-lesson .exercise-step:has(.answer-feedback)>.exercise-prompt,
+.precision-lesson .exercise-step:has(.answer-feedback)>.lesson-task-surface,
+.precision-lesson .exercise-step:has(.answer-feedback)>.speech-result,
+.precision-lesson .exercise-step:has(.answer-feedback)>.guided-hint,
+.precision-lesson .exercise-step:has(.answer-feedback)>.lesson-support-row{display:none}
+.precision-lesson .exercise-step:has(.answer-feedback){justify-content:center}
+.precision-lesson .answer-feedback{align-self:center;width:100%;padding:20px;border:1px solid color-mix(in srgb,currentColor 40%,transparent);border-radius:22px;background:radial-gradient(circle at 100% 0,color-mix(in srgb,currentColor 10%,transparent),transparent 40%),var(--dq-surface)}
+.precision-lesson .answer-feedback>svg{width:42px;height:42px;margin:0;padding:12px;border-radius:50%;background:color-mix(in srgb,currentColor 13%,transparent)}
+.precision-lesson .answer-feedback>div>b{font-size:20px;letter-spacing:-.02em}
+.precision-lesson .answer-feedback p{color:var(--dq-muted);font-size:12px;line-height:1.5}
+.precision-lesson .answer-feedback>button:not(.feedback-skip){min-height:56px;margin-top:8px;border-radius:16px}
+.precision-lesson .answer-feedback>.feedback-skip{min-height:36px;padding:0}
+.corrected-model{padding:13px;border:1px solid color-mix(in srgb,var(--dq-level) 22%,transparent);background:color-mix(in srgb,var(--dq-level) 6%,transparent)}
+.corrected-model strong{overflow-wrap:anywhere;font-size:15px}
+.error-diagnosis{margin-top:8px}.production-assessment{overflow:hidden}
+
+@media(max-width:360px){
+  .lesson-flow.precision-lesson{padding-left:13px;padding-right:13px}
+  .precision-lesson .lesson-step{gap:12px;padding-top:13px}
+  .precision-lesson .lesson-step>h1,.precision-lesson .exercise-prompt h1{font-size:21px}
+  .lesson-task-surface{padding:11px;border-radius:17px}
+  .lesson-support-row button{padding:0 7px;font-size:9px}
+  .precision-lesson .answer-feedback{padding:16px}
+}
+
+@media(max-height:700px){
+  .precision-lesson .lesson-step{gap:10px;padding-top:10px}
+  .lesson-module-strip{display:none}
+  .lesson-practice-path{display:none}
+  .lesson-task-surface{padding:10px}
+  .lesson-task-surface .exercise-choice>button{min-height:49px;padding:9px 11px}
+  .lesson-action-dock .primary-action{min-height:50px}
+}
+
 /* Release 59 — visible product redesign, not a maintenance patch. */
 .rc-home{gap:15px;background:radial-gradient(circle at 82% 6%,color-mix(in srgb,var(--dq-level) 15%,transparent),transparent 30%)}
 .rc-home-bar{padding:7px 0 2px;border:0}
