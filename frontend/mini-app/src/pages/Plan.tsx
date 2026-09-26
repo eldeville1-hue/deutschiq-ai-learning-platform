@@ -94,7 +94,7 @@ export const Plan: React.FC = () => {
       <section className="rc-plan-progress">
         <header><span>{tr(lang, 'ПРОГРЕСС', 'FORTSCHRITT', 'PROGRESS')}</span><strong>{routeCompleted}/{lessons.length || 30}</strong></header>
         <div className="rc-meter"><i style={{ width: `${routeProgress}%` }} /></div>
-        <div className="rc-module-strip">{moduleNames.map((name, index) => <span key={name} className={index + 1 < week ? 'done' : index + 1 === week ? 'current' : ''}>{index + 1}. {name}</span>)}</div>
+        <div className="rc-module-strip">{moduleNames.map((name, index) => <span key={name} aria-current={index + 1 === week ? 'step' : undefined} className={index + 1 < week ? 'done' : index + 1 === week ? 'current' : ''}><b>{String(index + 1).padStart(2, '0')}</b><small>{name}</small></span>)}</div>
       </section>
 
       <section className="rc-route">
