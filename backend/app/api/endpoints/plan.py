@@ -8,6 +8,7 @@ from app.models.user import User
 from app.models.diagnostic import DiagnosticResult
 from app.models.progress import UserProgress
 from app.models.learning import TopicMastery
+from app.models.lesson import Lesson
 import traceback
 from sqlalchemy.exc import SQLAlchemyError
 from app.core.telegram_auth import telegram_user_id, assert_owner
