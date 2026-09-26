@@ -4,6 +4,7 @@ const userState = (completed: boolean, language = 'en') => ({ exists: completed,
 const nextLesson = { id: 77, topic: 'konjunktiv_ii', title: 'Konjunktiv II: advice', level: 'B1', reason: 'weakest_ready_skill' };
 const today = (dueCount = 0) => ({ due_count: dueCount, next_lesson: nextLesson, session: { phases: [], minutes: 12 }, assessment: { samples: 4, weakest_dimension: 'coherence', weakest_score: 52, dimensions: { coherence: { score: 52, samples: 4 } }, priority_topics: [{ topic: 'konjunktiv_ii', dimension: 'coherence', score: 52 }] } });
 const plan = [{ ...nextLesson, week: 2, track: 'B1', completed: false, blocked_by: [], recommended: true }];
+const journey = { current_level: 'B1', levels: [{ level: 'A1', state: 'review', total_lessons: 24, completed_lessons: 24 }, { level: 'A2', state: 'review', total_lessons: 24, completed_lessons: 24 }, { level: 'B1', state: 'active', total_lessons: 24, completed_lessons: 4 }, { level: 'B2', state: 'locked', total_lessons: 24, completed_lessons: 0 }] };
 const dashboard = { level: 'B1', targetLevel: 'B2', xp: 120, streak: 3, weaknesses: [{ name: 'konjunktiv_ii', score: 24 }] };
 const lesson = {
   id: 77, level: 'B1', topic: 'konjunktiv_ii', estimated_time: 12, xp_reward: 70,
@@ -17,6 +18,7 @@ async function mockApi(page: Page, options: { completed?: boolean; dueCount?: nu
     if (pathname.includes('/api/learning/today/')) return route.fulfill({ json: today(options.dueCount ?? 0) });
     if (pathname.includes('/api/learning/reviews/')) return route.fulfill({ json: { reviews: options.reviews ?? [] } });
     if (pathname.includes('/api/dashboard/')) return route.fulfill({ json: dashboard });
+    if (pathname.includes('/api/plan/journey/')) return route.fulfill({ json: journey });
     if (pathname.includes('/api/plan/')) return route.fulfill({ json: plan });
     if (pathname === '/api/lesson/start') return route.fulfill({ json: { session_id: 'test-session' } });
     if (pathname === '/api/lesson/check-answer') return route.fulfill({ json: { correct: true, explanation: 'Task completed.', correct_answer: 'Du solltest früher schlafen gehen.', production: true, production_score: 82, cefr_standard: 'B1', pass_mark: 70, dimension_scores: { task_completion: 85, grammar: 80, vocabulary: 78, coherence: 80, register: 86 }, improvement: 'Add one concrete reason.' } });
@@ -103,16 +105,10 @@ test('invite claim continues through consent onboarding into diagnostics', async
   await expectNoHorizontalOverflow(page);
 });
 
-test('beta learner can report an issue from a primary screen', async ({ page }) => {
-  let report: any = null;
+test('primary screens do not float beta controls over product content', async ({ page }) => {
   await mockApi(page, { completed: true });
-  await page.route('**/api/beta/issue', async route => { report = route.request().postDataJSON(); return route.fulfill({ json: { ok: true } }); });
   await page.goto('/dashboard');
-  await page.getByRole('button', { name: /Report a problem/i }).click();
-  await page.getByRole('textbox').fill('The exercise button is hidden');
-  await page.getByRole('button', { name: /^Send$/i }).click();
-  await expect.poll(() => report?.page).toBe('/dashboard');
-  expect(report.message).toBe('The exercise button is hidden');
+  await expect(page.locator('.beta-report-trigger')).toHaveCount(0);
 });
 
 test('iPhone WebView keeps product controls styled', async ({ page }) => {
@@ -144,19 +140,29 @@ test('iPhone tutor stays compact above navigation', async ({ page }) => {
   await expectNoHorizontalOverflow(page);
 });
 
-test('lesson feedback carries the exact exercise context', async ({ page }) => {
-  let report: any = null;
+test('lesson keeps optional reporting controls away from the task surface', async ({ page }) => {
   await mockApi(page, { completed: true });
-  await page.route('**/api/beta/issue', async route => { report = route.request().postDataJSON(); return route.fulfill({ json: { ok: true } }); });
   await page.goto('/lesson/77');
-  await page.getByRole('button', { name: /Show example/i }).click();
-  await page.getByRole('button', { name: /Start practice/i }).click();
-  await page.getByRole('button', { name: /Report a problem/i }).click();
-  await page.locator('.beta-report-backdrop textarea').fill('This dialogue prompt is unclear');
-  await page.getByRole('button', { name: /^Send$/i }).click();
-  await expect.poll(() => report?.exercise_index).toBe(0);
-  expect(report).toMatchObject({ page: '/lesson/77', lesson_id: 77, exercise_type: 'dialogue', topic: 'konjunktiv_ii' });
+  await expect(page.locator('.beta-report-trigger')).toHaveCount(0);
 });
+
+for (const route of ['/dashboard', '/analytics', '/plan', '/profile']) {
+  test(`mobile structure stays clear and above navigation on ${route}`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await mockApi(page, { completed: true, language: 'de' });
+    await page.goto(route);
+    await expect(page.locator('.bottom-nav')).toBeVisible();
+    await expect(page.locator('.beta-report-trigger')).toHaveCount(0);
+    await expect.poll(() => page.evaluate(() => {
+      const shell = document.querySelector('.app-shell');
+      const nav = document.querySelector('.bottom-nav');
+      if (!shell || !nav) return false;
+      const paddingBottom = Number.parseFloat(getComputedStyle(shell).paddingBottom);
+      return paddingBottom >= nav.getBoundingClientRect().height + 20;
+    })).toBe(true);
+    await expectNoHorizontalOverflow(page);
+  });
+}
 
 for (const [language, heading] of [['ru', 'Твой урок'], ['de', 'Deine Lektion'], ['en', 'Your lesson']] as const) {
   test(`dashboard renders a complete ${language.toUpperCase()} interface`, async ({ page }) => {
