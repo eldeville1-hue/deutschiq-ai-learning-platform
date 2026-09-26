@@ -86,16 +86,15 @@ export const Profile: React.FC = () => {
     <main className="app-shell profile-page precision-profile v30-page v30-profile page-enter">
       <header className="profile-masthead page-stagger-1"><span>{tr(lang, 'ПРОФИЛЬ', 'PROFIL', 'PROFILE')}</span><b>DeutschIQ</b></header>
       <section className="profile-passport page-stagger-1"><div className="avatar">{initials}</div><div><small>{tr(lang, 'УЧЕНИК', 'LERNENDE', 'LEARNER')}</small><h1>{name}</h1><p>{tr(lang, 'Немецкий каждый день', 'Deutsch jeden Tag', 'German every day')}</p></div><strong>{data.level || 'A1'}</strong></section>
+      <section className="profile-settings page-stagger-3"><div className="profile-language"><strong>{tr(lang, 'Язык интерфейса', 'App-Sprache', 'App language')}</strong><LanguagePicker compact /></div><button onClick={toggleTheme}><span>{theme === 'dark' ? <FaMoon /> : <FaSun />}{tr(lang, 'Оформление', 'Darstellung', 'Appearance')}</span><small>{theme === 'dark' ? tr(lang, 'Тёмное', 'Dunkel', 'Dark') : tr(lang, 'Светлое', 'Hell', 'Light')}</small></button><button onClick={share}><span><FaShareAlt />{tr(lang, 'Пригласить друга', 'Freund einladen', 'Invite a friend')}</span><FaChevronRight /></button></section>
       <section className="profile-learning-pass page-stagger-2">
-        <header><small>{tr(lang, 'УЧЕБНЫЙ ПРОФИЛЬ', 'LERNPROFIL', 'LEARNING PROFILE')}</small></header>
+        <header><small>{tr(lang, 'ТВОЙ ПРОГРЕСС', 'DEIN FORTSCHRITT', 'YOUR PROGRESS')}</small><button type="button" onClick={() => navigate(withUser('/plan'))}>{tr(lang, 'Открыть план', 'Plan öffnen', 'Open plan')} <FaArrowRight /></button></header>
         <div className="profile-quick-stats">
           <span><b>{completed}</b><small>{tr(lang, 'уроков', 'Lektionen', 'lessons')}</small></span>
           <span><b><CountUp value={data.xp || 0} /></b><small>XP</small></span>
           <span><b>{data.streak || 0}</b><small>{tr(lang, 'дней подряд', 'Tage Serie', 'day streak')}</small></span>
         </div>
-        <button type="button" onClick={() => navigate(withUser('/plan'))}>{tr(lang, 'Продолжить обучение', 'Weiterlernen', 'Continue learning')} <FaArrowRight /></button>
       </section>
-      <section className="profile-settings page-stagger-3"><div className="profile-language"><strong>{tr(lang, 'Язык интерфейса', 'App-Sprache', 'App language')}</strong><LanguagePicker compact /></div><button onClick={toggleTheme}><span>{theme === 'dark' ? <FaMoon /> : <FaSun />}{tr(lang, 'Оформление', 'Darstellung', 'Appearance')}</span><small>{theme === 'dark' ? tr(lang, 'Тёмное', 'Dunkel', 'Dark') : tr(lang, 'Светлое', 'Hell', 'Light')}</small></button><button onClick={share}><span><FaShareAlt />{tr(lang, 'Пригласить друга', 'Freund einladen', 'Invite a friend')}</span><FaChevronRight /></button></section>
       <details className="profile-progress-details page-stagger-4">
         <summary><span>{tr(lang, 'Активность и достижения', 'Aktivität und Erfolge', 'Activity and achievements')}</span><FaChevronDown /></summary>
         <section className="streak-section"><small>{tr(lang, 'ТВОЯ СЕРИЯ', 'DEINE SERIE', 'YOUR STREAK')}</small><h2>{data.streak || 0} {tr(lang, 'дней', 'Tage', 'days')}</h2><div className="week-row">{weekdays.map((day, index) => <div key={day} style={{ animationDelay: `${index * 55}ms` }}><span>{day}</span><i className={index < (data.streak || 0) ? 'active' : ''} /></div>)}</div></section>

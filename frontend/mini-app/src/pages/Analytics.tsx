@@ -88,6 +88,11 @@ export const Analytics: React.FC = () => {
         <p>{tr(lang, 'Оценка основана на выполненных заданиях и уточняется после каждой практики.', 'Die Einschätzung basiert auf gelösten Aufgaben und wird mit jeder Übung genauer.', 'This estimate is based on completed tasks and improves with practice.')}</p>
       </section>
 
+      <section className="rc-analysis-signals" aria-label={tr(lang, 'Краткий разбор', 'Kurzanalyse', 'Quick analysis')}>
+        <div><small>{tr(lang, 'УЖЕ ПОЛУЧАЕТСЯ', 'DAS KLAPPT SCHON', 'WORKING WELL')}</small><strong>{strongest ? topicLabel(strongest.key, lang) : tr(lang, 'Собираем данные', 'Daten werden gesammelt', 'Collecting evidence')}</strong><span>{strongest ? `${strongest.score}%` : '—'}</span></div>
+        <div><small>{tr(lang, 'СЛЕДУЮЩИЙ ФОКУС', 'NÄCHSTER FOKUS', 'NEXT FOCUS')}</small><strong>{errors.length ? topicLabel(String(errors[0].name), lang) : nextFocus.replace(/^.*?:\s*/, '')}</strong><FaArrowRight /></div>
+      </section>
+
       <button type="button" className="rc-next-action" onClick={() => navigate(withUser('/plan'))}>
         <span><small>{tr(lang, 'СЛЕДУЮЩИЙ ШАГ', 'NÄCHSTER SCHRITT', 'NEXT STEP')}</small><strong>{tr(lang, 'Продолжить план', 'Plan fortsetzen', 'Continue plan')}</strong><em>{nextFocus}</em></span><FaArrowRight />
       </button>

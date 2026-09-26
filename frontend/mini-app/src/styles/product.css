@@ -771,11 +771,11 @@ body:has(.precision-tutor) .bottom-nav span{font-size:8px!important}
 }
 
 /* Core journey hierarchy and subtle level identity. */
-.level-a1{--dq-level:#70d6a8;--dq-gold:#70d6a8}
-.level-a2{--dq-level:#71b7ff;--dq-gold:#71b7ff}
-.level-b1{--dq-level:#f4bf55;--dq-gold:#f4bf55}
-.level-b2{--dq-level:#b99cff;--dq-gold:#b99cff}
-.level-c1{--dq-level:#ff8d82;--dq-gold:#ff8d82}
+.level-a1{--dq-level:#70d6a8}
+.level-a2{--dq-level:#71b7ff}
+.level-b1{--dq-level:#f4bf55}
+.level-b2{--dq-level:#b99cff}
+.level-c1{--dq-level:#ff8d82}
 .level-a1,.level-a2,.level-b1,.level-b2,.level-c1{background-image:radial-gradient(circle at 92% 2%,color-mix(in srgb,var(--dq-level) 9%,transparent),transparent 25%)}
 
 .lesson-module-strip{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:7px;padding:10px 12px;border:1px solid color-mix(in srgb,var(--dq-level) 22%,transparent);border-radius:14px;background:color-mix(in srgb,var(--dq-level) 6%,transparent)}
@@ -1197,4 +1197,119 @@ body:has(.precision-lesson) .beta-report-trigger{display:none}
   .rc-home-bar{display:none!important}
   .rc-focus-outcome{margin:9px 0!important}
   .rc-session-path{display:none!important}
+}
+
+/* Release 62 — editorial reset: one product palette, five distinct surfaces. */
+:root{
+  --dq-bg:#080c13;
+  --dq-bg-elevated:#0c121b;
+  --dq-surface:#111925;
+  --dq-surface-soft:#151e2b;
+  --dq-border:rgba(232,237,245,.09);
+  --dq-border-strong:rgba(232,237,245,.15);
+  --dq-gold:#f2bd54;
+  --dq-gold-soft:#ffd578;
+  --dq-blue:#83adf7;
+  --dq-green:#64d5aa;
+  --dq-card:18px;
+}
+.app-frame{background:radial-gradient(circle at 78% -12%,rgba(244,191,85,.055),transparent 30%),var(--dq-bg)!important}
+.rc-page,.precision-profile{padding-bottom:calc(88px + env(safe-area-inset-bottom))!important}
+.rc-primary,.primary-action{background:var(--dq-gold)!important;color:#10151d!important;box-shadow:none!important}
+.rc-primary:active,.primary-action:active{background:var(--dq-gold-soft)!important}
+
+/* Navigation stays visible without becoming the largest card on every page. */
+.bottom-nav{
+  width:min(calc(100% - 24px),456px)!important;
+  height:60px!important;
+  padding:4px!important;
+  border-radius:18px!important;
+  background:rgba(9,14,22,.96)!important;
+  box-shadow:0 10px 30px rgba(0,0,0,.38)!important;
+}
+.bottom-nav button{min-height:50px!important;border-radius:13px!important;gap:2px!important;color:#747e8d!important}
+.bottom-nav button.active{background:rgba(244,191,85,.075)!important;color:var(--dq-gold-soft)!important}
+.bottom-nav button.active::before{top:2px!important;width:15px!important;height:2px!important}
+.bottom-nav svg{font-size:15px!important}.bottom-nav span{font-size:8px!important}
+
+/* Overview: compact identity, one lesson, one action. */
+.rc-home{background:transparent!important}
+.rc-home-context>span,.rc-home-context b{color:var(--dq-gold)!important}
+.rc-focus-card{
+  border-color:rgba(244,191,85,.22)!important;
+  background:linear-gradient(155deg,#141e2c 0%,#0e151f 78%)!important;
+  box-shadow:0 18px 44px rgba(0,0,0,.25)!important;
+}
+.rc-focus-card::after{display:none!important}
+.rc-focus-card>header>span{color:var(--dq-gold)!important}
+.rc-focus-card>header>b{background:rgba(244,191,85,.09)!important;color:var(--dq-gold-soft)!important}
+.rc-focus-outcome{grid-template-columns:20px minmax(0,1fr)!important;border:0!important;border-left:2px solid var(--dq-green)!important;border-radius:3px 12px 12px 3px!important;background:rgba(99,215,170,.055)!important}
+.rc-focus-outcome>svg,.rc-focus-outcome small{color:var(--dq-green)!important}
+.rc-lesson-meta span{background:transparent!important;padding:0!important}
+.rc-today-secondary button{color:var(--dq-blue)!important}
+
+/* Analysis: blue is reserved for evidence; gold remains the only action colour. */
+.rc-analytics{background:radial-gradient(circle at 92% 2%,rgba(130,174,248,.07),transparent 27%)!important}
+.rc-analysis-signals{display:grid;grid-template-columns:1fr 1fr;overflow:hidden;border:1px solid var(--dq-border);border-radius:16px;background:rgba(255,255,255,.018)}
+.rc-analysis-signals>div{min-width:0;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 8px;padding:12px}
+.rc-analysis-signals>div+div{border-left:1px solid var(--dq-border)}
+.rc-analysis-signals small{grid-column:1/-1;color:var(--dq-muted);font-size:7px;font-weight:900;letter-spacing:.12em}
+.rc-analysis-signals strong{overflow:hidden;font-size:11px;line-height:1.25;text-overflow:ellipsis;white-space:nowrap}
+.rc-analysis-signals span,.rc-analysis-signals svg{align-self:center;color:var(--dq-blue);font-size:11px;font-weight:850}
+.rc-next-action{background:var(--dq-gold)!important;box-shadow:none!important}
+.rc-next-action small,.rc-next-action em,.rc-next-action strong{color:#10151e!important}
+.rc-evidence-toggle{border-style:solid!important;background:rgba(255,255,255,.015)!important}
+
+/* Plan: level selector + current lesson + a vertical path, with no dashboard grid. */
+.rc-plan{background:transparent!important}
+.rc-plan>.rc-page-title h1{font-size:27px!important}
+.cefr-journey.compact{border:0!important;background:transparent!important;padding:0!important}
+.cefr-journey.compact .cefr-levels{gap:7px!important}
+.cefr-journey.compact .cefr-level{min-height:48px!important;border-radius:13px!important;background:rgba(255,255,255,.018)!important}
+.cefr-journey.compact .cefr-level.selected{border-color:rgba(244,191,85,.5)!important;background:rgba(244,191,85,.075)!important;box-shadow:none!important}
+.cefr-journey.compact .cefr-level>svg{color:var(--dq-gold)!important}
+.rc-plan-now{border-color:rgba(244,191,85,.22)!important;background:linear-gradient(155deg,#141d29,#0e151f)!important}
+.rc-plan-now>div>small{color:var(--dq-muted)!important}
+.rc-plan-progress{display:none!important}
+.rc-route{gap:10px!important;padding-top:3px}
+.rc-route-progress{height:4px;margin-top:-2px;overflow:hidden;border-radius:99px;background:rgba(255,255,255,.065)}
+.rc-route-progress i{display:block;height:100%;border-radius:inherit;background:var(--dq-blue)}
+.rc-route-list{border-radius:16px!important;background:transparent!important}
+.rc-route-row{grid-template-columns:32px minmax(0,1fr) auto!important}
+.rc-route-marker{width:30px!important;height:30px!important;border-radius:10px!important}
+
+/* Tutor: messages stay near the composer and voice is part of the composer. */
+.app-shell.precision-tutor.v30-tutor{padding-bottom:calc(84px + env(safe-area-inset-bottom))!important;background:transparent!important}
+.v30-tutor .page-header{padding-top:2px!important}
+.v30-tutor .tutor-workspace{border:1px solid var(--dq-border)!important;border-radius:18px!important;background:rgba(255,255,255,.014)!important;padding:12px!important}
+.v30-tutor .chat-messages{gap:8px!important;padding:0!important}
+.v30-tutor .tutor-workspace.has-messages .message:first-child{margin-top:auto}
+.v30-tutor .message{max-width:86%!important;padding:10px 12px!important;border-radius:15px!important;font-size:12px!important;line-height:1.45!important}
+.v30-tutor .message.assistant{border:1px solid var(--dq-border)!important;border-bottom-left-radius:5px!important;background:#131c29!important}
+.v30-tutor .message.user{border-bottom-right-radius:5px!important;background:var(--dq-gold)!important;color:#10151d!important}
+.tutor-suggestions{display:flex;flex-wrap:wrap;gap:6px;margin-top:3px}
+.tutor-suggestions button{min-height:34px;padding:0 10px;border:1px solid rgba(244,191,85,.2);border-radius:999px;background:rgba(244,191,85,.05);color:var(--dq-gold-soft);font-size:9px;font-weight:750}
+.v30-tutor .tutor-dock{border-top:0!important;padding-top:0!important}
+.v30-tutor .chat-composer{grid-template-columns:minmax(0,1fr) 36px 42px!important;gap:2px!important;border-color:var(--dq-border-strong)!important;background:#0e1621!important}
+.v30-tutor .chat-composer>.voice-recorder{width:36px!important;height:42px!important;display:block!important;margin:0!important}
+.v30-tutor .chat-composer .voice-button{width:36px!important;height:42px!important;min-height:42px!important;display:grid!important;place-items:center!important;padding:0!important;border:0!important;background:transparent!important;color:var(--dq-muted)!important;font-size:0!important}
+.v30-tutor .chat-composer .voice-button svg{font-size:13px!important}
+.v30-tutor .chat-composer .voice-recorder p{position:absolute;right:0;bottom:48px;width:min(280px,80vw);padding:8px;border-radius:10px;background:var(--dq-surface);font-size:9px!important}
+.v30-tutor .chat-composer .composer-send{width:42px!important;height:42px!important;background:var(--dq-gold)!important}
+
+/* Profile starts with settings; progress is informative, not a giant CTA. */
+.precision-profile .profile-passport{border:0!important;border-bottom:1px solid var(--dq-border)!important;border-radius:0!important;background:transparent!important;padding:8px 0 14px!important}
+.profile-learning-pass{gap:9px!important;border-color:var(--dq-border)!important;background:rgba(255,255,255,.018)!important}
+.profile-learning-pass>header{justify-content:space-between!important}
+.profile-learning-pass>header>button{display:flex;align-items:center;gap:6px;padding:0;border:0;background:transparent;color:var(--dq-gold-soft);font-size:10px;font-weight:800}
+.profile-learning-pass>header>button svg{font-size:9px}
+.profile-learning-pass>button{display:none!important}
+.profile-quick-stats span{padding:3px 7px!important}
+.profile-settings{border-radius:16px!important;background:rgba(255,255,255,.015)!important}
+.language-picker button.active{background:rgba(244,191,85,.09)!important;box-shadow:inset 0 0 0 1px rgba(244,191,85,.28)!important}
+
+@media(max-width:360px){
+  .rc-analysis-signals{grid-template-columns:1fr}
+  .rc-analysis-signals>div+div{border-left:0;border-top:1px solid var(--dq-border)}
+  .v30-tutor .message{max-width:92%!important}
 }
