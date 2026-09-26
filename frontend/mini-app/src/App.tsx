@@ -5,7 +5,6 @@ import { ThemeProvider } from './context/ThemeContext';
 import { AppBackButton } from './components/AppBackButton';
 import { BrandMark } from './components/BrandMark';
 import { BottomNav } from './components/BottomNav';
-import { BetaIssueReporter } from './components/BetaIssueReporter';
 import { getTelegramUser, hasTelegramIdentity } from './utils/user';
 import { normalizeLanguage, tr } from './i18n/language';
 
@@ -73,7 +72,6 @@ function AppRoutes() {
   const primaryRoutes = ['/dashboard', '/analytics', '/plan', '/tutor', '/profile'];
   const hasBackButton = !['/', ...primaryRoutes].includes(location.pathname);
   const showPrimaryNav = primaryRoutes.includes(location.pathname);
-  const showBetaReporter = showPrimaryNav || location.pathname.startsWith('/lesson/') || location.pathname === '/diagnostic';
   return (
     <div className={`app-frame${hasBackButton ? ' has-back-button' : ''}`}>
       <ConnectionStatus />
@@ -95,7 +93,6 @@ function AppRoutes() {
         </Routes>
       </Suspense>
       {showPrimaryNav && <BottomNav />}
-      {showBetaReporter && <BetaIssueReporter />}
     </div>
   );
 }
