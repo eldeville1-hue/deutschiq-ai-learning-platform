@@ -82,10 +82,10 @@ export const Analytics: React.FC = () => {
       {loadError && <div className="rc-notice error"><span>{tr(lang, 'Свежие данные пока недоступны', 'Aktuelle Daten sind nicht verfügbar', 'Current data is unavailable')}</span><button type="button" onClick={load}>{tr(lang, 'Обновить', 'Aktualisieren', 'Refresh')}</button></div>}
 
       <section className="rc-analysis-overview" aria-label={tr(lang, 'Общий прогресс', 'Gesamtfortschritt', 'Overall progress')}>
-        <div className="rc-level-block"><small>{tr(lang, 'СЕЙЧАС', 'JETZT', 'CURRENT')}</small><strong>{data?.level || 'A1'}</strong><span>{tr(lang, `цель ${data?.targetLevel || 'A2'}`, `Ziel ${data?.targetLevel || 'A2'}`, `goal ${data?.targetLevel || 'A2'}`)}</span></div>
-        <div className="rc-score-ring" style={{ '--score': `${progress * 3.6}deg` } as React.CSSProperties}><span><strong>{data?.level || 'A1'}</strong><small>{progressBand}</small></span></div>
+        <div className="rc-level-block"><small>{tr(lang, 'ТВОЙ МАРШРУТ', 'DEIN LERNWEG', 'YOUR PATH')}</small><strong>{data?.level || 'A1'} <i>→</i> {data?.targetLevel || 'A2'}</strong><span>{progressBand}</span></div>
+        <div className="rc-score-ring" style={{ '--score': `${progress * 3.6}deg` } as React.CSSProperties}><span><strong>{progress}%</strong><small>{tr(lang, 'по заданиям', 'aus Aufgaben', 'from tasks')}</small></span></div>
         <div className="rc-journey"><span>{data?.level || 'A1'}</span><div><i style={{ width: `${progress}%` }} /></div><span>{data?.targetLevel || 'A2'}</span></div>
-        <p>{tr(lang, 'Это направление прогресса, а не экзаменационная оценка. Оно уточняется после новых заданий.', 'Das ist eine Lernrichtung, keine Prüfungsnote. Sie wird nach neuen Aufgaben genauer.', 'This is a learning direction, not an exam score. It becomes clearer after new tasks.')}</p>
+        <p>{tr(lang, 'Оценка основана на выполненных заданиях и уточняется после каждой практики.', 'Die Einschätzung basiert auf gelösten Aufgaben und wird mit jeder Übung genauer.', 'This estimate is based on completed tasks and improves with practice.')}</p>
       </section>
 
       <button type="button" className="rc-next-action" onClick={() => navigate(withUser('/plan'))}>
