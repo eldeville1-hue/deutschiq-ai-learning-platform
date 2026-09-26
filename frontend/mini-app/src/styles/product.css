@@ -1060,3 +1060,141 @@ body:has(.precision-lesson) .beta-report-trigger{display:none}
   .precision-tutor .quick-actions button,.precision-tutor .quick-actions button:last-child{justify-content:center}
   .precision-lesson .exercise-prompt h1{font-size:20px}
 }
+
+/* Release 61 — compact, page-specific mobile information architecture. */
+.rc-page,.precision-profile{
+  gap:12px!important;
+  padding:12px 18px calc(92px + env(safe-area-inset-bottom))!important;
+}
+.rc-page-title{gap:4px!important;padding:2px 0 4px!important}
+.rc-page-title p{font-size:8px!important;letter-spacing:.16em!important}
+.rc-page-title h1{font-size:28px!important;line-height:1.02!important}
+.rc-page-title>span{font-size:11px!important}
+.bottom-nav{
+  bottom:max(6px,env(safe-area-inset-bottom))!important;
+  height:64px!important;
+  padding:4px!important;
+  border-radius:20px!important;
+}
+.bottom-nav button{min-height:54px!important;border-radius:15px!important;gap:3px!important}
+.bottom-nav svg{font-size:16px!important}
+.bottom-nav span{font-size:8px!important}
+
+/* Overview owns one decision: start the next useful lesson. */
+.rc-home{gap:10px!important}
+.rc-home-bar{padding:1px 0 5px!important}
+.rc-identity .dq-brand-mark{width:34px!important;height:34px!important}
+.rc-home-stats>span{min-height:34px!important;padding:3px 9px!important}
+.rc-home-context{display:flex;align-items:center;justify-content:space-between;padding:7px 1px 0}
+.rc-home-context>span{color:var(--dq-level);font-size:8px;font-weight:900;letter-spacing:.15em}
+.rc-home-context small{color:var(--dq-muted);font-size:10px;font-weight:800}
+.rc-home-context b{padding:0 3px;color:var(--dq-level)}
+.rc-focus-card{gap:0!important;padding:17px!important;border-radius:22px!important}
+.rc-focus-card>header{margin-bottom:11px!important}
+.rc-focus-card h2{font-size:clamp(24px,7vw,30px)!important;line-height:1.03!important}
+.rc-lesson-meta{margin:8px 0 0!important}
+.rc-focus-outcome{margin:13px 0!important;padding:11px!important}
+.rc-focus-outcome strong{font-size:12px!important;line-height:1.35!important}
+.rc-session-path{margin-bottom:10px!important;gap:6px!important}
+.rc-session-path span{min-height:34px!important;padding:5px!important}
+.rc-session-path small{font-size:8px!important}
+.rc-focus-card .rc-primary{min-height:51px!important;border-radius:15px!important}
+.rc-today-secondary{padding:10px 1px!important}
+.rc-today-secondary strong{font-size:11px!important}.rc-today-secondary small{font-size:9px!important}
+.rc-today-secondary button{font-size:10px!important}
+
+/* Analysis explains the evidence once, then gives one corrective action. */
+.rc-analytics{gap:12px!important}
+.rc-analytics>.rc-page-title{padding-top:2px!important}
+.rc-analysis-overview{
+  grid-template-columns:minmax(0,1fr) 76px!important;
+  gap:10px 12px!important;
+  padding:16px!important;
+  border-radius:20px!important;
+}
+.rc-level-block{gap:4px!important}
+.rc-level-block strong{font-size:25px!important;line-height:1!important}
+.rc-level-block strong i{color:var(--dq-subtle);font-style:normal;font-weight:500}
+.rc-level-block span{font-size:10px!important}
+.rc-score-ring{width:72px!important;height:72px!important}
+.rc-score-ring::before{width:60px!important;height:60px!important}
+.rc-score-ring strong{font-size:18px!important}
+.rc-score-ring small{max-width:48px!important;font-size:6px!important}
+.rc-journey{gap:7px!important}
+.rc-analysis-overview>p{padding-top:9px!important;font-size:9px!important;line-height:1.4!important}
+.rc-next-action{min-height:64px!important;padding:11px 14px!important;border-radius:17px!important}
+.rc-next-action strong{font-size:15px!important}.rc-next-action em{font-size:10px!important}
+.rc-evidence-toggle{min-height:58px!important;padding:10px 14px!important;border-radius:16px!important}
+.rc-evidence-toggle strong{font-size:13px!important}
+
+/* Plan shows the route, not anonymous numbered boxes. */
+.rc-plan{gap:12px!important}
+.rc-plan>.rc-page-title{padding-top:2px!important}
+.rc-plan>.rc-page-title h1{font-size:30px!important}
+.rc-plan .rc-notice{min-height:40px!important;font-size:10px!important}
+.cefr-journey.compact{padding:10px 12px!important;border-radius:16px!important}
+.cefr-journey.compact>header{display:none!important}
+.cefr-journey.compact .cefr-level{min-height:54px!important;padding:7px!important}
+.cefr-journey.compact .cefr-code{font-size:16px!important}
+.rc-plan-now{gap:11px!important;padding:16px!important;border-radius:20px!important;box-shadow:none!important}
+.rc-plan-now h2{font-size:24px!important;line-height:1.05!important}
+.rc-plan-now .rc-primary{min-height:46px!important}
+.rc-plan-progress{gap:10px!important;padding:13px!important;border-radius:16px!important}
+.rc-module-strip{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important}
+.rc-module-strip span{
+  min-height:48px!important;display:grid!important;grid-template-columns:25px minmax(0,1fr)!important;
+  place-items:initial!important;align-items:center!important;gap:7px!important;padding:7px 8px!important;font-size:inherit!important;
+}
+.rc-module-strip span:before{content:none!important}
+.rc-module-strip b{color:var(--dq-subtle);font-size:10px}
+.rc-module-strip small{overflow:hidden;color:var(--dq-muted);font-size:8px;line-height:1.2;text-overflow:ellipsis}
+.rc-module-strip span.current b,.rc-module-strip span.current small{color:var(--dq-gold-soft)}
+.rc-module-strip span.done b,.rc-module-strip span.done small{color:var(--dq-green)}
+.rc-route{border-radius:18px!important}
+.rc-route>header{padding:13px!important}.rc-route-row{min-height:56px!important;padding:9px 12px!important}
+
+/* Profile is an account surface; learning statistics stay compact and optional. */
+.precision-profile{gap:11px!important}
+.profile-masthead{padding:2px 0 9px!important}
+.precision-profile .profile-passport{
+  min-height:62px!important;grid-template-columns:48px minmax(0,1fr) 42px!important;
+  gap:10px!important;padding:11px!important;border-radius:18px!important;
+}
+.precision-profile .profile-passport .avatar{width:48px!important;height:48px!important;border-radius:15px!important;font-size:14px!important}
+.precision-profile .profile-passport h1{font-size:17px!important}
+.precision-profile .profile-passport>strong{width:40px!important;height:40px!important;font-size:12px!important}
+.profile-learning-pass{gap:10px!important;padding:14px!important;border-radius:18px!important;box-shadow:none!important}
+.profile-quick-stats{display:grid!important;grid-template-columns:repeat(3,1fr);gap:0!important;padding:0!important}
+.profile-quick-stats span{display:grid!important;justify-items:center;gap:2px!important;padding:5px 7px;border-right:1px solid var(--dq-border)}
+.profile-quick-stats span:last-child{border-right:0}
+.profile-quick-stats b{color:var(--dq-text)!important;font-size:18px!important}
+.profile-quick-stats small{color:var(--dq-muted);font-size:8px!important;text-align:center}
+.profile-learning-pass>button{min-height:44px!important;margin:0!important}
+.precision-profile .profile-settings{padding:0!important;border-radius:17px!important}
+.precision-profile .profile-settings button{min-height:48px!important}
+.profile-language{gap:7px!important;padding:10px 13px!important}
+.language-picker.compact{grid-template-columns:repeat(3,1fr)!important;max-width:none!important}
+.language-picker.compact button{min-height:34px!important}
+.profile-progress-details{overflow:hidden;border:1px solid var(--dq-border);border-radius:17px;background:rgba(255,255,255,.02)}
+.profile-progress-details>summary{min-height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;cursor:pointer;list-style:none;color:var(--dq-text);font-size:12px;font-weight:800}
+.profile-progress-details>summary::-webkit-details-marker{display:none}
+.profile-progress-details>summary svg{color:var(--dq-muted);transition:transform .2s ease}
+.profile-progress-details[open]>summary svg{transform:rotate(180deg)}
+.profile-progress-details .streak-section,.profile-progress-details .achievement-section{margin:0 10px 10px;padding:13px!important;border-radius:14px!important}
+.profile-progress-details .streak-section h2{margin:5px 0 10px!important;font-size:18px!important}
+.profile-progress-details .week-row i{width:21px!important;height:21px!important}
+.profile-progress-details .achievement-card{min-height:56px!important;padding:9px!important}
+.profile-beta-feedback{padding:12px!important;border-radius:15px!important}
+.precision-profile .retake-link{min-height:42px!important}
+
+@media(max-width:360px){
+  .rc-page,.precision-profile{padding-left:14px!important;padding-right:14px!important}
+  .rc-session-path{display:none!important}
+  .rc-module-strip{grid-template-columns:1fr!important}
+}
+
+@media(max-height:720px){
+  .rc-home-bar{display:none!important}
+  .rc-focus-outcome{margin:9px 0!important}
+  .rc-session-path{display:none!important}
+}
