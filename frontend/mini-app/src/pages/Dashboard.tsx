@@ -66,17 +66,10 @@ export const Dashboard: React.FC = () => {
 
       {loadError && <div className="rc-notice error"><span>{tr(lang, 'Показываем сохранённые данные', 'Gespeicherte Daten werden angezeigt', 'Showing saved data')}</span><button type="button" onClick={load}>{tr(lang, 'Обновить', 'Aktualisieren', 'Refresh')}</button></div>}
 
-      <section className="rc-home-hero">
-        <header className="rc-page-title rc-home-title">
-          <p>{tr(lang, 'ТВОЙ НЕМЕЦКИЙ СЕГОДНЯ', 'DEIN DEUTSCH HEUTE', 'YOUR GERMAN TODAY')}</p>
-          <h1>{tr(lang, 'Один навык. Один ясный шаг.', 'Eine Fähigkeit. Ein klarer Schritt.', 'One skill. One clear step.')}</h1>
-        </header>
-        <div className="rc-home-level" aria-label={tr(lang, 'Текущий уровень', 'Aktuelles Niveau', 'Current level')}>
-          <span>{data.level || 'A1'}</span>
-          <i><b /></i>
-          <small>{data.targetLevel || 'A2'}</small>
-        </div>
-      </section>
+      <div className="rc-home-context">
+        <span>{tr(lang, 'СЕГОДНЯШНИЙ ФОКУС', 'HEUTIGER FOKUS', 'TODAY’S FOCUS')}</span>
+        <small>{data.level || 'A1'} <b>→</b> {data.targetLevel || 'A2'}</small>
+      </div>
 
       <section className="rc-focus-card">
         <header><span>{selectedLesson?.module_title || tr(lang, 'СЛЕДУЮЩИЙ ШАГ', 'NÄCHSTER SCHRITT', 'NEXT STEP')}{selectedLesson?.module_step && selectedLesson?.module_size ? ` · ${selectedLesson.module_step}/${selectedLesson.module_size}` : ''}</span><b>{tr(lang, '≈ 10 МИН', '≈ 10 MIN', '≈ 10 MIN')}</b></header>
