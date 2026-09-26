@@ -1,6 +1,8 @@
 import unittest
 from types import SimpleNamespace
 
+from app.api.endpoints import plan as plan_endpoints
+from app.models.lesson import Lesson
 from app.services.learning_route import curriculum_track_for_level, filter_roadmap_for_level, next_cefr_track, normalize_cefr, track_access
 
 
@@ -12,6 +14,9 @@ def lesson(day, track=None):
 
 
 class PlanTrackTests(unittest.TestCase):
+    def test_journey_endpoint_has_the_lesson_model_available(self):
+        self.assertIs(Lesson, plan_endpoints.Lesson)
+
     def test_levels_map_to_expected_track(self):
         self.assertEqual("A1", curriculum_track_for_level("A1"))
         self.assertEqual("A2", curriculum_track_for_level("A2"))
