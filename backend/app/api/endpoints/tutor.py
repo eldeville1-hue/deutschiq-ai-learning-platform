@@ -107,7 +107,10 @@ Rules:
     
     # 5. Собираем сообщения: системный промпт + история (если есть) + текущий вопрос
     messages = [{"role": "system", "content": system_prompt}]
-    stored_history = db.query(TutorMessage).filter(TutorMessage.user_id == user.id, TutorMessage.language == lang).order_by(TutorMessage.created_at.desc()).limit(12).all()
+    stored_history_query = db.query(TutorMessage).filter(TutorMessage.user_id == user.id, TutorMessage.language == lang)
+    if diagnostic:
+        stored_history_query = stored_history_query.filter(TutorMessage.created_at >= diagnostic.created_at)
+    stored_history = stored_history_query.order_by(TutorMessage.created_at.desc()).limit(12).all()
     messages.extend({"role": item.role, "content": item.content} for item in reversed(stored_history))
     messages.append({"role": "user", "content": data.question})
     
@@ -137,5 +140,9 @@ async def tutor_state(user_id: int, lang: str = "en", db: Session = Depends(get_
     pro = has_active_pro(user)
     limit = settings.BETA_TUTOR_DAILY_LIMIT if settings.BETA_FREE_ACCESS else (999 if pro else 3)
     language = normalize_language(lang)
-    history = db.query(TutorMessage).filter(TutorMessage.user_id == user.id, TutorMessage.language == language).order_by(TutorMessage.created_at.desc()).limit(30).all()
+    diagnostic = db.query(DiagnosticResult).filter(DiagnosticResult.user_id == user.id).order_by(DiagnosticResult.created_at.desc()).first()
+    history_query = db.query(TutorMessage).filter(TutorMessage.user_id == user.id, TutorMessage.language == language)
+    if diagnostic:
+        history_query = history_query.filter(TutorMessage.created_at >= diagnostic.created_at)
+    history = history_query.order_by(TutorMessage.created_at.desc()).limit(30).all()
     return {"remaining": max(0, limit - (usage.questions_used if usage else 0)), "limit": limit, "is_pro": pro, "beta_free": settings.BETA_FREE_ACCESS, "messages": [{"role": item.role, "content": item.content} for item in reversed(history)]}

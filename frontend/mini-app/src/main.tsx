@@ -2,7 +2,6 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './styles/global.css';
-import './styles/product.css';
 import { api } from './services/api';
 import { getUserId } from './utils/user';
 
@@ -29,9 +28,18 @@ const telegram = (window as any).Telegram?.WebApp;
 telegram?.ready();
 telegram?.expand();
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode><App /></React.StrictMode>
-);
+const renderApp = async () => {
+  // Keep the stable component baseline and the current product polish in
+  // separate route-independent chunks. Loading them in sequence preserves the
+  // intentional cascade without forcing every rule into one monolithic file.
+  await import('./styles/product.css');
+  await import('./styles/product-polish.css');
+  ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode><App /></React.StrictMode>
+  );
+};
+
+void renderApp();
 
 window.setTimeout(() => {
   if (!getUserId()) return;

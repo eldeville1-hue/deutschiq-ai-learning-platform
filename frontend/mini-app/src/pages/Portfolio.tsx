@@ -1,4 +1,5 @@
 import React from 'react';
+import '../styles/portfolio.css';
 import { FaArrowRight, FaBrain, FaCheck, FaGithub, FaTelegramPlane } from 'react-icons/fa';
 import { useLanguage } from '../context/LanguageContext';
 import { LanguagePicker } from '../components/LanguagePicker';

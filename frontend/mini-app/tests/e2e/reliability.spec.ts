@@ -22,7 +22,7 @@ async function mockApi(page: Page, options: { completed?: boolean; dueCount?: nu
     if (pathname.includes('/api/plan/')) return route.fulfill({ json: plan });
     if (pathname === '/api/lesson/start') return route.fulfill({ json: { session_id: 'test-session' } });
     if (pathname === '/api/lesson/check-answer') return route.fulfill({ json: { correct: true, explanation: 'Task completed.', correct_answer: 'Du solltest früher schlafen gehen.', production: true, production_score: 82, cefr_standard: 'B1', pass_mark: 70, dimension_scores: { task_completion: 85, grammar: 80, vocabulary: 78, coherence: 80, register: 86 }, improvement: 'Add one concrete reason.' } });
-    if (pathname === '/api/lesson/complete') return route.fulfill({ json: { passed: true, score: 100, mastery: 76, xp_gained: 70, first_try_correct: 1, corrected_retries: 0, needs_review: 0 } });
+    if (pathname === '/api/lesson/complete') return route.fulfill({ json: { passed: true, score: 100, mastery: 76, xp_gained: 70, first_try_correct: 1, corrected_retries: 0, needs_review: 0, exercise_count: 1 } });
     if (pathname === '/api/lesson/77') return route.fulfill({ json: lesson });
     if (pathname === '/api/events') return route.fulfill({ status: 204 });
     return route.fulfill({ json: {} });
@@ -185,8 +185,11 @@ test('learner completes a production exercise and sees CEFR evidence', async ({ 
   await expect(page.getByText('B1 ASSESSMENT')).toBeVisible();
   await expect(page.getByText('82%')).toBeVisible();
   await page.locator('.answer-feedback > button').click();
-  await expect(page.getByText('LESSON COMPLETE')).toBeVisible();
-  await expect(page.getByRole('heading', { name: '100%' })).toBeVisible();
+  await expect(page.getByText('NEW SKILL UNLOCKED')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'You did it' })).toBeVisible();
+  await expect(page.getByText('1/1')).toBeVisible();
+  await expect(page.getByText('Give polite advice.')).toBeVisible();
+  await expect(page.getByRole('button', { name: /Continue my path/i })).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
 
@@ -204,6 +207,10 @@ for (const width of [320, 375, 390, 430]) {
     await page.getByRole('button', { name: /^Check$/i }).click();
     await expect(page.locator('.answer-feedback')).toBeVisible();
     await expect(page.locator('.lesson-task-surface')).toBeHidden();
+    await page.locator('.answer-feedback > button').click();
+    await expect(page.locator('.lesson-result-hero')).toBeVisible();
+    await expect(page.locator('.lesson-result-skill')).toBeVisible();
+    await expect(page.getByRole('button', { name: /Continue my path/i })).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
 }
