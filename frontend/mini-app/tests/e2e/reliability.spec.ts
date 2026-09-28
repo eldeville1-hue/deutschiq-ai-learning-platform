@@ -46,10 +46,9 @@ test('new user sees onboarding and can enter diagnostics', async ({ page }) => {
 test('returning user stays out of diagnostics after reload', async ({ page }) => {
   await mockApi(page, { completed: true });
   await page.goto('/');
-  await expect(page.getByText('WELCOME BACK')).toBeVisible();
-  await page.getByRole('button', { name: /Continue/i }).click();
   await expect(page).toHaveURL(/\/dashboard/);
-  await expect(page.getByRole('heading', { name: /Your lesson/i })).toBeVisible();
+  await expect(page.getByText('YOUR STEP TODAY')).toBeVisible();
+  await expect(page.locator('.bottom-nav')).toBeVisible();
   await page.goto('/');
   await expect(page).toHaveURL(/\/dashboard/);
   await expect(page.getByText(/German that adapts/i)).toHaveCount(0);

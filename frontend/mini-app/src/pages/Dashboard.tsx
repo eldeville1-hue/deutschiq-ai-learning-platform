@@ -60,22 +60,19 @@ export const Dashboard: React.FC = () => {
   return (
     <main className={`app-shell dq-home page-enter level-${String(data.level || 'a1').toLowerCase()}`}>
       <header className="dq-home-top">
-        <div className="dq-home-person"><BrandMark label="DeutschIQ" /><div><small>{greeting}</small><strong>{data.first_name || 'DeutschIQ'}</strong></div></div>
+        <div className="dq-home-person"><BrandMark label="DeutschIQ" /><div><small>{greeting}</small><strong>{data.first_name || tr(lang, 'Немецкий сегодня', 'Deutsch heute', 'German today')}</strong></div></div>
         <div className="dq-home-streak"><FaFire /><strong>{data.streak || 0}</strong><small>{tr(lang, 'дня', 'Tage', 'days')}</small></div>
       </header>
 
       {loadError && <div className="rc-notice error"><span>{tr(lang, 'Показываем сохранённые данные', 'Gespeicherte Daten werden angezeigt', 'Showing saved data')}</span><button type="button" onClick={load}>{tr(lang, 'Обновить', 'Aktualisieren', 'Refresh')}</button></div>}
 
       <section className="dq-daily-stage">
-        <div className="dq-level-rail" aria-label={`${data.level || 'A1'} → ${data.targetLevel || 'A2'}`}>
-          <strong>{data.level || 'A1'}</strong><i><span /></i><small>{data.targetLevel || 'A2'}</small>
-        </div>
         <div className="dq-daily-copy">
-          <div className="dq-daily-kicker"><span>{tr(lang, 'ТВОЙ ШАГ НА СЕГОДНЯ', 'DEIN SCHRITT FÜR HEUTE', 'YOUR STEP TODAY')}</span>{selectedLesson?.module_step && selectedLesson?.module_size ? <b>{selectedLesson.module_step}/{selectedLesson.module_size}</b> : null}</div>
+          <div className="dq-daily-kicker"><span>{tr(lang, 'ТВОЙ ШАГ НА СЕГОДНЯ', 'DEIN SCHRITT FÜR HEUTE', 'YOUR STEP TODAY')}</span><div><em>{data.level || 'A1'} → {data.targetLevel || 'A2'}</em>{selectedLesson?.module_step && selectedLesson?.module_size ? <b>{selectedLesson.module_step}/{selectedLesson.module_size}</b> : null}</div></div>
           <h1>{selectedLesson?.title || topicLabel(topic, lang)}</h1>
           <p>{selectedLesson?.scenario || selectedLesson?.can_do || tr(lang, 'Один короткий урок для реальной ситуации.', 'Eine kurze Lektion für eine echte Situation.', 'One short lesson for a real situation.')}</p>
           <div className="dq-daily-outcome"><FaCheck /><span><small>{tr(lang, 'ПОСЛЕ УРОКА', 'NACH DER LEKTION', 'AFTER THIS LESSON')}</small><strong>{selectedLesson?.can_do || tr(lang, 'Ты применишь навык в коротком разговоре.', 'Du nutzt die Fähigkeit in einem kurzen Gespräch.', 'You will use the skill in a short conversation.')}</strong></span></div>
-          <div className="dq-daily-meta"><span>{Math.max(1, Number(learning?.session?.phases?.length || 1))} {tr(lang, 'шага', 'Schritte', 'steps')}</span><span>≈ {Math.min(10, Number(learning?.session?.minutes || selectedLesson?.minutes || 6))} {tr(lang, 'мин', 'Min.', 'min')}</span><span>{data.xp || 0} XP</span></div>
+          <div className="dq-daily-meta"><span>{Math.max(1, Number(learning?.session?.phases?.length || 1))} {tr(lang, 'шага', 'Schritte', 'steps')}</span><span>≈ {Math.min(10, Number(learning?.session?.minutes || selectedLesson?.minutes || 6))} {tr(lang, 'мин', 'Min.', 'min')}</span></div>
           <button type="button" className="dq-main-action" onClick={startLesson}><span><FaPlay /> {selectedLesson?.id ? (learning?.due_count ? tr(lang, 'Начать с повторения', 'Mit Wiederholung starten', 'Start with review') : tr(lang, 'Начать урок', 'Lektion starten', 'Start lesson')) : tr(lang, 'Открыть план', 'Plan öffnen', 'Open plan')}</span><FaArrowRight /></button>
         </div>
       </section>

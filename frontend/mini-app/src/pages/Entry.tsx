@@ -3,7 +3,6 @@ import { api } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
 import { getUserId } from '../utils/user';
 import { DiagnosticWelcome } from './DiagnosticWelcome';
-import { ReturningIntro } from './ReturningIntro';
 import { Navigate } from 'react-router-dom';
 import { BrandMark } from '../components/BrandMark';
 import type { AppLanguage } from '../i18n/language';
@@ -34,7 +33,8 @@ export const Entry: React.FC = () => {
   if (state.beta_access === false) return <BetaAccess onDone={loadState} />;
   if (state.beta_onboarding_completed === false) return <BetaOnboarding onDone={loadState} />;
   if (!state.diagnostic_completed) return <DiagnosticWelcome />;
-  const introKey = `deutschiq-intro-${userId}-${new Date().toISOString().slice(0, 10)}`;
-  if (sessionStorage.getItem(introKey)) return <Navigate to="/dashboard" replace />;
-  return <ReturningIntro level={state.level || 'A1'} introKey={introKey} />;
+  // Returning learners land on the product itself. The dashboard already
+  // greets them and exposes today's lesson, so an extra full-screen gate only
+  // adds latency and a redundant tap.
+  return <Navigate to="/dashboard" replace />;
 };
