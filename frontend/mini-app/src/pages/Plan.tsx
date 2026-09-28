@@ -65,8 +65,8 @@ export const Plan: React.FC = () => {
   if (!dashboard) return <main className="app-shell rc-page"><div className="skeleton rc-hero-skeleton" /></main>;
 
   return (
-    <main className={`app-shell rc-page rc-plan page-enter level-${String(track).toLowerCase()}`}>
-      <header className="rc-page-title">
+    <main className={`app-shell dq-plan page-enter level-${String(track).toLowerCase()}`}>
+      <header className="dq-plan-head">
         <p>{tr(lang, 'ПЛАН', 'PLAN', 'PLAN')}</p>
         <h1>{dashboard.level || 'A1'} <span>→</span> {dashboard.targetLevel || 'A2'}</h1>
         <span>{tr(lang, 'Твой маршрут по навыкам', 'Dein Weg nach Fähigkeiten', 'Your skill-based path')}</span>
@@ -74,28 +74,27 @@ export const Plan: React.FC = () => {
 
       {loadError && <div className="rc-notice saved"><span>{tr(lang, 'Показываем сохранённый маршрут', 'Gespeicherter Lernweg wird angezeigt', 'Showing your saved path')}</span><button type="button" onClick={load}>{tr(lang, 'Обновить', 'Aktualisieren', 'Refresh')}</button></div>}
 
-      {(journey?.levels || []).some((item: any) => item.total_lessons > 0) && <section className="cefr-journey compact" aria-label={tr(lang, 'Путь по уровням', 'Niveaureise', 'Level journey')}>
-        <header><div><small>{tr(lang, 'УРОВЕНЬ', 'NIVEAU', 'LEVEL')}</small><h2>{tr(lang, 'Выбери доступный маршрут', 'Wähle einen verfügbaren Weg', 'Choose an available path')}</h2></div></header>
-        <div className="cefr-levels">{(journey?.levels || []).filter((item: any) => item.total_lessons > 0).map((item: any) => {
+      {(journey?.levels || []).some((item: any) => item.total_lessons > 0) && <section className="dq-level-switcher" aria-label={tr(lang, 'Путь по уровням', 'Niveaureise', 'Level journey')}>
+        <div className="dq-levels">{(journey?.levels || []).filter((item: any) => item.total_lessons > 0).map((item: any) => {
           const accessible = ['active', 'review', 'completed'].includes(item.state);
           const label = item.state === 'active' ? tr(lang, 'Активный', 'Aktiv', 'Active') : item.state === 'review' ? tr(lang, 'Повторение', 'Wiederholen', 'Review') : item.state === 'completed' ? tr(lang, 'Пройден', 'Abgeschlossen', 'Completed') : item.state === 'coming_soon' ? tr(lang, 'Позже', 'Demnächst', 'Coming later') : tr(lang, 'Закрыт', 'Gesperrt', 'Locked');
-          return <button type="button" key={item.level} className={`cefr-level ${item.state}${track === item.level ? ' selected' : ''}`} disabled={!accessible} onClick={() => accessible && setSelectedTrack(item.level)}>
-            <span className="cefr-code">{item.level}</span><span><strong>{label}</strong><small>{item.total_lessons ? `${item.completed_lessons}/${item.total_lessons} ${tr(lang, 'уроков', 'Lektionen', 'lessons')}` : '—'}</small></span>{accessible ? item.state === 'completed' ? <FaCheck /> : <FaPlay /> : <FaLock />}
+          return <button type="button" key={item.level} className={`dq-level ${item.state}${track === item.level ? ' selected' : ''}`} disabled={!accessible} onClick={() => accessible && setSelectedTrack(item.level)} aria-label={`${item.level}: ${label}`}>
+            <span>{item.level}</span>{accessible ? item.state === 'completed' ? <FaCheck /> : track === item.level ? <FaPlay /> : null : <FaLock />}
           </button>;
         })}</div>
         {(() => { const active = (journey?.levels || []).find((item: any) => item.state === 'active'); return active && active.completion >= 80 && active.mastery >= 70 ? <button type="button" className="rc-primary checkpoint-cta" onClick={() => navigate(withUser(`/checkpoint/${active.level}`))}>{tr(lang, `Пройти финальный тест ${active.level}`, `${active.level}-Abschlusstest starten`, `Take the ${active.level} final checkpoint`)}</button> : null; })()}
       </section>}
 
-      <section className="rc-plan-now">
+      <section className="dq-plan-now">
         <header><span>{tr(lang, 'ПРОДОЛЖИТЬ МАРШРУТ', 'WEG FORTSETZEN', 'CONTINUE YOUR PATH')}</span><small>{tr(lang, `Модуль ${week} из 4`, `Modul ${week} von 4`, `Module ${week} of 4`)}</small></header>
         <div><small>{moduleNames[week - 1]}</small><h2>{current?.title || topicLabel(current?.topic || 'word_order', lang)}</h2></div>
-        <button type="button" className="rc-primary" disabled={!current?.id} onClick={() => current?.id && navigate(withUser(`/lesson/${current.id}`))}><span><FaPlay /> {current?.id ? tr(lang, 'Начать', 'Starten', 'Start') : tr(lang, 'Загрузка…', 'Laden…', 'Loading…')}</span></button>
+        <button type="button" className="dq-main-action" disabled={!current?.id} onClick={() => current?.id && navigate(withUser(`/lesson/${current.id}`))}><span><FaPlay /> {current?.id ? tr(lang, 'Продолжить', 'Weitermachen', 'Continue') : tr(lang, 'Загрузка…', 'Laden…', 'Loading…')}</span><b>→</b></button>
       </section>
 
-      <section className="rc-route">
+      <section className="dq-route">
         <header><div><small>{tr(lang, `МОДУЛЬ ${week} · ${routeCompleted}/${lessons.length || 20}`, `MODUL ${week} · ${routeCompleted}/${lessons.length || 20}`, `MODULE ${week} · ${routeCompleted}/${lessons.length || 20}`)}</small><h2>{tr(lang, 'Следующие шаги', 'Nächste Schritte', 'Next steps')}</h2></div><span>{routeProgress}%</span></header>
-        <div className="rc-route-progress"><i style={{ width: `${routeProgress}%` }} /></div>
-        <div className="rc-route-list">
+        <div className="dq-route-progress"><i style={{ width: `${routeProgress}%` }} /></div>
+        <div className="dq-route-list">
           {upcoming.map((lesson, index) => {
             const locked = Array.isArray(lesson.blocked_by) && lesson.blocked_by.length > 0;
             const active = lesson.id === current?.id;
@@ -108,10 +107,10 @@ export const Plan: React.FC = () => {
                 : lesson.mastery == null
                   ? tr(lang, 'Доступно', 'Bereit', 'Ready')
                   : `${tr(lang, 'Освоено', 'Beherrscht', 'Mastery')} ${lesson.mastery}%`;
-            return <button type="button" key={lesson.id || index} className={`rc-route-row${active ? ' active' : ''}${lesson.completed ? ' complete' : ''}`} disabled={locked} onClick={() => !locked && lesson.id && navigate(withUser(`/lesson/${lesson.id}`))}>
-              <span className="rc-route-marker">{lesson.completed ? <FaCheck /> : locked ? <FaLock /> : index + 1}</span>
+            return <button type="button" key={lesson.id || index} className={`dq-route-step${active ? ' active' : ''}${lesson.completed ? ' complete' : ''}`} disabled={locked} onClick={() => !locked && lesson.id && navigate(withUser(`/lesson/${lesson.id}`))}>
+              <span className="dq-route-dot">{lesson.completed ? <FaCheck /> : locked ? <FaLock /> : String(index + 2).padStart(2, '0')}</span>
               <span><strong>{lesson.title || topicLabel(lesson.topic, lang)}</strong><small>{detail}</small></span>
-              {!locked && <span className="rc-route-arrow">›</span>}
+              {!locked && <span className="dq-route-arrow">›</span>}
             </button>;
           })}
           {!upcoming.length && <div className="rc-empty-inline"><span>{tr(lang, 'Следующие шаги появятся после этого урока.', 'Die nächsten Schritte erscheinen nach dieser Lektion.', 'Your next steps will appear after this lesson.')}</span></div>}

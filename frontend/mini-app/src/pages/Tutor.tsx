@@ -64,7 +64,7 @@ export const Tutor: React.FC = () => {
     window.speechSynthesis.speak(utterance);
   };
   return (
-    <main className="app-shell tutor-page precision-tutor v30-page v30-tutor page-enter">
+    <main className="app-shell tutor-page precision-tutor v30-page v30-tutor dq-tutor page-enter">
       <header className="page-header"><div><p className="eyebrow">DEUTSCHIQ</p><h1>{tr(lang, 'ИИ-репетитор', 'KI-Tutor', 'AI Tutor')}</h1></div><span className="quota">BETA</span></header>
       {!ready && <div className="rc-notice"><span>{tr(lang, 'Подготавливаем репетитора…', 'Tutor wird vorbereitet…', 'Preparing your tutor…')}</span></div>}
       {loadError && <div className="rc-notice error"><span>{tr(lang, 'Не удалось загрузить историю', 'Verlauf konnte nicht geladen werden', 'Could not load chat history')}</span><button type="button" onClick={loadTutor}>{tr(lang, 'Повторить', 'Erneut laden', 'Try again')}</button></div>}

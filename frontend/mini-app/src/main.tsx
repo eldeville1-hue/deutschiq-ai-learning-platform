@@ -34,6 +34,7 @@ const renderApp = async () => {
   // intentional cascade without forcing every rule into one monolithic file.
   await import('./styles/product.css');
   await import('./styles/product-polish.css');
+  await import('./styles/experience.css');
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode><App /></React.StrictMode>
   );

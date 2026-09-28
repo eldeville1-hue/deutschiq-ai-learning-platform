@@ -116,11 +116,11 @@ test('iPhone WebView keeps product controls styled', async ({ page }) => {
   await mockApi(page, { completed: true });
   await page.goto('/dashboard');
 
-  const control = page.locator('.rc-focus-card .rc-primary');
+  const control = page.locator('.dq-daily-stage .dq-main-action');
   await expect(control).toBeVisible();
   await expect(control).toHaveCSS('appearance', 'none');
   await expect(control).toHaveCSS('display', 'flex');
-  await expect(control).toHaveCSS('background-color', 'rgb(244, 191, 85)');
+  await expect(control).toHaveCSS('background-image', /linear-gradient/);
   await expectNoHorizontalOverflow(page);
 });
 
@@ -178,7 +178,7 @@ for (const [language, heading] of [['ru', 'Твой урок'], ['de', 'Deine Le
 test('learner completes a production exercise and sees CEFR evidence', async ({ page }) => {
   await mockApi(page, { completed: true });
   await page.goto('/lesson/77');
-  await page.getByRole('button', { name: /Show example/i }).click();
+  await page.getByRole('button', { name: /Understand with an example/i }).click();
   await page.getByRole('button', { name: /Start practice/i }).click();
   await page.getByRole('textbox').fill('Du solltest früher schlafen gehen, weil du oft müde bist.');
   await page.getByRole('button', { name: /^Check$/i }).click();
@@ -199,7 +199,7 @@ for (const width of [320, 375, 390, 430]) {
     await mockApi(page, { completed: true });
     await page.goto('/lesson/77');
     await expectNoHorizontalOverflow(page);
-    await page.getByRole('button', { name: /Show example/i }).click();
+    await page.getByRole('button', { name: /Understand with an example/i }).click();
     await page.getByRole('button', { name: /Start practice/i }).click();
     await expect(page.locator('.lesson-task-surface')).toBeVisible();
     await expect(page.getByRole('button', { name: /^Check$/i })).toBeVisible();
@@ -221,7 +221,7 @@ test('stale dashboard cache survives a bounded network failure without reload lo
   await mockApi(page, { completed: true });
   await page.route('**/api/dashboard/**', async route => { dashboardRequests += 1; await route.abort('failed'); });
   await page.goto('/dashboard');
-  await expect(page.locator('.rc-home-stats small')).toHaveText('321 XP');
+  await expect(page.locator('.dq-daily-meta span').last()).toHaveText('321 XP');
   await expect.poll(() => dashboardRequests).toBe(2);
   await page.reload();
   await expect(page.locator('.rc-home-stats small')).toHaveText('321 XP');

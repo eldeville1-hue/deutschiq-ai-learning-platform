@@ -72,7 +72,7 @@ export const Analytics: React.FC = () => {
   if (loading && !data) return <main className="app-shell rc-page"><div className="skeleton rc-hero-skeleton" /></main>;
 
   return (
-    <main className={`app-shell rc-page rc-analytics page-enter level-${String(data?.level || 'a1').toLowerCase()}`}>
+    <main className={`app-shell rc-page rc-analytics dq-analysis page-enter level-${String(data?.level || 'a1').toLowerCase()}`}>
       <header className="rc-page-title">
         <p>{tr(lang, 'АНАЛИЗ', 'ANALYSE', 'ANALYSIS')}</p>
         <h1>{tr(lang, 'Прогресс', 'Fortschritt', 'Progress')}</h1>

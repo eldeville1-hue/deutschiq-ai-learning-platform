@@ -224,8 +224,8 @@ export const Lesson: React.FC = () => {
     setSpeechResult(result);
   };
   return (
-    <main className={`lesson-flow precision-lesson rc-lesson fade-up level-${String(lesson.level || 'a1').toLowerCase()}`}>
-      <header className="lesson-progress-head">
+    <main className={`lesson-flow precision-lesson dq-lesson fade-up level-${String(lesson.level || 'a1').toLowerCase()}`}>
+      <header className="dq-lesson-progress">
         <small>{step < introSteps ? tr(lang, "ПОДГОТОВКА", "VORBEREITUNG", "PREPARE") : step < total ? activityLabel : tr(lang, "ГОТОВО", "GESCHAFFT", "COMPLETE")}</small>
         <span>{Math.min(step + 1, total)}/{total}</span>
         <div className="progress-bar">
@@ -235,45 +235,41 @@ export const Lesson: React.FC = () => {
           />
         </div>
       </header>
-      {content.module_title && step === 0 && <div className="lesson-module-strip">
+      {content.module_title && step === 0 && <div className="dq-lesson-module">
         <div><small>{tr(lang, "МОДУЛЬ", "MODUL", "MODULE")}</small><strong>{content.module_title}</strong></div>
         <span>{content.module_step}/{content.module_size}</span>
       </div>}
       {step === 0 && (
-        <section className="lesson-step">
-          <p className="eyebrow">
-            {tr(lang, "НОВЫЙ НАВЫК", "NEUES LERNZIEL", "NEW SKILL")} ·{" "}
-            {content.cefr || lesson.level}
-          </p>
+        <section className="lesson-step dq-lesson-intro">
+          <div className="dq-lesson-label"><span>{content.cefr || lesson.level}</span><small>{tr(lang, "НОВЫЙ НАВЫК", "NEUES LERNZIEL", "NEW SKILL")}</small></div>
           <h1>{cleanTitle(topicLabel(content.title || lesson.topic, lang))}</h1>
+          <p className="dq-lesson-scenario">{content.scenario || tr(lang, 'Короткая реальная ситуация на немецком.', 'Eine kurze echte Situation auf Deutsch.', 'A short real-life situation in German.')}</p>
+          <div className="dq-lesson-preview">
+            <small>{tr(lang, 'ФРАЗА УРОКА', 'SATZ DER LEKTION', 'LESSON PHRASE')}</small>
+            <strong>{content.examples?.[0] || content.audio_text || 'Heute lerne ich Deutsch.'}</strong>
+            <button type="button" onClick={() => speak(0.85)} aria-label={tr(lang, 'Прослушать пример', 'Beispiel anhören', 'Listen to example')}><FaVolumeUp /></button>
+          </div>
           <div className={`lesson-mode-pill ${learningProfile.mode}`}><span>{learningProfile.mode === 'supported'
             ? tr(lang, "С подсказками", "Mit Hinweisen", "Guided")
             : learningProfile.mode === 'challenge'
               ? tr(lang, "Самостоятельно", "Selbstständig", "Challenge")
               : tr(lang, "Сбалансировано", "Ausgewogen", "Balanced")}</span><small>{exercises.length} {tr(lang, 'заданий', 'Aufgaben', 'tasks')}</small></div>
           <div className="lesson-can-do"><small>{tr(lang, "ПОСЛЕ УРОКА", "NACH DER LEKTION", "AFTER THIS LESSON")}</small><strong>{content.can_do || content.objective}</strong></div>
-          {content.scenario && <details className="lesson-context"><summary>{tr(lang, 'Где это пригодится', 'Wo du das brauchst', 'Where you will use it')}</summary><div>{content.scenario}</div></details>}
           <details className="lesson-optional-rule"><summary>{tr(lang, 'Короткое правило', 'Kurze Regel', 'Quick rule')}</summary><div>{content.rule}</div></details>
           {content.module_size === 5 && <div className="lesson-practice-path" aria-label={tr(lang, 'Путь урока', 'Lektionsweg', 'Lesson path')}>
             {[tr(lang, 'Понять', 'Verstehen', 'Understand'), tr(lang, 'Выбрать', 'Wählen', 'Choose'), tr(lang, 'Собрать', 'Bauen', 'Build'), tr(lang, 'Сказать', 'Sprechen', 'Speak')].map((label, index) => <span key={label}><i>{index + 1}</i>{label}</span>)}
           </div>}
-          <button className="primary-action" onClick={next}>
-            {tr(lang, "Показать пример", "Beispiel zeigen", "Show example")}{" "}
+          <button className="primary-action dq-lesson-action" onClick={next}>
+            {tr(lang, "Понять на примере", "Am Beispiel verstehen", "Understand with an example")}{" "}
             <FaArrowRight />
           </button>
         </section>
       )}
       {step === 1 && (
-        <section className="lesson-step">
-          <p className="eyebrow">
-            {tr(lang, "ПРИМЕР", "BEISPIEL", "EXAMPLE")}
-          </p>
-          <h1>
-            {tr(lang, "Послушай фразу", "Höre den Satz", "Listen to the sentence")}
-          </h1>
-          <div className="example-sentence">
-            {content.examples?.[0] || "Heute lerne ich Deutsch."}
-          </div>
+        <section className="lesson-step dq-lesson-model">
+          <div className="dq-lesson-label"><span>01</span><small>{tr(lang, "ЗАМЕТЬ МОДЕЛЬ", "MUSTER ERKENNEN", "NOTICE THE PATTERN")}</small></div>
+          <h1>{tr(lang, "Сначала услышь смысл", "Höre zuerst die Bedeutung", "Hear the meaning first")}</h1>
+          <div className="example-sentence"><small>DE</small><strong>{content.examples?.[0] || "Heute lerne ich Deutsch."}</strong></div>
           <div className="audio-controls">
             <button type="button" onClick={() => speak(0.9)}>
               <FaVolumeUp /> {tr(lang, "Обычно", "Normal", "Normal")}
@@ -289,14 +285,14 @@ export const Lesson: React.FC = () => {
               ))}
             </div>
           )}
-          <button className="primary-action" onClick={next}>
+          <button className="primary-action dq-lesson-action" onClick={next}>
             {tr(lang, "Начать практику", "Übung starten", "Start practice")}{" "}
             <FaArrowRight />
           </button>
         </section>
       )}
       {activeExercise && (
-        <section className="lesson-step exercise-step">
+        <section className="lesson-step exercise-step dq-exercise">
           <div className="exercise-stage-row"><p className="eyebrow">{activityLabel}{retried[exerciseIndex] ? tr(lang, " · ещё раз", " · noch einmal", " · try again") : ""}</p><span>{exerciseIndex + 1}/{exercises.length}</span></div>
           <div className="exercise-prompt"><h1>{activeExercise.type === "repeat" ? tr(lang, "Произнеси фразу", "Sprich den Satz", "Say the sentence") : activeExercise.question}</h1></div>
           <div className="lesson-task-surface">
@@ -394,7 +390,8 @@ export const Lesson: React.FC = () => {
             <button className="primary-action" onClick={() => void completeSession()}>{tr(lang, "Сохранить ещё раз", "Erneut speichern", "Save again")} <FaArrowRight /></button>
           </section>
         ) : (
-          <section className={"lesson-step lesson-result lesson-result-" + (resultPassed ? "success" : "retry")}>
+          <section className={"lesson-step lesson-result dq-lesson-result lesson-result-" + (resultPassed ? "success" : "retry")}>
+            <div className="dq-result-glow" aria-hidden="true"><i /><i /><i /></div>
             <div className="lesson-result-hero">
               <span className={"result-orbit " + (resultPassed ? "success" : "retry")}><i>{resultPassed ? <FaCheck /> : <FaRedo />}</i></span>
               <div>

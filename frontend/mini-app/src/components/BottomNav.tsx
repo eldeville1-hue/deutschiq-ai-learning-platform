@@ -26,7 +26,7 @@ export const BottomNav: React.FC = () => {
     navigate(withUser(path));
   };
 
-  return <nav className="bottom-nav" aria-label={tr(lang, 'Основная навигация', 'Hauptnavigation', 'Main navigation')}>{tabs.map(([path, Icon, label]) => {
+  return <nav className="bottom-nav dq-nav" aria-label={tr(lang, 'Основная навигация', 'Hauptnavigation', 'Main navigation')}>{tabs.map(([path, Icon, label]) => {
     const active = location.pathname === path;
     return <button type="button" key={path} className={active ? 'active' : ''} aria-current={active ? 'page' : undefined} aria-label={label} onClick={() => openTab(path)}><Icon aria-hidden="true" /><span>{label}</span></button>;
   })}</nav>;
