@@ -30,6 +30,7 @@ export type LearningExercise = {
     placeholder?: string;
     model?: string;
   }>;
+  mission_role?: 'final' | string;
 };
 
 export const exerciseKind = (exercise: LearningExercise): ExerciseKind => {

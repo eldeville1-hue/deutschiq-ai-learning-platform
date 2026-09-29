@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { FaArrowRight, FaCheck, FaRedo, FaTimes, FaVolumeUp } from "react-icons/fa";
+import { FaArrowRight, FaCheck, FaTimes, FaVolumeUp } from "react-icons/fa";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../services/api";
 import { useLanguage } from "../context/LanguageContext";
 import { topicLabel } from "../i18n/topics";
 import { getUserId, withUser } from "../utils/user";
 import { ExerciseInteraction } from "../components/learning/ExerciseInteraction";
+import { LessonCompletion, type LessonOutcome } from "../components/learning/LessonCompletion";
 import { exerciseKind } from "../learning/exercises";
 import { tr } from "../i18n/language";
 
@@ -29,7 +30,7 @@ export const Lesson: React.FC = () => {
   const [startedAt, setStartedAt] = useState(() => Date.now());
   const [retried, setRetried] = useState<Record<number, boolean>>({});
   const [retryExercises, setRetryExercises] = useState<Record<number, any>>({});
-  const [outcome, setOutcome] = useState<any>(null);
+  const [outcome, setOutcome] = useState<LessonOutcome | null>(null);
   const [completionState, setCompletionState] = useState<"idle" | "saving" | "ready" | "error">("idle");
   const [sessionId, setSessionId] = useState("");
   const [speechResult, setSpeechResult] = useState<any>(null);
@@ -51,7 +52,9 @@ export const Lesson: React.FC = () => {
   const exerciseIndex = step - introSteps;
   const exercise = exercises[exerciseIndex];
   const activeExercise = retried[exerciseIndex] && retryExercises[exerciseIndex] ? retryExercises[exerciseIndex] : exercise;
-  const activityLabel = activeExercise ? ({
+  const activityLabel = activeExercise?.mission_role === 'final'
+    ? tr(lang, 'Миссия', 'Mission', 'Mission')
+    : activeExercise ? ({
     choice: tr(lang, "Выбери", "Wähle", "Choose"),
     analogy: tr(lang, "Перенеси", "Übertrage", "Transfer"),
     cloze: tr(lang, "Допиши", "Ergänze", "Complete"),
@@ -163,6 +166,17 @@ export const Lesson: React.FC = () => {
       resetAnswer();
       return;
     }
+    if (exercise?.mission_role === 'final' && retried[exerciseIndex]) {
+      void api.trackEvent({ user_id: getUserId(), event_name: 'mission_repair_completed', properties: { lesson_id: Number(id), exercise_index: exerciseIndex, repaired: Boolean(checked) } });
+      setRetried((value) => ({ ...value, [exerciseIndex]: false }));
+      setRetryExercises((value) => {
+        const nextValue = { ...value };
+        delete nextValue[exerciseIndex];
+        return nextValue;
+      });
+      resetAnswer();
+      return;
+    }
     await advance();
   };
   const skipExercise = async (reason: string) => {
@@ -184,16 +198,6 @@ export const Lesson: React.FC = () => {
     navigate(withUser(outcome?.passed ? "/plan" : `/lesson/${id}`), {
       replace: true,
     });
-  const resultPassed = outcome?.passed !== false;
-  const resultEvidence = {
-    firstTry: Number(outcome?.first_try_correct || 0),
-    corrected: Number(outcome?.corrected_retries || 0),
-    review: Number(outcome?.needs_review || 0),
-    exercises: Number(outcome?.exercise_count || 0),
-    score: Number(outcome?.score || 0),
-    mastery: Number(outcome?.mastery || 0),
-    xp: Number(outcome?.xp_gained || 0),
-  };
   const sendMilestone = (rating: string) => {
     void api.submitBetaFeedback({ user_id: getUserId(), message: `First lesson rating: ${rating}`, language: lang, page: 'lesson_complete' });
     localStorage.setItem(`deutschiq-beta-milestone-${getUserId()}`, '1');
@@ -255,9 +259,10 @@ export const Lesson: React.FC = () => {
               ? tr(lang, "Самостоятельно", "Selbstständig", "Challenge")
               : tr(lang, "Сбалансировано", "Ausgewogen", "Balanced")}</span><small>{exercises.length} {tr(lang, 'заданий', 'Aufgaben', 'tasks')}</small></div>
           <div className="lesson-can-do"><small>{tr(lang, "ПОСЛЕ УРОКА", "NACH DER LEKTION", "AFTER THIS LESSON")}</small><strong>{content.can_do || content.objective}</strong></div>
+          {content.mission && <div className="lesson-mission-brief"><small>{tr(lang, 'ТВОЯ МИССИЯ', 'DEINE MISSION', 'YOUR MISSION')}</small><strong>{content.mission}</strong></div>}
           <details className="lesson-optional-rule"><summary>{tr(lang, 'Короткое правило', 'Kurze Regel', 'Quick rule')}</summary><div>{content.rule}</div></details>
           <div className="lesson-practice-path" aria-label={tr(lang, 'Путь урока', 'Lektionsweg', 'Lesson path')}>
-            {[tr(lang, 'Понять', 'Verstehen', 'Understand'), tr(lang, 'Выбрать', 'Wählen', 'Choose'), tr(lang, 'Собрать', 'Bauen', 'Build'), tr(lang, 'Сказать', 'Sprechen', 'Speak')].map((label, index) => <span key={label}><i>{index + 1}</i>{label}</span>)}
+            {[tr(lang, 'Услышать', 'Hören', 'Hear'), tr(lang, 'Собрать', 'Bauen', 'Build'), tr(lang, 'Ответить', 'Antworten', 'Respond'), tr(lang, 'Использовать', 'Anwenden', 'Use')].map((label, index) => <span key={label}><i>{index + 1}</i>{label}</span>)}
           </div>
           <button className="primary-action dq-lesson-action" onClick={next}>
             {tr(lang, "Понять на примере", "Am Beispiel verstehen", "Understand with an example")}{" "}
@@ -294,6 +299,7 @@ export const Lesson: React.FC = () => {
       {activeExercise && (
         <section className="lesson-step exercise-step dq-exercise">
           <div className="exercise-stage-row"><p className="eyebrow">{activityLabel}{retried[exerciseIndex] ? tr(lang, " · ещё раз", " · noch einmal", " · try again") : ""}</p><span>{exerciseIndex + 1}/{exercises.length}</span></div>
+          {activeExercise.mission_role === 'final' && <div className="mission-stage-banner"><span>{tr(lang, 'БЕЗ МОДЕЛИ', 'OHNE MODELL', 'WITHOUT THE MODEL')}</span><strong>{tr(lang, 'Покажи, что ты можешь сделать это сам', 'Zeige, dass du es selbst kannst', 'Show that you can do it independently')}</strong></div>}
           <div className="exercise-prompt"><h1>{activeExercise.type === "repeat" ? tr(lang, "Произнеси фразу", "Sprich den Satz", "Say the sentence") : activeExercise.question}</h1></div>
           <div className="lesson-task-surface">
           {(activeExercise.type === "listening" || activeExercise.type === "listening_choice") && (
@@ -320,7 +326,7 @@ export const Lesson: React.FC = () => {
             {activeExercise.hint && !showHint && !learningProfile.show_guided_hint && <button type="button" onClick={() => setShowHint(true)}>{tr(lang, 'Подсказка', 'Hinweis', 'Hint')}</button>}
             {!easyMode && <button type="button" onClick={() => { setEasyMode(true); setShowHint(true); }}>{tr(lang, 'Сделать проще', 'Einfacher machen', 'Make easier')}</button>}
             {(activeExercise.type === 'listening' || activeExercise.type === 'listening_choice') && !showTranscript && <button type="button" onClick={() => setShowTranscript(true)}>{tr(lang, 'Не могу слушать', 'Kann gerade nicht hören', "I can't listen")}</button>}
-            <button type="button" className="skip" onClick={() => void skipExercise('learner_choice')}>{tr(lang, 'Пропустить', 'Jetzt überspringen', 'Skip for now')}</button>
+            {activeExercise.mission_role !== 'final' && <button type="button" className="skip" onClick={() => void skipExercise('learner_choice')}>{tr(lang, 'Пропустить', 'Jetzt überspringen', 'Skip for now')}</button>}
           </div>}
           {checked === null ? (
             <div className="lesson-action-dock"><button className="primary-action" onClick={check} disabled={!answer.trim() || !sessionId || checking}>
@@ -366,83 +372,30 @@ export const Lesson: React.FC = () => {
                 {!checked && !retried[exerciseIndex] && <small>{tr(lang, 'Давай соберём ответ с поддержкой.', 'Bauen wir die Antwort mit Hilfe neu.', "Let's rebuild it with support.")}</small>}
               </div>
               <button onClick={next}>
-                <span>{!checked && !retried[exerciseIndex] ? tr(lang, "Исправить по словам", "Mit Wörtern korrigieren", "Fix with word tiles") : tr(lang, "Дальше", "Weiter", "Next")}</span><FaArrowRight />
+                <span>{!checked && !retried[exerciseIndex]
+                  ? tr(lang, "Исправить по словам", "Mit Wörtern korrigieren", "Fix with word tiles")
+                  : exercise?.mission_role === 'final' && retried[exerciseIndex]
+                    ? tr(lang, "Повторить миссию самому", "Mission selbst wiederholen", "Retry the mission independently")
+                    : tr(lang, "Дальше", "Weiter", "Next")}</span><FaArrowRight />
               </button>
-              {!checked && <button type="button" className="feedback-skip" onClick={() => void skipExercise('after_feedback')}>{tr(lang, 'Продолжить пока', 'Vorerst weiter', 'Continue for now')}</button>}
+              {!checked && activeExercise.mission_role !== 'final' && <button type="button" className="feedback-skip" onClick={() => void skipExercise('after_feedback')}>{tr(lang, 'Продолжить пока', 'Vorerst weiter', 'Continue for now')}</button>}
             </div>
           )}
           {checkError && <div className="lesson-check-error" role="alert">{checkError}</div>}
         </section>
       )}
-      {step >= total && (
-        completionState === "saving" || completionState === "idle" ? (
-          <section className="lesson-step lesson-result lesson-result-loading" aria-live="polite">
-            <span className="result-loader" />
-            <p className="eyebrow">{tr(lang, "СОХРАНЯЕМ ПРОГРЕСС", "FORTSCHRITT WIRD GESPEICHERT", "SAVING YOUR PROGRESS")}</p>
-            <h1>{tr(lang, "Собираем итоги урока…", "Dein Lernergebnis wird vorbereitet…", "Preparing your lesson result…")}</h1>
-          </section>
-        ) : completionState === "error" ? (
-          <section className="lesson-step lesson-result lesson-result-error" role="alert">
-            <span className="result-orbit retry"><i><FaRedo /></i></span>
-            <p className="eyebrow">{tr(lang, "ПРОГРЕСС НЕ ПОТЕРЯН", "DEIN FORTSCHRITT IST SICHER", "YOUR WORK IS STILL HERE")}</p>
-            <h1>{tr(lang, "Не удалось сохранить результат", "Das Ergebnis konnte nicht gespeichert werden", "We couldn’t save the result")}</h1>
-            <p>{tr(lang, "Проверь соединение и попробуй ещё раз.", "Prüfe deine Verbindung und versuche es erneut.", "Check your connection and try once more.")}</p>
-            <button className="primary-action" onClick={() => void completeSession()}>{tr(lang, "Сохранить ещё раз", "Erneut speichern", "Save again")} <FaArrowRight /></button>
-          </section>
-        ) : (
-          <section className={"lesson-step lesson-result dq-lesson-result lesson-result-" + (resultPassed ? "success" : "retry")}>
-            <div className="dq-result-glow" aria-hidden="true"><i /><i /><i /></div>
-            <div className="lesson-result-hero">
-              <span className={"result-orbit " + (resultPassed ? "success" : "retry")}><i>{resultPassed ? <FaCheck /> : <FaRedo />}</i></span>
-              <div>
-                <div className="lesson-result-kicker">
-                  <p className="eyebrow">{resultPassed
-                    ? tr(lang, "НОВЫЙ НАВЫК ОТКРЫТ", "NEUE FÄHIGKEIT FREIGESCHALTET", "NEW SKILL UNLOCKED")
-                    : tr(lang, "ПРАКТИКА СОХРАНЕНА", "ÜBUNG GESPEICHERT", "PRACTICE SAVED")}</p>
-                  {resultEvidence.xp > 0 && <span>+{resultEvidence.xp} XP</span>}
-                </div>
-                <h1>{resultPassed
-                  ? tr(lang, "У тебя получилось", "Du hast es geschafft", "You did it")
-                  : tr(lang, "Почти готово", "Fast geschafft", "Almost there")}</h1>
-                <p>{resultPassed
-                  ? tr(lang, "Теперь используй этот навык в следующем разговоре.", "Nutze diese Fähigkeit jetzt im nächsten Gespräch.", "Now take this skill into your next conversation.")
-                  : tr(lang, "Остался один короткий шаг — повторим только то, что пока не закрепилось.", "Nur ein kurzer Schritt fehlt — wir wiederholen, was noch nicht sitzt.", "One short step remains — we’ll focus on what has not stuck yet.")}</p>
-              </div>
-            </div>
-
-            <div className="lesson-result-skill">
-              <header><small>{resultPassed
-                ? tr(lang, "ТЕПЕРЬ ТЫ МОЖЕШЬ", "JETZT KANNST DU", "NOW YOU CAN")
-                : tr(lang, "ТВОЯ ЦЕЛЬ", "DEIN ZIEL", "YOUR TARGET")}</small><span>{resultPassed ? tr(lang, "ГОТОВО", "BEREIT", "READY") : tr(lang, "ЕЩЁ РАЗ", "NOCH EINMAL", "RETRY")}</span></header>
-              <strong>{content.can_do || content.objective || cleanTitle(topicLabel(content.title || lesson.topic, lang))}</strong>
-            </div>
-
-            <div className="lesson-result-evidence" aria-label={tr(lang, "Результаты урока", "Lektionsergebnis", "Lesson evidence")}>
-              <span><b>{resultEvidence.firstTry}/{resultEvidence.exercises}</b><small>{tr(lang, "С ПЕРВОЙ ПОПЫТКИ", "IM ERSTEN VERSUCH", "FIRST TRY")}</small></span>
-              <span className={resultEvidence.corrected > 0 ? "positive" : ""}><b>{resultEvidence.corrected}</b><small>{tr(lang, "ИСПРАВЛЕНО", "KORRIGIERT", "CORRECTED")}</small></span>
-              <span className={resultEvidence.review > 0 ? "attention" : "positive"}><b>{resultEvidence.review}</b><small>{tr(lang, "НА ПОВТОР", "ZU WIEDERHOLEN", "TO REVIEW")}</small></span>
-            </div>
-
-            <div className="lesson-result-next"><small>{tr(lang, "ДАЛЬШЕ", "ALS NÄCHSTES", "NEXT")}</small><strong>{resultPassed
-              ? tr(lang, "Продолжить по твоему маршруту", "Auf deinem Lernweg weitermachen", "Continue your learning path")
-              : tr(lang, "Пройти навык ещё раз с готовыми исправлениями", "Die Fähigkeit mit deinen Korrekturen wiederholen", "Try the skill again with your corrections")}</strong><FaArrowRight /></div>
-
-            {content.checkpoint && resultPassed && <div className="module-checkpoint-complete"><small>{tr(lang, "МОДУЛЬ ЗАВЕРШЁН", "MODUL ABGESCHLOSSEN", "MODULE COMPLETE")}</small><strong>{content.module_title}</strong><span>{tr(lang, "Теперь ты можешь провести короткий первый разговор.", "Du kannst jetzt ein kurzes erstes Gespräch führen.", "You can now have a short first conversation.")}</span></div>}
-            {outcome?.unlocked_level && <div className="level-unlocked"><small>{tr(lang, "НОВЫЙ УРОВЕНЬ", "NEUES NIVEAU", "NEW LEVEL")}</small><strong>{outcome.unlocked_level}</strong><span>{tr(lang, "Твой следующий маршрут открыт.", "Dein nächster Lernweg ist jetzt offen.", "Your next learning path is now open.")}</span></div>}
-
-            <details className="lesson-result-details"><summary>{tr(lang, "Детали урока", "Lektionsdetails", "Lesson details")}</summary><div><span>{tr(lang, "Точность", "Genauigkeit", "Accuracy")} <b>{resultEvidence.score}%</b></span><span>{tr(lang, "Освоение", "Beherrschung", "Mastery")} <b>{resultEvidence.mastery}%</b></span><span>{tr(lang, "Награда", "Belohnung", "Reward")} <b>+{resultEvidence.xp} XP</b></span></div></details>
-
-            <div className="lesson-result-actions">
-              <button className="primary-action" onClick={finish}>{resultPassed
-                ? tr(lang, "Продолжить маршрут", "Lernweg fortsetzen", "Continue my path")
-                : tr(lang, "Попробовать навык ещё раз", "Fähigkeit erneut üben", "Practice this skill again")} <FaArrowRight /></button>
-              {!resultPassed && <button type="button" className="lesson-result-secondary" onClick={() => navigate(withUser("/plan"), { replace: true })}>{tr(lang, "Вернуться к плану", "Zurück zum Lernplan", "Back to plan")}</button>}
-            </div>
-
-            {outcome && !milestoneSent && <details className="beta-milestone compact"><summary>{tr(lang,"Оценить урок","Lektion bewerten","Rate lesson")}</summary><div><button onClick={()=>sendMilestone('hard')}>{tr(lang,"Сложно","Schwer","Hard")}</button><button onClick={()=>sendMilestone('good')}>{tr(lang,"Хорошо","Gut","Good")}</button><button onClick={()=>sendMilestone('easy')}>{tr(lang,"Легко","Leicht","Easy")}</button></div></details>}
-          </section>
-        )
-      )}
+      {step >= total && <LessonCompletion
+        lang={lang}
+        state={completionState}
+        outcome={outcome}
+        content={content}
+        skillTitle={cleanTitle(topicLabel(content.title || lesson.topic, lang))}
+        milestoneSent={milestoneSent}
+        onRetrySave={() => void completeSession()}
+        onFinish={finish}
+        onBackToPlan={() => navigate(withUser('/plan'), { replace: true })}
+        onRate={sendMilestone}
+      />}
     </main>
   );
 };

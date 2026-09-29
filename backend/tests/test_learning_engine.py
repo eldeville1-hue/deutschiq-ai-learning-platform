@@ -1,6 +1,6 @@
 import unittest
 from types import SimpleNamespace
-from app.services.learning_engine import mastery_update, mastery_update_from_evidence, next_stability, retention_score, review_interval, session_score, summarize_attempts
+from app.services.learning_engine import mastery_update, mastery_update_from_evidence, next_stability, retention_score, review_interval, session_score, summarize_attempts, summarize_mission
 from app.services.skill_graph import blocked_by, prerequisites_met
 from app.services.learning_route import lesson_blockers, select_recommended_lesson
 
@@ -21,6 +21,26 @@ class LearningEngineTests(unittest.TestCase):
         self.assertEqual(1, summary["first_try_correct"])
         self.assertEqual(1, summary["corrected_retries"])
         self.assertEqual(0, summary["needs_review"])
+
+    def test_mission_requires_independent_production_evidence(self):
+        attempts = [
+            SimpleNamespace(exercise_index=3, correct=False, production_score=48, answer="Ich Hamburg."),
+            SimpleNamespace(exercise_index=3, correct=True, production_score=None, answer="Ich wohne in Hamburg."),
+        ]
+        summary = summarize_mission(attempts, 3)
+        self.assertTrue(summary["mission_attempted"])
+        self.assertFalse(summary["mission_passed"])
+        self.assertEqual(48, summary["mission_score"])
+        self.assertEqual("Ich Hamburg.", summary["mission_answer"])
+
+    def test_mission_passes_with_strong_independent_answer(self):
+        attempts = [SimpleNamespace(
+            exercise_index=3, correct=True, production_score=86,
+            answer="Ich komme aus Kyjiw und wohne in Hamburg.",
+        )]
+        summary = summarize_mission(attempts, 3)
+        self.assertTrue(summary["mission_passed"])
+        self.assertEqual(86, summary["mission_score"])
 
     def test_mastery_is_bounded_and_confidence_weighted(self):
         self.assertEqual(mastery_update(95, True, "sure"), 100)

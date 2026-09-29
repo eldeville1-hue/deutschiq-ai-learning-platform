@@ -172,6 +172,45 @@ A1_FIRST_CONVERSATION = {
 }
 
 
+# Every gold-module lesson closes with a short, contextual conversation.  The
+# German partner lines stay authentic while the coaching goal is localized.
+A1_MISSION_DIALOGUES = {
+    "greetings": [
+        ("Guten Morgen! Willkommen im Kurs. Wie heißt du?", ("Поздоровайся и назови своё имя.", "Begrüße die Person und sage deinen Namen.", "Greet the person and say your name."), "Hallo! Ich heiße …", "Hallo! Ich heiße Mia."),
+        ("Freut mich! Schön, dass du da bist.", ("Ответь коротко и дружелюбно.", "Antworte kurz und freundlich.", "Reply briefly and politely."), "Danke, freut mich!", "Danke, freut mich!"),
+    ],
+    "personal_details": [
+        ("Hallo! Woher kommst du?", ("Скажи, откуда ты.", "Sage, woher du kommst.", "Say where you are from."), "Ich komme aus …", "Ich komme aus Kyjiw."),
+        ("Und wo wohnst du jetzt?", ("Скажи, где ты сейчас живёшь.", "Sage, wo du jetzt wohnst.", "Say where you live now."), "Ich wohne in …", "Ich wohne in Hamburg."),
+    ],
+    "main_clause": [
+        ("Was machst du heute?", ("Начни со слова Heute и назови действие.", "Beginne mit Heute und nenne eine Handlung.", "Begin with Heute and name an action."), "Heute … ich …", "Heute lerne ich Deutsch."),
+        ("Und was machst du am Abend?", ("Начни с Am Abend; глагол поставь вторым.", "Beginne mit Am Abend; das Verb steht an Position zwei.", "Begin with Am Abend; put the verb in position two."), "Am Abend … ich …", "Am Abend koche ich zu Hause."),
+    ],
+    "yes_no_questions": [
+        ("Ich komme morgen wieder zum Kurs.", ("Спроси, придёт ли собеседник завтра.", "Frage, ob die Person morgen kommt.", "Ask whether the person is coming tomorrow."), "Kommst du …?", "Kommst du morgen zum Kurs?"),
+        ("Ja, gern. Und du?", ("Задай ещё один вопрос с ответом ja или nein.", "Stelle noch eine Ja-/Nein-Frage.", "Ask one more yes-or-no question."), "Lernst du …?", "Lernst du auch Deutsch?"),
+    ],
+    "w_questions": [
+        ("Guten Morgen! Ich heiße Lena. Wie heißt du?", ("Поздоровайся и назови своё имя.", "Begrüße die Person und sage deinen Namen.", "Greet the person and say your name."), "Hallo! Ich heiße …", "Hallo! Ich heiße Alex."),
+        ("Freut mich! Frag mich, woher ich komme.", ("Задай вопрос с Woher.", "Stelle eine Frage mit Woher.", "Ask a question with Woher."), "Woher …?", "Woher kommst du?"),
+        ("Ich komme aus Köln. Frag mich jetzt, wo ich wohne.", ("Задай вопрос с Wo.", "Stelle eine Frage mit Wo.", "Ask a question with Wo."), "Wo …?", "Wo wohnst du?"),
+    ],
+}
+
+
+def _mission_turns(topic: str, language_index: int) -> list[dict]:
+    return [
+        {
+            "partner": partner,
+            "goal": goals[language_index],
+            "placeholder": placeholder,
+            "model": model,
+        }
+        for partner, goals, placeholder, model in A1_MISSION_DIALOGUES[topic]
+    ]
+
+
 def _localized(base: dict, ru: dict, de: dict, en: dict) -> dict:
     return {**base, "i18n": {"ru": ru, "de": de, "en": en}}
 
@@ -192,6 +231,12 @@ def build_foundation_content(row: tuple, level: str) -> dict:
         task_ru, task_de, task_en = starter["task"]
         tokens = model.rstrip(".?!").split()
         mixed_tokens = tokens[1::2] + tokens[::2]
+        mission_turns = {
+            "ru": _mission_turns(topic, 0),
+            "de": _mission_turns(topic, 1),
+            "en": _mission_turns(topic, 2),
+        }
+        mission_model = "\n".join(turn["model"] for turn in mission_turns["ru"])
         exercises = [
             _localized(
                 {"id":f"a1-{day}-build","type":"reorder","stage":"guided","question":"Собери полезную фразу.","answer":model,"accepted_answers":[model,model.rstrip(".?!")],"tokens":mixed_tokens,"hint":rule_ru,"explanation":rule_ru,"misconception":"a1_first_conversation_form","accessibility_label":"Собери немецкую фразу"},
@@ -212,23 +257,10 @@ def build_foundation_content(row: tuple, level: str) -> dict:
                 {"question":"Listen. What is the speaker doing?","answer":listen_en,"accepted_answers":[listen_en],"options":list(options_en),"accessibility_label":"Listen and choose the meaning"},
             ),
             _localized(
-                {"id":f"a1-{day}-use","type":"dialogue","stage":"transfer","question":task_ru,"answer":("Hallo! Ich heiße Alex.\nWoher kommst du?\nWo wohnst du?" if starter.get("checkpoint") else model),"model_answer":("Hallo! Ich heiße Alex.\nWoher kommst du?\nWo wohnst du?" if starter.get("checkpoint") else model),"accepted_answers":[model,model.rstrip(".?!")],"target_patterns":(["heiße","woher","wo"] if starter.get("checkpoint") else starter["patterns"]),"hint":rule_ru,"explanation":"Смысл должен подходить ситуации. Личные данные могут отличаться.","misconception":"a1_first_conversation_transfer","accessibility_label":"Дай свой ответ по-немецки",
-                 **({"conversation_turns":[
-                    {"partner":"Guten Morgen! Ich heiße Lena. Wie heißt du?","goal":"Поздоровайся и назови своё имя.","placeholder":"Hallo! Ich heiße …","model":"Hallo! Ich heiße Alex."},
-                    {"partner":"Freut mich! Frag mich, woher ich komme.","goal":"Задай вопрос с Woher.","placeholder":"Woher …?","model":"Woher kommst du?"},
-                    {"partner":"Ich komme aus Köln. Frag mich jetzt, wo ich wohne.","goal":"Задай вопрос с Wo.","placeholder":"Wo …?","model":"Wo wohnst du?"},
-                 ]} if starter.get("checkpoint") else {})},
-                {"question":task_ru,"hint":rule_ru,"explanation":"Смысл должен подходить ситуации. Личные данные могут отличаться.","accessibility_label":"Дай свой ответ по-немецки"},
-                {"question":task_de,"hint":rule_de,"explanation":"Die Antwort muss zur Situation passen. Persönliche Angaben dürfen anders sein.","accessibility_label":"Eigene Antwort auf Deutsch geben",**({"conversation_turns":[
-                    {"partner":"Guten Morgen! Ich heiße Lena. Wie heißt du?","goal":"Begrüße die Person und sage deinen Namen.","placeholder":"Hallo! Ich heiße …","model":"Hallo! Ich heiße Alex."},
-                    {"partner":"Freut mich! Frag mich, woher ich komme.","goal":"Stelle eine Frage mit Woher.","placeholder":"Woher …?","model":"Woher kommst du?"},
-                    {"partner":"Ich komme aus Köln. Frag mich jetzt, wo ich wohne.","goal":"Stelle eine Frage mit Wo.","placeholder":"Wo …?","model":"Wo wohnst du?"},
-                 ]} if starter.get("checkpoint") else {})},
-                {"question":task_en,"hint":rule_en,"explanation":"The answer must fit the situation. Personal details may be different.","accessibility_label":"Give your own answer in German",**({"conversation_turns":[
-                    {"partner":"Guten Morgen! Ich heiße Lena. Wie heißt du?","goal":"Greet the person and say your name.","placeholder":"Hallo! Ich heiße …","model":"Hallo! Ich heiße Alex."},
-                    {"partner":"Freut mich! Frag mich, woher ich komme.","goal":"Ask a question with Woher.","placeholder":"Woher …?","model":"Woher kommst du?"},
-                    {"partner":"Ich komme aus Köln. Frag mich jetzt, wo ich wohne.","goal":"Ask a question with Wo.","placeholder":"Wo …?","model":"Wo wohnst du?"},
-                 ]} if starter.get("checkpoint") else {})},
+                {"id":f"a1-{day}-use","type":"dialogue","stage":"transfer","mission_role":"final","question":task_ru,"answer":mission_model,"model_answer":mission_model,"accepted_answers":[model,model.rstrip(".?!")],"target_patterns":(["heiße","woher","wo"] if starter.get("checkpoint") else starter["patterns"]),"hint":rule_ru,"explanation":"Смысл должен подходить ситуации. Личные данные могут отличаться.","misconception":"a1_first_conversation_transfer","accessibility_label":"Пройди реальный мини-диалог","conversation_turns":mission_turns["ru"]},
+                {"question":task_ru,"hint":rule_ru,"explanation":"Смысл должен подходить ситуации. Личные данные могут отличаться.","accessibility_label":"Пройди реальный мини-диалог","conversation_turns":mission_turns["ru"]},
+                {"question":task_de,"hint":rule_de,"explanation":"Die Antwort muss zur Situation passen. Persönliche Angaben dürfen anders sein.","accessibility_label":"Ein echtes Mini-Gespräch führen","conversation_turns":mission_turns["de"]},
+                {"question":task_en,"hint":rule_en,"explanation":"The answer must fit the situation. Personal details may be different.","accessibility_label":"Complete a real mini dialogue","conversation_turns":mission_turns["en"]},
             ),
             _localized(
                 {"id":f"a1-{day}-speak","type":"repeat","stage":"transfer","question":"Скажи фразу вслух.","answer":starter["alternate"],"accepted_answers":[starter["alternate"],starter["alternate"].rstrip(".?!")],"audio_text":starter["alternate"],"explanation":"Говори спокойно. Важно, чтобы ключевые слова были понятны.","misconception":"a1_first_conversation_fluency","accessibility_label":"Повтори немецкую фразу"},
@@ -238,19 +270,19 @@ def build_foundation_content(row: tuple, level: str) -> dict:
             ),
         ]
         return {
-            "day":day,"week":1,"track":"A1","module":1,"quality_version":6,
-            "learning_method":"notice_build_use_reflect","module_title":"Первый разговор",
+            "day":day,"week":1,"track":"A1","module":1,"quality_version":7,
+            "learning_method":"mission_loop_v1","module_title":"Первый разговор",
             "module_step":day,"module_size":5,"checkpoint":bool(starter.get("checkpoint")),
             "title":title_ru,"objective":can_do_ru,"can_do":can_do_ru,
-            "communication_goal":task_ru,"scenario":scenario_ru,"rule":rule_ru,
+            "communication_goal":task_ru,"mission":task_ru,"success_evidence":can_do_ru,"scenario":scenario_ru,"rule":rule_ru,
             "examples":[model,starter["alternate"],f"❌ {wrong}"],"audio_text":model,"cefr":"A1",
             "prerequisites":[] if day == 1 else [A1_CURRICULUM[day - 2][2]],
             "common_mistakes":[f"❌ {wrong}",f"✅ {model}"],
             "recall_prompt":"Закрой пример и произнеси свою версию без подсказки.",
             "i18n":{
-                "ru":{"title":title_ru,"module_title":"Первый разговор","objective":can_do_ru,"can_do":can_do_ru,"communication_goal":task_ru,"scenario":scenario_ru,"rule":rule_ru,"recall_prompt":"Закрой пример и произнеси свою версию без подсказки."},
-                "de":{"title":title_de,"module_title":"Das erste Gespräch","objective":can_do_de,"can_do":can_do_de,"communication_goal":task_de,"scenario":scenario_de,"rule":rule_de,"recall_prompt":"Verdecke das Beispiel und sage deine eigene Version ohne Hilfe."},
-                "en":{"title":title_en,"module_title":"Your first conversation","objective":can_do_en,"can_do":can_do_en,"communication_goal":task_en,"scenario":scenario_en,"rule":rule_en,"recall_prompt":"Hide the example and say your own version without help."},
+                "ru":{"title":title_ru,"module_title":"Первый разговор","objective":can_do_ru,"can_do":can_do_ru,"communication_goal":task_ru,"mission":task_ru,"success_evidence":can_do_ru,"scenario":scenario_ru,"rule":rule_ru,"recall_prompt":"Закрой пример и произнеси свою версию без подсказки."},
+                "de":{"title":title_de,"module_title":"Das erste Gespräch","objective":can_do_de,"can_do":can_do_de,"communication_goal":task_de,"mission":task_de,"success_evidence":can_do_de,"scenario":scenario_de,"rule":rule_de,"recall_prompt":"Verdecke das Beispiel und sage deine eigene Version ohne Hilfe."},
+                "en":{"title":title_en,"module_title":"Your first conversation","objective":can_do_en,"can_do":can_do_en,"communication_goal":task_en,"mission":task_en,"success_evidence":can_do_en,"scenario":scenario_en,"rule":rule_en,"recall_prompt":"Hide the example and say your own version without help."},
             },
             "exercises":exercises,
         }

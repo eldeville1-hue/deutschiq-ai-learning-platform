@@ -190,7 +190,8 @@ class ContentQualityTests(unittest.TestCase):
 
         self.assertEqual([1, 2, 3, 4, 5], [item["module_step"] for item in lessons])
         self.assertTrue(all(item["module_size"] == 5 for item in lessons))
-        self.assertTrue(all(item["quality_version"] == 6 for item in lessons))
+        self.assertTrue(all(item["quality_version"] == 7 for item in lessons))
+        self.assertTrue(all(item["learning_method"] == "mission_loop_v1" for item in lessons))
         self.assertTrue(all(item["module_title"] == "Первый разговор" for item in lessons))
         self.assertTrue(all(item.get("can_do") for item in lessons))
         self.assertFalse(any(item.get("checkpoint") for item in lessons[:-1]))
@@ -210,16 +211,24 @@ class ContentQualityTests(unittest.TestCase):
             )
             self.assertEqual(5, len({exercise["id"] for exercise in content["exercises"]}))
             self.assertTrue(all(exercise.get("accessibility_label") for exercise in content["exercises"]))
+            self.assertTrue(content["mission"])
+            self.assertTrue(content["success_evidence"])
+            final = [item for item in content["exercises"] if item.get("mission_role") == "final"]
+            self.assertEqual(1, len(final))
+            self.assertGreaterEqual(len(final[0]["conversation_turns"]), 2)
             for language in ("ru", "de", "en"):
                 localized = localize_lesson_content(content, language)
                 self.assertTrue(localized["module_title"])
                 self.assertTrue(localized["can_do"])
                 self.assertTrue(localized["communication_goal"])
+                self.assertTrue(localized["mission"])
+                self.assertTrue(localized["success_evidence"])
                 self.assertTrue(all(exercise.get("accessibility_label") for exercise in localized["exercises"]))
                 analogy = localized["exercises"][1]
                 self.assertTrue(analogy.get("analogy_source"))
                 self.assertTrue(analogy.get("analogy_target"))
                 self.assertTrue(analogy.get("pattern_label"))
+                self.assertGreaterEqual(len(localized["exercises"][3]["conversation_turns"]), 2)
                 if content.get("checkpoint"):
                     self.assertEqual(3, len(localized["exercises"][3]["conversation_turns"]))
 

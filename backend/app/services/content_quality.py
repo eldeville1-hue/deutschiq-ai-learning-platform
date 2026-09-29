@@ -92,7 +92,8 @@ def validate_roadmap_content(content: dict) -> list[str]:
         exercises = content.get("exercises") or []
         kinds = {item.get("type") for item in exercises}
         prompts = [str(item.get("question", "")).strip().casefold() for item in exercises]
-        if content.get("learning_method") != "notice_build_use_reflect":
+        expected_method = "mission_loop_v1" if content.get("quality_version", 0) >= 7 else "notice_build_use_reflect"
+        if content.get("learning_method") != expected_method:
             errors.append("adaptive:missing_learning_method")
         if len(exercises) < 5 or len(kinds) < 4:
             errors.append("adaptive:insufficient_variety")
@@ -110,4 +111,19 @@ def validate_roadmap_content(content: dict) -> list[str]:
             errors.append("foundation:overconstrained_production")
         if content.get("cefr") in {"B1", "B2"} and len(content.get("assessment_rubric") or []) < 3:
             errors.append("advanced:missing_assessment_rubric")
+    if content.get("quality_version", 0) >= 7:
+        if content.get("learning_method") != "mission_loop_v1":
+            errors.append("mission:missing_learning_method")
+        if not content.get("mission") or not content.get("success_evidence"):
+            errors.append("mission:missing_outcome")
+        final_missions = [
+            item for item in content.get("exercises") or []
+            if item.get("mission_role") == "final"
+        ]
+        if len(final_missions) != 1:
+            errors.append("mission:requires_one_final")
+        elif final_missions[0].get("type") not in {"production", "dialogue"}:
+            errors.append("mission:final_not_production")
+        elif len(final_missions[0].get("conversation_turns") or []) < 2:
+            errors.append("mission:conversation_too_short")
     return errors

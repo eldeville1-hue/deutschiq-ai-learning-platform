@@ -13,7 +13,7 @@ import uuid
 from app.core.telegram_auth import telegram_user_id, assert_owner
 from app.services.srs import schedule_review
 from app.models.learning import ExerciseAttempt, TopicMastery, LearningSession
-from app.services.learning_engine import mastery_update, mastery_update_from_evidence, next_stability, review_interval, retention_score, summarize_attempts
+from app.services.learning_engine import mastery_update, mastery_update_from_evidence, next_stability, review_interval, retention_score, summarize_attempts, summarize_mission
 from app.services.skill_graph import skill_for
 from app.services.content_quality import normalize_lesson_content
 from app.services.content_i18n import localize_lesson_content, normalize_language
@@ -217,8 +217,21 @@ async def complete_lesson(data: CompleteLessonRequest, db: Session = Depends(get
         ExerciseAttempt.session_id == session.id,
     ).all()
     summary = summarize_attempts(attempts)
+    lesson_content = normalize_lesson_content(lesson.content or {}, lesson.topic, lesson.level)
+    exercises = lesson_content.get("exercises") or []
+    final_candidates = [
+        index for index, exercise in enumerate(exercises)
+        if exercise.get("mission_role") == "final"
+    ]
+    if not final_candidates:
+        final_candidates = [
+            index for index, exercise in enumerate(exercises)
+            if exercise.get("type") in {"production", "dialogue"}
+        ]
+    mission_index = final_candidates[-1] if final_candidates else None
+    mission = summarize_mission(attempts, mission_index)
     accuracy = summary["score"]
-    passed = accuracy >= 70
+    passed = accuracy >= 70 and mission["mission_passed"]
     topic_mastery = db.query(TopicMastery).filter(TopicMastery.user_id == user.id, TopicMastery.topic == lesson.topic).first()
     mastery_value = round(topic_mastery.mastery) if topic_mastery else 0
     session.score = accuracy
@@ -272,6 +285,7 @@ async def complete_lesson(data: CompleteLessonRequest, db: Session = Depends(get
     db.commit()
     if passed:
         schedule_review(db, user.id, lesson.id)
+    mission_exercise = exercises[mission_index] if mission_index is not None else {}
     duration_seconds = max(0, round((session.completed_at.replace(tzinfo=None) - session.started_at.replace(tzinfo=None)).total_seconds())) if session.started_at else 0
     return {
         "status": "passed" if passed else "practice_needed",
@@ -285,6 +299,14 @@ async def complete_lesson(data: CompleteLessonRequest, db: Session = Depends(get
         "corrected_retries": summary["corrected_retries"],
         "needs_review": summary["needs_review"],
         "exercise_count": summary["exercise_count"],
+        "mission_required": mission["mission_required"],
+        "mission_attempted": mission["mission_attempted"],
+        "mission_passed": mission["mission_passed"],
+        "mission_score": mission["mission_score"],
+        "mission_answer": mission["mission_answer"],
+        "mission_prompt": mission_exercise.get("question"),
+        "mission_model": mission_exercise.get("model_answer") or mission_exercise.get("answer"),
+        "review_in_days": 1 if passed else None,
         "duration_seconds": duration_seconds,
         "next_action": "plan" if passed else "retry",
         "checkpoint_ready": checkpoint_ready,

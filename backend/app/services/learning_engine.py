@@ -21,6 +21,38 @@ def summarize_attempts(attempts) -> dict:
     }
 
 
+def summarize_mission(attempts, mission_index: int | None) -> dict:
+    """Return evidence for the independent task that closes a mission lesson.
+
+    A supported word-tile retry may repair an earlier error, but it is not
+    independent production.  Therefore a mission is demonstrated only by a
+    successful production assessment on the designated final exercise.
+    """
+    if mission_index is None:
+        return {
+            "mission_required": False,
+            "mission_attempted": False,
+            "mission_passed": True,
+            "mission_score": None,
+            "mission_answer": None,
+        }
+
+    mission_attempts = [
+        attempt for attempt in attempts
+        if int(attempt.exercise_index) == int(mission_index)
+        and getattr(attempt, "production_score", None) is not None
+    ]
+    latest = mission_attempts[-1] if mission_attempts else None
+    score = int(latest.production_score) if latest and latest.production_score is not None else None
+    return {
+        "mission_required": True,
+        "mission_attempted": latest is not None,
+        "mission_passed": bool(latest and latest.correct and score is not None and score >= 70),
+        "mission_score": score,
+        "mission_answer": latest.answer if latest else None,
+    }
+
+
 def mastery_update(
     current: float,
     correct: bool,

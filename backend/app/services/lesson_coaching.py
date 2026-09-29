@@ -33,6 +33,7 @@ def supported_retry_exercise(exercise: dict, lesson_content: dict, language: str
         "hint": hints[lang],
         "explanation": str(exercise.get("explanation", "")),
         "misconception": exercise.get("misconception"),
+        "mission_role": exercise.get("mission_role"),
     }
 
 

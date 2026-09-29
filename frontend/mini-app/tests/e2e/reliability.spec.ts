@@ -8,7 +8,7 @@ const journey = { current_level: 'B1', levels: [{ level: 'A1', state: 'review', 
 const dashboard = { level: 'B1', targetLevel: 'B2', xp: 120, streak: 3, weaknesses: [{ name: 'konjunktiv_ii', score: 24 }] };
 const lesson = {
   id: 77, level: 'B1', topic: 'konjunktiv_ii', estimated_time: 12, xp_reward: 70,
-  content: { cefr: 'B1', title: 'Konjunktiv II: advice', objective: 'Give polite advice.', rule: 'Use sollte for advice.', examples: ['Du solltest früher schlafen gehen.'], common_mistakes: [], exercises: [{ type: 'dialogue', stage: 'transfer', question: 'Give a friend polite advice.' }] },
+  content: { cefr: 'B1', title: 'Konjunktiv II: advice', objective: 'Give polite advice.', mission: 'Respond to a friend with useful advice.', success_evidence: 'You can give polite advice in a real conversation.', rule: 'Use sollte for advice.', examples: ['Du solltest früher schlafen gehen.'], common_mistakes: [], exercises: [{ type: 'dialogue', stage: 'transfer', mission_role: 'final', question: 'Give a friend polite advice.' }] },
 };
 
 async function mockApi(page: Page, options: { completed?: boolean; dueCount?: number; reviews?: unknown[]; language?: string } = {}) {
@@ -22,7 +22,7 @@ async function mockApi(page: Page, options: { completed?: boolean; dueCount?: nu
     if (pathname.includes('/api/plan/')) return route.fulfill({ json: plan });
     if (pathname === '/api/lesson/start') return route.fulfill({ json: { session_id: 'test-session' } });
     if (pathname === '/api/lesson/check-answer') return route.fulfill({ json: { correct: true, explanation: 'Task completed.', correct_answer: 'Du solltest früher schlafen gehen.', production: true, production_score: 82, cefr_standard: 'B1', pass_mark: 70, dimension_scores: { task_completion: 85, grammar: 80, vocabulary: 78, coherence: 80, register: 86 }, improvement: 'Add one concrete reason.' } });
-    if (pathname === '/api/lesson/complete') return route.fulfill({ json: { passed: true, score: 100, mastery: 76, xp_gained: 70, first_try_correct: 1, corrected_retries: 0, needs_review: 0, exercise_count: 1 } });
+    if (pathname === '/api/lesson/complete') return route.fulfill({ json: { passed: true, score: 100, mastery: 76, xp_gained: 70, first_try_correct: 1, corrected_retries: 0, needs_review: 0, exercise_count: 1, mission_attempted: true, mission_passed: true, mission_score: 82, mission_answer: 'Du solltest früher schlafen gehen, weil du oft müde bist.', review_in_days: 1 } });
     if (pathname === '/api/lesson/77') return route.fulfill({ json: lesson });
     if (pathname === '/api/events') return route.fulfill({ status: 204 });
     return route.fulfill({ json: {} });
@@ -176,7 +176,7 @@ for (const [language, heading] of [['ru', 'Твой урок'], ['de', 'Deine Le
   });
 }
 
-test('learner completes a production exercise and sees CEFR evidence', async ({ page }) => {
+test('learner completes a mission and sees their own usable German', async ({ page }) => {
   await mockApi(page, { completed: true });
   await page.goto('/lesson/77');
   await page.getByRole('button', { name: /Understand with an example/i }).click();
@@ -186,10 +186,10 @@ test('learner completes a production exercise and sees CEFR evidence', async ({ 
   await expect(page.getByText('B1 ASSESSMENT')).toBeVisible();
   await expect(page.getByText('82%')).toBeVisible();
   await page.locator('.answer-feedback > button').click();
-  await expect(page.getByText('NEW SKILL UNLOCKED')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'You did it' })).toBeVisible();
+  await expect(page.getByText('MISSION COMPLETE')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'This is your German now' })).toBeVisible();
+  await expect(page.getByText('Du solltest früher schlafen gehen, weil du oft müde bist.')).toBeVisible();
   await expect(page.getByText('1/1')).toBeVisible();
-  await expect(page.getByText('Give polite advice.')).toBeVisible();
   await expect(page.getByRole('button', { name: /Continue my path/i })).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
@@ -209,8 +209,8 @@ for (const width of [320, 375, 390, 430]) {
     await expect(page.locator('.answer-feedback')).toBeVisible();
     await expect(page.locator('.lesson-task-surface')).toBeHidden();
     await page.locator('.answer-feedback > button').click();
-    await expect(page.locator('.lesson-result-hero')).toBeVisible();
-    await expect(page.locator('.lesson-result-skill')).toBeVisible();
+    await expect(page.locator('.mission-result-hero')).toBeVisible();
+    await expect(page.locator('.mission-proof')).toBeVisible();
     await expect(page.getByRole('button', { name: /Continue my path/i })).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
