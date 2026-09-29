@@ -1,7 +1,7 @@
 import { expect, Page, test } from '@playwright/test';
 
 const userState = (completed: boolean, language = 'en') => ({ exists: completed, diagnostic_completed: completed, language, level: completed ? 'B1' : 'A1', xp: 120, streak: 3, beta_access: true, beta_onboarding_completed: true });
-const nextLesson = { id: 77, topic: 'konjunktiv_ii', title: 'Konjunktiv II: advice', level: 'B1', reason: 'weakest_ready_skill' };
+const nextLesson = { id: 77, topic: 'konjunktiv_ii', title: 'Konjunktiv II: advice', level: 'B1', track: 'B1', week: 2, module_title: 'Voice & modality', module_step: 2, module_size: 5, scenario: 'A friend asks you for advice.', can_do: 'Give polite advice in a real conversation.', minutes: 8, reason: 'weakest_ready_skill' };
 const today = (dueCount = 0) => ({ due_count: dueCount, next_lesson: nextLesson, session: { phases: [], minutes: 12 }, assessment: { samples: 4, weakest_dimension: 'coherence', weakest_score: 52, dimensions: { coherence: { score: 52, samples: 4 } }, priority_topics: [{ topic: 'konjunktiv_ii', dimension: 'coherence', score: 52 }] } });
 const plan = [{ ...nextLesson, week: 2, track: 'B1', completed: false, blocked_by: [], recommended: true }];
 const journey = { current_level: 'B1', levels: [{ level: 'A1', state: 'review', total_lessons: 24, completed_lessons: 24 }, { level: 'A2', state: 'review', total_lessons: 24, completed_lessons: 24 }, { level: 'B1', state: 'active', total_lessons: 24, completed_lessons: 4 }, { level: 'B2', state: 'locked', total_lessons: 24, completed_lessons: 0 }] };
@@ -120,6 +120,8 @@ test('iPhone WebView keeps product controls styled', async ({ page }) => {
   await expect(control).toHaveCSS('appearance', 'none');
   await expect(control).toHaveCSS('display', 'flex');
   await expect(control).toHaveCSS('background-image', /linear-gradient/);
+  await expect(page.locator('.dq-session-path > span')).toHaveCount(3);
+  await expect(page.getByText('Give polite advice in a real conversation.')).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
 
@@ -220,11 +222,26 @@ test('stale dashboard cache survives a bounded network failure without reload lo
   await mockApi(page, { completed: true });
   await page.route('**/api/dashboard/**', async route => { dashboardRequests += 1; await route.abort('failed'); });
   await page.goto('/dashboard');
-  await expect(page.locator('.dq-daily-meta span').last()).toHaveText('321 XP');
+  await expect(page.locator('.dq-home-streak strong')).toHaveText('4');
+  await expect(page.getByText('B1 → B2')).toBeVisible();
   await expect.poll(() => dashboardRequests).toBe(2);
   await page.reload();
-  await expect(page.locator('.rc-home-stats small')).toHaveText('321 XP');
+  await expect(page.locator('.dq-home-streak strong')).toHaveText('4');
   expect(dashboardRequests).toBeLessThanOrEqual(4);
+});
+
+test('empty learning path shows a deliberate state instead of a disabled loading card', async ({ page }) => {
+  await mockApi(page, { completed: true });
+  await page.route('**/api/plan/**', async route => {
+    const { pathname } = new URL(route.request().url());
+    if (pathname.includes('/journey/')) return route.fallback();
+    return route.fulfill({ json: [] });
+  });
+  await page.goto('/plan');
+  await expect(page.getByRole('heading', { name: /next lesson will appear soon/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /refresh path/i })).toBeVisible();
+  await expect(page.getByText('Loading…')).toHaveCount(0);
+  await expectNoHorizontalOverflow(page);
 });
 
 test('Telegram BackButton owns nested navigation without duplicate browser control', async ({ page }) => {

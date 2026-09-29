@@ -55,6 +55,36 @@ class PlanTrackTests(unittest.TestCase):
         self.assertEqual("B1", next_cefr_track("A2+"))
         self.assertIsNone(next_cefr_track("B2"))
 
+    def test_plan_lesson_contract_keeps_learning_meaning(self):
+        content = {
+            "day": 2,
+            "week": 1,
+            "track": "A1",
+            "module_step": 2,
+            "module_size": 5,
+            "title": "Скажи, откуда ты",
+            "scenario": "Тебя спрашивают, откуда ты.",
+            "can_do": "Ты сможешь коротко ответить.",
+            "i18n": {
+                "en": {
+                    "title": "Say where you are from",
+                    "scenario": "Someone asks where you are from.",
+                    "can_do": "You can answer briefly.",
+                    "module_title": "Your first conversation",
+                }
+            },
+        }
+        row = SimpleNamespace(id=7, content=content, topic="personal_details", level="A1", pillar="speaking", estimated_time=8)
+        result = plan_endpoints.serialize_plan_lesson(row, 1, "en", set(), {}, [], row)
+        self.assertEqual("Say where you are from", result["title"])
+        self.assertEqual("Someone asks where you are from.", result["scenario"])
+        self.assertEqual("You can answer briefly.", result["can_do"])
+        self.assertEqual("Your first conversation", result["module_title"])
+        self.assertEqual(2, result["module_step"])
+        self.assertEqual(5, result["module_size"])
+        self.assertEqual(8, result["minutes"])
+        self.assertTrue(result["recommended"])
+
 
 if __name__ == "__main__":
     unittest.main()

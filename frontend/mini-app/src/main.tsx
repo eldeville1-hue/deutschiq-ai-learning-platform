@@ -29,12 +29,11 @@ telegram?.ready();
 telegram?.expand();
 
 const renderApp = async () => {
-  // Keep the stable component baseline and the current product polish in
-  // separate route-independent chunks. Loading them in sequence preserves the
-  // intentional cascade without forcing every rule into one monolithic file.
+  // These layers stay split until the legacy rules are consolidated. Importing
+  // them statically creates one oversized render-blocking stylesheet.
   await import('./styles/product.css');
   await import('./styles/product-polish.css');
-  await import('./styles/experience.css');
+  await import('./styles/learning-system.css');
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode><App /></React.StrictMode>
   );

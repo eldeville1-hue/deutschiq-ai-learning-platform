@@ -256,9 +256,9 @@ export const Lesson: React.FC = () => {
               : tr(lang, "Сбалансировано", "Ausgewogen", "Balanced")}</span><small>{exercises.length} {tr(lang, 'заданий', 'Aufgaben', 'tasks')}</small></div>
           <div className="lesson-can-do"><small>{tr(lang, "ПОСЛЕ УРОКА", "NACH DER LEKTION", "AFTER THIS LESSON")}</small><strong>{content.can_do || content.objective}</strong></div>
           <details className="lesson-optional-rule"><summary>{tr(lang, 'Короткое правило', 'Kurze Regel', 'Quick rule')}</summary><div>{content.rule}</div></details>
-          {content.module_size === 5 && <div className="lesson-practice-path" aria-label={tr(lang, 'Путь урока', 'Lektionsweg', 'Lesson path')}>
+          <div className="lesson-practice-path" aria-label={tr(lang, 'Путь урока', 'Lektionsweg', 'Lesson path')}>
             {[tr(lang, 'Понять', 'Verstehen', 'Understand'), tr(lang, 'Выбрать', 'Wählen', 'Choose'), tr(lang, 'Собрать', 'Bauen', 'Build'), tr(lang, 'Сказать', 'Sprechen', 'Speak')].map((label, index) => <span key={label}><i>{index + 1}</i>{label}</span>)}
-          </div>}
+          </div>
           <button className="primary-action dq-lesson-action" onClick={next}>
             {tr(lang, "Понять на примере", "Am Beispiel verstehen", "Understand with an example")}{" "}
             <FaArrowRight />

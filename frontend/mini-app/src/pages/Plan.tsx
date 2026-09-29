@@ -6,21 +6,26 @@ import { useLanguage } from '../context/LanguageContext';
 import { topicLabel } from '../i18n/topics';
 import { getUserId, withUser } from '../utils/user';
 import { tr } from '../i18n/language';
+import { ProductState } from '../components/ProductState';
+import type { JourneyLesson } from '../learning/journey';
+import { normalizeJourneyLessons, selectCurrentLesson } from '../learning/journey';
 
 export const Plan: React.FC = () => {
   const { lang } = useLanguage();
   const navigate = useNavigate();
-  const [lessons, setLessons] = useState<any[]>([]);
+  const [lessons, setLessons] = useState<JourneyLesson[]>([]);
   const [dashboard, setDashboard] = useState<any>(null);
   const [journey, setJourney] = useState<any>(null);
   const [selectedTrack, setSelectedTrack] = useState<string>('');
   const [showWeek, setShowWeek] = useState(false);
   const [loadError, setLoadError] = useState(false);
+  const [loading, setLoading] = useState(true);
   const userId = getUserId();
 
   const load = useCallback(async () => {
+    setLoading(true);
     const [plan, profile, path] = await Promise.allSettled([api.getPlan(userId, lang, selectedTrack || undefined), api.getDashboard(userId), api.getJourney(userId)]);
-    if (plan.status === 'fulfilled') setLessons(Array.isArray(plan.value) ? plan.value : []);
+    if (plan.status === 'fulfilled') setLessons(normalizeJourneyLessons(plan.value));
     if (profile.status === 'fulfilled') setDashboard(profile.value);
     else setDashboard({ level: 'A1', targetLevel: 'A2' });
     if (path.status === 'fulfilled') {
@@ -28,15 +33,16 @@ export const Plan: React.FC = () => {
       if (!selectedTrack && path.value?.current_level) setSelectedTrack(path.value.current_level);
     }
     setLoadError(plan.status === 'rejected' || profile.status === 'rejected' || path.status === 'rejected');
+    setLoading(false);
   }, [lang, selectedTrack, userId]);
 
   useEffect(() => { void load(); }, [load]);
 
-  const current = useMemo(() => lessons.find(item => item.recommended) || lessons.find(item => !item.completed && !(Array.isArray(item.blocked_by) && item.blocked_by.length)) || lessons.find(item => !item.completed) || lessons[0], [lessons]);
-  const week = Number(current?.week || 1);
-  const weekLessons = lessons.filter(item => Number(item.week || 1) === week);
-  const visible = showWeek ? weekLessons : weekLessons.slice(0, 5);
-  const upcoming = visible.filter(item => item.id !== current?.id);
+  const current = useMemo(() => selectCurrentLesson(lessons), [lessons]);
+  const week = current?.week || 1;
+  const weekLessons = lessons.filter(item => item.week === week);
+  const upcomingLessons = weekLessons.filter(item => item.id !== current?.id);
+  const upcoming = showWeek ? upcomingLessons : upcomingLessons.slice(0, 3);
   const routeCompleted = lessons.filter(item => item.completed).length;
   const routeProgress = Math.round((routeCompleted / Math.max(lessons.length, 1)) * 100);
   const track = selectedTrack || current?.track || dashboard?.level || 'A1';
@@ -62,7 +68,8 @@ export const Plan: React.FC = () => {
     tr(lang, 'Решаем дела', 'Alltag erledigen', 'Getting things done'),
   ];
 
-  if (!dashboard) return <main className="app-shell rc-page"><div className="skeleton rc-hero-skeleton" /></main>;
+  if (loading && !dashboard) return <main className="app-shell dq-plan" aria-busy="true"><div className="dq-page-skeleton"><span /><span /><span /></div></main>;
+  if (!dashboard) return <main className="app-shell dq-plan page-enter"><ProductState kind="error" eyebrow={tr(lang, 'МАРШРУТ НЕДОСТУПЕН', 'LERNWEG NICHT VERFÜGBAR', 'PATH UNAVAILABLE')} title={tr(lang, 'Не удалось загрузить план', 'Der Lernweg konnte nicht geladen werden', 'We could not load your path')} detail={tr(lang, 'Твой прогресс сохранён. Проверь соединение и попробуй снова.', 'Dein Fortschritt ist sicher. Prüfe die Verbindung und versuche es erneut.', 'Your progress is safe. Check the connection and try again.')} action={tr(lang, 'Повторить', 'Erneut versuchen', 'Try again')} onAction={() => void load()} /></main>;
 
   return (
     <main className={`app-shell dq-plan page-enter level-${String(track).toLowerCase()}`}>
@@ -85,23 +92,23 @@ export const Plan: React.FC = () => {
         {(() => { const active = (journey?.levels || []).find((item: any) => item.state === 'active'); return active && active.completion >= 80 && active.mastery >= 70 ? <button type="button" className="rc-primary checkpoint-cta" onClick={() => navigate(withUser(`/checkpoint/${active.level}`))}>{tr(lang, `Пройти финальный тест ${active.level}`, `${active.level}-Abschlusstest starten`, `Take the ${active.level} final checkpoint`)}</button> : null; })()}
       </section>}
 
-      <section className="dq-plan-now">
+      {current?.id ? <section className="dq-plan-now">
         <header><span>{tr(lang, 'ПРОДОЛЖИТЬ МАРШРУТ', 'WEG FORTSETZEN', 'CONTINUE YOUR PATH')}</span><small>{tr(lang, `Модуль ${week} из 4`, `Modul ${week} von 4`, `Module ${week} of 4`)}</small></header>
-        <div><small>{moduleNames[week - 1]}</small><h2>{current?.title || topicLabel(current?.topic || 'word_order', lang)}</h2></div>
-        <button type="button" className="dq-main-action" disabled={!current?.id} onClick={() => current?.id && navigate(withUser(`/lesson/${current.id}`))}><span><FaPlay /> {current?.id ? tr(lang, 'Продолжить', 'Weitermachen', 'Continue') : tr(lang, 'Загрузка…', 'Laden…', 'Loading…')}</span><b>→</b></button>
-      </section>
+        <div><small>{current.moduleTitle || moduleNames[week - 1]}</small><h2>{current.title || topicLabel(current.topic || 'word_order', lang)}</h2>{current.canDo && <p>{current.canDo}</p>}</div>
+        <button type="button" className="dq-main-action" onClick={() => navigate(withUser(`/lesson/${current.id}`))}><span><FaPlay /> {tr(lang, 'Продолжить', 'Weitermachen', 'Continue')}</span><b>→</b></button>
+      </section> : <ProductState kind={loadError ? 'error' : 'empty'} eyebrow={loadError ? tr(lang, 'СВЯЗЬ ПРЕРВАЛАСЬ', 'VERBINDUNG UNTERBROCHEN', 'CONNECTION INTERRUPTED') : tr(lang, 'ПЛАН ГОТОВИТСЯ', 'LERNWEG WIRD VORBEREITET', 'PATH IN PREPARATION')} title={loadError ? tr(lang, 'Маршрут пока не загрузился', 'Dein Lernweg wurde noch nicht geladen', 'Your path has not loaded yet') : tr(lang, 'Следующий урок скоро появится', 'Die nächste Lektion erscheint bald', 'Your next lesson will appear soon')} detail={loadError ? tr(lang, 'Проверь соединение — прогресс уже сохранён.', 'Prüfe die Verbindung — dein Fortschritt ist gespeichert.', 'Check your connection—your progress is already safe.') : tr(lang, 'Мы собираем следующий шаг из твоих результатов.', 'Wir erstellen den nächsten Schritt aus deinen Ergebnissen.', 'We are building the next step from your results.')} action={loadError ? tr(lang, 'Повторить', 'Erneut versuchen', 'Try again') : tr(lang, 'Обновить план', 'Lernweg aktualisieren', 'Refresh path')} onAction={() => void load()} />}
 
-      <section className="dq-route">
+      {current?.id && <section className="dq-route">
         <header><div><small>{tr(lang, `МОДУЛЬ ${week} · ${routeCompleted}/${lessons.length || 20}`, `MODUL ${week} · ${routeCompleted}/${lessons.length || 20}`, `MODULE ${week} · ${routeCompleted}/${lessons.length || 20}`)}</small><h2>{tr(lang, 'Следующие шаги', 'Nächste Schritte', 'Next steps')}</h2></div><span>{routeProgress}%</span></header>
         <div className="dq-route-progress"><i style={{ width: `${routeProgress}%` }} /></div>
         <div className="dq-route-list">
           {upcoming.map((lesson, index) => {
-            const locked = Array.isArray(lesson.blocked_by) && lesson.blocked_by.length > 0;
+            const locked = lesson.blockedBy.length > 0;
             const active = lesson.id === current?.id;
             const detail = lesson.completed
               ? tr(lang, 'Завершено', 'Abgeschlossen', 'Completed')
               : locked
-                ? lesson.blocked_by?.includes('previous_step')
+                ? lesson.blockedBy.includes('previous_step')
                   ? tr(lang, 'Сначала пройди предыдущий шаг', 'Zuerst den vorherigen Schritt abschließen', 'Complete the previous step first')
                   : tr(lang, 'Сначала закрепи базовый навык', 'Zuerst die Grundlage festigen', 'Strengthen the prerequisite first')
                 : lesson.mastery == null
@@ -113,10 +120,10 @@ export const Plan: React.FC = () => {
               {!locked && <span className="dq-route-arrow">›</span>}
             </button>;
           })}
-          {!upcoming.length && <div className="rc-empty-inline"><span>{tr(lang, 'Следующие шаги появятся после этого урока.', 'Die nächsten Schritte erscheinen nach dieser Lektion.', 'Your next steps will appear after this lesson.')}</span></div>}
+          {!upcoming.length && <div className="rc-empty-inline"><span>{tr(lang, 'Заверши текущий урок — следующий шаг откроется автоматически.', 'Schließe die aktuelle Lektion ab – der nächste Schritt öffnet sich automatisch.', 'Finish the current lesson and the next step will open automatically.')}</span></div>}
         </div>
-        {weekLessons.length > 5 && <button type="button" className="rc-text-action" onClick={() => setShowWeek(value => !value)}>{showWeek ? tr(lang, 'Показать меньше шагов', 'Weniger Schritte anzeigen', 'Show fewer steps') : tr(lang, 'Показать весь модуль', 'Ganzes Modul anzeigen', 'Show full module')} <FaChevronDown className={showWeek ? 'rotated' : ''} /></button>}
-      </section>
+        {upcomingLessons.length > 3 && <button type="button" className="rc-text-action" onClick={() => setShowWeek(value => !value)}>{showWeek ? tr(lang, 'Показать меньше шагов', 'Weniger Schritte anzeigen', 'Show fewer steps') : tr(lang, 'Показать весь модуль', 'Ganzes Modul anzeigen', 'Show full module')} <FaChevronDown className={showWeek ? 'rotated' : ''} /></button>}
+      </section>}
     </main>
   );
 };

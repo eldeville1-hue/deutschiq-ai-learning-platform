@@ -19,6 +19,45 @@ from app.services.content_quality import normalize_lesson_content
 
 router = APIRouter(prefix="/api/plan", tags=["plan"])
 
+
+def serialize_plan_lesson(lesson, index, language, completed_ids, mastery, blockers, recommended):
+    content = localize_lesson_content(
+        normalize_lesson_content(lesson.content or {}, lesson.topic, lesson.level),
+        language,
+    )
+    week = (lesson.content or {}).get("week", min(index // 7 + 1, 4))
+    track = (lesson.content or {}).get("track", "foundation")
+    foundation_titles = {1: "Satzbau", 2: "Dativ & Akkusativ", 3: "Der, Die, Das", 4: "Perfekt"}
+    module_titles = {
+        "A1": {1: "Start & Orientierung", 2: "Sätze & Wörter", 3: "Alltagshandlungen", 4: "Im Alltag sprechen"},
+        "A2": {1: "Fälle sicher nutzen", 2: "Über Vergangenes sprechen", 3: "Sätze verbinden", 4: "Selbstständig kommunizieren"},
+        "B1": {1: "Satzverknüpfung", 2: "Passiv & Modalität", 3: "Grammatische Präzision", 4: "Schreiben & Sprechen"},
+        "B2": {1: "Verknüpfen & Verdichten", 2: "Formeller Ausdruck", 3: "Argumentieren & Schreiben", 4: "Diskutieren & Präsentieren"},
+    }
+    module_title = content.get("module_title") or module_titles.get(track, foundation_titles).get(week, "Wiederholung")
+    return {
+        "id": lesson.id,
+        "day": (lesson.content or {}).get("day", index + 1),
+        "week": week,
+        "week_title": module_title,
+        "module_title": module_title,
+        "module_step": content.get("module_step") or content.get("day") or (lesson.content or {}).get("day", index + 1),
+        "module_size": content.get("module_size"),
+        "track": track,
+        "topic": lesson.topic,
+        "title": content.get("title", lesson.topic),
+        "scenario": content.get("scenario"),
+        "can_do": content.get("can_do") or content.get("objective"),
+        "pillar": lesson.pillar,
+        "level": lesson.level,
+        "estimated_time": lesson.estimated_time,
+        "minutes": lesson.estimated_time or 6,
+        "completed": lesson.id in completed_ids,
+        "mastery": mastery.get(lesson.topic),
+        "blocked_by": blockers,
+        "recommended": bool(recommended and lesson.id == recommended.id),
+    }
+
 @router.get("/journey/{user_id}")
 async def get_journey(user_id: int, db: Session = Depends(get_db), authenticated_id: int = Depends(telegram_user_id)):
     assert_owner(authenticated_id, user_id)
@@ -64,48 +103,16 @@ async def get_plan(user_id: int, lang: str | None = None, track: str | None = No
         diagnostic = db.query(DiagnosticResult).filter(DiagnosticResult.user_id == user.id).order_by(DiagnosticResult.created_at.desc()).first()
         weak_points = diagnostic.weak_points if diagnostic and diagnostic.weak_points else {}
         recommended = select_recommended_lesson(lessons, completed_ids, mastery, weak_points)
-        foundation_titles = {
-            1: "Satzbau",
-            2: "Dativ & Akkusativ",
-            3: "Der, Die, Das",
-            4: "Perfekt",
-        }
-        a1_titles = {1: "Start & Orientierung", 2: "Sätze & Wörter", 3: "Alltagshandlungen", 4: "Im Alltag sprechen"}
-        a2_titles = {1: "Fälle sicher nutzen", 2: "Über Vergangenes sprechen", 3: "Sätze verbinden", 4: "Selbstständig kommunizieren"}
-        b1_titles = {
-            1: "Satzverknüpfung",
-            2: "Passiv & Modalität",
-            3: "Grammatische Präzision",
-            4: "Schreiben & Sprechen",
-        }
-        b2_titles = {
-            1: "Verknüpfen & Verdichten",
-            2: "Formeller Ausdruck",
-            3: "Argumentieren & Schreiben",
-            4: "Diskutieren & Präsentieren",
-        }
         language = normalize_language(lang or user.language_code)
-        return [{
-            "id": lesson.id,
-            "day": (lesson.content or {}).get("day", index + 1),
-            "week": (lesson.content or {}).get("week", min(index // 7 + 1, 4)),
-            "week_title": ({"A1": a1_titles, "A2": a2_titles, "B1": b1_titles, "B2": b2_titles}.get((lesson.content or {}).get("track"), foundation_titles)).get((lesson.content or {}).get("week", min(index // 7 + 1, 4)), "Wiederholung"),
-            "track": (lesson.content or {}).get("track", "foundation"),
-            "topic": lesson.topic,
-            "title": localize_lesson_content(normalize_lesson_content(lesson.content or {}, lesson.topic, lesson.level), language).get("title", lesson.topic),
-            "pillar": lesson.pillar,
-            "level": lesson.level,
-            "estimated_time": lesson.estimated_time,
-            "completed": lesson.id in completed_ids,
-            "mastery": mastery.get(lesson.topic),
-            "blocked_by": lesson_blockers(lesson, lessons, completed_ids, mastery),
-            "recommended": bool(recommended and lesson.id == recommended.id),
-            "recommendation_reason": (
-                "review_due" if any(row.topic == lesson.topic and row.next_review_at and (row.next_review_at if row.next_review_at.tzinfo else row.next_review_at.replace(tzinfo=timezone.utc)) <= datetime.now(timezone.utc) for row in mastery_rows)
-                else "build_foundation" if mastery.get(lesson.topic) is None
-                else "improve_mastery"
-            ),
-        } for index, lesson in enumerate(lessons)]
+        return [serialize_plan_lesson(
+            lesson,
+            index,
+            language,
+            completed_ids,
+            mastery,
+            lesson_blockers(lesson, lessons, completed_ids, mastery),
+            recommended,
+        ) for index, lesson in enumerate(lessons)]
     except HTTPException:
         raise
     except SQLAlchemyError:
