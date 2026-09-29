@@ -199,6 +199,237 @@ A1_MISSION_DIALOGUES = {
 }
 
 
+# The remaining A1 route is authored as connected real-life missions instead
+# of grammar-labelled template drills.  Each five-lesson module ends in a
+# checkpoint that reuses several earlier skills without showing a model first.
+A1_MISSION_BLUEPRINTS = {
+    "present_regular": {
+        "module_title": ("Повседневная жизнь", "Alltag", "Everyday life"),
+        "title": ("Расскажи о своей привычке", "Erzähle von deiner Gewohnheit", "Describe your routine"),
+        "scenario": ("После курса вы говорите о том, как учите немецкий дома.", "Nach dem Kurs sprecht ihr darüber, wie ihr zu Hause Deutsch lernt.", "After class, you talk about how you study German at home."),
+        "can_do": ("Ты сможешь описать одну регулярную привычку.", "Du kannst eine regelmäßige Gewohnheit beschreiben.", "You can describe one regular habit."),
+        "task": ("Расскажи, когда и как ты обычно учишь немецкий.", "Erzähle, wann und wie du normalerweise Deutsch lernst.", "Say when and how you normally study German."),
+        "alternate": "Ich übe jeden Morgen zehn Minuten.",
+        "turns": [
+            ("Wann lernst du normalerweise Deutsch?", ("Назови время и действие.", "Nenne eine Zeit und eine Handlung.", "Give a time and an activity."), "Ich lerne …", "Ich lerne jeden Abend Deutsch."),
+            ("Und wie übst du zu Hause?", ("Назови ещё одну привычку.", "Nenne noch eine Gewohnheit.", "Name one more habit."), "Ich … jeden …", "Ich höre jeden Morgen einen Podcast."),
+        ],
+    },
+    "sein_haben": {
+        "module_title": ("Повседневная жизнь", "Alltag", "Everyday life"),
+        "title": ("Скажи, как ты себя чувствуешь", "Sage, wie es dir geht", "Say how you feel"),
+        "scenario": ("Друг спрашивает, готов ли ты пойти на встречу.", "Ein Freund fragt, ob du für ein Treffen bereit bist.", "A friend asks whether you are ready to meet."),
+        "can_do": ("Ты сможешь сказать о своём состоянии и времени.", "Du kannst über deinen Zustand und deine Zeit sprechen.", "You can talk about how you feel and whether you have time."),
+        "task": ("Скажи, как ты себя чувствуешь и есть ли у тебя время.", "Sage, wie du dich fühlst und ob du Zeit hast.", "Say how you feel and whether you have time."),
+        "alternate": "Ich bin bereit und habe heute Zeit.",
+        "turns": [
+            ("Wie geht es dir heute?", ("Ответь с sein.", "Antworte mit sein.", "Answer using sein."), "Ich bin …", "Ich bin heute etwas müde."),
+            ("Hast du trotzdem Zeit für einen Kaffee?", ("Ответь с haben.", "Antworte mit haben.", "Answer using haben."), "Ich habe …", "Ja, ich habe eine halbe Stunde Zeit."),
+        ],
+    },
+    "noun_gender": {
+        "module_title": ("Повседневная жизнь", "Alltag", "Everyday life"),
+        "title": ("Назови вещи вокруг", "Benenne Dinge um dich herum", "Name things around you"),
+        "scenario": ("Ты показываешь новому соседу вещи в общей кухне.", "Du zeigst einem neuen Mitbewohner Dinge in der gemeinsamen Küche.", "You show a new flatmate things in the shared kitchen."),
+        "can_do": ("Ты сможешь назвать предметы с правильным артиклем.", "Du kannst Gegenstände mit dem richtigen Artikel nennen.", "You can name objects with the correct article."),
+        "task": ("Покажи и назови два предмета с ein или eine.", "Zeige und benenne zwei Gegenstände mit ein oder eine.", "Point out and name two objects using ein or eine."),
+        "alternate": "Hier sind ein Tisch und eine Lampe.",
+        "turns": [
+            ("Was ist das neben dem Fenster?", ("Назови предмет с артиклем.", "Nenne den Gegenstand mit Artikel.", "Name the object with its article."), "Das ist ein/eine …", "Das ist ein Tisch."),
+            ("Und was steht auf dem Tisch?", ("Назови второй предмет.", "Nenne einen zweiten Gegenstand.", "Name a second object."), "Da steht …", "Da steht eine Lampe."),
+        ],
+    },
+    "plural": {
+        "module_title": ("Повседневная жизнь", "Alltag", "Everyday life"),
+        "title": ("Опиши несколько вещей", "Beschreibe mehrere Dinge", "Describe several things"),
+        "scenario": ("Вы вместе проверяете, что уже есть в комнате.", "Ihr prüft gemeinsam, was schon im Zimmer steht.", "Together, you check what is already in the room."),
+        "can_do": ("Ты сможешь сказать о нескольких предметах.", "Du kannst über mehrere Gegenstände sprechen.", "You can talk about several objects."),
+        "task": ("Назови две группы предметов во множественном числе.", "Nenne zwei Gruppen von Gegenständen im Plural.", "Name two groups of objects in the plural."),
+        "alternate": "Die Stühle stehen am Fenster.",
+        "turns": [
+            ("Was steht am Fenster?", ("Ответь во множественном числе.", "Antworte im Plural.", "Answer in the plural."), "Die … stehen …", "Die Stühle stehen am Fenster."),
+            ("Und wo liegen die Bücher?", ("Назови место.", "Nenne den Ort.", "Give the location."), "Die Bücher liegen …", "Die Bücher liegen auf dem Tisch."),
+        ],
+    },
+    "negation": {
+        "module_title": ("Повседневная жизнь", "Alltag", "Everyday life"),
+        "title": ("Объясни, чего не хватает", "Erkläre, was fehlt", "Explain what is missing"),
+        "scenario": ("Перед поездкой вы проверяете вещи и планы на день.", "Vor einer Fahrt prüft ihr eure Sachen und Pläne für den Tag.", "Before a trip, you check your things and plans for the day."),
+        "can_do": ("Ты сможешь сказать, чего у тебя нет и что ты не делаешь.", "Du kannst sagen, was du nicht hast und was du nicht machst.", "You can say what you do not have and do not do."),
+        "task": ("Скажи одну фразу с kein и одну с nicht.", "Sage einen Satz mit kein und einen mit nicht.", "Say one sentence with kein and one with nicht."),
+        "alternate": "Ich habe keine Fahrkarte und fahre heute nicht.",
+        "checkpoint": True,
+        "turns": [
+            ("Hast du eine Fahrkarte?", ("Ответь с kein.", "Antworte mit kein.", "Answer using kein."), "Ich habe kein/keine …", "Nein, ich habe keine Fahrkarte."),
+            ("Fährst du heute mit?", ("Ответь с nicht.", "Antworte mit nicht.", "Answer using nicht."), "Ich fahre heute nicht.", "Nein, ich fahre heute nicht."),
+            ("Was fehlt dir noch?", ("Назови ещё одну вещь, которой нет.", "Nenne noch eine Sache, die fehlt.", "Name one more thing you do not have."), "Ich habe kein/keine …", "Ich habe kein Ladegerät."),
+        ],
+    },
+    "accusative_a1": {
+        "module_title": ("В городе", "Unterwegs", "Out and about"),
+        "title": ("Закажи в кафе", "Bestelle im Café", "Order at a café"),
+        "scenario": ("Ты делаешь простой заказ в кафе.", "Du bestellst etwas in einem Café.", "You place a simple order at a café."),
+        "can_do": ("Ты сможешь заказать напиток и еду.", "Du kannst ein Getränk und etwas zu essen bestellen.", "You can order a drink and something to eat."),
+        "task": ("Закажи два продукта с правильными артиклями.", "Bestelle zwei Produkte mit den richtigen Artikeln.", "Order two items using the correct articles."),
+        "alternate": "Ich nehme einen Tee und eine Suppe.",
+        "turns": [
+            ("Guten Tag! Was möchten Sie trinken?", ("Закажи напиток.", "Bestelle ein Getränk.", "Order a drink."), "Ich nehme einen/eine …", "Ich nehme einen Kaffee."),
+            ("Möchten Sie auch etwas essen?", ("Закажи еду.", "Bestelle etwas zu essen.", "Order something to eat."), "Und ein/eine …", "Ja, und ein Brötchen, bitte."),
+        ],
+    },
+    "modal_verbs_a1": {
+        "module_title": ("В городе", "Unterwegs", "Out and about"),
+        "title": ("Договорись о планах", "Sprich über Pläne", "Talk about plans"),
+        "scenario": ("Друг предлагает встретиться после работы.", "Ein Freund möchte sich nach der Arbeit treffen.", "A friend wants to meet after work."),
+        "can_do": ("Ты сможешь сказать, что можешь или должен сделать.", "Du kannst sagen, was du kannst oder musst.", "You can say what you can or must do."),
+        "task": ("Скажи, что ты должен сделать и когда можешь встретиться.", "Sage, was du tun musst und wann du dich treffen kannst.", "Say what you must do and when you can meet."),
+        "alternate": "Ich muss bis sechs arbeiten, aber danach kann ich kommen.",
+        "turns": [
+            ("Kannst du heute um fünf kommen?", ("Скажи, что ты должен сделать.", "Sage, was du tun musst.", "Say what you have to do."), "Ich muss …", "Ich muss bis sechs arbeiten."),
+            ("Wann kannst du kommen?", ("Предложи время с können.", "Schlage eine Zeit mit können vor.", "Offer a time using können."), "Ich kann um …", "Ich kann um halb sieben kommen."),
+        ],
+    },
+    "separable_verbs_a1": {
+        "module_title": ("В городе", "Unterwegs", "Out and about"),
+        "title": ("Сообщи время", "Nenne eine Uhrzeit", "Give a time"),
+        "scenario": ("Вы уточняете, когда начинается курс и прибывает поезд.", "Ihr klärt, wann der Kurs beginnt und der Zug ankommt.", "You check when the course starts and the train arrives."),
+        "can_do": ("Ты сможешь сообщить время действия с отделяемым глаголом.", "Du kannst eine Zeit mit einem trennbaren Verb nennen.", "You can give an action time using a separable verb."),
+        "task": ("Скажи, когда начинается событие и когда ты прибываешь.", "Sage, wann etwas anfängt und wann du ankommst.", "Say when an event starts and when you arrive."),
+        "alternate": "Der Zug kommt um acht Uhr an.",
+        "turns": [
+            ("Wann fängt der Kurs an?", ("Назови время начала.", "Nenne die Anfangszeit.", "Give the start time."), "Der Kurs fängt um … an.", "Der Kurs fängt um neun Uhr an."),
+            ("Und wann kommst du an?", ("Назови время прибытия.", "Nenne deine Ankunftszeit.", "Give your arrival time."), "Ich komme um … an.", "Ich komme um Viertel vor neun an."),
+        ],
+    },
+    "time_daily_routine": {
+        "module_title": ("В городе", "Unterwegs", "Out and about"),
+        "title": ("Опиши свой день", "Beschreibe deinen Tag", "Describe your day"),
+        "scenario": ("Новый коллега спрашивает о твоём обычном рабочем дне.", "Ein neuer Kollege fragt nach deinem normalen Arbeitstag.", "A new colleague asks about your usual workday."),
+        "can_do": ("Ты сможешь назвать время двух ежедневных действий.", "Du kannst die Zeit von zwei täglichen Handlungen nennen.", "You can give the time of two daily activities."),
+        "task": ("Расскажи, когда ты встаёшь и начинаешь работу или учёбу.", "Erzähle, wann du aufstehst und mit der Arbeit oder dem Lernen beginnst.", "Say when you get up and start work or study."),
+        "alternate": "Um sieben Uhr stehe ich auf, und um neun Uhr arbeite ich.",
+        "turns": [
+            ("Wann stehst du normalerweise auf?", ("Назови время.", "Nenne eine Uhrzeit.", "Give a time."), "Um … stehe ich auf.", "Um sieben Uhr stehe ich auf."),
+            ("Wann beginnt dein Arbeitstag?", ("Назови второе время и действие.", "Nenne eine zweite Zeit und Handlung.", "Give a second time and activity."), "Um … arbeite/lerne ich.", "Um neun Uhr arbeite ich."),
+        ],
+    },
+    "directions": {
+        "module_title": ("В городе", "Unterwegs", "Out and about"),
+        "title": ("Найди дорогу", "Finde den Weg", "Find your way"),
+        "scenario": ("В незнакомом городе ты ищешь вокзал и остановку.", "In einer fremden Stadt suchst du den Bahnhof und eine Haltestelle.", "In an unfamiliar city, you are looking for the station and a stop."),
+        "can_do": ("Ты сможешь вежливо спросить дорогу и уточнить направление.", "Du kannst höflich nach dem Weg fragen und die Richtung klären.", "You can politely ask for directions and clarify the route."),
+        "task": ("Спроси дорогу к вокзалу и уточни, где остановка.", "Frage nach dem Weg zum Bahnhof und wo die Haltestelle ist.", "Ask the way to the station and where the stop is."),
+        "alternate": "Entschuldigung, wie komme ich zum Bahnhof?",
+        "checkpoint": True,
+        "turns": [
+            ("Guten Tag. Kann ich Ihnen helfen?", ("Вежливо спроси дорогу к вокзалу.", "Frage höflich nach dem Weg zum Bahnhof.", "Politely ask the way to the station."), "Entschuldigung, wie komme ich …?", "Entschuldigung, wie komme ich zum Bahnhof?"),
+            ("Gehen Sie geradeaus und dann links.", ("Уточни, где находится остановка.", "Frage, wo die Haltestelle ist.", "Ask where the stop is."), "Wo ist …?", "Danke. Und wo ist die Bushaltestelle?"),
+            ("Direkt vor dem Bahnhof.", ("Поблагодари и подтверди.", "Bedanke dich und bestätige.", "Thank the person and confirm."), "Danke …", "Vielen Dank für Ihre Hilfe!"),
+        ],
+    },
+    "shopping": {
+        "module_title": ("Самостоятельность", "Selbstständig im Alltag", "Independent everyday life"),
+        "title": ("Купи продукты", "Kaufe Lebensmittel", "Buy groceries"),
+        "scenario": ("На рынке ты покупаешь фрукты и хлеб.", "Auf dem Markt kaufst du Obst und Brot.", "At a market, you buy fruit and bread."),
+        "can_do": ("Ты сможешь попросить нужное количество и узнать цену.", "Du kannst eine Menge bestellen und nach dem Preis fragen.", "You can ask for an amount and its price."),
+        "task": ("Закажи два продукта и спроси общую цену.", "Bestelle zwei Produkte und frage nach dem Gesamtpreis.", "Order two products and ask for the total price."),
+        "alternate": "Ich hätte gern ein Kilo Äpfel und zwei Brötchen.",
+        "turns": [
+            ("Guten Tag! Was darf es sein?", ("Закажи продукт и количество.", "Bestelle ein Produkt mit Menge.", "Order a product and amount."), "Ich hätte gern …", "Ich hätte gern ein Kilo Äpfel."),
+            ("Gern. Sonst noch etwas?", ("Добавь второй продукт и спроси цену.", "Füge ein zweites Produkt hinzu und frage nach dem Preis.", "Add a second product and ask the price."), "… und … Was kostet das?", "Zwei Brötchen, bitte. Was kostet das zusammen?"),
+        ],
+    },
+    "appointments": {
+        "module_title": ("Самостоятельность", "Selbstständig im Alltag", "Independent everyday life"),
+        "title": ("Подтверди запись", "Bestätige einen Termin", "Confirm an appointment"),
+        "scenario": ("Ты подтверждаешь запись к врачу по телефону.", "Du bestätigst telefonisch einen Arzttermin.", "You confirm a medical appointment by phone."),
+        "can_do": ("Ты сможешь назвать день и точное время встречи.", "Du kannst den Tag und die genaue Uhrzeit eines Termins nennen.", "You can give the day and exact time of an appointment."),
+        "task": ("Подтверди день и время записи, затем повтори их.", "Bestätige Tag und Uhrzeit des Termins und wiederhole sie.", "Confirm the appointment day and time, then repeat them."),
+        "alternate": "Wir treffen uns am Dienstag um elf Uhr.",
+        "turns": [
+            ("Ihr Termin ist am Montag. Passt das?", ("Подтверди день.", "Bestätige den Tag.", "Confirm the day."), "Ja, am …", "Ja, am Montag passt es."),
+            ("Gut. Wir erwarten Sie um zehn Uhr.", ("Повтори день и время.", "Wiederhole Tag und Uhrzeit.", "Repeat the day and time."), "Also am … um …", "Danke, also am Montag um zehn Uhr."),
+        ],
+    },
+    "family": {
+        "module_title": ("Самостоятельность", "Selbstständig im Alltag", "Independent everyday life"),
+        "title": ("Расскажи о семье", "Erzähle von deiner Familie", "Talk about your family"),
+        "scenario": ("Знакомый спрашивает, кто живёт рядом с тобой.", "Eine Bekannte fragt, wer in deiner Nähe wohnt.", "An acquaintance asks who lives near you."),
+        "can_do": ("Ты сможешь коротко рассказать о двух родственниках.", "Du kannst kurz von zwei Familienmitgliedern erzählen.", "You can briefly describe two family members."),
+        "task": ("Расскажи о двух родственниках и где они живут.", "Erzähle von zwei Familienmitgliedern und wo sie wohnen.", "Talk about two relatives and where they live."),
+        "alternate": "Meine Schwester wohnt in Köln, und mein Bruder lebt in Bonn.",
+        "turns": [
+            ("Hast du Geschwister?", ("Расскажи об одном родственнике.", "Erzähle von einem Familienmitglied.", "Talk about one relative."), "Mein/Meine …", "Ja, meine Schwester wohnt in Köln."),
+            ("Und wo lebt dein Bruder?", ("Расскажи о втором родственнике.", "Erzähle von einem zweiten Familienmitglied.", "Talk about a second relative."), "Mein Bruder …", "Mein Bruder lebt mit seiner Familie in Bonn."),
+        ],
+    },
+    "simple_past_experience": {
+        "module_title": ("Самостоятельность", "Selbstständig im Alltag", "Independent everyday life"),
+        "title": ("Расскажи о вчерашнем дне", "Erzähle von gestern", "Talk about yesterday"),
+        "scenario": ("Коллега спрашивает, почему вчера тебя не было.", "Eine Kollegin fragt, warum du gestern nicht da warst.", "A colleague asks why you were absent yesterday."),
+        "can_do": ("Ты сможешь назвать два завершённых действия.", "Du kannst zwei abgeschlossene Handlungen nennen.", "You can name two completed activities."),
+        "task": ("Расскажи двумя фразами, что ты делал вчера.", "Erzähle in zwei Sätzen, was du gestern gemacht hast.", "Use two sentences to say what you did yesterday."),
+        "alternate": "Gestern habe ich gearbeitet und danach meine Freundin besucht.",
+        "turns": [
+            ("Was hast du gestern gemacht?", ("Назови первое действие в Perfekt.", "Nenne die erste Handlung im Perfekt.", "Give the first activity in the perfect tense."), "Gestern habe/bin ich …", "Gestern habe ich lange gearbeitet."),
+            ("Und was hast du danach gemacht?", ("Назови второе действие.", "Nenne eine zweite Handlung.", "Give a second activity."), "Danach habe/bin ich …", "Danach habe ich meine Freundin besucht."),
+        ],
+    },
+    "a1_final": {
+        "module_title": ("Самостоятельность", "Selbstständig im Alltag", "Independent everyday life"),
+        "title": ("Проведи настоящий разговор", "Führe ein echtes Gespräch", "Have a real conversation"),
+        "scenario": ("Ты знакомишься с новой группой и договариваешься о встрече.", "Du lernst eine neue Gruppe kennen und verabredest dich.", "You meet a new group and arrange to meet."),
+        "can_do": ("Ты сможешь представиться, рассказать о себе и задать вопрос без подсказки.", "Du kannst dich vorstellen, von dir erzählen und ohne Hilfe eine Frage stellen.", "You can introduce yourself, talk about yourself, and ask a question without help."),
+        "task": ("Представься, назови город и занятие, затем задай собеседнику вопрос.", "Stelle dich vor, nenne deinen Wohnort und deine Tätigkeit und stelle dann eine Frage.", "Introduce yourself, give your city and activity, then ask the other person a question."),
+        "alternate": "Ich heiße Lina, wohne in Bremen und lerne jeden Tag Deutsch. Wo wohnst du?",
+        "checkpoint": True,
+        "turns": [
+            ("Hallo! Wir kennen uns noch nicht. Erzähl kurz von dir.", ("Назови имя и город.", "Nenne deinen Namen und Wohnort.", "Give your name and city."), "Ich heiße … und wohne in …", "Ich heiße Lina und wohne in Bremen."),
+            ("Was machst du normalerweise am Abend?", ("Расскажи об одном регулярном действии.", "Erzähle von einer regelmäßigen Handlung.", "Describe one regular activity."), "Am Abend … ich …", "Am Abend lerne ich Deutsch."),
+            ("Hast du noch eine Frage an mich?", ("Задай самостоятельный вопрос.", "Stelle selbstständig eine Frage.", "Ask an independent question."), "Wo/Wann/Was …?", "Wo wohnst du?"),
+        ],
+    },
+}
+
+
+for _row in A1_CURRICULUM[5:]:
+    _day, _module, _topic, _pillar, _title_ru, _title_de, _title_en, _focus, _model, _wrong = _row
+    _blueprint = A1_MISSION_BLUEPRINTS[_topic]
+    _scenario = _blueprint["scenario"]
+    _can_do = _blueprint["can_do"]
+    _task = _blueprint["task"]
+    _rule = (
+        f"Используй модель «{_focus}» в своей фразе; личные детали можно менять.",
+        f"Nutze das Muster „{_focus}“ in deinem eigenen Satz; persönliche Details dürfen anders sein.",
+        f"Use the “{_focus}” pattern in your own sentence; personal details may be different.",
+    )
+    A1_FIRST_CONVERSATION[_topic] = {
+        "module_title": _blueprint["module_title"],
+        "title": _blueprint["title"],
+        "scenario": _scenario,
+        "can_do": _can_do,
+        "rule": _rule,
+        "model": _model,
+        "alternate": _blueprint["alternate"],
+        "wrong": _wrong,
+        "choice": (
+            f"Какая фраза подходит к ситуации: {_scenario[0]}",
+            f"Welcher Satz passt zur Situation: {_scenario[1]}",
+            f"Which sentence fits this situation: {_scenario[2]}",
+        ),
+        "listen_answer": (_can_do[0], _can_do[1], _can_do[2]),
+        "listen_options": (
+            (_can_do[0], "Человек меняет тему", "Это только приветствие"),
+            (_can_do[1], "Die Person wechselt das Thema", "Das ist nur eine Begrüßung"),
+            (_can_do[2], "The speaker changes the subject", "It is only a greeting"),
+        ),
+        "task": _task,
+        "patterns": PRACTICE_VARIANTS[_topic][4][:3],
+        "checkpoint": bool(_blueprint.get("checkpoint")),
+    }
+    A1_MISSION_DIALOGUES[_topic] = _blueprint["turns"]
+
+
 def _mission_turns(topic: str, language_index: int) -> list[dict]:
     return [
         {
@@ -217,9 +448,13 @@ def _localized(base: dict, ru: dict, de: dict, en: dict) -> dict:
 
 def build_foundation_content(row: tuple, level: str) -> dict:
     day, module, topic, pillar, title_ru, title_de, title_en, focus, model, wrong = row
-    starter = A1_FIRST_CONVERSATION.get(topic) if level == "A1" and day <= 5 else None
+    starter = A1_FIRST_CONVERSATION.get(topic) if level == "A1" else None
     if starter:
         title_ru, title_de, title_en = starter["title"]
+        module_title_ru, module_title_de, module_title_en = starter.get(
+            "module_title",
+            ("Первый разговор", "Das erste Gespräch", "Your first conversation"),
+        )
         scenario_ru, scenario_de, scenario_en = starter["scenario"]
         can_do_ru, can_do_de, can_do_en = starter["can_do"]
         rule_ru, rule_de, rule_en = starter["rule"]
@@ -257,7 +492,7 @@ def build_foundation_content(row: tuple, level: str) -> dict:
                 {"question":"Listen. What is the speaker doing?","answer":listen_en,"accepted_answers":[listen_en],"options":list(options_en),"accessibility_label":"Listen and choose the meaning"},
             ),
             _localized(
-                {"id":f"a1-{day}-use","type":"dialogue","stage":"transfer","mission_role":"final","question":task_ru,"answer":mission_model,"model_answer":mission_model,"accepted_answers":[model,model.rstrip(".?!")],"target_patterns":(["heiße","woher","wo"] if starter.get("checkpoint") else starter["patterns"]),"hint":rule_ru,"explanation":"Смысл должен подходить ситуации. Личные данные могут отличаться.","misconception":"a1_first_conversation_transfer","accessibility_label":"Пройди реальный мини-диалог","conversation_turns":mission_turns["ru"]},
+                {"id":f"a1-{day}-use","type":"dialogue","stage":"transfer","mission_role":"final","question":task_ru,"answer":mission_model,"model_answer":mission_model,"accepted_answers":[model,model.rstrip(".?!")],"target_patterns":(["heiße","woher","wo"] if day == 5 else starter["patterns"]),"hint":rule_ru,"explanation":"Смысл должен подходить ситуации. Личные данные могут отличаться.","misconception":"a1_first_conversation_transfer","accessibility_label":"Пройди реальный мини-диалог","conversation_turns":mission_turns["ru"]},
                 {"question":task_ru,"hint":rule_ru,"explanation":"Смысл должен подходить ситуации. Личные данные могут отличаться.","accessibility_label":"Пройди реальный мини-диалог","conversation_turns":mission_turns["ru"]},
                 {"question":task_de,"hint":rule_de,"explanation":"Die Antwort muss zur Situation passen. Persönliche Angaben dürfen anders sein.","accessibility_label":"Ein echtes Mini-Gespräch führen","conversation_turns":mission_turns["de"]},
                 {"question":task_en,"hint":rule_en,"explanation":"The answer must fit the situation. Personal details may be different.","accessibility_label":"Complete a real mini dialogue","conversation_turns":mission_turns["en"]},
@@ -270,9 +505,9 @@ def build_foundation_content(row: tuple, level: str) -> dict:
             ),
         ]
         return {
-            "day":day,"week":1,"track":"A1","module":1,"quality_version":7,
-            "learning_method":"mission_loop_v1","module_title":"Первый разговор",
-            "module_step":day,"module_size":5,"checkpoint":bool(starter.get("checkpoint")),
+            "day":day,"week":module,"track":"A1","module":module,"quality_version":7,
+            "learning_method":"mission_loop_v1","module_title":module_title_ru,
+            "module_step":((day - 1) % 5) + 1,"module_size":5,"checkpoint":bool(starter.get("checkpoint")),
             "title":title_ru,"objective":can_do_ru,"can_do":can_do_ru,
             "communication_goal":task_ru,"mission":task_ru,"success_evidence":can_do_ru,"scenario":scenario_ru,"rule":rule_ru,
             "examples":[model,starter["alternate"],f"❌ {wrong}"],"audio_text":model,"cefr":"A1",
@@ -280,9 +515,9 @@ def build_foundation_content(row: tuple, level: str) -> dict:
             "common_mistakes":[f"❌ {wrong}",f"✅ {model}"],
             "recall_prompt":"Закрой пример и произнеси свою версию без подсказки.",
             "i18n":{
-                "ru":{"title":title_ru,"module_title":"Первый разговор","objective":can_do_ru,"can_do":can_do_ru,"communication_goal":task_ru,"mission":task_ru,"success_evidence":can_do_ru,"scenario":scenario_ru,"rule":rule_ru,"recall_prompt":"Закрой пример и произнеси свою версию без подсказки."},
-                "de":{"title":title_de,"module_title":"Das erste Gespräch","objective":can_do_de,"can_do":can_do_de,"communication_goal":task_de,"mission":task_de,"success_evidence":can_do_de,"scenario":scenario_de,"rule":rule_de,"recall_prompt":"Verdecke das Beispiel und sage deine eigene Version ohne Hilfe."},
-                "en":{"title":title_en,"module_title":"Your first conversation","objective":can_do_en,"can_do":can_do_en,"communication_goal":task_en,"mission":task_en,"success_evidence":can_do_en,"scenario":scenario_en,"rule":rule_en,"recall_prompt":"Hide the example and say your own version without help."},
+                "ru":{"title":title_ru,"module_title":module_title_ru,"objective":can_do_ru,"can_do":can_do_ru,"communication_goal":task_ru,"mission":task_ru,"success_evidence":can_do_ru,"scenario":scenario_ru,"rule":rule_ru,"recall_prompt":"Закрой пример и произнеси свою версию без подсказки."},
+                "de":{"title":title_de,"module_title":module_title_de,"objective":can_do_de,"can_do":can_do_de,"communication_goal":task_de,"mission":task_de,"success_evidence":can_do_de,"scenario":scenario_de,"rule":rule_de,"recall_prompt":"Verdecke das Beispiel und sage deine eigene Version ohne Hilfe."},
+                "en":{"title":title_en,"module_title":module_title_en,"objective":can_do_en,"can_do":can_do_en,"communication_goal":task_en,"mission":task_en,"success_evidence":can_do_en,"scenario":scenario_en,"rule":rule_en,"recall_prompt":"Hide the example and say your own version without help."},
             },
             "exercises":exercises,
         }

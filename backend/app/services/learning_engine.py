@@ -92,6 +92,13 @@ def review_interval(correct: bool, streak: int) -> int:
     return intervals[min(max(streak - 1, 0), len(intervals) - 1)]
 
 
+def retrieval_review_interval(correct: bool, stability_days: float) -> int:
+    """Schedule from independent retrieval stability, never lesson-card streaks."""
+    if not correct:
+        return 1
+    return max(3, min(30, round(max(1.0, stability_days))))
+
+
 def retention_score(mastery: float, stability_days: float, days_overdue: float = 0.0) -> int:
     """A conservative, explainable estimate used for prioritisation, not a CEFR score."""
     decay = max(0.0, days_overdue) * (7.0 / max(1.0, stability_days))

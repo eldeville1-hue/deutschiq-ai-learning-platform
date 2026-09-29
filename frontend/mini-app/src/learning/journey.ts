@@ -1,4 +1,4 @@
-export type LearningPhaseKind = 'review' | 'repair' | 'learn' | 'speak';
+export type LearningPhaseKind = 'review' | 'repair' | 'learn' | 'mission';
 
 export type LearningPhase = {
   kind: LearningPhaseKind;
@@ -78,7 +78,7 @@ export const normalizeLearningPhases = (value: unknown): LearningPhase[] => {
   return value.flatMap(item => {
     if (!item || typeof item !== 'object') return [];
     const phase = item as Record<string, unknown>;
-    if (!['review', 'repair', 'learn', 'speak'].includes(String(phase.kind))) return [];
+    if (!['review', 'repair', 'learn', 'mission'].includes(String(phase.kind))) return [];
     return [{
       kind: String(phase.kind) as LearningPhaseKind,
       count: positiveNumber(phase.count) || undefined,

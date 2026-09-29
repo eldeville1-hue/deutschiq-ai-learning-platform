@@ -10,10 +10,11 @@ from datetime import datetime, timedelta
 import copy
 import re
 import uuid
+from typing import Literal
 from app.core.telegram_auth import telegram_user_id, assert_owner
 from app.services.srs import schedule_review
 from app.models.learning import ExerciseAttempt, TopicMastery, LearningSession
-from app.services.learning_engine import mastery_update, mastery_update_from_evidence, next_stability, review_interval, retention_score, summarize_attempts, summarize_mission
+from app.services.learning_engine import mastery_update, mastery_update_from_evidence, next_stability, retrieval_review_interval, retention_score, summarize_attempts, summarize_mission
 from app.services.skill_graph import skill_for
 from app.services.content_quality import normalize_lesson_content
 from app.services.content_i18n import localize_lesson_content, normalize_language
@@ -89,6 +90,7 @@ class CheckAnswerRequest(BaseModel):
     session_id: str
     language: str = "en"
     retry: bool = False
+    mode: Literal["lesson", "review"] = "lesson"
 
 def normalize_answer(value: str) -> str:
     value = re.sub(r"[.!?;,]+$", "", value.strip().lower())
@@ -141,10 +143,16 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
     ) if production_feedback else mastery_update(mastery.mastery or 0, correct, data.confidence, data.response_ms)
     mastery.correct_total = (mastery.correct_total or 0) + (1 if correct else 0)
     mastery.lapse_count = (mastery.lapse_count or 0) + (0 if correct else 1)
-    mastery.stability_days = next_stability(mastery.stability_days or 1, correct, data.confidence)
     mastery.last_answer_at = datetime.now()
-    interval_days = review_interval(correct, mastery.correct_streak)
-    mastery.next_review_at = datetime.now() + timedelta(days=interval_days)
+    if data.mode == "review":
+        mastery.stability_days = next_stability(mastery.stability_days or 1, correct, data.confidence)
+        interval_days = retrieval_review_interval(correct, mastery.stability_days)
+        mastery.next_review_at = datetime.now() + timedelta(days=interval_days)
+        session.score = (production_feedback or {}).get("score", 100 if correct else 0)
+        session.status = "passed" if correct else "practice_needed"
+        session.completed_at = datetime.now()
+    else:
+        interval_days = 1
     db.commit()
     skill = skill_for(topic)
     common_mistakes = lesson_content.get("common_mistakes") or []
@@ -282,9 +290,15 @@ async def complete_lesson(data: CompleteLessonRequest, db: Session = Depends(get
         average_mastery = round(sum(mastery_values) / len(mastery_values)) if mastery_values else 0
         production_attempts = db.query(ExerciseAttempt).filter(ExerciseAttempt.user_id == user.id, ExerciseAttempt.topic.in_(track_topics), ExerciseAttempt.assessment.isnot(None)).order_by(ExerciseAttempt.created_at.desc()).limit(100).all()
         checkpoint_ready = bool(next_cefr_track(current_track) and completion_percent >= 80 and average_mastery >= 70 and evidence_gate(production_attempts)["eligible"])
+    # A newly demonstrated skill always returns tomorrow. Later successful
+    # retrievals expand the interval through check-answer's SRS update.
+    if passed and first_completion and topic_mastery:
+        topic_mastery.next_review_at = datetime.now() + timedelta(days=1)
     db.commit()
     if passed:
         schedule_review(db, user.id, lesson.id)
+    review_at = topic_mastery.next_review_at if passed and topic_mastery else None
+    review_in_days = max(1, round((review_at.replace(tzinfo=None) - datetime.now()).total_seconds() / 86_400)) if review_at else None
     mission_exercise = exercises[mission_index] if mission_index is not None else {}
     duration_seconds = max(0, round((session.completed_at.replace(tzinfo=None) - session.started_at.replace(tzinfo=None)).total_seconds())) if session.started_at else 0
     return {
@@ -306,7 +320,8 @@ async def complete_lesson(data: CompleteLessonRequest, db: Session = Depends(get
         "mission_answer": mission["mission_answer"],
         "mission_prompt": mission_exercise.get("question"),
         "mission_model": mission_exercise.get("model_answer") or mission_exercise.get("answer"),
-        "review_in_days": 1 if passed else None,
+        "review_in_days": review_in_days,
+        "review_at": review_at.isoformat() if review_at else None,
         "duration_seconds": duration_seconds,
         "next_action": "plan" if passed else "retry",
         "checkpoint_ready": checkpoint_ready,

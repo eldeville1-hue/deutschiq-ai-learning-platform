@@ -9,6 +9,7 @@ import { ExerciseInteraction } from "../components/learning/ExerciseInteraction"
 import { LessonCompletion, type LessonOutcome } from "../components/learning/LessonCompletion";
 import { exerciseKind } from "../learning/exercises";
 import { tr } from "../i18n/language";
+import { clearDailySession, saveDailySession } from "../learning/dailySession";
 
 export const cleanTitle = (value: string) => value.replace(/^(?:tag|day|день)\s*\d+\s*[:·—-]\s*/i, "").trim();
 
@@ -65,6 +66,7 @@ export const Lesson: React.FC = () => {
     write: tr(lang, "Напиши", "Schreibe", "Write"),
   } as const)[exerciseKind(activeExercise)] : "";
   useEffect(() => {
+    saveDailySession(getUserId(), { nextLessonId: Number(id), stage: 'lesson' });
     Promise.all([
       api.getLesson(Number(id), lang),
       api.startLesson({ user_id: getUserId(), lesson_id: Number(id) }),
@@ -142,6 +144,7 @@ export const Lesson: React.FC = () => {
       setOutcome(result);
       setCompletionState("ready");
       completedRef.current = true;
+      if (result.passed) clearDailySession(getUserId());
       try { localStorage.removeItem(draftKey); } catch { /* Ignore unavailable storage. */ }
       void api.trackEvent({ user_id: getUserId(), event_name: 'lesson_completed', properties: { lesson_id: Number(id), passed: Boolean(result.passed), score: Number(result.score || 0) } });
       void api.trackEvent({ user_id: getUserId(), event_name: 'session_finished', properties: { lesson_id: Number(id), duration_seconds: Number(result.duration_seconds || 0), corrected_retries: Number(result.corrected_retries || 0), needs_review: Number(result.needs_review || 0) } });
@@ -195,7 +198,7 @@ export const Lesson: React.FC = () => {
     } finally { setChecking(false); }
   };
   const finish = () =>
-    navigate(withUser(outcome?.passed ? "/plan" : `/lesson/${id}`), {
+    navigate(withUser(outcome?.passed ? "/dashboard" : `/lesson/${id}`), {
       replace: true,
     });
   const sendMilestone = (rating: string) => {

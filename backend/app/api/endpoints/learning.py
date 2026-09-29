@@ -61,28 +61,30 @@ async def today(user_id: int, lang: str | None = None, db: Session = Depends(get
     language = normalize_language(lang or user.language_code)
     next_content = localize_lesson_content(normalize_lesson_content(next_lesson.content or {}, next_lesson.topic, next_lesson.level), language) if next_lesson else {}
     due_count = len(due)
-    review_count = min(5, due_count)
+    # A daily session stays short enough to finish: at most two retrievals,
+    # one compact teaching block, and one independent mission.
+    review_count = min(2, due_count)
     phases = []
     if review_count:
-        phases.append({"kind": "review", "count": review_count, "minutes": max(2, review_count * 2), "reason": "due"})
+        phases.append({"kind": "review", "count": review_count, "minutes": 2 if review_count == 1 else 3, "reason": "due"})
     if next_lesson:
         weakest = mastery[0] if mastery else None
-        if repair_focus and repair_focus["score"] < 70:
+        if not review_count and repair_focus and repair_focus["score"] < 70:
             repair_lesson = next((item for item in plan if item.topic == repair_focus["topic"]), None)
-            phases.append({"kind": "repair", "count": 1, "minutes": 4, "topic": repair_focus["topic"], "dimension": repair_focus["dimension"], "score": repair_focus["score"], "lesson_id": repair_lesson.id if repair_lesson else None, "reason": "weak_assessment_dimension"})
-        elif weakest and weakest.mastery < 70 and weakest.topic not in {item.topic for item in due[:5]}:
-            phases.append({"kind": "repair", "count": 1, "minutes": 3, "topic": weakest.topic, "reason": "weak_mastery"})
+            phases.append({"kind": "repair", "count": 1, "minutes": 2, "topic": repair_focus["topic"], "dimension": repair_focus["dimension"], "score": repair_focus["score"], "lesson_id": repair_lesson.id if repair_lesson else None, "reason": "weak_assessment_dimension"})
+        elif not review_count and weakest and weakest.mastery < 70 and weakest.topic not in {item.topic for item in due[:2]}:
+            phases.append({"kind": "repair", "count": 1, "minutes": 2, "topic": weakest.topic, "reason": "weak_mastery"})
         phases.append({
             "kind": "learn",
             "count": 1,
-            "minutes": next_lesson.estimated_time or 12,
+            "minutes": 4,
             "lesson_id": next_lesson.id,
             "topic": next_lesson.topic,
             "title": next_content.get("title", next_lesson.topic),
             "reason": "weakest_ready_skill" if mastery else "first_step",
             "prerequisites": list(skill_for(next_lesson.topic).prerequisites),
         })
-        phases.append({"kind": "speak", "count": 1, "minutes": 3, "topic": next_lesson.topic, "reason": "active_recall"})
+        phases.append({"kind": "mission", "count": 1, "minutes": 2, "topic": next_lesson.topic, "reason": "independent_transfer"})
     total_minutes = sum(item["minutes"] for item in phases)
     recent_errors = db.query(ExerciseAttempt).filter(ExerciseAttempt.user_id == user.id, ExerciseAttempt.correct == False).order_by(ExerciseAttempt.created_at.desc()).limit(100).all()
     error_counts = {}
@@ -133,14 +135,14 @@ async def reviews(user_id: int, lang: str | None = None, db: Session = Depends(g
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     now = datetime.now(timezone.utc)
-    rows = db.query(TopicMastery).filter(TopicMastery.user_id == user.id, TopicMastery.next_review_at <= now).order_by(TopicMastery.mastery.asc()).limit(5).all()
+    rows = db.query(TopicMastery).filter(TopicMastery.user_id == user.id, TopicMastery.next_review_at <= now).order_by(TopicMastery.mastery.asc()).limit(2).all()
     production_attempts = db.query(ExerciseAttempt).filter(ExerciseAttempt.user_id == user.id, ExerciseAttempt.assessment.isnot(None)).order_by(ExerciseAttempt.created_at.desc()).limit(100).all()
     assessment = assessment_insights(production_attempts)
     repair_focus = assessment["priority_topics"][0] if assessment["priority_topics"] else None
     if repair_focus and repair_focus["score"] < 70 and repair_focus["topic"] not in {row.topic for row in rows}:
         repair_mastery = db.query(TopicMastery).filter(TopicMastery.user_id == user.id, TopicMastery.topic == repair_focus["topic"]).first()
         if repair_mastery:
-            rows = [repair_mastery, *rows][:5]
+            rows = [repair_mastery, *rows][:2]
     result = []
     for row in rows:
         lesson = db.query(Lesson).filter(Lesson.topic == row.topic, Lesson.is_active == True).first()

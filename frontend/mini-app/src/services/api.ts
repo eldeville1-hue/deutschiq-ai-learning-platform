@@ -182,7 +182,7 @@ export const api = {
       return r.data;
     });
   },
-  checkLessonAnswer: (payload: { user_id: number; lesson_id: number; exercise_index: number; answer: string; session_id: string; language: AppLanguage; confidence?: 'guess' | 'okay' | 'sure'; response_ms?: number; retry?: boolean }) =>
+  checkLessonAnswer: (payload: { user_id: number; lesson_id: number; exercise_index: number; answer: string; session_id: string; language: AppLanguage; confidence?: 'guess' | 'okay' | 'sure'; response_ms?: number; retry?: boolean; mode?: 'lesson' | 'review' }) =>
     apiClient.post('/api/lesson/check-answer', payload).then(r => r.data),
   transcribeSpeech: (payload: { user_id: number; lesson_id: number; exercise_index: number; session_id: string; audio: Blob }) => {
     const form = new FormData();

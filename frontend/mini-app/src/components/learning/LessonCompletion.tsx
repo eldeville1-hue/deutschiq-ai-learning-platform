@@ -21,6 +21,7 @@ export type LessonOutcome = {
   mission_prompt?: string | null;
   mission_model?: string | null;
   review_in_days?: number | null;
+  review_at?: string | null;
   unlocked_level?: string | null;
 };
 
@@ -81,6 +82,12 @@ export const LessonCompletion: React.FC<Props> = ({
   };
   const missionAnswer = String(result.mission_answer || '').trim();
   const missionModel = String(result.mission_model || '').trim();
+  const reviewDate = result.review_at ? new Date(result.review_at) : null;
+  const reviewLabel = reviewDate && !Number.isNaN(reviewDate.getTime())
+    ? new Intl.DateTimeFormat(lang === 'ru' ? 'ru-RU' : lang === 'de' ? 'de-DE' : 'en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).format(reviewDate)
+    : result.review_in_days === 1
+      ? tr(lang, 'Завтра', 'Morgen', 'Tomorrow')
+      : tr(lang, `Через ${result.review_in_days || 1} дн.`, `In ${result.review_in_days || 1} Tagen`, `In ${result.review_in_days || 1} days`);
 
   return (
     <section className={`lesson-step lesson-result dq-lesson-result mission-result mission-result-${passed ? 'success' : 'retry'}`}>
@@ -114,7 +121,7 @@ export const LessonCompletion: React.FC<Props> = ({
           ? tr(lang, 'ПОВТОРЕНИЕ', 'WIEDERHOLUNG', 'REVIEW')
           : tr(lang, 'СЛЕДУЮЩИЙ ШАГ', 'NÄCHSTER SCHRITT', 'NEXT STEP')}</small>
           <strong>{passed
-            ? tr(lang, 'Завтра · 2 минуты', 'Morgen · 2 Minuten', 'Tomorrow · 2 minutes')
+            ? `${reviewLabel} · ${tr(lang, '2 минуты', '2 Minuten', '2 minutes')}`
             : tr(lang, 'Повтори разговор с подсказкой', 'Wiederhole das Gespräch mit Hilfe', 'Repeat the dialogue with support')}</strong></span>
         <FaArrowRight />
       </div>

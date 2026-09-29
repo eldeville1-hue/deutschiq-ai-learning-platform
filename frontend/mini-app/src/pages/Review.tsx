@@ -7,11 +7,14 @@ import { topicLabel } from '../i18n/topics';
 import { getUserId, withUser } from '../utils/user';
 import { tr } from '../i18n/language';
 import { ExerciseInteraction } from '../components/learning/ExerciseInteraction';
+import { clearDailySession, readDailySession, saveDailySession } from '../learning/dailySession';
 
 export const Review: React.FC = () => {
   const { lang } = useLanguage();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const userId = getUserId();
+  const nextLesson = Number(searchParams.get('nextLesson') || readDailySession(userId)?.nextLessonId || 0);
   const [items, setItems] = useState<any[] | null>(null);
   const [index, setIndex] = useState(0);
   const [answer, setAnswer] = useState('');
@@ -21,11 +24,18 @@ export const Review: React.FC = () => {
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => { void api.trackEvent({ user_id: getUserId(), event_name: 'review_started' }); api.getReviews(getUserId(), lang).then(data => setItems(data.reviews || [])).catch(() => { setItems([]); setError(tr(lang, 'Не удалось загрузить повторения.', 'Wiederholungen konnten nicht geladen werden.', 'Could not load reviews.')); }); }, [lang]);
+  useEffect(() => {
+    if (nextLesson) saveDailySession(userId, { nextLessonId: nextLesson, stage: 'review' });
+    void api.trackEvent({ user_id: userId, event_name: 'review_started' });
+    api.getReviews(userId, lang).then(data => setItems(data.reviews || [])).catch(() => { setItems([]); setError(tr(lang, 'Не удалось загрузить повторения.', 'Wiederholungen konnten nicht geladen werden.', 'Could not load reviews.')); });
+  }, [lang, nextLesson, userId]);
 
-  const nextLesson = Number(searchParams.get('nextLesson') || 0);
   const leave = () => navigate(withUser('/dashboard'));
-  const continueSession = () => navigate(withUser(nextLesson ? `/lesson/${nextLesson}` : '/dashboard'));
+  const continueSession = () => {
+    if (nextLesson) saveDailySession(userId, { nextLessonId: nextLesson, stage: 'lesson' });
+    else clearDailySession(userId);
+    navigate(withUser(nextLesson ? `/lesson/${nextLesson}` : '/dashboard'));
+  };
   if (items === null) return <main className="lesson-flow rc-review"><div className="skeleton rc-hero-skeleton" /></main>;
   if (!items.length) return <main className="lesson-flow rc-review rc-review-state"><span className="rc-state-icon"><FaCheck /></span><p>{tr(lang, 'ПОВТОРЕНИЕ', 'WIEDERHOLUNG', 'REVIEW')}</p><h1>{error ? tr(lang, 'Не удалось загрузить', 'Laden fehlgeschlagen', 'Could not load') : tr(lang, 'На сегодня всё', 'Für heute erledigt', 'All done for today')}</h1><span>{error || tr(lang, 'Новые карточки появятся после урока.', 'Neue Karten erscheinen nach der Lektion.', 'New cards appear after a lesson.')}</span><button type="button" className="rc-primary" onClick={error ? leave : continueSession}>{nextLesson && !error ? tr(lang, 'Перейти к новому навыку', 'Zum neuen Lernziel', 'Continue to new skill') : tr(lang, 'На главную', 'Zur Übersicht', 'Back to overview')}</button></main>;
   if (index >= items.length) return <main className="lesson-flow rc-review rc-review-state"><span className="rc-state-icon success"><FaCheck /></span><p>{tr(lang, 'ГОТОВО', 'FERTIG', 'DONE')}</p><h1>{tr(lang, 'Память укреплена', 'Erinnerung gefestigt', 'Memory strengthened')}</h1><span>{tr(lang, `${items.length} тем повторено.`, `${items.length} Themen wiederholt.`, `${items.length} topics reviewed.`)}</span><button type="button" className="rc-primary" onClick={() => { void api.trackEvent({ user_id: getUserId(), event_name: 'review_completed', properties: { count: items.length } }); continueSession(); }}>{nextLesson ? tr(lang, 'Новый навык', 'Neues Lernziel', 'New skill') : tr(lang, 'Продолжить', 'Weiter', 'Continue')} <FaArrowRight /></button></main>;
@@ -43,13 +53,18 @@ export const Review: React.FC = () => {
     setError('');
     try {
       const activeSession = await ensureSession();
-      const result = await api.checkLessonAnswer({ user_id: getUserId(), lesson_id: item.lesson_id, exercise_index: item.exercise_index, answer, session_id: activeSession, language: lang, confidence: 'okay', response_ms: Date.now() - startedAt });
+      const result = await api.checkLessonAnswer({ user_id: userId, lesson_id: item.lesson_id, exercise_index: item.exercise_index, answer, session_id: activeSession, language: lang, confidence: 'okay', response_ms: Date.now() - startedAt, mode: 'review' });
       setFeedback(result);
     } catch {
       setError(tr(lang, 'Ответ не отправился. Проверь соединение и повтори.', 'Die Antwort wurde nicht gesendet. Prüfe die Verbindung und versuche es erneut.', 'Your answer was not sent. Check the connection and try again.'));
     } finally { setChecking(false); }
   };
-  const next = () => { setIndex(value => value + 1); setAnswer(''); setFeedback(null); setSessionId(''); setError(''); setStartedAt(Date.now()); };
+  const next = () => {
+    const nextIndex = index + 1;
+    setIndex(nextIndex);
+    if (nextLesson) saveDailySession(userId, { nextLessonId: nextLesson, stage: 'review' });
+    setAnswer(''); setFeedback(null); setSessionId(''); setError(''); setStartedAt(Date.now());
+  };
   const progress = ((index + (feedback ? 1 : 0)) / items.length) * 100;
 
   return (

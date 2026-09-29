@@ -2,7 +2,7 @@ import { expect, Page, test } from '@playwright/test';
 
 const userState = (completed: boolean, language = 'en') => ({ exists: completed, diagnostic_completed: completed, language, level: completed ? 'B1' : 'A1', xp: 120, streak: 3, beta_access: true, beta_onboarding_completed: true });
 const nextLesson = { id: 77, topic: 'konjunktiv_ii', title: 'Konjunktiv II: advice', level: 'B1', track: 'B1', week: 2, module_title: 'Voice & modality', module_step: 2, module_size: 5, scenario: 'A friend asks you for advice.', can_do: 'Give polite advice in a real conversation.', minutes: 8, reason: 'weakest_ready_skill' };
-const today = (dueCount = 0) => ({ due_count: dueCount, next_lesson: nextLesson, session: { phases: [], minutes: 12 }, assessment: { samples: 4, weakest_dimension: 'coherence', weakest_score: 52, dimensions: { coherence: { score: 52, samples: 4 } }, priority_topics: [{ topic: 'konjunktiv_ii', dimension: 'coherence', score: 52 }] } });
+const today = (dueCount = 0) => ({ due_count: dueCount, next_lesson: nextLesson, session: { phases: [{ kind: 'review', count: Math.min(2, dueCount), minutes: 3 }, { kind: 'learn', count: 1, minutes: 4 }, { kind: 'mission', count: 1, minutes: 2 }].filter(item => item.kind !== 'review' || dueCount), minutes: dueCount ? 9 : 6 }, assessment: { samples: 4, weakest_dimension: 'coherence', weakest_score: 52, dimensions: { coherence: { score: 52, samples: 4 } }, priority_topics: [{ topic: 'konjunktiv_ii', dimension: 'coherence', score: 52 }] } });
 const plan = [{ ...nextLesson, week: 2, track: 'B1', completed: false, blocked_by: [], recommended: true }];
 const journey = { current_level: 'B1', levels: [{ level: 'A1', state: 'review', total_lessons: 24, completed_lessons: 24 }, { level: 'A2', state: 'review', total_lessons: 24, completed_lessons: 24 }, { level: 'B1', state: 'active', total_lessons: 24, completed_lessons: 4 }, { level: 'B2', state: 'locked', total_lessons: 24, completed_lessons: 0 }] };
 const dashboard = { level: 'B1', targetLevel: 'B2', xp: 120, streak: 3, weaknesses: [{ name: 'konjunktiv_ii', score: 24 }] };
@@ -22,7 +22,7 @@ async function mockApi(page: Page, options: { completed?: boolean; dueCount?: nu
     if (pathname.includes('/api/plan/')) return route.fulfill({ json: plan });
     if (pathname === '/api/lesson/start') return route.fulfill({ json: { session_id: 'test-session' } });
     if (pathname === '/api/lesson/check-answer') return route.fulfill({ json: { correct: true, explanation: 'Task completed.', correct_answer: 'Du solltest früher schlafen gehen.', production: true, production_score: 82, cefr_standard: 'B1', pass_mark: 70, dimension_scores: { task_completion: 85, grammar: 80, vocabulary: 78, coherence: 80, register: 86 }, improvement: 'Add one concrete reason.' } });
-    if (pathname === '/api/lesson/complete') return route.fulfill({ json: { passed: true, score: 100, mastery: 76, xp_gained: 70, first_try_correct: 1, corrected_retries: 0, needs_review: 0, exercise_count: 1, mission_attempted: true, mission_passed: true, mission_score: 82, mission_answer: 'Du solltest früher schlafen gehen, weil du oft müde bist.', review_in_days: 1 } });
+    if (pathname === '/api/lesson/complete') return route.fulfill({ json: { passed: true, score: 100, mastery: 76, xp_gained: 70, first_try_correct: 1, corrected_retries: 0, needs_review: 0, exercise_count: 1, mission_attempted: true, mission_passed: true, mission_score: 82, mission_answer: 'Du solltest früher schlafen gehen, weil du oft müde bist.', review_in_days: 1, review_at: '2026-09-30T12:00:00' } });
     if (pathname === '/api/lesson/77') return route.fulfill({ json: lesson });
     if (pathname === '/api/events') return route.fulfill({ status: 204 });
     return route.fulfill({ json: {} });
@@ -68,6 +68,17 @@ test('daily start connects due review to the recommended lesson', async ({ page 
   await expect(page).toHaveURL(/\/lesson\/77/);
   await expect(page.getByText('NEW SKILL')).toBeVisible();
   await expectNoHorizontalOverflow(page);
+});
+
+test('daily session resumes the lesson after an interruption', async ({ page }) => {
+  await mockApi(page, { completed: true, dueCount: 2, reviews: [] });
+  await page.goto('/dashboard');
+  await page.getByRole('button', { name: /Start with review/i }).click();
+  await page.getByRole('button', { name: /Continue to new skill/i }).click();
+  await expect(page).toHaveURL(/\/lesson\/77/);
+  await page.goto('/dashboard');
+  await page.getByRole('button', { name: /Continue session/i }).click();
+  await expect(page).toHaveURL(/\/lesson\/77/);
 });
 
 test('profile bootstrap offers a working retry after a network failure', async ({ page }) => {
@@ -191,6 +202,9 @@ test('learner completes a mission and sees their own usable German', async ({ pa
   await expect(page.getByText('Du solltest früher schlafen gehen, weil du oft müde bist.')).toBeVisible();
   await expect(page.getByText('1/1')).toBeVisible();
   await expect(page.getByRole('button', { name: /Continue my path/i })).toBeVisible();
+  await page.getByRole('button', { name: /Continue my path/i }).click();
+  await expect(page).toHaveURL(/\/dashboard/);
+  await expect(page.getByRole('button', { name: /Continue session/i })).toHaveCount(0);
   await expectNoHorizontalOverflow(page);
 });
 

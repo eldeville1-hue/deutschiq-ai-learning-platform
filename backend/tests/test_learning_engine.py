@@ -1,6 +1,6 @@
 import unittest
 from types import SimpleNamespace
-from app.services.learning_engine import mastery_update, mastery_update_from_evidence, next_stability, retention_score, review_interval, session_score, summarize_attempts, summarize_mission
+from app.services.learning_engine import mastery_update, mastery_update_from_evidence, next_stability, retention_score, retrieval_review_interval, review_interval, session_score, summarize_attempts, summarize_mission
 from app.services.skill_graph import blocked_by, prerequisites_met
 from app.services.learning_route import lesson_blockers, select_recommended_lesson
 
@@ -55,6 +55,12 @@ class LearningEngineTests(unittest.TestCase):
         self.assertEqual(review_interval(False, 8), 1)
         self.assertEqual(review_interval(True, 1), 1)
         self.assertEqual(review_interval(True, 5), 30)
+
+    def test_retrieval_schedule_uses_stability_and_a_lapse_returns_tomorrow(self):
+        self.assertEqual(1, retrieval_review_interval(False, 20))
+        self.assertEqual(3, retrieval_review_interval(True, 1.8))
+        self.assertEqual(7, retrieval_review_interval(True, 7.2))
+        self.assertEqual(30, retrieval_review_interval(True, 90))
 
     def test_confident_error_is_penalized_more_than_guess(self):
         self.assertLess(mastery_update(50, False, "sure"), mastery_update(50, False, "guess"))

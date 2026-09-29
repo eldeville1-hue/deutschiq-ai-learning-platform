@@ -10,15 +10,17 @@ import { ProductState } from '../components/ProductState';
 import { tr } from '../i18n/language';
 import type { JourneyLesson } from '../learning/journey';
 import { normalizeJourneyLesson, normalizeJourneyLessons, normalizeLearningPhases, selectCurrentLesson } from '../learning/journey';
+import { readDailySession, saveDailySession } from '../learning/dailySession';
 
 export const Dashboard: React.FC = () => {
   const { lang } = useLanguage();
   const navigate = useNavigate();
+  const userId = getUserId();
   const [data, setData] = useState<any>(null);
   const [lesson, setLesson] = useState<JourneyLesson | null>(null);
   const [learning, setLearning] = useState<any>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'partial' | 'error'>('loading');
-  const userId = getUserId();
+  const [resume, setResume] = useState(() => readDailySession(userId));
 
   const load = useCallback(async () => {
     setStatus(current => current === 'ready' || current === 'partial' ? current : 'loading');
@@ -57,9 +59,13 @@ export const Dashboard: React.FC = () => {
       : tr(lang, 'Добрый вечер', 'Guten Abend', 'Good evening');
   const startLesson = () => {
     if (!selectedLesson?.id) return navigate(withUser('/plan'));
-    const target = learning?.due_count
-      ? `/review?nextLesson=${selectedLesson.id}`
-      : `/lesson/${selectedLesson.id}`;
+    const nextLessonId = resume?.nextLessonId || selectedLesson.id;
+    const stage = resume?.stage || (learning?.due_count ? 'review' : 'lesson');
+    saveDailySession(userId, { nextLessonId, stage });
+    setResume(readDailySession(userId));
+    const target = stage === 'review'
+      ? `/review?nextLesson=${nextLessonId}`
+      : `/lesson/${nextLessonId}`;
     navigate(withUser(target));
   };
 
@@ -86,7 +92,7 @@ export const Dashboard: React.FC = () => {
           </div>
           <div className="dq-daily-outcome"><FaCheck /><span><small>{tr(lang, 'ПОСЛЕ УРОКА', 'NACH DER LEKTION', 'AFTER THIS LESSON')}</small><strong>{selectedLesson.canDo || tr(lang, 'Ты применишь навык в коротком разговоре.', 'Du nutzt die Fähigkeit in einem kurzen Gespräch.', 'You will use the skill in a short conversation.')}</strong></span></div>
           <div className="dq-daily-meta"><span>{Math.max(1, phases.length || 1)} {tr(lang, 'шага', 'Schritte', 'steps')}</span><span>≈ {Math.min(10, Number(learning?.session?.minutes || selectedLesson.minutes))} {tr(lang, 'мин', 'Min.', 'min')}</span></div>
-          <button type="button" className="dq-main-action" onClick={startLesson}><span><FaPlay /> {selectedLesson?.id ? (learning?.due_count ? tr(lang, 'Начать с повторения', 'Mit Wiederholung starten', 'Start with review') : tr(lang, 'Начать урок', 'Lektion starten', 'Start lesson')) : tr(lang, 'Открыть план', 'Plan öffnen', 'Open plan')}</span><FaArrowRight /></button>
+          <button type="button" className="dq-main-action" onClick={startLesson}><span><FaPlay /> {selectedLesson?.id ? (resume ? tr(lang, 'Продолжить занятие', 'Einheit fortsetzen', 'Continue session') : learning?.due_count ? tr(lang, 'Начать с повторения', 'Mit Wiederholung starten', 'Start with review') : tr(lang, 'Начать урок', 'Lektion starten', 'Start lesson')) : tr(lang, 'Открыть план', 'Plan öffnen', 'Open plan')}</span><FaArrowRight /></button>
         </div>
       </section>
 
