@@ -111,7 +111,8 @@ test('invite claim continues through consent onboarding into diagnostics', async
   await expect(page.getByRole('heading', { name: /Join the closed beta/i })).toBeVisible();
   await page.getByRole('button', { name: /Continue/i }).click();
   await expect(page.getByRole('heading', { name: /Set up your beta/i })).toBeVisible();
-  await page.getByRole('checkbox').check();
+  await page.locator('.beta-consent').click();
+  await expect(page.getByRole('checkbox')).toBeChecked();
   await page.getByRole('button', { name: /Start learning/i }).click();
   await expect(page.getByRole('heading', { name: /German that adapts/i })).toBeVisible();
   await expectNoHorizontalOverflow(page);
@@ -178,13 +179,14 @@ for (const route of ['/dashboard', '/analytics', '/plan', '/profile']) {
   });
 }
 
-for (const [language, heading] of [['ru', 'Твой урок'], ['de', 'Deine Lektion'], ['en', 'Your lesson']] as const) {
+for (const [language, kicker] of [['ru', 'ТВОЙ ШАГ НА СЕГОДНЯ'], ['de', 'DEIN SCHRITT FÜR HEUTE']] as const) {
   test(`dashboard renders a complete ${language.toUpperCase()} interface`, async ({ page }) => {
     await mockApi(page, { completed: true, language });
     await page.goto('/dashboard');
-    await expect(page.getByRole('heading', { name: heading })).toBeVisible();
+    await expect(page.getByText(kicker)).toBeVisible();
+    await expect(page.getByRole('heading', { name: nextLesson.title })).toBeVisible();
     await expect(page.locator('html')).toHaveAttribute('lang', language);
-    await expect(page.getByText(/WHAT TO IMPROVE|ЧТО УЛУЧШИТЬ|NÄCHSTER FOKUS/)).toBeVisible();
+    await expect(page.getByText(nextLesson.can_do)).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
 }
@@ -202,6 +204,7 @@ test('learner completes a mission and sees their own usable German', async ({ pa
   await expect(page.getByText('MISSION COMPLETE')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'This is your German now' })).toBeVisible();
   await expect(page.getByText('Du solltest früher schlafen gehen, weil du oft müde bist.')).toBeVisible();
+  await page.locator('.lesson-result-details summary').click();
   await expect(page.getByText('1/1')).toBeVisible();
   await expect(page.getByRole('button', { name: /Continue my path/i })).toBeVisible();
   await page.getByRole('button', { name: /Continue my path/i }).click();

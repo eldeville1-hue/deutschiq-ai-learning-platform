@@ -65,6 +65,9 @@ test('owner QA stays protected and performs no learner writes', async ({ page })
 });
 
 test('QA matrix renders RU and DE recovery states at every supported width', async ({ page }, testInfo) => {
+  // The quality center is an owner workspace: give its controls enough room while
+  // the nested device keeps the exact learner viewport under test.
+  await page.setViewportSize({ width: 1280, height: 1000 });
   await mockOwnerApi(page);
   await unlock(page);
   await page.getByLabel('Preview screen').selectOption('overview');
@@ -95,4 +98,3 @@ test('QA lesson uses real exercise and completion components', async ({ page }) 
   await expect(page.getByText('МИССИЯ ВЫПОЛНЕНА')).toBeVisible();
   await expect(page.getByText('Это уже твой немецкий')).toBeVisible();
 });
-
