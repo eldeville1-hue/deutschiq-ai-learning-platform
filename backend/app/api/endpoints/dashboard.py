@@ -67,8 +67,17 @@ async def get_dashboard(user_id: int, db: Session = Depends(get_db), authenticat
             "diagnostic_completed": False,
         }
     
-    completed_lessons = db.query(UserProgress).filter(UserProgress.user_id == user.id, UserProgress.completed == True).count()
-    total_lessons = db.query(Lesson).filter(Lesson.level == user.current_level).count()
+    track_lessons = [
+        item for item in db.query(Lesson).filter(Lesson.is_active == True).all()
+        if isinstance(item.content, dict) and item.content.get("track") == user.current_level
+    ]
+    track_ids = [item.id for item in track_lessons]
+    completed_lessons = db.query(UserProgress).filter(
+        UserProgress.user_id == user.id,
+        UserProgress.lesson_id.in_(track_ids),
+        UserProgress.completed == True,
+    ).count() if track_ids else 0
+    total_lessons = len(track_lessons)
     plan_progress = round(completed_lessons / total_lessons * 100) if total_lessons else 0
     return {
         "level": user.current_level,

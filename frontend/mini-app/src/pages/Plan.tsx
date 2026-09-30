@@ -89,7 +89,7 @@ export const Plan: React.FC = () => {
             <span>{item.level}</span>{accessible ? item.state === 'completed' ? <FaCheck /> : track === item.level ? <FaPlay /> : null : <FaLock />}
           </button>;
         })}</div>
-        {(() => { const active = (journey?.levels || []).find((item: any) => item.state === 'active'); return active && active.completion >= 80 && active.mastery >= 70 ? <button type="button" className="rc-primary checkpoint-cta" onClick={() => navigate(withUser(`/checkpoint/${active.level}`))}>{tr(lang, `Пройти финальный тест ${active.level}`, `${active.level}-Abschlusstest starten`, `Take the ${active.level} final checkpoint`)}</button> : null; })()}
+        {(() => { const active = (journey?.levels || []).find((item: any) => item.state === 'active'); const rule = journey?.unlock_rule || { completion: 100, mastery: 60 }; return active && active.completion >= rule.completion && active.mastery >= rule.mastery ? <button type="button" className="rc-primary checkpoint-cta" onClick={() => navigate(withUser(`/checkpoint/${active.level}`))}>{tr(lang, `Пройти выпускную миссию ${active.level}`, `${active.level}-Abschlussmission starten`, `Take the ${active.level} graduation mission`)}</button> : null; })()}
       </section>}
 
       {current?.id ? <section className="dq-plan-now">

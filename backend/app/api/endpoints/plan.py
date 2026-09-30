@@ -75,10 +75,13 @@ async def get_journey(user_id: int, db: Session = Depends(get_db), authenticated
         average_mastery = round(sum(mastered) / len(mastered)) if mastered else 0
         completion = round(completed / len(track_lessons) * 100) if track_lessons else 0
         state = track_access(level, user.current_level)
-        if state == "review" and completion >= 80 and average_mastery >= 70:
+        # A previous track is complete once every lesson was finished and its
+        # graduation checkpoint promoted the learner. Mastery may later decay
+        # for review without revoking an earned CEFR transition.
+        if state == "review" and completion >= 100:
             state = "completed"
         result.append({"level": level, "state": state, "completion": completion, "mastery": average_mastery, "completed_lessons": completed, "total_lessons": len(track_lessons)})
-    return {"current_level": normalize_cefr(user.current_level), "levels": result, "unlock_rule": {"completion": 80, "mastery": 70}}
+    return {"current_level": normalize_cefr(user.current_level), "levels": result, "unlock_rule": {"completion": 100, "mastery": 60}}
 
 
 @router.get("/{user_id}")

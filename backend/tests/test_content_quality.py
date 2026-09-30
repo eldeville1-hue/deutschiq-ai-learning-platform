@@ -166,7 +166,7 @@ class ContentQualityTests(unittest.TestCase):
                 self.assertGreaterEqual(content["quality_version"], 5)
                 self.assertEqual(5, len(content["exercises"]))
                 guided_types.add(content["exercises"][0]["type"])
-                expected_transfer = "analogy_choice" if level == "A1" else "context_choice"
+                expected_transfer = "analogy_choice"
                 self.assertEqual({expected_transfer, "listening_choice", "dialogue", "repeat"}, {item["type"] for item in content["exercises"][1:]})
                 self.assertEqual(3, len(set(content["examples"])))
                 self.assertLessEqual(len(content["exercises"][3]["target_patterns"]), 3)
@@ -176,7 +176,7 @@ class ContentQualityTests(unittest.TestCase):
                     self.assertTrue(localized["objective"])
                     self.assertTrue(localized["scenario"])
                     self.assertTrue(all("i18n" not in item for item in localized["exercises"]))
-        self.assertEqual({"error_repair", "reorder", "transform"}, guided_types)
+        self.assertEqual({"reorder"}, guided_types)
 
     def test_a1_and_a2_foundations_are_sequentially_prerequisite_gated(self):
         for level, curriculum in (("A1", A1_CURRICULUM), ("A2", A2_CURRICULUM)):
@@ -190,7 +190,7 @@ class ContentQualityTests(unittest.TestCase):
 
         self.assertEqual([1, 2, 3, 4, 5], [item["module_step"] for item in lessons])
         self.assertTrue(all(item["module_size"] == 5 for item in lessons))
-        self.assertTrue(all(item["quality_version"] == 7 for item in lessons))
+        self.assertTrue(all(item["quality_version"] == 8 for item in lessons))
         self.assertTrue(all(item["learning_method"] == "mission_loop_v1" for item in lessons))
         self.assertTrue(all(item["module_title"] == "Первый разговор" for item in lessons))
         self.assertTrue(all(item.get("can_do") for item in lessons))
@@ -235,7 +235,7 @@ class ContentQualityTests(unittest.TestCase):
     def test_every_a1_lesson_is_a_validated_mission_and_each_module_has_a_checkpoint(self):
         lessons = [build_foundation_content(row, "A1") for row in A1_CURRICULUM]
 
-        self.assertTrue(all(item["quality_version"] == 7 for item in lessons))
+        self.assertTrue(all(item["quality_version"] == 8 for item in lessons))
         self.assertTrue(all(item["learning_method"] == "mission_loop_v1" for item in lessons))
         self.assertEqual([5, 10, 15, 20], [item["day"] for item in lessons if item.get("checkpoint")])
         self.assertEqual(4, len({item["module_title"] for item in lessons}))
@@ -245,6 +245,31 @@ class ContentQualityTests(unittest.TestCase):
             self.assertTrue(module_lessons[-1]["checkpoint"])
         for content in lessons:
             self.assertEqual([], validate_roadmap_content(content), f"A1 day {content['day']}")
+            final = [item for item in content["exercises"] if item.get("mission_role") == "final"]
+            self.assertEqual(1, len(final))
+            self.assertGreaterEqual(len(final[0]["conversation_turns"]), 2)
+            self.assertTrue(content["mission"])
+            self.assertTrue(content["success_evidence"])
+
+    def test_every_a2_lesson_is_a_connected_mission_with_independent_checkpoints(self):
+        lessons = [build_foundation_content(row, "A2") for row in A2_CURRICULUM]
+
+        self.assertEqual(20, len(lessons))
+        self.assertTrue(all(item["quality_version"] == 8 for item in lessons))
+        self.assertTrue(all(item["learning_method"] == "mission_loop_v1" for item in lessons))
+        self.assertEqual([5, 10, 15, 20], [item["day"] for item in lessons if item.get("checkpoint")])
+        self.assertEqual(4, len({item["module_title"] for item in lessons}))
+        for module in range(1, 5):
+            module_lessons = [item for item in lessons if item["module"] == module]
+            self.assertEqual([1, 2, 3, 4, 5], [item["module_step"] for item in module_lessons])
+            self.assertTrue(module_lessons[-1]["checkpoint"])
+            self.assertEqual(3, len(module_lessons[-1]["exercises"][3]["conversation_turns"]))
+        for content in lessons:
+            self.assertEqual([], validate_roadmap_content(content), f"A2 day {content['day']}")
+            self.assertEqual(
+                ["reorder", "analogy_choice", "listening_choice", "dialogue", "repeat"],
+                [exercise["type"] for exercise in content["exercises"]],
+            )
             final = [item for item in content["exercises"] if item.get("mission_role") == "final"]
             self.assertEqual(1, len(final))
             self.assertGreaterEqual(len(final[0]["conversation_turns"]), 2)

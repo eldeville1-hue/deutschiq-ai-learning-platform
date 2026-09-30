@@ -289,7 +289,7 @@ async def complete_lesson(data: CompleteLessonRequest, db: Session = Depends(get
         completion_percent = round(completed_count / len(track_lessons) * 100) if track_lessons else 0
         average_mastery = round(sum(mastery_values) / len(mastery_values)) if mastery_values else 0
         production_attempts = db.query(ExerciseAttempt).filter(ExerciseAttempt.user_id == user.id, ExerciseAttempt.topic.in_(track_topics), ExerciseAttempt.assessment.isnot(None)).order_by(ExerciseAttempt.created_at.desc()).limit(100).all()
-        checkpoint_ready = bool(next_cefr_track(current_track) and completion_percent >= 80 and average_mastery >= 70 and evidence_gate(production_attempts)["eligible"])
+        checkpoint_ready = bool(next_cefr_track(current_track) and completion_percent >= 100 and average_mastery >= 60 and evidence_gate(production_attempts)["eligible"])
     # A newly demonstrated skill always returns tomorrow. Later successful
     # retrievals expand the interval through check-answer's SRS update.
     if passed and first_completion and topic_mastery:

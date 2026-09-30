@@ -166,6 +166,12 @@ async def submit_diagnostic(data: SubmitAnswers, db: Session = Depends(get_db), 
         "level_scores": result["level_scores"],
         "pillar_attempts": result["pillar_attempts"],
         "assessment_ceiling": result["assessment_ceiling"],
+        "placement": {
+            "track": result["level"],
+            "start_day": 1,
+            "status": "confirmed" if result["confidence"] == "high" else "provisional",
+            "route": "/dashboard",
+        },
         "persisted": persisted,
         "mistakes": [
             {

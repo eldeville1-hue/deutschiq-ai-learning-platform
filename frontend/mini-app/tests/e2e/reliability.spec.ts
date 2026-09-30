@@ -24,6 +24,8 @@ async function mockApi(page: Page, options: { completed?: boolean; dueCount?: nu
     if (pathname === '/api/lesson/check-answer') return route.fulfill({ json: { correct: true, explanation: 'Task completed.', correct_answer: 'Du solltest früher schlafen gehen.', production: true, production_score: 82, cefr_standard: 'B1', pass_mark: 70, dimension_scores: { task_completion: 85, grammar: 80, vocabulary: 78, coherence: 80, register: 86 }, improvement: 'Add one concrete reason.' } });
     if (pathname === '/api/lesson/complete') return route.fulfill({ json: { passed: true, score: 100, mastery: 76, xp_gained: 70, first_try_correct: 1, corrected_retries: 0, needs_review: 0, exercise_count: 1, mission_attempted: true, mission_passed: true, mission_score: 82, mission_answer: 'Du solltest früher schlafen gehen, weil du oft müde bist.', review_in_days: 1, review_at: '2026-09-30T12:00:00' } });
     if (pathname === '/api/lesson/77') return route.fulfill({ json: lesson });
+    if (pathname.includes('/api/checkpoint/') && route.request().method() === 'GET') return route.fulfill({ json: { level: 'A1', pass_score: 70, format: 'independent_missions', items: [{ id: 0, lesson_id: 20, topic: 'a1_final', type: 'dialogue', stage: 'checkpoint', question: 'Introduce yourself and ask one question.', conversation_turns: [{ partner: 'Hallo! Erzähl kurz von dir.', goal: 'Introduce yourself.', placeholder: 'Reply independently in German…' }, { partner: 'Hast du eine Frage an mich?', goal: 'Ask one question.', placeholder: 'Reply independently in German…' }] }] } });
+    if (pathname === '/api/checkpoint/submit') return route.fulfill({ json: { passed: true, score: 82, required: 70, completed_level: 'A1', unlocked_level: 'A2', recovery_topics: [], dimensions: { task_completion: 88, grammar: 78, vocabulary: 80, coherence: 82, register: 84 } } });
     if (pathname === '/api/events') return route.fulfill({ status: 204 });
     return route.fulfill({ json: {} });
   });
@@ -205,6 +207,22 @@ test('learner completes a mission and sees their own usable German', async ({ pa
   await page.getByRole('button', { name: /Continue my path/i }).click();
   await expect(page).toHaveURL(/\/dashboard/);
   await expect(page.getByRole('button', { name: /Continue session/i })).toHaveCount(0);
+  await expectNoHorizontalOverflow(page);
+});
+
+test('graduation checkpoint uses independent dialogue and opens the next level', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockApi(page, { completed: true });
+  await page.goto('/checkpoint/A1');
+  await expect(page.getByText('GRADUATION MISSION')).toBeVisible();
+  await page.getByRole('textbox').fill('Ich heiße Daria und wohne in Hamburg.');
+  await page.getByRole('button', { name: /Send reply/i }).click();
+  await page.getByRole('textbox').fill('Wo wohnst du?');
+  await page.getByRole('button', { name: /Finish dialogue/i }).click();
+  await page.getByRole('button', { name: /Complete level/i }).click();
+  await expect(page.getByRole('heading', { name: /handled it independently/i })).toBeVisible();
+  await expect(page.getByText('A1 ✓ · 0% → A2')).toBeVisible();
+  await expect(page.getByRole('button', { name: /Start A2/i })).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
 

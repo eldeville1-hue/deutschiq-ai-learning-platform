@@ -208,7 +208,10 @@ def seed():
             for row in curriculum:
                 day, _module, topic, pillar, *_copy = row
                 content = build_foundation_content(row, level)
-                estimated_time = 7 if level == "A1" and day <= 5 else (14 if level == "A1" else 16)
+                # Foundation missions are deliberately short enough for one
+                # daily mobile session; the UI must not promise a 9-minute
+                # flow while the stored lesson still claims 14–16 minutes.
+                estimated_time = 8 if level == "A1" else 9
                 existing = next((item for item in existing_lessons if isinstance(item.content, dict) and item.content.get("track") == level and item.content.get("day") == day), None)
                 if existing:
                     existing.topic = topic

@@ -392,9 +392,268 @@ A1_MISSION_BLUEPRINTS = {
 }
 
 
-for _row in A1_CURRICULUM[5:]:
+# A2 keeps the same short daily loop as A1, but asks the learner to connect
+# ideas, narrate events, and resolve everyday problems. Each module is one
+# practical story arc and closes with an unaided transfer conversation.
+A2_MISSION_BLUEPRINTS = {
+    "dative_a2": {
+        "module_title": ("Люди и вещи", "Menschen und Dinge", "People and things"),
+        "title": ("Передай нужную вещь", "Gib die richtige Sache weiter", "Pass on the right item"),
+        "scenario": ("Коллега просит передать документы другому человеку.", "Eine Kollegin bittet dich, Unterlagen an eine andere Person weiterzugeben.", "A colleague asks you to pass documents to another person."),
+        "can_do": ("Ты сможешь сказать, кому передаёшь вещь.", "Du kannst sagen, wem du etwas gibst.", "You can say who you are giving something to."),
+        "task": ("Скажи, кому и что ты передаёшь.", "Sage, wem du was gibst.", "Say what you are giving and to whom."),
+        "alternate": "Ich bringe meinem Nachbarn ein Paket.",
+        "turns": [
+            ("Kannst du Frau Berger diese Mappe geben?", ("Подтверди и назови получателя.", "Bestätige und nenne die Empfängerin.", "Confirm and name the recipient."), "Ja, ich gebe …", "Ja, ich gebe Frau Berger die Mappe."),
+            ("Und wem gibst du den Schlüssel?", ("Назови второго получателя.", "Nenne den zweiten Empfänger.", "Name the second recipient."), "Ich gebe …", "Ich gebe meinem Kollegen den Schlüssel."),
+        ],
+    },
+    "dative_accusative": {
+        "module_title": ("Люди и вещи", "Menschen und Dinge", "People and things"),
+        "title": ("Объясни, кто что получает", "Erkläre, wer was bekommt", "Explain who receives what"),
+        "scenario": ("Ты распределяешь материалы перед встречей.", "Du verteilst vor einer Besprechung die Materialien.", "You distribute materials before a meeting."),
+        "can_do": ("Ты сможешь различать человека и предмет в одной фразе.", "Du kannst Person und Sache in einem Satz unterscheiden.", "You can distinguish the person and item in one sentence."),
+        "task": ("Распредели два предмета между двумя людьми.", "Verteile zwei Dinge an zwei Personen.", "Distribute two items between two people."),
+        "alternate": "Ich zeige meiner Kollegin den Plan.",
+        "turns": [
+            ("Wer bekommt den Plan?", ("Назови человека в Dativ.", "Nenne die Person im Dativ.", "Name the person in the dative."), "Ich gebe … den Plan.", "Ich gebe meiner Kollegin den Plan."),
+            ("Und was gibst du dem neuen Mitarbeiter?", ("Назови предмет в Akkusativ.", "Nenne die Sache im Akkusativ.", "Name the item in the accusative."), "Dem Mitarbeiter gebe ich …", "Dem neuen Mitarbeiter gebe ich die Zugangskarte."),
+        ],
+    },
+    "two_way_prepositions": {
+        "module_title": ("Люди и вещи", "Menschen und Dinge", "People and things"),
+        "title": ("Расставь вещи в комнате", "Richte den Raum ein", "Arrange the room"),
+        "scenario": ("Перед встречей вы готовите комнату.", "Vor einem Treffen bereitet ihr den Raum vor.", "You prepare a room before a meeting."),
+        "can_do": ("Ты сможешь сказать, где предмет находится и куда его поставить.", "Du kannst sagen, wo etwas ist und wohin es gestellt wird.", "You can say where something is and where to put it."),
+        "task": ("Опиши положение одного предмета и перемещение другого.", "Beschreibe den Ort eines Gegenstands und die Bewegung eines anderen.", "Describe one item's location and move another item."),
+        "alternate": "Die Tasche liegt auf dem Stuhl, und ich stelle die Vase auf den Tisch.",
+        "turns": [
+            ("Wo liegt die Tasche?", ("Ответь на wo с Dativ.", "Antworte auf wo mit Dativ.", "Answer wo using the dative."), "Sie liegt auf …", "Sie liegt auf dem Stuhl."),
+            ("Wohin stellst du die Vase?", ("Ответь на wohin с Akkusativ.", "Antworte auf wohin mit Akkusativ.", "Answer wohin using the accusative."), "Ich stelle sie auf …", "Ich stelle sie auf den Tisch."),
+        ],
+    },
+    "dative_prepositions": {
+        "module_title": ("Люди и вещи", "Menschen und Dinge", "People and things"),
+        "title": ("Расскажи о жизни здесь", "Erzähle von deinem Leben hier", "Talk about your life here"),
+        "scenario": ("Новый знакомый спрашивает, как давно и с кем ты живёшь в городе.", "Eine neue Bekanntschaft fragt, seit wann und mit wem du in der Stadt lebst.", "A new acquaintance asks how long and with whom you have lived in the city."),
+        "can_do": ("Ты сможешь использовать mit, bei и seit в личном рассказе.", "Du kannst mit, bei und seit in einem persönlichen Gespräch verwenden.", "You can use mit, bei, and seit in a personal conversation."),
+        "task": ("Скажи, с кем ты живёшь и как давно ты здесь.", "Sage, mit wem du wohnst und seit wann du hier bist.", "Say who you live with and how long you have been here."),
+        "alternate": "Ich wohne seit einem Jahr bei meiner Tante.",
+        "turns": [
+            ("Seit wann wohnst du hier?", ("Ответь с seit.", "Antworte mit seit.", "Answer using seit."), "Seit …", "Ich wohne seit einem Jahr hier."),
+            ("Wohnst du allein?", ("Ответь с mit или bei.", "Antworte mit mit oder bei.", "Answer using mit or bei."), "Ich wohne mit/bei …", "Nein, ich wohne mit meiner Schwester."),
+        ],
+    },
+    "accusative_prepositions": {
+        "module_title": ("Люди и вещи", "Menschen und Dinge", "People and things"),
+        "title": ("Подготовь всё к встрече", "Bereite alles für das Treffen vor", "Prepare everything for the meeting"),
+        "scenario": ("Ты объясняешь, для кого покупки и без чего встреча не состоится.", "Du erklärst, für wen die Einkäufe sind und ohne was das Treffen nicht stattfinden kann.", "You explain who the purchases are for and what the meeting cannot happen without."),
+        "can_do": ("Ты сможешь использовать für и ohne в реальной ситуации.", "Du kannst für und ohne in einer echten Situation verwenden.", "You can use für and ohne in a real situation."),
+        "task": ("Скажи, для кого одна вещь и без чего нельзя начать.", "Sage, für wen eine Sache ist und ohne was ihr nicht beginnen könnt.", "Say who one item is for and what you cannot start without."),
+        "alternate": "Die Blumen sind für meine Kollegin, und ohne den Schlüssel kommen wir nicht hinein.",
+        "checkpoint": True,
+        "turns": [
+            ("Für wen sind die Blumen?", ("Ответь с für.", "Antworte mit für.", "Answer using für."), "Sie sind für …", "Sie sind für meine Kollegin."),
+            ("Können wir ohne den Schlüssel anfangen?", ("Ответь с ohne.", "Antworte mit ohne.", "Answer using ohne."), "Ohne … können wir nicht …", "Nein, ohne den Schlüssel können wir nicht anfangen."),
+            ("Was gibst du Herrn Klein?", ("Соедини человека и предмет самостоятельно.", "Verbinde Person und Sache selbstständig.", "Connect a person and item independently."), "Ich gebe …", "Ich gebe Herrn Klein die Unterlagen."),
+        ],
+    },
+    "perfect_haben": {
+        "module_title": ("Что произошло", "Was passiert ist", "What happened"),
+        "title": ("Расскажи о вчерашнем вечере", "Erzähle von gestern Abend", "Talk about yesterday evening"),
+        "scenario": ("Друг спрашивает, почему ты вчера не ответил.", "Ein Freund fragt, warum du gestern nicht geantwortet hast.", "A friend asks why you did not reply yesterday."),
+        "can_do": ("Ты сможешь назвать завершённые действия с haben.", "Du kannst abgeschlossene Handlungen mit haben nennen.", "You can describe completed actions with haben."),
+        "task": ("Назови два действия, которые ты сделал вчера.", "Nenne zwei Dinge, die du gestern gemacht hast.", "Name two things you did yesterday."),
+        "alternate": "Gestern habe ich lange gearbeitet und danach telefoniert.",
+        "turns": [
+            ("Was hast du gestern Abend gemacht?", ("Назови действие в Perfekt.", "Nenne eine Handlung im Perfekt.", "Give one action in the perfect tense."), "Ich habe …", "Ich habe lange gearbeitet."),
+            ("Hast du meine Nachricht gelesen?", ("Ответь ещё одной формой с haben.", "Antworte mit einer weiteren haben-Form.", "Answer with another haben form."), "Ja/Nein, ich habe …", "Ja, ich habe deine Nachricht später gelesen."),
+        ],
+    },
+    "perfect_sein": {
+        "module_title": ("Что произошло", "Was passiert ist", "What happened"),
+        "title": ("Расскажи о поездке", "Erzähle von einer Fahrt", "Talk about a trip"),
+        "scenario": ("Вы обсуждаете поездку на выходных.", "Ihr sprecht über eine Fahrt am Wochenende.", "You talk about a weekend trip."),
+        "can_do": ("Ты сможешь рассказать о движении и перемене с sein.", "Du kannst Bewegung und Veränderung mit sein beschreiben.", "You can describe movement and change using sein."),
+        "task": ("Скажи, куда ты ездил и когда вернулся.", "Sage, wohin du gefahren und wann du zurückgekommen bist.", "Say where you went and when you returned."),
+        "alternate": "Am Samstag bin ich nach Bremen gefahren und am Abend zurückgekommen.",
+        "turns": [
+            ("Wohin bist du am Wochenende gefahren?", ("Назови направление с sein.", "Nenne ein Ziel mit sein.", "Give a destination using sein."), "Ich bin nach … gefahren.", "Ich bin nach Bremen gefahren."),
+            ("Wann bist du zurückgekommen?", ("Назови время возвращения.", "Nenne die Rückkehrzeit.", "Give the return time."), "Ich bin … zurückgekommen.", "Ich bin am Sonntagabend zurückgekommen."),
+        ],
+    },
+    "perfect_participles": {
+        "module_title": ("Что произошло", "Was passiert ist", "What happened"),
+        "title": ("Отчитайся о сделанном", "Berichte, was erledigt ist", "Report what is done"),
+        "scenario": ("Перед окончанием рабочего дня коллега уточняет, что уже готово.", "Vor Feierabend fragt eine Kollegin, was schon erledigt ist.", "Before the workday ends, a colleague asks what is finished."),
+        "can_do": ("Ты сможешь перечислить несколько завершённых дел.", "Du kannst mehrere erledigte Aufgaben nennen.", "You can list several completed tasks."),
+        "task": ("Назови два завершённых дела и одно ещё незавершённое.", "Nenne zwei erledigte Aufgaben und eine offene Aufgabe.", "Name two completed tasks and one unfinished task."),
+        "alternate": "Ich habe die E-Mail geschrieben und die Unterlagen abgeschickt, aber noch nicht angerufen.",
+        "turns": [
+            ("Was hast du schon erledigt?", ("Назови два Partizip II.", "Nenne zwei Partizip-II-Formen.", "Use two past participles."), "Ich habe … und …", "Ich habe die E-Mail geschrieben und die Unterlagen abgeschickt."),
+            ("Was ist noch offen?", ("Скажи, что ещё не сделано.", "Sage, was noch nicht gemacht ist.", "Say what is not done yet."), "Ich habe noch nicht …", "Ich habe den Kunden noch nicht angerufen."),
+        ],
+    },
+    "modal_past_a2": {
+        "module_title": ("Что произошло", "Was passiert ist", "What happened"),
+        "title": ("Объясни прошлые обязанности", "Erkläre frühere Pflichten", "Explain past obligations"),
+        "scenario": ("Вы сравниваете прошлый рабочий день с сегодняшним.", "Ihr vergleicht den gestrigen Arbeitstag mit heute.", "You compare yesterday's workday with today."),
+        "can_do": ("Ты сможешь сказать, что должен, мог или не мог сделать.", "Du kannst sagen, was du tun musstest, konntest oder nicht konntest.", "You can say what you had to, could, or could not do."),
+        "task": ("Скажи, что ты должен был сделать и чего не смог.", "Sage, was du tun musstest und was du nicht konntest.", "Say what you had to do and what you could not do."),
+        "alternate": "Ich musste länger arbeiten und konnte deshalb nicht kommen.",
+        "turns": [
+            ("Warum warst du gestern so lange im Büro?", ("Ответь с musste.", "Antworte mit musste.", "Answer using musste."), "Ich musste …", "Ich musste einen Bericht fertigstellen."),
+            ("Konntest du danach noch einkaufen?", ("Ответь с konnte.", "Antworte mit konnte.", "Answer using konnte."), "Ich konnte …", "Nein, ich konnte danach nicht mehr einkaufen."),
+        ],
+    },
+    "past_sequence": {
+        "module_title": ("Что произошло", "Was passiert ist", "What happened"),
+        "title": ("Расскажи историю по порядку", "Erzähle eine Geschichte der Reihe nach", "Tell a story in order"),
+        "scenario": ("Ты объясняешь, почему опоздал на важную встречу.", "Du erklärst, warum du zu einem wichtigen Termin zu spät gekommen bist.", "You explain why you were late for an important appointment."),
+        "can_do": ("Ты сможешь связать несколько событий в понятную историю.", "Du kannst mehrere Ereignisse zu einer klaren Geschichte verbinden.", "You can connect several events into a clear story."),
+        "task": ("Расскажи три события по порядку и объясни опоздание.", "Erzähle drei Ereignisse der Reihe nach und erkläre die Verspätung.", "Tell three events in order and explain why you were late."),
+        "alternate": "Zuerst ist der Bus nicht gekommen, dann habe ich ein Taxi gerufen, und danach bin ich losgefahren.",
+        "checkpoint": True,
+        "turns": [
+            ("Warum bist du zu spät gekommen?", ("Начни историю с zuerst.", "Beginne die Geschichte mit zuerst.", "Begin the story with zuerst."), "Zuerst …", "Zuerst ist der Bus nicht gekommen."),
+            ("Was hast du dann gemacht?", ("Продолжи с dann.", "Fahre mit dann fort.", "Continue using dann."), "Dann habe/bin ich …", "Dann habe ich ein Taxi gerufen."),
+            ("Und was ist danach passiert?", ("Заверши историю с danach.", "Beende die Geschichte mit danach.", "Finish the story using danach."), "Danach …", "Danach bin ich zur Arbeit gefahren."),
+        ],
+    },
+    "weil_clause": {
+        "module_title": ("Решения и причины", "Entscheidungen und Gründe", "Decisions and reasons"),
+        "title": ("Объясни своё решение", "Begründe deine Entscheidung", "Explain your decision"),
+        "scenario": ("Друг спрашивает, почему ты изменил план.", "Ein Freund fragt, warum du deinen Plan geändert hast.", "A friend asks why you changed your plan."),
+        "can_do": ("Ты сможешь назвать решение и причину с weil.", "Du kannst eine Entscheidung mit weil begründen.", "You can explain a decision using weil."),
+        "task": ("Скажи, что ты решил и почему.", "Sage, was du entschieden hast und warum.", "Say what you decided and why."),
+        "alternate": "Ich fahre mit dem Bus, weil es stark regnet.",
+        "turns": [
+            ("Warum kommst du heute nicht mit dem Fahrrad?", ("Ответь с weil; глагол в конце.", "Antworte mit weil; das Verb steht am Ende.", "Answer using weil with the verb at the end."), "…, weil …", "Ich fahre mit dem Bus, weil es regnet."),
+            ("Warum gehst du früher nach Hause?", ("Назови вторую причину.", "Nenne einen zweiten Grund.", "Give a second reason."), "Ich gehe …, weil …", "Ich gehe früher, weil ich einen Termin habe."),
+        ],
+    },
+    "dass_clause": {
+        "module_title": ("Решения и причины", "Entscheidungen und Gründe", "Decisions and reasons"),
+        "title": ("Передай важную информацию", "Gib wichtige Informationen weiter", "Pass on important information"),
+        "scenario": ("Ты сообщаешь коллеге изменения в расписании.", "Du informierst eine Kollegin über Änderungen im Zeitplan.", "You tell a colleague about changes to the schedule."),
+        "can_do": ("Ты сможешь передать мнение или информацию с dass.", "Du kannst eine Meinung oder Information mit dass weitergeben.", "You can report an opinion or information using dass."),
+        "task": ("Передай две важные новости с dass.", "Gib zwei wichtige Informationen mit dass weiter.", "Pass on two important pieces of information using dass."),
+        "alternate": "Ich glaube, dass die Besprechung später beginnt.",
+        "turns": [
+            ("Was hat Frau Weber über den Termin gesagt?", ("Передай информацию с dass.", "Gib die Information mit dass weiter.", "Report the information using dass."), "Sie hat gesagt, dass …", "Sie hat gesagt, dass der Termin später beginnt."),
+            ("Und was denkst du über den neuen Plan?", ("Назови мнение с dass.", "Nenne deine Meinung mit dass.", "Give your opinion using dass."), "Ich denke, dass …", "Ich denke, dass der neue Plan besser ist."),
+        ],
+    },
+    "wenn_clause": {
+        "module_title": ("Решения и причины", "Entscheidungen und Gründe", "Decisions and reasons"),
+        "title": ("Договорись при условии", "Vereinbare etwas mit einer Bedingung", "Make a conditional arrangement"),
+        "scenario": ("Вы планируете выходные, но всё зависит от погоды и времени.", "Ihr plant das Wochenende, aber alles hängt vom Wetter und von der Zeit ab.", "You plan the weekend, but everything depends on weather and time."),
+        "can_do": ("Ты сможешь согласовать план с условием wenn.", "Du kannst einen Plan mit einer wenn-Bedingung vereinbaren.", "You can agree on a plan with a wenn condition."),
+        "task": ("Предложи два плана с разными условиями.", "Schlage zwei Pläne mit unterschiedlichen Bedingungen vor.", "Suggest two plans with different conditions."),
+        "alternate": "Wenn das Wetter gut ist, gehen wir an die Elbe.",
+        "turns": [
+            ("Was machen wir, wenn das Wetter gut ist?", ("Предложи план с wenn.", "Schlage einen Plan mit wenn vor.", "Suggest a plan using wenn."), "Wenn …, …", "Wenn das Wetter gut ist, gehen wir spazieren."),
+            ("Und wenn es regnet?", ("Предложи запасной вариант.", "Schlage eine Alternative vor.", "Suggest a backup plan."), "Wenn es regnet, …", "Wenn es regnet, besuchen wir ein Museum."),
+        ],
+    },
+    "comparatives": {
+        "module_title": ("Решения и причины", "Entscheidungen und Gründe", "Decisions and reasons"),
+        "title": ("Сравни два варианта", "Vergleiche zwei Möglichkeiten", "Compare two options"),
+        "scenario": ("Вы выбираете транспорт для поездки.", "Ihr wählt ein Verkehrsmittel für eine Reise.", "You choose transport for a trip."),
+        "can_do": ("Ты сможешь сравнить варианты и выбрать лучший.", "Du kannst Möglichkeiten vergleichen und die beste wählen.", "You can compare options and choose the best one."),
+        "task": ("Сравни поезд и автобус по двум критериям и выбери один.", "Vergleiche Zug und Bus nach zwei Kriterien und entscheide dich.", "Compare train and bus using two criteria and choose one."),
+        "alternate": "Der Zug ist schneller, aber der Bus ist günstiger. Ich nehme den Zug.",
+        "turns": [
+            ("Ist der Zug besser als der Bus?", ("Сравни скорость или удобство.", "Vergleiche Geschwindigkeit oder Komfort.", "Compare speed or comfort."), "Der Zug ist … als …", "Der Zug ist schneller als der Bus."),
+            ("Welche Verbindung nimmst du?", ("Выбери и коротко обоснуй.", "Entscheide dich und begründe kurz.", "Choose and give a short reason."), "Ich nehme …, weil …", "Ich nehme den Zug, weil er bequemer ist."),
+        ],
+    },
+    "reflexive_verbs": {
+        "module_title": ("Решения и причины", "Entscheidungen und Gründe", "Decisions and reasons"),
+        "title": ("Обсуди интересы и планы", "Sprich über Interessen und Pläne", "Discuss interests and plans"),
+        "scenario": ("Вы знакомитесь в группе и выбираете совместное занятие.", "Ihr lernt euch in einer Gruppe kennen und wählt eine gemeinsame Aktivität.", "You meet in a group and choose an activity together."),
+        "can_do": ("Ты сможешь говорить об интересах, встречах и договорённостях.", "Du kannst über Interessen, Treffen und Verabredungen sprechen.", "You can talk about interests, meetings, and arrangements."),
+        "task": ("Расскажи, чем ты интересуешься, и договорись о встрече.", "Erzähle, wofür du dich interessierst, und verabrede dich.", "Say what interests you and arrange to meet."),
+        "alternate": "Ich interessiere mich für Fotografie. Treffen wir uns am Samstag?",
+        "checkpoint": True,
+        "turns": [
+            ("Wofür interessierst du dich?", ("Ответь с sich interessieren.", "Antworte mit sich interessieren.", "Answer using sich interessieren."), "Ich interessiere mich für …", "Ich interessiere mich für moderne Kunst."),
+            ("Möchtest du gemeinsam eine Ausstellung besuchen?", ("Ответь и предложи время.", "Antworte und schlage eine Zeit vor.", "Answer and suggest a time."), "Ja, wir können uns … treffen.", "Ja, wir können uns am Samstag treffen."),
+            ("Warum passt dir dieser Tag?", ("Объясни причину с weil.", "Begründe mit weil.", "Explain using weil."), "…, weil …", "Der Samstag passt mir, weil ich nicht arbeiten muss."),
+        ],
+    },
+    "requests_a2": {
+        "module_title": ("Решение проблем", "Probleme lösen", "Solving problems"),
+        "title": ("Попроси о помощи вежливо", "Bitte höflich um Hilfe", "Ask for help politely"),
+        "scenario": ("В учреждении тебе нужна помощь с формуляром.", "In einer Behörde brauchst du Hilfe mit einem Formular.", "At a public office, you need help with a form."),
+        "can_do": ("Ты сможешь вежливо объяснить просьбу.", "Du kannst eine Bitte höflich formulieren.", "You can make a polite request."),
+        "task": ("Поздоровайся, сформулируй просьбу и уточни следующий шаг.", "Begrüße die Person, formuliere deine Bitte und frage nach dem nächsten Schritt.", "Greet the person, make your request, and ask about the next step."),
+        "alternate": "Entschuldigung, könnten Sie mir bitte mit diesem Formular helfen?",
+        "turns": [
+            ("Guten Tag. Was kann ich für Sie tun?", ("Сформулируй вежливую просьбу.", "Formuliere eine höfliche Bitte.", "Make a polite request."), "Könnten Sie mir bitte …?", "Könnten Sie mir bitte mit diesem Formular helfen?"),
+            ("Natürlich. Haben Sie Ihren Ausweis dabei?", ("Ответь и уточни следующий шаг.", "Antworte und frage nach dem nächsten Schritt.", "Answer and ask about the next step."), "Ja. Was muss ich …?", "Ja. Was muss ich danach machen?"),
+        ],
+    },
+    "formal_message_a2": {
+        "module_title": ("Решение проблем", "Probleme lösen", "Solving problems"),
+        "title": ("Перенеси встречу письменно", "Verschiebe einen Termin schriftlich", "Reschedule an appointment in writing"),
+        "scenario": ("Ты не можешь прийти к врачу и пишешь короткое сообщение.", "Du kannst nicht zum Arzttermin kommen und schreibst eine kurze Nachricht.", "You cannot attend a medical appointment and write a short message."),
+        "can_do": ("Ты сможешь написать понятное официальное сообщение.", "Du kannst eine klare formelle Nachricht schreiben.", "You can write a clear formal message."),
+        "task": ("Напиши обращение, причину, просьбу о новой дате и прощание.", "Schreibe Anrede, Grund, Bitte um einen neuen Termin und Gruß.", "Write a greeting, reason, request for a new date, and closing."),
+        "alternate": "Sehr geehrte Frau Klein, leider kann ich morgen nicht kommen. Könnten Sie mir bitte einen neuen Termin geben? Mit freundlichen Grüßen",
+        "turns": [
+            ("Schreiben Sie zuerst, warum Sie sich melden.", ("Начни официально и назови проблему.", "Beginne formell und nenne das Problem.", "Start formally and state the problem."), "Sehr geehrte …, leider …", "Sehr geehrte Frau Klein, leider kann ich morgen nicht kommen."),
+            ("Welche Lösung möchten Sie?", ("Вежливо попроси новую дату.", "Bitte höflich um einen neuen Termin.", "Politely request a new date."), "Könnten Sie …?", "Könnten Sie mir bitte einen neuen Termin geben?"),
+        ],
+    },
+    "opinions_a2": {
+        "module_title": ("Решение проблем", "Probleme lösen", "Solving problems"),
+        "title": ("Выскажи мнение с причиной", "Äußere eine begründete Meinung", "Give a reasoned opinion"),
+        "scenario": ("На курсе обсуждают, лучше учиться онлайн или очно.", "Im Kurs diskutiert ihr, ob Online- oder Präsenzunterricht besser ist.", "In class, you discuss whether online or in-person learning is better."),
+        "can_do": ("Ты сможешь высказать мнение и привести причину.", "Du kannst deine Meinung äußern und begründen.", "You can state and support an opinion."),
+        "task": ("Выбери формат обучения, назови преимущество и недостаток.", "Wähle eine Lernform und nenne einen Vorteil und einen Nachteil.", "Choose a learning format and give one advantage and disadvantage."),
+        "alternate": "Ich finde Präsenzunterricht besser, weil man direkt fragen kann. Online ist aber flexibler.",
+        "turns": [
+            ("Lernst du lieber online oder im Kurs?", ("Назови мнение.", "Nenne deine Meinung.", "State your opinion."), "Ich finde … besser.", "Ich finde Präsenzunterricht besser."),
+            ("Warum? Gibt es auch einen Nachteil?", ("Назови причину и один минус.", "Nenne einen Grund und einen Nachteil.", "Give a reason and one drawback."), "…, weil … Aber …", "Weil ich direkt fragen kann. Aber der Weg zum Kurs dauert lange."),
+        ],
+    },
+    "problem_solution_a2": {
+        "module_title": ("Решение проблем", "Probleme lösen", "Solving problems"),
+        "title": ("Реши проблему в сервисе", "Löse ein Problem beim Service", "Solve a service problem"),
+        "scenario": ("Твой поезд отменён, и тебе нужна другая связь.", "Dein Zug fällt aus, und du brauchst eine andere Verbindung.", "Your train is cancelled and you need another connection."),
+        "can_do": ("Ты сможешь объяснить проблему и попросить конкретное решение.", "Du kannst ein Problem erklären und um eine konkrete Lösung bitten.", "You can explain a problem and request a specific solution."),
+        "task": ("Объясни отмену, назови цель поездки и попроси альтернативу.", "Erkläre den Ausfall, nenne dein Reiseziel und bitte um eine Alternative.", "Explain the cancellation, give your destination, and ask for an alternative."),
+        "alternate": "Mein Zug nach Berlin fällt aus. Deshalb brauche ich eine andere Verbindung. Können Sie mir helfen?",
+        "turns": [
+            ("Guten Tag. Was ist passiert?", ("Коротко объясни проблему.", "Erkläre das Problem kurz.", "Briefly explain the problem."), "Mein Zug …", "Mein Zug nach Berlin fällt aus."),
+            ("Was brauchen Sie jetzt?", ("Попроси конкретное решение.", "Bitte um eine konkrete Lösung.", "Ask for a specific solution."), "Deshalb brauche ich …", "Deshalb brauche ich eine andere Verbindung."),
+        ],
+    },
+    "a2_final": {
+        "module_title": ("Решение проблем", "Probleme lösen", "Solving problems"),
+        "title": ("Справься с реальной ситуацией", "Bewältige eine echte Situation", "Handle a real-life situation"),
+        "scenario": ("Ты опоздал на рабочую встречу, объясняешь прошлое и предлагаешь решение.", "Du kommst zu spät zu einem Arbeitstermin, erklärst, was passiert ist, und schlägst eine Lösung vor.", "You are late for a work meeting, explain what happened, and suggest a solution."),
+        "can_do": ("Ты сможешь связно объяснить событие, причину и следующий шаг без подсказки.", "Du kannst ein Ereignis, einen Grund und den nächsten Schritt ohne Hilfe zusammenhängend erklären.", "You can clearly explain an event, reason, and next step without help."),
+        "task": ("Извинись, расскажи, что произошло, объясни причину и предложи решение.", "Entschuldige dich, erzähle, was passiert ist, begründe es und schlage eine Lösung vor.", "Apologise, explain what happened and why, then suggest a solution."),
+        "alternate": "Entschuldigung für die Verspätung. Mein Zug ist ausgefallen, deshalb musste ich auf den Bus warten. Können wir jetzt beginnen?",
+        "checkpoint": True,
+        "turns": [
+            ("Sie kommen zwanzig Minuten zu spät. Was ist passiert?", ("Извинись и начни рассказ в Perfekt.", "Entschuldige dich und beginne im Perfekt.", "Apologise and begin in the perfect tense."), "Entschuldigung. … ist/hat …", "Entschuldigung. Mein Zug ist ausgefallen."),
+            ("Warum haben Sie nicht angerufen?", ("Объясни причину с weil.", "Begründe mit weil.", "Explain using weil."), "…, weil …", "Ich konnte nicht anrufen, weil mein Akku leer war."),
+            ("Wie lösen wir das jetzt?", ("Предложи конкретный следующий шаг.", "Schlage einen konkreten nächsten Schritt vor.", "Suggest a concrete next step."), "Könnten wir …?", "Könnten wir die wichtigsten Punkte jetzt besprechen?"),
+        ],
+    },
+}
+
+
+for _level, _curriculum, _blueprints in (
+    ("A1", A1_CURRICULUM[5:], A1_MISSION_BLUEPRINTS),
+    ("A2", A2_CURRICULUM, A2_MISSION_BLUEPRINTS),
+):
+  for _row in _curriculum:
     _day, _module, _topic, _pillar, _title_ru, _title_de, _title_en, _focus, _model, _wrong = _row
-    _blueprint = A1_MISSION_BLUEPRINTS[_topic]
+    _blueprint = _blueprints[_topic]
     _scenario = _blueprint["scenario"]
     _can_do = _blueprint["can_do"]
     _task = _blueprint["task"]
@@ -448,8 +707,9 @@ def _localized(base: dict, ru: dict, de: dict, en: dict) -> dict:
 
 def build_foundation_content(row: tuple, level: str) -> dict:
     day, module, topic, pillar, title_ru, title_de, title_en, focus, model, wrong = row
-    starter = A1_FIRST_CONVERSATION.get(topic) if level == "A1" else None
+    starter = A1_FIRST_CONVERSATION.get(topic)
     if starter:
+        exercise_prefix = level.lower()
         title_ru, title_de, title_en = starter["title"]
         module_title_ru, module_title_de, module_title_en = starter.get(
             "module_title",
@@ -474,44 +734,44 @@ def build_foundation_content(row: tuple, level: str) -> dict:
         mission_model = "\n".join(turn["model"] for turn in mission_turns["ru"])
         exercises = [
             _localized(
-                {"id":f"a1-{day}-build","type":"reorder","stage":"guided","question":"Собери полезную фразу.","answer":model,"accepted_answers":[model,model.rstrip(".?!")],"tokens":mixed_tokens,"hint":rule_ru,"explanation":rule_ru,"misconception":"a1_first_conversation_form","accessibility_label":"Собери немецкую фразу"},
+                {"id":f"{exercise_prefix}-{day}-build","type":"reorder","stage":"guided","question":"Собери полезную фразу.","answer":model,"accepted_answers":[model,model.rstrip(".?!")],"tokens":mixed_tokens,"hint":rule_ru,"explanation":rule_ru,"misconception":"foundation_mission_form","accessibility_label":"Собери немецкую фразу"},
                 {"question":"Собери полезную фразу.","hint":rule_ru,"explanation":rule_ru,"accessibility_label":"Собери немецкую фразу"},
                 {"question":"Baue den nützlichen Satz.","hint":rule_de,"explanation":rule_de,"accessibility_label":"Deutschen Satz bauen"},
                 {"question":"Build the useful sentence.","hint":rule_en,"explanation":rule_en,"accessibility_label":"Build the German sentence"},
             ),
             _localized(
-                {"id":f"a1-{day}-analogy","type":"analogy_choice","stage":"independent","question":starter["choice"][0],"answer":model,"accepted_answers":[model],"options":choices,"analogy_source":starter["alternate"],"analogy_target":scenario_ru,"pattern_label":"Та же структура — новая ситуация","explanation":rule_ru,"misconception":"a1_first_conversation_transfer","accessibility_label":"Перенеси знакомую структуру в новую ситуацию"},
+                {"id":f"{exercise_prefix}-{day}-analogy","type":"analogy_choice","stage":"independent","question":starter["choice"][0],"answer":model,"accepted_answers":[model],"options":choices,"analogy_source":starter["alternate"],"analogy_target":scenario_ru,"pattern_label":"Та же структура — новая ситуация","explanation":rule_ru,"misconception":"foundation_mission_transfer","accessibility_label":"Перенеси знакомую структуру в новую ситуацию"},
                 {"question":starter["choice"][0],"analogy_target":scenario_ru,"pattern_label":"Та же структура — новая ситуация","explanation":rule_ru,"accessibility_label":"Перенеси знакомую структуру в новую ситуацию"},
                 {"question":starter["choice"][1],"analogy_target":scenario_de,"pattern_label":"Gleiches Muster – neue Situation","explanation":rule_de,"accessibility_label":"Bekanntes Muster auf eine neue Situation übertragen"},
                 {"question":starter["choice"][2],"analogy_target":scenario_en,"pattern_label":"Same pattern — new situation","explanation":rule_en,"accessibility_label":"Transfer a familiar pattern to a new situation"},
             ),
             _localized(
-                {"id":f"a1-{day}-listen","type":"listening_choice","stage":"independent","question":"Послушай. Что делает говорящий?","answer":listen_ru,"accepted_answers":[listen_ru],"options":list(options_ru),"audio_text":model,"explanation":model,"misconception":"a1_first_conversation_listening","accessibility_label":"Послушай и выбери смысл"},
+                {"id":f"{exercise_prefix}-{day}-listen","type":"listening_choice","stage":"independent","question":"Послушай. Что делает говорящий?","answer":listen_ru,"accepted_answers":[listen_ru],"options":list(options_ru),"audio_text":model,"explanation":model,"misconception":"foundation_mission_listening","accessibility_label":"Послушай и выбери смысл"},
                 {"question":"Послушай. Что делает говорящий?","answer":listen_ru,"accepted_answers":[listen_ru],"options":list(options_ru),"accessibility_label":"Послушай и выбери смысл"},
                 {"question":"Höre zu. Was macht die sprechende Person?","answer":listen_de,"accepted_answers":[listen_de],"options":list(options_de),"accessibility_label":"Hören und Bedeutung wählen"},
                 {"question":"Listen. What is the speaker doing?","answer":listen_en,"accepted_answers":[listen_en],"options":list(options_en),"accessibility_label":"Listen and choose the meaning"},
             ),
             _localized(
-                {"id":f"a1-{day}-use","type":"dialogue","stage":"transfer","mission_role":"final","question":task_ru,"answer":mission_model,"model_answer":mission_model,"accepted_answers":[model,model.rstrip(".?!")],"target_patterns":(["heiße","woher","wo"] if day == 5 else starter["patterns"]),"hint":rule_ru,"explanation":"Смысл должен подходить ситуации. Личные данные могут отличаться.","misconception":"a1_first_conversation_transfer","accessibility_label":"Пройди реальный мини-диалог","conversation_turns":mission_turns["ru"]},
+                {"id":f"{exercise_prefix}-{day}-use","type":"dialogue","stage":"transfer","mission_role":"final","question":task_ru,"answer":mission_model,"model_answer":mission_model,"accepted_answers":[mission_model,mission_model.rstrip(".?!")],"target_patterns":(["heiße","woher","wo"] if level == "A1" and day == 5 else starter["patterns"]),"hint":rule_ru,"explanation":"Смысл должен подходить ситуации. Личные данные могут отличаться.","misconception":"foundation_mission_transfer","accessibility_label":"Пройди реальный мини-диалог","conversation_turns":mission_turns["ru"]},
                 {"question":task_ru,"hint":rule_ru,"explanation":"Смысл должен подходить ситуации. Личные данные могут отличаться.","accessibility_label":"Пройди реальный мини-диалог","conversation_turns":mission_turns["ru"]},
                 {"question":task_de,"hint":rule_de,"explanation":"Die Antwort muss zur Situation passen. Persönliche Angaben dürfen anders sein.","accessibility_label":"Ein echtes Mini-Gespräch führen","conversation_turns":mission_turns["de"]},
                 {"question":task_en,"hint":rule_en,"explanation":"The answer must fit the situation. Personal details may be different.","accessibility_label":"Complete a real mini dialogue","conversation_turns":mission_turns["en"]},
             ),
             _localized(
-                {"id":f"a1-{day}-speak","type":"repeat","stage":"transfer","question":"Скажи фразу вслух.","answer":starter["alternate"],"accepted_answers":[starter["alternate"],starter["alternate"].rstrip(".?!")],"audio_text":starter["alternate"],"explanation":"Говори спокойно. Важно, чтобы ключевые слова были понятны.","misconception":"a1_first_conversation_fluency","accessibility_label":"Повтори немецкую фразу"},
+                {"id":f"{exercise_prefix}-{day}-speak","type":"repeat","stage":"transfer","question":"Скажи фразу вслух.","answer":starter["alternate"],"accepted_answers":[starter["alternate"],starter["alternate"].rstrip(".?!")],"audio_text":starter["alternate"],"explanation":"Говори спокойно. Важно, чтобы ключевые слова были понятны.","misconception":"foundation_mission_fluency","accessibility_label":"Повтори немецкую фразу"},
                 {"question":"Скажи фразу вслух.","explanation":"Говори спокойно. Важно, чтобы ключевые слова были понятны.","accessibility_label":"Повтори немецкую фразу"},
                 {"question":"Sprich den Satz laut.","explanation":"Sprich ruhig. Die Schlüsselwörter sollen verständlich sein.","accessibility_label":"Deutschen Satz nachsprechen"},
                 {"question":"Say the sentence aloud.","explanation":"Speak calmly. The key words should be clear.","accessibility_label":"Repeat the German sentence"},
             ),
         ]
         return {
-            "day":day,"week":module,"track":"A1","module":module,"quality_version":7,
+            "day":day,"week":module,"track":level,"module":module,"quality_version":8,
             "learning_method":"mission_loop_v1","module_title":module_title_ru,
             "module_step":((day - 1) % 5) + 1,"module_size":5,"checkpoint":bool(starter.get("checkpoint")),
             "title":title_ru,"objective":can_do_ru,"can_do":can_do_ru,
             "communication_goal":task_ru,"mission":task_ru,"success_evidence":can_do_ru,"scenario":scenario_ru,"rule":rule_ru,
-            "examples":[model,starter["alternate"],f"❌ {wrong}"],"audio_text":model,"cefr":"A1",
-            "prerequisites":[] if day == 1 else [A1_CURRICULUM[day - 2][2]],
+            "examples":[model,starter["alternate"],f"❌ {wrong}"],"audio_text":model,"cefr":level,
+            "prerequisites":[] if day == 1 else [(A1_CURRICULUM if level == "A1" else A2_CURRICULUM)[day - 2][2]],
             "common_mistakes":[f"❌ {wrong}",f"✅ {model}"],
             "recall_prompt":"Закрой пример и произнеси свою версию без подсказки.",
             "i18n":{
