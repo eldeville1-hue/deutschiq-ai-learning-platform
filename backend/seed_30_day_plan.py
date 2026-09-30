@@ -6,6 +6,7 @@ from app.models.user import User  # noqa: F401 - registers users for FK resoluti
 from app.content.b1_curriculum import B1_CURRICULUM, build_b1_content
 from app.content.b2_curriculum import B2_CURRICULUM, build_b2_content
 from app.content.foundation_curriculum import A1_CURRICULUM, A2_CURRICULUM, build_foundation_content
+from app.services.content_quality import validate_roadmap_content
 
 
 CURRICULUM = [
@@ -208,6 +209,9 @@ def seed():
             for row in curriculum:
                 day, _module, topic, pillar, *_copy = row
                 content = build_foundation_content(row, level)
+                validation_errors = validate_roadmap_content(content)
+                if validation_errors:
+                    raise ValueError(f"Refusing to publish {level} day {day}: {', '.join(validation_errors)}")
                 # Foundation missions are deliberately short enough for one
                 # daily mobile session; the UI must not promise a 9-minute
                 # flow while the stored lesson still claims 14–16 minutes.

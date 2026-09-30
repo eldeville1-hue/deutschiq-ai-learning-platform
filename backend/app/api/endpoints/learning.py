@@ -152,7 +152,11 @@ async def reviews(user_id: int, lang: str | None = None, db: Session = Depends(g
             # Повторение проверяет самостоятельное извлечение, а не этап с подсказкой.
             repair_dimension = repair_focus["dimension"] if repair_focus and row.topic == repair_focus["topic"] else None
             preferred_types = {"grammar": {"error_repair", "transform"}, "task_completion": {"dialogue", "production"}, "vocabulary": {"dialogue", "production"}, "coherence": {"dialogue", "production"}, "register": {"dialogue", "production"}}.get(repair_dimension, set())
-            exercise_index = next((index for index, item in enumerate(exercises) if item.get("type") in preferred_types), 1 if len(exercises) > 1 else 0)
+            delayed_review = content.get("delayed_review") or {}
+            final_index = next((index for index, item in enumerate(exercises) if item.get("mission_role") == "final"), None)
+            exercise_index = final_index if delayed_review.get("method") == "changed_context_retrieval" and final_index is not None else next((index for index, item in enumerate(exercises) if item.get("type") in preferred_types), 1 if len(exercises) > 1 else 0)
             exercise = exercises[exercise_index]
-            result.append({"topic": row.topic, "mastery": round(row.mastery), "lesson_id": lesson.id, "exercise_index": exercise_index, "question": exercise.get("question", ""), "type": exercise.get("type", "fill"), "options": exercise.get("options", []), "tokens": exercise.get("tokens", []), "repair_dimension": repair_dimension, "repair_score": repair_focus["score"] if repair_dimension else None})
+            attempts = int(row.attempts or 0)
+            evidence_status = "not_enough_evidence" if attempts < 2 else "building" if attempts < 4 else "retained" if row.mastery >= 70 else "needs_review"
+            result.append({"topic": row.topic, "mastery": round(row.mastery), "attempts": attempts, "evidence_status": evidence_status, "can_do": content.get("can_do") or content.get("objective"), "review_reason": delayed_review.get("reason"), "lesson_id": lesson.id, "exercise_index": exercise_index, "question": delayed_review.get("prompt") or exercise.get("question", ""), "type": exercise.get("type", "fill"), "options": exercise.get("options", []), "tokens": exercise.get("tokens", []), "conversation_turns": exercise.get("conversation_turns", []), "target_patterns": exercise.get("target_patterns", []), "repair_dimension": repair_dimension, "repair_score": repair_focus["score"] if repair_dimension else None})
     return {"reviews": result, "assessment": assessment}

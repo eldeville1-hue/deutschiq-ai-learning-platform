@@ -20,7 +20,15 @@ from app.services.content_quality import normalize_lesson_content
 router = APIRouter(prefix="/api/plan", tags=["plan"])
 
 
-def serialize_plan_lesson(lesson, index, language, completed_ids, mastery, blockers, recommended):
+def evidence_status(attempts: int, mastery: float | None) -> str:
+    if attempts < 2:
+        return "not_enough_evidence"
+    if attempts < 4:
+        return "building"
+    return "retained" if (mastery or 0) >= 70 else "needs_review"
+
+
+def serialize_plan_lesson(lesson, index, language, completed_ids, mastery, attempts, blockers, recommended):
     content = localize_lesson_content(
         normalize_lesson_content(lesson.content or {}, lesson.topic, lesson.level),
         language,
@@ -54,6 +62,8 @@ def serialize_plan_lesson(lesson, index, language, completed_ids, mastery, block
         "minutes": lesson.estimated_time or 6,
         "completed": lesson.id in completed_ids,
         "mastery": mastery.get(lesson.topic),
+        "attempts": attempts.get(lesson.topic, 0),
+        "evidence_status": evidence_status(attempts.get(lesson.topic, 0), mastery.get(lesson.topic)),
         "blocked_by": blockers,
         "recommended": bool(recommended and lesson.id == recommended.id),
     }
@@ -103,6 +113,7 @@ async def get_plan(user_id: int, lang: str | None = None, track: str | None = No
         }
         mastery_rows = db.query(TopicMastery).filter(TopicMastery.user_id == user.id).all()
         mastery = {row.topic: round(row.mastery) for row in mastery_rows}
+        attempts = {row.topic: int(row.attempts or 0) for row in mastery_rows}
         diagnostic = db.query(DiagnosticResult).filter(DiagnosticResult.user_id == user.id).order_by(DiagnosticResult.created_at.desc()).first()
         weak_points = diagnostic.weak_points if diagnostic and diagnostic.weak_points else {}
         recommended = select_recommended_lesson(lessons, completed_ids, mastery, weak_points)
@@ -113,6 +124,7 @@ async def get_plan(user_id: int, lang: str | None = None, track: str | None = No
             language,
             completed_ids,
             mastery,
+            attempts,
             lesson_blockers(lesson, lessons, completed_ids, mastery),
             recommended,
         ) for index, lesson in enumerate(lessons)]

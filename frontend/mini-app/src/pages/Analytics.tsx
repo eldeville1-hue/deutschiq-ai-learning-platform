@@ -49,6 +49,11 @@ export const Analytics: React.FC = () => {
       : progress < 85
         ? tr(lang, 'Уверенный прогресс', 'Sicherer Fortschritt', 'Strong progress')
         : tr(lang, 'Почти готово к проверке', 'Fast bereit für den Check', 'Nearly ready for assessment');
+  const evidenceLabel = (score: number) => score >= 80
+    ? tr(lang, 'Уверенно', 'Sicher', 'Strong')
+    : score >= 55
+      ? tr(lang, 'Формируется', 'Im Aufbau', 'Building')
+      : tr(lang, 'Нужно повторение', 'Wiederholen', 'Needs review');
   const stats: Skill[] = useMemo(() => (data?.stats || []).map((item: any) => ({
     key: skillKey(String(item.label)),
     score: Math.max(0, Math.min(100, Math.round(Number(item.value || 0) * (Number(item.value || 0) <= 10 ? 10 : 1)))),
@@ -83,13 +88,13 @@ export const Analytics: React.FC = () => {
 
       <section className="rc-analysis-overview" aria-label={tr(lang, 'Общий прогресс', 'Gesamtfortschritt', 'Overall progress')}>
         <div className="rc-level-block"><small>{tr(lang, 'ТВОЙ МАРШРУТ', 'DEIN LERNWEG', 'YOUR PATH')}</small><strong>{data?.level || 'A1'} <i>→</i> {data?.targetLevel || 'A2'}</strong><span>{progressBand}</span></div>
-        <div className="rc-score-ring" style={{ '--score': `${progress * 3.6}deg` } as React.CSSProperties}><span><strong>{progress}%</strong><small>{tr(lang, 'по заданиям', 'aus Aufgaben', 'from tasks')}</small></span></div>
+        <div className="rc-score-ring" style={{ '--score': `${progress * 3.6}deg` } as React.CSSProperties}><span><strong>{data?.level || 'A1'}</strong><small>{tr(lang, 'уровень пути', 'Lernstufe', 'path level')}</small></span></div>
         <div className="rc-journey"><span>{data?.level || 'A1'}</span><div><i style={{ width: `${progress}%` }} /></div><span>{data?.targetLevel || 'A2'}</span></div>
-        <p>{tr(lang, 'Оценка основана на выполненных заданиях и уточняется после каждой практики.', 'Die Einschätzung basiert auf gelösten Aufgaben und wird mit jeder Übung genauer.', 'This estimate is based on completed tasks and improves with practice.')}</p>
+        <p>{tr(lang, 'Мы показываем, что уже получается без подсказки. Точность оценки растёт после новых ответов и повторений.', 'Wir zeigen, was schon ohne Hilfe gelingt. Neue Antworten und Wiederholungen machen die Einschätzung verlässlicher.', 'We show what already works without help. New answers and reviews make the evidence more reliable.')}</p>
       </section>
 
       <section className="rc-analysis-signals" aria-label={tr(lang, 'Краткий разбор', 'Kurzanalyse', 'Quick analysis')}>
-        <div><small>{tr(lang, 'УЖЕ ПОЛУЧАЕТСЯ', 'DAS KLAPPT SCHON', 'WORKING WELL')}</small><strong>{strongest ? topicLabel(strongest.key, lang) : tr(lang, 'Собираем данные', 'Daten werden gesammelt', 'Collecting evidence')}</strong><span>{strongest ? `${strongest.score}%` : '—'}</span></div>
+        <div><small>{tr(lang, 'УЖЕ ПОЛУЧАЕТСЯ', 'DAS KLAPPT SCHON', 'WORKING WELL')}</small><strong>{strongest ? topicLabel(strongest.key, lang) : tr(lang, 'Собираем данные', 'Daten werden gesammelt', 'Collecting evidence')}</strong><span>{strongest ? evidenceLabel(strongest.score) : '—'}</span></div>
         <div><small>{tr(lang, 'СЛЕДУЮЩИЙ ФОКУС', 'NÄCHSTER FOKUS', 'NEXT FOCUS')}</small><strong>{errors.length ? topicLabel(String(errors[0].name), lang) : nextFocus.replace(/^.*?:\s*/, '')}</strong><FaArrowRight /></div>
       </section>
 

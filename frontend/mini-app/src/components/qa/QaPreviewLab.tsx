@@ -83,6 +83,7 @@ export const QaPreviewLab: React.FC<Props> = ({ accessKey, catalog }) => {
   const [lessonLoading, setLessonLoading] = useState(false);
   const [answer, setAnswer] = useState('');
   const levelLessons = useMemo(() => catalog.filter(item => item.level === level), [catalog, level]);
+  const selectedCatalogLesson = useMemo(() => catalog.find(item => item.id === lessonId), [catalog, lessonId]);
   const exercise = lesson?.content?.exercises?.[Math.min(1, (lesson?.content?.exercises?.length || 1) - 1)];
   const t = copy[lang];
 
@@ -163,7 +164,18 @@ export const QaPreviewLab: React.FC<Props> = ({ accessKey, catalog }) => {
     </div>
     <div className="qa-status-strip"><span><FaSignal /> Protected owner route</span><span><FaCheck /> Analytics excluded</span><span><FaCheck /> Learner writes blocked</span><span>{deviceWidth}px · {lang.toUpperCase()} · {surface}</span></div>
     <div className="qa-workbench">
-      <aside><strong>Required checks</strong>{['No horizontal overflow','44px touch targets','Readable at 320px','Bottom dock clear','RU/DE copy fits','Offline recovery visible'].map(item => <span key={item}><FaCheck />{item}</span>)}</aside>
+      <aside>
+        <strong>Publishing gate</strong>
+        <span className={selectedCatalogLesson?.publish_ready ? 'gate-pass' : 'gate-fail'}>{selectedCatalogLesson?.publish_ready ? <FaCheck /> : <FaTimes />}{selectedCatalogLesson?.publish_ready ? 'Ready to publish' : 'Publishing blocked'}</span>
+        {([
+          ['RU copy reviewed', selectedCatalogLesson?.reviewed_languages?.includes('ru')],
+          ['DE copy reviewed', selectedCatalogLesson?.reviewed_languages?.includes('de')],
+          ['Changed-context review', selectedCatalogLesson?.delayed_review_method === 'changed_context_retrieval'],
+        ] as Array<[string, boolean]>).map(([label, passed]) => <span className={passed ? 'gate-pass' : 'gate-fail'} key={label}>{passed ? <FaCheck /> : <FaTimes />}{label}</span>)}
+        {(selectedCatalogLesson?.publication_blockers || []).map((blocker: string) => <span className="gate-fail" key={blocker}><FaTimes />{blocker}</span>)}
+        <strong className="qa-check-title">Device checks</strong>
+        {['No horizontal overflow','44px touch targets','Readable at 320px','Bottom dock clear','RU/DE copy fits','Offline recovery visible'].map(item => <span key={item}><FaCheck />{item}</span>)}
+      </aside>
       <div className="qa-device-stage">
         <div className={`qa-device level-${level.toLowerCase()}${keyboard ? ' keyboard-open' : ''}`} style={{ width: deviceWidth }} data-testid="qa-device">
           <div className="qa-device-status"><span>9:41</span><b>{t.preview}</b><span>●●●</span></div>

@@ -67,6 +67,12 @@ export const Plan: React.FC = () => {
     tr(lang, 'В городе', 'In der Stadt', 'In the city'),
     tr(lang, 'Решаем дела', 'Alltag erledigen', 'Getting things done'),
   ];
+  const evidenceLabel = (lesson: JourneyLesson) => ({
+    not_enough_evidence: tr(lang, 'Нужно больше примеров', 'Mehr Beispiele nötig', 'More evidence needed'),
+    building: tr(lang, 'Навык формируется', 'Fähigkeit wächst', 'Building the skill'),
+    retained: tr(lang, 'Получается без подсказки', 'Klappt ohne Hilfe', 'Works without help'),
+    needs_review: tr(lang, 'Пора повторить', 'Zeit zum Wiederholen', 'Ready for review'),
+  }[lesson.evidenceStatus]);
 
   if (loading && !dashboard) return <main className="app-shell dq-plan" aria-busy="true"><div className="dq-page-skeleton"><span /><span /><span /></div></main>;
   if (!dashboard) return <main className="app-shell dq-plan page-enter"><ProductState kind="error" eyebrow={tr(lang, 'МАРШРУТ НЕДОСТУПЕН', 'LERNWEG NICHT VERFÜGBAR', 'PATH UNAVAILABLE')} title={tr(lang, 'Не удалось загрузить план', 'Der Lernweg konnte nicht geladen werden', 'We could not load your path')} detail={tr(lang, 'Твой прогресс сохранён. Проверь соединение и попробуй снова.', 'Dein Fortschritt ist sicher. Prüfe die Verbindung und versuche es erneut.', 'Your progress is safe. Check the connection and try again.')} action={tr(lang, 'Повторить', 'Erneut versuchen', 'Try again')} onAction={() => void load()} /></main>;
@@ -111,9 +117,9 @@ export const Plan: React.FC = () => {
                 ? lesson.blockedBy.includes('previous_step')
                   ? tr(lang, 'Сначала пройди предыдущий шаг', 'Zuerst den vorherigen Schritt abschließen', 'Complete the previous step first')
                   : tr(lang, 'Сначала закрепи базовый навык', 'Zuerst die Grundlage festigen', 'Strengthen the prerequisite first')
-                : lesson.mastery == null
+                : lesson.attempts === 0
                   ? tr(lang, 'Доступно', 'Bereit', 'Ready')
-                  : `${tr(lang, 'Освоено', 'Beherrscht', 'Mastery')} ${lesson.mastery}%`;
+                  : evidenceLabel(lesson);
             return <button type="button" key={lesson.id || index} className={`dq-route-step${active ? ' active' : ''}${lesson.completed ? ' complete' : ''}`} disabled={locked} onClick={() => !locked && lesson.id && navigate(withUser(`/lesson/${lesson.id}`))}>
               <span className="dq-route-dot">{lesson.completed ? <FaCheck /> : locked ? <FaLock /> : String(index + 2).padStart(2, '0')}</span>
               <span><strong>{lesson.title || topicLabel(lesson.topic, lang)}</strong><small>{detail}</small></span>

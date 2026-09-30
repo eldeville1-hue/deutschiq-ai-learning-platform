@@ -95,6 +95,11 @@ def localize_lesson_content(content: dict, language: str) -> dict:
             "en": "Close the example, state the rule, and create a new sentence.",
         }
         value["recall_prompt"] = localized.get("recall_prompt", recall[lang])
+        delayed_review = value.get("delayed_review")
+        if isinstance(delayed_review, dict):
+            delayed_localized = (delayed_review.get("i18n") or {}).get(lang) or {}
+            delayed_review.update(delayed_localized)
+            delayed_review.pop("i18n", None)
         for exercise in value.get("exercises") or []:
             exercise.update((exercise.get("i18n") or {}).get(lang, {}))
             exercise.pop("i18n", None)

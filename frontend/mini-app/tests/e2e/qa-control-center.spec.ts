@@ -14,7 +14,7 @@ const catalog = [
   { id: 2, level: 'A2', day: 1, title: 'Plan a meeting' },
   { id: 3, level: 'B1', day: 1, title: 'Explain a decision' },
   { id: 4, level: 'B2', day: 1, title: 'Defend a proposal' },
-];
+].map(item => ({ ...item, publish_ready: true, publication_blockers: [], reviewed_languages: ['ru', 'de'], delayed_review_method: 'changed_context_retrieval' }));
 
 const lesson = (id: number, lang: string) => ({
   id, level: catalog.find(item => item.id === id)?.level || 'A1', pillar: 'Communication',
@@ -55,6 +55,9 @@ async function unlock(page: Page) {
 test('owner QA stays protected and performs no learner writes', async ({ page }) => {
   const writes = await mockOwnerApi(page);
   await unlock(page);
+  await expect(page.getByText('Ready to publish')).toBeVisible();
+  await expect(page.getByText('RU copy reviewed')).toBeVisible();
+  await expect(page.getByText('Changed-context review')).toBeVisible();
   await page.getByLabel('Learner state').selectOption('graduation');
   await page.getByLabel('Preview screen').selectOption('checkpoint');
   await page.getByLabel('Interface state').selectOption('pass');

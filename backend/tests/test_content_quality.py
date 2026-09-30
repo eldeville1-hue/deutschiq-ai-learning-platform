@@ -2,7 +2,7 @@ import ast
 import re
 import unittest
 from pathlib import Path
-from app.services.content_quality import normalize_lesson_content, validate_lesson_content, validate_roadmap_content
+from app.services.content_quality import normalize_lesson_content, publication_blockers, validate_lesson_content, validate_roadmap_content
 from app.content.b1_curriculum import B1_CURRICULUM, build_b1_content
 from app.content.b2_curriculum import B2_CURRICULUM, build_b2_content
 from app.content.foundation_curriculum import A1_CURRICULUM, A2_CURRICULUM, build_foundation_content
@@ -250,6 +250,26 @@ class ContentQualityTests(unittest.TestCase):
             self.assertGreaterEqual(len(final[0]["conversation_turns"]), 2)
             self.assertTrue(content["mission"])
             self.assertTrue(content["success_evidence"])
+            self.assertEqual([], publication_blockers(content))
+            self.assertEqual("targeted_retry", content["repair_flow"]["mode"])
+            self.assertEqual("changed_context_retrieval", content["delayed_review"]["method"])
+            self.assertEqual({"ru", "de"}, {language for language, status in content["content_review"]["languages"].items() if status == "reviewed"})
+            final_question = final[0]["question"]
+            for language in ("ru", "de"):
+                localized = localize_lesson_content(content, language)
+                self.assertTrue(localized["delayed_review"]["reason"])
+                self.assertNotEqual(final_question, localized["delayed_review"]["prompt"])
+
+    def test_v8_publication_gate_blocks_unreviewed_content(self):
+        content = build_foundation_content(A1_CURRICULUM[0], "A1")
+        content["content_review"]["languages"]["de"] = "pending"
+        content["delayed_review"].pop("i18n")
+
+        blockers = publication_blockers(content)
+
+        self.assertIn("review:de:not_reviewed", blockers)
+        self.assertIn("review:ru:missing_copy", blockers)
+        self.assertIn("review:de:missing_copy", blockers)
 
     def test_every_a2_lesson_is_a_connected_mission_with_independent_checkpoints(self):
         lessons = [build_foundation_content(row, "A2") for row in A2_CURRICULUM]

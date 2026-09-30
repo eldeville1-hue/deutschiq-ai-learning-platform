@@ -16,7 +16,7 @@ from app.models.beta import BetaEnrollment, BetaInvite
 from app.services.beta_insights import exercise_health, retention_cohorts, summarize_events, tester_progress
 from app.services.bot_links import telegram_beta_invite_url
 from app.services.content_i18n import localize_lesson_content, normalize_language
-from app.services.content_quality import normalize_lesson_content
+from app.services.content_quality import normalize_lesson_content, publication_blockers
 
 router = APIRouter(prefix="/api/internal", tags=["internal"])
 
@@ -44,17 +44,26 @@ async def curriculum_preview_catalog(db: Session = Depends(get_db)):
         content = item.content if isinstance(item.content, dict) else {}
         return (item.level, int(content.get("day") or 999), item.id)
 
-    return [{
-        "id": item.id,
-        "level": item.level,
-        "pillar": item.pillar,
-        "topic": item.topic,
-        "day": int((item.content or {}).get("day") or 0),
-        "module": int((item.content or {}).get("module") or (item.content or {}).get("week") or 0),
-        "title": (item.content or {}).get("title") or item.topic,
-        "quality_version": int((item.content or {}).get("quality_version") or 0),
-        "exercise_count": len((item.content or {}).get("exercises") or []),
-    } for item in sorted(lessons, key=order)]
+    result = []
+    for item in sorted(lessons, key=order):
+        content = item.content or {}
+        blockers = publication_blockers(content) if int(content.get("quality_version") or 0) >= 8 else ["quality:legacy_version"]
+        result.append({
+            "id": item.id,
+            "level": item.level,
+            "pillar": item.pillar,
+            "topic": item.topic,
+            "day": int(content.get("day") or 0),
+            "module": int(content.get("module") or content.get("week") or 0),
+            "title": content.get("title") or item.topic,
+            "quality_version": int(content.get("quality_version") or 0),
+            "exercise_count": len(content.get("exercises") or []),
+            "publish_ready": not blockers,
+            "publication_blockers": blockers,
+            "reviewed_languages": sorted(language for language, status in ((content.get("content_review") or {}).get("languages") or {}).items() if status == "reviewed"),
+            "delayed_review_method": (content.get("delayed_review") or {}).get("method"),
+        })
+    return result
 
 
 @router.get("/curriculum/{lesson_id}", dependencies=[Depends(require_control_key)])
@@ -78,6 +87,8 @@ async def curriculum_preview_lesson(
         "estimated_time": lesson.estimated_time,
         "xp_reward": lesson.xp_reward,
         "content": content,
+        "publish_ready": not publication_blockers(lesson.content or {}),
+        "publication_blockers": publication_blockers(lesson.content or {}),
         "preview": True,
     }
 

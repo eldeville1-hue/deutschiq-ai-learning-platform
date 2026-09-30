@@ -732,6 +732,26 @@ def build_foundation_content(row: tuple, level: str) -> dict:
             "en": _mission_turns(topic, 2),
         }
         mission_model = "\n".join(turn["model"] for turn in mission_turns["ru"])
+        delayed_review = {
+            "method": "changed_context_retrieval",
+            "after_days": [1, 3, 7, 14, 30],
+            "prompt": f"Теперь это спрашивает новый человек в другом месте: {scenario_ru} Ответь по-немецки без модели.",
+            "reason": "Этот навык вернулся, чтобы проверить, можешь ли ты использовать его без подсказки в новой ситуации.",
+            "i18n": {
+                "ru": {
+                    "prompt": f"Теперь это спрашивает новый человек в другом месте: {scenario_ru} Ответь по-немецки без модели.",
+                    "reason": "Этот навык вернулся, чтобы проверить, можешь ли ты использовать его без подсказки в новой ситуации.",
+                },
+                "de": {
+                    "prompt": f"Jetzt fragt eine neue Person an einem anderen Ort: {scenario_de} Antworte ohne Beispiel.",
+                    "reason": "Diese Fähigkeit kommt zurück, damit du sie in einer neuen Situation ohne Hilfe abrufen kannst.",
+                },
+                "en": {
+                    "prompt": f"Now a new person asks in a different place: {scenario_en} Respond without the model.",
+                    "reason": "This skill is back so you can retrieve it without help in a new situation.",
+                },
+            },
+        }
         exercises = [
             _localized(
                 {"id":f"{exercise_prefix}-{day}-build","type":"reorder","stage":"guided","question":"Собери полезную фразу.","answer":model,"accepted_answers":[model,model.rstrip(".?!")],"tokens":mixed_tokens,"hint":rule_ru,"explanation":rule_ru,"misconception":"foundation_mission_form","accessibility_label":"Собери немецкую фразу"},
@@ -774,6 +794,9 @@ def build_foundation_content(row: tuple, level: str) -> dict:
             "prerequisites":[] if day == 1 else [(A1_CURRICULUM if level == "A1" else A2_CURRICULUM)[day - 2][2]],
             "common_mistakes":[f"❌ {wrong}",f"✅ {model}"],
             "recall_prompt":"Закрой пример и произнеси свою версию без подсказки.",
+            "repair_flow":{"mode":"targeted_retry","contrast_before_retry":True,"max_immediate_retries":1},
+            "delayed_review":delayed_review,
+            "content_review":{"status":"approved","version":"a1-a2-mastery-v8","languages":{"ru":"reviewed","de":"reviewed"}},
             "i18n":{
                 "ru":{"title":title_ru,"module_title":module_title_ru,"objective":can_do_ru,"can_do":can_do_ru,"communication_goal":task_ru,"mission":task_ru,"success_evidence":can_do_ru,"scenario":scenario_ru,"rule":rule_ru,"recall_prompt":"Закрой пример и произнеси свою версию без подсказки."},
                 "de":{"title":title_de,"module_title":module_title_de,"objective":can_do_de,"can_do":can_do_de,"communication_goal":task_de,"mission":task_de,"success_evidence":can_do_de,"scenario":scenario_de,"rule":rule_de,"recall_prompt":"Verdecke das Beispiel und sage deine eigene Version ohne Hilfe."},

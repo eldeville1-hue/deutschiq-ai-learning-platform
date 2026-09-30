@@ -3,6 +3,37 @@ ALLOWED_EXERCISE_TYPES = {
     "error_repair", "transform", "context_choice", "analogy_choice", "listening_choice", "dialogue",
 }
 
+PUBLISH_LANGUAGES = ("ru", "de")
+
+
+def publication_blockers(content: dict) -> list[str]:
+    """Return owner-facing reasons why a lesson must not be published."""
+    blockers = []
+    review = content.get("content_review") or {}
+    languages = review.get("languages") or {}
+    if review.get("status") != "approved":
+        blockers.append("review:not_approved")
+    for language in PUBLISH_LANGUAGES:
+        if languages.get(language) != "reviewed":
+            blockers.append(f"review:{language}:not_reviewed")
+
+    for field in ("can_do", "mission", "success_evidence"):
+        if not content.get(field):
+            blockers.append(f"outcome:missing_{field}")
+
+    repair = content.get("repair_flow") or {}
+    if repair.get("mode") != "targeted_retry" or not repair.get("contrast_before_retry"):
+        blockers.append("repair:missing_targeted_retry")
+
+    delayed = content.get("delayed_review") or {}
+    if delayed.get("method") != "changed_context_retrieval":
+        blockers.append("review:missing_changed_context")
+    for language in PUBLISH_LANGUAGES:
+        localized = (delayed.get("i18n") or {}).get(language) or {}
+        if not localized.get("prompt") or not localized.get("reason"):
+            blockers.append(f"review:{language}:missing_copy")
+    return blockers
+
 
 def normalize_lesson_content(content: dict, topic: str, level: str) -> dict:
     value = dict(content or {})
@@ -126,4 +157,6 @@ def validate_roadmap_content(content: dict) -> list[str]:
             errors.append("mission:final_not_production")
         elif len(final_missions[0].get("conversation_turns") or []) < 2:
             errors.append("mission:conversation_too_short")
+    if content.get("quality_version", 0) >= 8:
+        errors.extend(f"publish:{blocker}" for blocker in publication_blockers(content))
     return errors

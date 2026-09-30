@@ -58,6 +58,8 @@ class BetaControlCenterTests(unittest.TestCase):
 
         self.assertEqual([1, 2], [item["id"] for item in catalog])
         self.assertEqual(1, catalog[0]["exercise_count"])
+        self.assertFalse(catalog[0]["publish_ready"])
+        self.assertIn("quality:legacy_version", catalog[0]["publication_blockers"])
         self.assertTrue(detail["preview"])
         self.assertEqual("A1", detail["level"])
         self.assertEqual("Hallo", detail["content"]["exercises"][0]["answer"])

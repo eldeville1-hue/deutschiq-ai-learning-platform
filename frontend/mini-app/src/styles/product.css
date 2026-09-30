@@ -837,6 +837,10 @@ body:has(.precision-tutor) .bottom-nav span{font-size:8px!important}
 .rc-review-question{border-radius:24px}.rc-review-feedback{border-radius:19px}.rc-review-state{justify-content:center;text-align:center}.rc-state-icon{box-shadow:0 15px 38px rgba(99,215,170,.14)}
 .auth-error,.diagnostic-empty,.empty-panel{background:radial-gradient(circle at 50% 20%,rgba(244,191,85,.08),transparent 34%),var(--dq-bg)}
 @media(max-width:360px){:root{--dq-page-pad:15px;--dq-control:52px}.rc-page,.precision-profile,.precision-tutor{gap:14px}.bottom-nav span{font-size:8px}.profile-learning-pass{padding:16px}.rc-score-ring{width:82px;height:82px}.rc-score-ring::before{width:69px;height:69px}}
+.rc-review-reason{display:grid;gap:5px;padding:13px 14px;border-left:3px solid var(--dq-mint);border-radius:4px 14px 14px 4px;background:rgba(99,215,170,.08)}
+.rc-review-reason small{color:var(--dq-mint);font-size:8px;font-weight:900;letter-spacing:.14em}
+.rc-review-reason strong{font-size:14px;line-height:1.35}
+.rc-review-reason span{color:var(--dq-muted);font-size:11px;line-height:1.45}
 .beta-milestone.compact{width:100%;padding:0;border:0;background:transparent}
 .beta-milestone.compact summary{cursor:pointer;color:var(--dq-muted);font-size:11px;text-align:center}
 .beta-milestone.compact>div{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:9px}

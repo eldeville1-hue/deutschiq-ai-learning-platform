@@ -75,6 +75,7 @@ export const Review: React.FC = () => {
       <section className="rc-review-question">
         <div className="rc-retrieval-label"><FaRedo /><span>{item.repair_dimension ? tr(lang, 'Персональная практика', 'Personalisierte Übung', 'Personalised practice') : tr(lang, 'Вспомни', 'Erinnere dich', 'Recall')}</span></div>
         <p>{topicLabel(item.topic, lang)}</p>
+        {item.review_reason && <div className="rc-review-reason"><small>{tr(lang, 'ПОЧЕМУ СЕЙЧАС', 'WARUM JETZT', 'WHY NOW')}</small><strong>{item.can_do}</strong><span>{item.review_reason}</span></div>}
         {item.repair_dimension && <div className="rc-repair-target">{tr(lang, 'Фокус', 'Fokus', 'Focus')}: {({ task_completion: tr(lang, 'выполнение задачи', 'Aufgabenerfüllung', 'task completion'), grammar: tr(lang, 'грамматика', 'Grammatik', 'grammar'), vocabulary: tr(lang, 'лексика', 'Wortschatz', 'vocabulary'), coherence: tr(lang, 'связность', 'Kohärenz', 'coherence'), register: tr(lang, 'регистр', 'Register', 'register') } as Record<string,string>)[item.repair_dimension]} · {item.repair_score}%</div>}
         <h1>{item.question}</h1>
 

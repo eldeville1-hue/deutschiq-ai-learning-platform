@@ -22,6 +22,8 @@ export type JourneyLesson = {
   completed: boolean;
   recommended: boolean;
   mastery: number | null;
+  attempts: number;
+  evidenceStatus: 'not_enough_evidence' | 'building' | 'retained' | 'needs_review';
   blockedBy: string[];
 };
 
@@ -55,6 +57,10 @@ export const normalizeJourneyLesson = (value: unknown): JourneyLesson | null => 
     completed: Boolean(item.completed),
     recommended: Boolean(item.recommended),
     mastery: item.mastery == null ? null : Math.max(0, Math.min(100, Number(item.mastery) || 0)),
+    attempts: positiveNumber(item.attempts),
+    evidenceStatus: ['not_enough_evidence', 'building', 'retained', 'needs_review'].includes(String(item.evidence_status))
+      ? item.evidence_status as JourneyLesson['evidenceStatus']
+      : 'not_enough_evidence',
     blockedBy: Array.isArray(item.blocked_by) ? item.blocked_by.map(String) : [],
   };
 };
