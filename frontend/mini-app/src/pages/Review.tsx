@@ -55,6 +55,19 @@ export const Review: React.FC = () => {
       const activeSession = await ensureSession();
       const result = await api.checkLessonAnswer({ user_id: userId, lesson_id: item.lesson_id, exercise_index: item.exercise_index, answer, session_id: activeSession, language: lang, confidence: 'okay', response_ms: Date.now() - startedAt, mode: 'review' });
       setFeedback(result);
+      void api.trackEvent({
+        user_id: userId,
+        event_name: 'review_answered',
+        properties: {
+          lesson_id: Number(item.lesson_id),
+          exercise_index: Number(item.exercise_index),
+          topic: String(item.topic || ''),
+          correct: Boolean(result.correct),
+          changed_context: Boolean(item.review_reason),
+          repair_dimension: String(item.repair_dimension || ''),
+          response_ms: Math.max(0, Date.now() - startedAt),
+        },
+      });
     } catch {
       setError(tr(lang, 'Ответ не отправился. Проверь соединение и повтори.', 'Die Antwort wurde nicht gesendet. Prüfe die Verbindung und versuche es erneut.', 'Your answer was not sent. Check the connection and try again.'));
     } finally { setChecking(false); }

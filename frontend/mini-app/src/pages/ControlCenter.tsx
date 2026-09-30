@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import '../styles/qa-control-center.css';
-import { FaChartLine, FaEye, FaLock, FaPlus, FaSignOutAlt, FaSyncAlt } from 'react-icons/fa';
+import { FaChartLine, FaEye, FaHeartbeat, FaLock, FaPlus, FaSignOutAlt, FaSyncAlt } from 'react-icons/fa';
 import { api } from '../services/api';
 import { QaPreviewLab } from '../components/qa/QaPreviewLab';
+import { ContentHealth } from '../components/qa/ContentHealth';
 
 const metric = (value: unknown) => Number(value || 0).toLocaleString();
 
@@ -17,7 +18,7 @@ export const ControlCenter: React.FC = () => {
   const [batchCount, setBatchCount] = useState(15);
   const [newInvites, setNewInvites] = useState<any[]>([]);
   const [curriculum, setCurriculum] = useState<any[]>([]);
-  const [section, setSection] = useState<'qa' | 'signals' | 'access'>('qa');
+  const [section, setSection] = useState<'qa' | 'health' | 'signals' | 'access'>('qa');
 
   const load = async () => {
     if (!key.trim()) return;
@@ -44,8 +45,9 @@ export const ControlCenter: React.FC = () => {
   const flags = (data.exercise_health || []).filter((item: any) => item.status !== 'healthy');
   return <main className="control-center">
     <header><div><small>DEUTSCHIQ · OWNER ONLY</small><h1>Quality center</h1><p>Preview the complete learner journey before every release.</p></div><div className="control-actions"><select aria-label="Analytics range" value={days} onChange={event => setDays(Number(event.target.value))}><option value={7}>7 days</option><option value={30}>30 days</option><option value={90}>90 days</option></select><button type="button" onClick={load} disabled={loading}><FaSyncAlt /> Refresh</button><button type="button" className="control-logout" onClick={logout}><FaSignOutAlt /> Lock</button></div></header>
-    <nav className="control-sections" aria-label="Quality center sections"><button className={section === 'qa' ? 'active' : ''} onClick={() => setSection('qa')}><FaEye /> QA preview</button><button className={section === 'signals' ? 'active' : ''} onClick={() => setSection('signals')}><FaChartLine /> Product signals</button><button className={section === 'access' ? 'active' : ''} onClick={() => setSection('access')}><FaLock /> Beta access</button></nav>
+    <nav className="control-sections" aria-label="Quality center sections"><button className={section === 'qa' ? 'active' : ''} onClick={() => setSection('qa')}><FaEye /> QA preview</button><button className={section === 'health' ? 'active' : ''} onClick={() => setSection('health')}><FaHeartbeat /> Content health</button><button className={section === 'signals' ? 'active' : ''} onClick={() => setSection('signals')}><FaChartLine /> Product signals</button><button className={section === 'access' ? 'active' : ''} onClick={() => setSection('access')}><FaLock /> Beta access</button></nav>
     {section === 'qa' && <QaPreviewLab accessKey={key} catalog={curriculum} />}
+    {section === 'health' && <ContentHealth data={data} />}
     {section === 'signals' && <>
     <section className="control-metrics">
       <article><small>Total learners</small><strong>{metric(data.audience?.total_users)}</strong><span>{metric(data.audience?.new_users)} new</span></article>

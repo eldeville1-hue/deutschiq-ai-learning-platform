@@ -35,6 +35,30 @@ def publication_blockers(content: dict) -> list[str]:
     return blockers
 
 
+def curriculum_journey_issues(lessons, expected_lessons: int = 20) -> list[str]:
+    """Validate the complete ordered learning journey, not only isolated lessons."""
+    ordered = sorted(lessons, key=lambda item: int((item.content or {}).get("day") or 999))
+    issues = []
+    if len(ordered) != expected_lessons:
+        issues.append(f"journey:expected_{expected_lessons}_lessons:found_{len(ordered)}")
+    days = [int((item.content or {}).get("day") or 0) for item in ordered]
+    if days != list(range(1, expected_lessons + 1)):
+        issues.append("journey:days_not_contiguous")
+    checkpoints = [int((item.content or {}).get("day") or 0) for item in ordered if (item.content or {}).get("checkpoint")]
+    if checkpoints != [5, 10, 15, 20]:
+        issues.append("journey:checkpoint_sequence_invalid")
+    for index, lesson in enumerate(ordered):
+        content = lesson.content or {}
+        if index == 0 and content.get("prerequisites"):
+            issues.append("journey:first_lesson_has_prerequisite")
+        if index > 0 and content.get("prerequisites") != [ordered[index - 1].topic]:
+            issues.append(f"journey:day_{days[index]}_prerequisite_gap")
+        final_missions = [item for item in content.get("exercises") or [] if item.get("mission_role") == "final"]
+        if len(final_missions) != 1:
+            issues.append(f"journey:day_{days[index]}_final_mission_invalid")
+    return issues
+
+
 def normalize_lesson_content(content: dict, topic: str, level: str) -> dict:
     value = dict(content or {})
     examples = value.get("examples") or []

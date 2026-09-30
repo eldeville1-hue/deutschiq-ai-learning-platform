@@ -2,7 +2,7 @@ import ast
 import re
 import unittest
 from pathlib import Path
-from app.services.content_quality import normalize_lesson_content, publication_blockers, validate_lesson_content, validate_roadmap_content
+from app.services.content_quality import curriculum_journey_issues, normalize_lesson_content, publication_blockers, validate_lesson_content, validate_roadmap_content
 from app.content.b1_curriculum import B1_CURRICULUM, build_b1_content
 from app.content.b2_curriculum import B2_CURRICULUM, build_b2_content
 from app.content.foundation_curriculum import A1_CURRICULUM, A2_CURRICULUM, build_foundation_content
@@ -259,6 +259,15 @@ class ContentQualityTests(unittest.TestCase):
                 localized = localize_lesson_content(content, language)
                 self.assertTrue(localized["delayed_review"]["reason"])
                 self.assertNotEqual(final_question, localized["delayed_review"]["prompt"])
+
+    def test_complete_a1_journey_has_no_sequence_gaps(self):
+        lessons = []
+        for index, row in enumerate(A1_CURRICULUM, start=1):
+            lessons.append(type("Lesson", (), {"id": index, "topic": row[2], "content": build_foundation_content(row, "A1")})())
+        self.assertEqual([], curriculum_journey_issues(lessons))
+
+        lessons[9].content["prerequisites"] = ["wrong_topic"]
+        self.assertIn("journey:day_10_prerequisite_gap", curriculum_journey_issues(lessons))
 
     def test_v8_publication_gate_blocks_unreviewed_content(self):
         content = build_foundation_content(A1_CURRICULUM[0], "A1")

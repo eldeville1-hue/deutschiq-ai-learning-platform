@@ -13,10 +13,10 @@ from app.models.learning import ExerciseAttempt, LearningSession
 from app.models.lesson import Lesson
 from app.models.user import User
 from app.models.beta import BetaEnrollment, BetaInvite
-from app.services.beta_insights import exercise_health, retention_cohorts, summarize_events, tester_progress
+from app.services.beta_insights import beta_readiness, exercise_health, lesson_content_health, retention_cohorts, summarize_events, tester_progress
 from app.services.bot_links import telegram_beta_invite_url
 from app.services.content_i18n import localize_lesson_content, normalize_language
-from app.services.content_quality import normalize_lesson_content, publication_blockers
+from app.services.content_quality import curriculum_journey_issues, normalize_lesson_content, publication_blockers
 
 router = APIRouter(prefix="/api/internal", tags=["internal"])
 
@@ -145,6 +145,10 @@ async def beta_control_center(
     for user in users:
         language = user.language_code or "unknown"
         languages[language] = languages.get(language, 0) + 1
+    a1_lessons = [item for item in lessons if item.is_active and item.level == "A1"]
+    content_health = lesson_content_health(a1_lessons, attempts, sessions, events, publication_blockers)
+    journey_issues = curriculum_journey_issues(a1_lessons)
+    readiness = beta_readiness(content_health, event_summary, len(enrollments), len(session_users), journey_issues)
     return {
         "window_days": days,
         "generated_at": datetime.now().isoformat(),
@@ -170,6 +174,8 @@ async def beta_control_center(
         },
         "events": event_summary,
         "exercise_health": exercise_health(attempts, {item.id: item.topic for item in lessons}),
+        "content_health": content_health,
+        "readiness": readiness,
         "retention": retention_cohorts(enrollments, all_sessions, datetime.now()),
         "beta": {
             "enrolled": len(enrollments),
