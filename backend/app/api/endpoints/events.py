@@ -19,6 +19,7 @@ ALLOWED_EVENTS = {
     "microphone_failed", "draft_restored", "checkpoint_draft_restored", "checkpoint_completed",
     "invite_claimed", "beta_onboarding_completed", "diagnostic_started",
     "diagnostic_completed",
+    "audio_started", "audio_failed", "audio_interrupted",
 }
 
 

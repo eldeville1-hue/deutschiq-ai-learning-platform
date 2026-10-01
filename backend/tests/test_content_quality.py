@@ -187,6 +187,42 @@ class ContentQualityTests(unittest.TestCase):
             for index, lesson in enumerate(lessons[1:], start=1):
                 self.assertEqual([curriculum[index - 1][2]], lesson["prerequisites"])
 
+    def test_a1_has_stable_audio_manifest_for_every_listening_moment(self):
+        expected_urls = set()
+        for row in A1_CURRICULUM:
+            content = build_foundation_content(row, "A1")
+            topic = row[2]
+            prefix = f"/media/audio/a1/{topic}/"
+
+            self.assertEqual("curated_tts", content["audio_source"])
+            self.assertEqual(f"{prefix}model.mp3?v=11", content["audio_url"])
+            expected_urls.add(content["audio_url"])
+
+            listening = next(item for item in content["exercises"] if item["type"] == "listening_choice")
+            repeat = next(item for item in content["exercises"] if item["type"] == "repeat")
+            dialogue = next(item for item in content["exercises"] if item["type"] == "dialogue")
+            self.assertEqual(f"{prefix}model.mp3?v=11", listening["audio_url"])
+            self.assertEqual(f"{prefix}repeat.mp3?v=11", repeat["audio_url"])
+            expected_urls.update((listening["audio_url"], repeat["audio_url"]))
+
+            for index, turn in enumerate(dialogue["conversation_turns"], start=1):
+                self.assertEqual(f"{prefix}turn-{index}.mp3?v=11", turn["audio_url"])
+                expected_urls.add(turn["audio_url"])
+
+            for language in ("ru", "de", "en"):
+                localized = localize_lesson_content(content, language)
+                localized_dialogue = next(item for item in localized["exercises"] if item["type"] == "dialogue")
+                self.assertTrue(all(turn.get("audio_url") for turn in localized_dialogue["conversation_turns"]))
+
+        self.assertEqual(20, len({url for url in expected_urls if url.endswith("model.mp3?v=11")}))
+        self.assertGreaterEqual(len(expected_urls), 80)
+        audio_root = Path(__file__).resolve().parents[1] / "static" / "audio"
+        self.assertEqual(84, len(expected_urls))
+        for url in expected_urls:
+            audio_file = audio_root / url.split("?", 1)[0].removeprefix("/media/audio/")
+            self.assertTrue(audio_file.is_file(), url)
+            self.assertGreater(audio_file.stat().st_size, 1_000, url)
+
     def test_a1_first_conversation_is_a_connected_five_lesson_module(self):
         lessons = [build_foundation_content(row, "A1") for row in A1_CURRICULUM[:5]]
 

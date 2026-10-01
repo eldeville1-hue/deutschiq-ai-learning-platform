@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { FaArrowRight, FaCheck, FaExchangeAlt, FaMicrophone, FaRedo, FaTimes, FaUndo } from 'react-icons/fa';
+import { FaArrowRight, FaCheck, FaExchangeAlt, FaMicrophone, FaRedo, FaTimes, FaUndo, FaVolumeUp } from 'react-icons/fa';
 import type { AppLanguage } from '../../i18n/language';
 import { tr } from '../../i18n/language';
 import { exerciseKind, type LearningExercise } from '../../learning/exercises';
@@ -13,9 +13,10 @@ type Props = {
   lang: AppLanguage;
   onAudio?: (blob: Blob) => Promise<void>;
   guided?: boolean;
+  onPlayAudio?: (url?: string, text?: string, rate?: number) => void;
 };
 
-export const ExerciseInteraction: React.FC<Props> = ({ exercise, answer, onAnswer, disabled = false, lang, onAudio, guided = false }) => {
+export const ExerciseInteraction: React.FC<Props> = ({ exercise, answer, onAnswer, disabled = false, lang, onAudio, guided = false, onPlayAudio }) => {
   const kind = exerciseKind(exercise);
   const [selectedTokens, setSelectedTokens] = useState<number[]>([]);
   const [conversationStep, setConversationStep] = useState(0);
@@ -138,7 +139,7 @@ export const ExerciseInteraction: React.FC<Props> = ({ exercise, answer, onAnswe
       <div className="conversation-progress"><span>{tr(lang, 'МИНИ-ДИАЛОГ', 'MINI-DIALOG', 'MINI DIALOGUE')}</span><b>{Math.min(conversationReplies.length + 1, turns.length)}/{turns.length}</b></div>
       <div className="conversation-thread" aria-live="polite">
         {turns.map((turn, index) => index <= conversationStep ? <React.Fragment key={`${turn.partner}-${index}`}>
-          <div className="conversation-bubble partner"><small>{tr(lang, 'СОБЕСЕДНИК', 'GESPRÄCHSPARTNER', 'PARTNER')}</small><p>{turn.partner}</p></div>
+          <div className="conversation-bubble partner"><small>{tr(lang, 'СОБЕСЕДНИК', 'GESPRÄCHSPARTNER', 'PARTNER')}</small>{onPlayAudio && <button type="button" className="conversation-audio" onClick={() => onPlayAudio(turn.audio_url, turn.partner, 0.92)} aria-label={tr(lang, 'Прослушать реплику', 'Antwort anhören', 'Listen to partner')}><FaVolumeUp /></button>}<p>{turn.partner}</p></div>
           {conversationReplies[index] && <div className="conversation-bubble learner"><small>{tr(lang, 'ТЫ', 'DU', 'YOU')}</small><p>{conversationReplies[index]}</p></div>}
         </React.Fragment> : null)}
       </div>
@@ -165,6 +166,7 @@ export const ExerciseInteraction: React.FC<Props> = ({ exercise, answer, onAnswe
       <FaMicrophone />
       <strong>{tr(lang, 'Прочитай вслух', 'Lies laut vor', 'Read aloud')}</strong>
       <span>{exercise.audio_text || exercise.model_answer || exercise.answer}</span>
+      {onPlayAudio && <button type="button" className="repeat-listen" onClick={() => onPlayAudio(exercise.audio_url, exercise.audio_text || exercise.model_answer || exercise.answer, 0.92)}><FaVolumeUp /> {tr(lang, 'Сначала послушать', 'Zuerst anhören', 'Listen first')}</button>}
       {!disabled && onAudio && <VoiceRecorder lang={lang} onAudio={onAudio} />}
       {!disabled && <details className="speak-fallback"><summary>{tr(lang, 'Не работает микрофон?', 'Mikrofon funktioniert nicht?', 'Microphone not working?')}</summary><label><small>{tr(lang, 'Напиши фразу', 'Satz schreiben', 'Type the sentence')}</small><input value={answer} onChange={event => onAnswer(event.target.value)} /></label></details>}
     </div>

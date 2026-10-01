@@ -41,6 +41,9 @@ export const Lesson: React.FC = () => {
   const [showHint, setShowHint] = useState(false);
   const [easyMode, setEasyMode] = useState(false);
   const [showTranscript, setShowTranscript] = useState(false);
+  const [audioState, setAudioState] = useState<'idle' | 'loading' | 'playing' | 'paused' | 'fallback'>('idle');
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioUrlRef = useRef('');
   const completedRef = useRef(false);
   const openedAtRef = useRef(Date.now());
   const stepRef = useRef(0);
@@ -92,6 +95,22 @@ export const Lesson: React.FC = () => {
     void api.trackEvent({ user_id: getUserId(), event_name: 'lesson_stage_viewed', properties: { lesson_id: Number(id), stage, step } });
   }, [exercises, id, lesson, sessionId, step, total]);
   useEffect(() => { stepRef.current = step; }, [step]);
+  useEffect(() => {
+    const onVisibility = () => {
+      const audio = audioRef.current;
+      if (document.hidden && audio && !audio.paused) {
+        audio.pause();
+        setAudioState('paused');
+        void api.trackEvent({ user_id: getUserId(), event_name: 'audio_interrupted', properties: { lesson_id: Number(id), reason: 'app_hidden' } });
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      audioRef.current?.pause();
+      window.speechSynthesis?.cancel();
+    };
+  }, [id]);
   useEffect(() => () => {
     if (!sessionId || completedRef.current) return;
     void api.trackEvent({ user_id: getUserId(), event_name: 'lesson_abandoned', properties: { lesson_id: Number(id), step: stepRef.current, duration_seconds: Math.round((Date.now() - openedAtRef.current) / 1000) } });
@@ -206,13 +225,7 @@ export const Lesson: React.FC = () => {
     localStorage.setItem(`deutschiq-beta-milestone-${getUserId()}`, '1');
     setMilestoneSent(true);
   };
-  const speak = (rate = 0.9, text?: string) => {
-    if (!text && content.audio_url) {
-      const audio = new Audio(content.audio_url);
-      audio.playbackRate = rate;
-      void audio.play();
-      return;
-    }
+  const deviceVoiceFallback = (rate = 0.9, text?: string) => {
     if (!("speechSynthesis" in window)) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(
@@ -220,7 +233,41 @@ export const Lesson: React.FC = () => {
     );
     utterance.lang = "de-DE";
     utterance.rate = rate;
+    utterance.onstart = () => setAudioState('fallback');
+    utterance.onend = () => setAudioState('idle');
     window.speechSynthesis.speak(utterance);
+  };
+  const playAudio = (url?: string, text?: string, rate = 0.9) => {
+    const resolvedUrl = url || (!text ? content.audio_url : undefined);
+    if (!resolvedUrl) {
+      deviceVoiceFallback(rate, text);
+      return;
+    }
+    const current = audioRef.current;
+    if (current && audioUrlRef.current === resolvedUrl && current.paused && current.currentTime > 0 && current.currentTime < current.duration) {
+      current.playbackRate = rate;
+      void current.play();
+      return;
+    }
+    current?.pause();
+    const audio = new Audio(resolvedUrl);
+    audio.preload = 'auto';
+    audio.playbackRate = rate;
+    audioRef.current = audio;
+    audioUrlRef.current = resolvedUrl;
+    setAudioState('loading');
+    audio.onplaying = () => {
+      setAudioState('playing');
+      void api.trackEvent({ user_id: getUserId(), event_name: 'audio_started', properties: { lesson_id: Number(id), source: 'curated_tts', rate } });
+    };
+    audio.onpause = () => audio.currentTime < audio.duration && setAudioState('paused');
+    audio.onended = () => setAudioState('idle');
+    audio.onerror = () => {
+      setAudioState('fallback');
+      void api.trackEvent({ user_id: getUserId(), event_name: 'audio_failed', properties: { lesson_id: Number(id), url: resolvedUrl.slice(0, 180), online: navigator.onLine } });
+      deviceVoiceFallback(rate, text);
+    };
+    void audio.play().catch(() => audio.onerror?.(new Event('error')));
   };
   const transcribe = async (audio: Blob) => {
     const result = await api.transcribeSpeech({
@@ -254,7 +301,7 @@ export const Lesson: React.FC = () => {
           <div className="dq-lesson-preview">
             <small>{tr(lang, 'ФРАЗА УРОКА', 'SATZ DER LEKTION', 'LESSON PHRASE')}</small>
             <strong>{content.examples?.[0] || content.audio_text || 'Heute lerne ich Deutsch.'}</strong>
-            <button type="button" onClick={() => speak(0.85)} aria-label={tr(lang, 'Прослушать пример', 'Beispiel anhören', 'Listen to example')}><FaVolumeUp /></button>
+            <button type="button" onClick={() => playAudio(content.audio_url, content.audio_text, 0.92)} aria-label={tr(lang, 'Прослушать пример', 'Beispiel anhören', 'Listen to example')}><FaVolumeUp /></button>
           </div>
           <div className={`lesson-mode-pill ${learningProfile.mode}`}><span>{learningProfile.mode === 'supported'
             ? tr(lang, "С подсказками", "Mit Hinweisen", "Guided")
@@ -279,10 +326,10 @@ export const Lesson: React.FC = () => {
           <h1>{tr(lang, "Сначала услышь смысл", "Höre zuerst die Bedeutung", "Hear the meaning first")}</h1>
           <div className="example-sentence"><small>DE</small><strong>{content.examples?.[0] || "Heute lerne ich Deutsch."}</strong></div>
           <div className="audio-controls">
-            <button type="button" onClick={() => speak(0.9)}>
+            <button type="button" onClick={() => playAudio(content.audio_url, content.audio_text, 0.92)}>
               <FaVolumeUp /> {tr(lang, "Обычно", "Normal", "Normal")}
             </button>
-            <button type="button" onClick={() => speak(0.65)}>
+            <button type="button" onClick={() => playAudio(content.audio_url, content.audio_text, 0.72)}>
               <FaVolumeUp /> {tr(lang, "Медленно", "Langsam", "Slow")}
             </button>
           </div>
@@ -307,18 +354,21 @@ export const Lesson: React.FC = () => {
           <div className="lesson-task-surface">
           {(activeExercise.type === "listening" || activeExercise.type === "listening_choice") && (
             <div className="listening-challenge simple">
-              <button type="button" className="listen-main" onClick={() => speak(0.9, activeExercise.audio_text)}><FaVolumeUp /> {tr(lang, "Слушать", "Anhören", "Listen")}</button>
-              <button type="button" className="listen-slow" onClick={() => speak(0.7, activeExercise.audio_text)}>{tr(lang, "Медленно", "Langsam", "Slow")}</button>
+              <button type="button" className={`listen-main ${audioState}`} onClick={() => playAudio(activeExercise.audio_url, activeExercise.audio_text, 0.92)}><FaVolumeUp /> {audioState === 'loading' ? tr(lang, 'Загрузка…', 'Wird geladen…', 'Loading…') : audioState === 'paused' ? tr(lang, 'Продолжить', 'Fortsetzen', 'Continue') : tr(lang, "Слушать", "Anhören", "Listen")}</button>
+              <button type="button" className="listen-slow" onClick={() => playAudio(activeExercise.audio_url, activeExercise.audio_text, 0.72)}>{tr(lang, "Медленно", "Langsam", "Slow")}</button>
             </div>
           )}
           {(showTranscript || easyMode) && activeExercise.audio_text && <div className="listening-transcript"><small>{tr(lang, 'ТЕКСТ', 'TEXT', 'TRANSCRIPT')}</small><span>{activeExercise.audio_text}</span></div>}
-          <ExerciseInteraction exercise={{ ...activeExercise, id: `${id}-${exerciseIndex}-${retried[exerciseIndex] ? 'retry' : 'first'}` }} answer={answer} onAnswer={setAnswer} disabled={checked !== null} lang={lang} onAudio={sessionId ? transcribe : undefined} guided={easyMode || exerciseKind(activeExercise) === 'repair'} />
+          <ExerciseInteraction exercise={{ ...activeExercise, id: `${id}-${exerciseIndex}-${retried[exerciseIndex] ? 'retry' : 'first'}` }} answer={answer} onAnswer={setAnswer} disabled={checked !== null} lang={lang} onAudio={sessionId ? transcribe : undefined} onPlayAudio={playAudio} guided={easyMode || exerciseKind(activeExercise) === 'repair'} />
           </div>
             {speechResult?.transcript && (
               <div className="speech-result">
                 <small>{tr(lang, "РАСПОЗНАНО", "ERKANNT", "RECOGNISED")}</small>
                 <strong>“{speechResult.transcript}”</strong>
-                {speechResult.match && <span>{tr(lang, `Совпадение слов: ${speechResult.match.score}%`, `Wortübereinstimmung: ${speechResult.match.score}%`, `Word match: ${speechResult.match.score}%`)}</span>}
+                {speechResult.match && <span>{speechResult.match.missing_words?.length
+                  ? tr(lang, 'Некоторые ключевые слова не распознаны', 'Einige Schlüsselwörter wurden nicht erkannt', 'Some key words were not recognised')
+                  : tr(lang, 'Ключевые слова распознаны', 'Die Schlüsselwörter wurden erkannt', 'Key words were recognised')}</span>}
+                {speechResult.match?.missing_words?.length > 0 && <div className="speech-missing-words"><small>{tr(lang, 'НЕ РАСПОЗНАНО', 'NICHT ERKANNT', 'NOT RECOGNISED')}</small>{speechResult.match.missing_words.map((word: string) => <b key={word}>{word}</b>)}</div>}
                 <em>{tr(lang, "Это оценка распознанных слов, не акцента или фонетики.", "Bewertet werden erkannte Wörter, nicht Akzent oder Phonetik.", "This measures recognised words, not accent or phonetics.")}</em>
               </div>
             )}

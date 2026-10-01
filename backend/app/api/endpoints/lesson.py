@@ -62,7 +62,8 @@ async def get_lesson(lesson_id: int, lang: str = "en", db: Session = Depends(get
         int(mastery.correct_streak or 0) if mastery else 0,
     )
     audio_path = Path(__file__).resolve().parents[3] / "static" / "audio" / f"lesson_{lesson.id}.mp3"
-    public_content["audio_url"] = f"/media/audio/lesson_{lesson.id}.mp3" if audio_path.exists() else None
+    if not public_content.get("audio_url"):
+        public_content["audio_url"] = f"/media/audio/lesson_{lesson.id}.mp3" if audio_path.exists() else None
     for exercise in public_content.get("exercises", []):
         exercise.pop("answer", None)
         exercise.pop("accepted_answers", None)

@@ -21,6 +21,7 @@ export type LearningExercise = {
   hint?: string;
   model_answer?: string;
   audio_text?: string;
+  audio_url?: string;
   analogy_source?: string;
   analogy_target?: string;
   pattern_label?: string;
@@ -29,6 +30,7 @@ export type LearningExercise = {
     goal: string;
     placeholder?: string;
     model?: string;
+    audio_url?: string;
   }>;
   mission_role?: 'final' | string;
 };

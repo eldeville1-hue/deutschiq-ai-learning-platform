@@ -697,6 +697,7 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .exercise-speak>svg{color:var(--dq-gold);font-size:25px}
 .exercise-speak>strong{font-size:13px;color:var(--dq-muted)}
 .exercise-speak>span{color:var(--dq-text);font-size:18px;line-height:1.45;font-weight:700}
+.repeat-listen{min-height:42px;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 13px;border:1px solid rgba(244,191,85,.24);border-radius:12px;background:rgba(244,191,85,.07);color:var(--dq-gold-soft);font:inherit;font-size:12px;font-weight:800}
 .speak-fallback{width:100%;color:var(--dq-muted);font-size:12px;text-align:left}
 .speak-fallback summary{padding:8px 0;text-align:center;cursor:pointer}
 .speak-fallback label{display:grid;gap:7px;margin-top:8px}
@@ -704,7 +705,10 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .listening-challenge.simple{display:grid;grid-template-columns:1fr auto;gap:9px;padding:0;border:0;background:transparent}
 .listening-challenge.simple button{min-height:54px;border-radius:16px;font:inherit;font-weight:800}
 .listening-challenge .listen-main{border:0;background:var(--dq-gold);color:#10151e}
+.listening-challenge .listen-main.playing{box-shadow:0 0 0 4px rgba(244,191,85,.13)}
 .listening-challenge .listen-slow{padding:0 16px;border:1px solid var(--dq-border);background:var(--dq-surface);color:var(--dq-muted)}
+.conversation-bubble.partner{grid-template-columns:1fr auto;align-items:center}.conversation-bubble.partner p{grid-column:1/-1}.conversation-audio{width:30px;height:30px;display:grid;place-items:center;border:1px solid var(--dq-border);border-radius:9px;background:rgba(130,174,248,.07);color:var(--dq-blue)}
+.speech-missing-words{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.speech-missing-words small{width:100%;color:var(--dq-muted);font-size:8px;letter-spacing:.1em}.speech-missing-words b{padding:5px 8px;border:1px solid rgba(244,191,85,.2);border-radius:8px;background:rgba(244,191,85,.06);color:var(--dq-gold-soft);font-size:11px}
 
 .precision-lesson .exercise-step>.primary-action{min-height:58px;margin-top:auto;border-radius:17px;font-size:15px}
 .precision-lesson .answer-feedback{grid-template-columns:28px minmax(0,1fr);gap:10px;padding:15px;border-radius:18px}

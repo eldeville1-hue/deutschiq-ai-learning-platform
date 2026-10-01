@@ -832,7 +832,24 @@ def build_foundation_content(row: tuple, level: str) -> dict:
                 ),
             }
             experience_type, experience_labels, exercises, practice_path = lesson_shapes[archetype]
+            audio_base = f"/media/audio/a1/{topic}"
+            for item in exercises:
+                if item.get("type") == "listening_choice":
+                    item["audio_url"] = f"{audio_base}/model.mp3?v=11"
+                elif item.get("type") == "repeat":
+                    item["audio_url"] = f"{audio_base}/repeat.mp3?v=11"
+                elif item.get("type") == "dialogue":
+                    item["conversation_turns"] = [
+                        {**turn, "audio_url": f"{audio_base}/turn-{index}.mp3?v=11"}
+                        for index, turn in enumerate(item.get("conversation_turns") or [], start=1)
+                    ]
+                    for localized in (item.get("i18n") or {}).values():
+                        localized["conversation_turns"] = [
+                            {**turn, "audio_url": f"{audio_base}/turn-{index}.mp3?v=11"}
+                            for index, turn in enumerate(localized.get("conversation_turns") or [], start=1)
+                        ]
         else:
+            audio_base = None
             experience_type = "build_and_use"
             experience_labels = ("Собери и используй", "Bauen und anwenden", "Build and use")
             practice_path = (("Собрать", "Bauen", "Build"), ("Перенести", "Übertragen", "Transfer"), ("Услышать", "Hören", "Hear"), ("Ответить", "Antworten", "Respond"))
@@ -842,6 +859,8 @@ def build_foundation_content(row: tuple, level: str) -> dict:
             "module_step":((day - 1) % 5) + 1,"module_size":5,"checkpoint":bool(starter.get("checkpoint")),
             "experience_type":experience_type,"experience_label":experience_labels[0],
             "practice_path":[item[0] for item in practice_path],
+            "audio_url":f"{audio_base}/model.mp3?v=11" if audio_base else None,
+            "audio_source":"curated_tts" if audio_base else "device_voice_fallback",
             "title":title_ru,"objective":can_do_ru,"can_do":can_do_ru,
             "communication_goal":task_ru,"mission":task_ru,"success_evidence":can_do_ru,"scenario":scenario_ru,"rule":rule_ru,
             "examples":[model,starter["alternate"],f"❌ {wrong}"],"audio_text":model,"cefr":level,

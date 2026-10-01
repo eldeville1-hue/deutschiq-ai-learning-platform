@@ -16,7 +16,9 @@ def cache_control_for_path(path: str, content_type: str = "") -> str | None:
     if path.startswith("/assets/"):
         return "public, max-age=31536000, immutable"
     if path.startswith("/media/audio/"):
-        return "public, max-age=604800"
+        # Audio URLs carry a release query version, so the relatively large
+        # lesson library can stay on-device without being downloaded again.
+        return "public, max-age=31536000, immutable"
     if not path.startswith("/api/") and ("text/html" in content_type or "." not in path.rsplit("/", 1)[-1]):
         return "no-cache"
     return None
