@@ -47,6 +47,11 @@ def curriculum_journey_issues(lessons, expected_lessons: int = 20) -> list[str]:
     checkpoints = [int((item.content or {}).get("day") or 0) for item in ordered if (item.content or {}).get("checkpoint")]
     if checkpoints != [5, 10, 15, 20]:
         issues.append("journey:checkpoint_sequence_invalid")
+    sequences = [tuple(item.get("type") for item in ((lesson.content or {}).get("exercises") or [])) for lesson in ordered]
+    if len(set(sequences)) < 4:
+        issues.append("journey:exercise_shapes_too_repetitive")
+    if any(current == previous for previous, current in zip(sequences, sequences[1:])):
+        issues.append("journey:adjacent_exercise_shapes_repeat")
     for index, lesson in enumerate(ordered):
         content = lesson.content or {}
         if index == 0 and content.get("prerequisites"):

@@ -784,10 +784,64 @@ def build_foundation_content(row: tuple, level: str) -> dict:
                 {"question":"Say the sentence aloud.","explanation":"Speak calmly. The key words should be clear.","accessibility_label":"Repeat the German sentence"},
             ),
         ]
+        if level == "A1":
+            context_exercise = _localized(
+                {"id":f"{exercise_prefix}-{day}-context","type":"context_choice","stage":"independent","question":f"Ситуация: {scenario_ru} Что ты скажешь?","answer":model,"accepted_answers":[model],"options":[model,wrong,"Danke, gleichfalls!"],"explanation":rule_ru,"misconception":"foundation_mission_context","accessibility_label":"Выбери естественный ответ для ситуации"},
+                {"question":f"Ситуация: {scenario_ru} Что ты скажешь?","explanation":rule_ru,"accessibility_label":"Выбери естественный ответ для ситуации"},
+                {"question":f"Situation: {scenario_de} Was sagst du?","explanation":rule_de,"accessibility_label":"Eine natürliche Antwort für die Situation wählen"},
+                {"question":f"Situation: {scenario_en} What would you say?","explanation":rule_en,"accessibility_label":"Choose a natural reply for the situation"},
+            )
+            repair_exercise = _localized(
+                {"id":f"{exercise_prefix}-{day}-repair","type":"error_repair","stage":"guided","question":f"Исправь только ошибку: {wrong}","answer":model,"model_answer":model,"accepted_answers":[model,model.rstrip(".?!")],"hint":rule_ru,"explanation":rule_ru,"misconception":"foundation_mission_form","accessibility_label":"Исправь ошибку в немецкой фразе"},
+                {"question":f"Исправь только ошибку: {wrong}","hint":rule_ru,"explanation":rule_ru,"accessibility_label":"Исправь ошибку в немецкой фразе"},
+                {"question":f"Korrigiere nur den Fehler: {wrong}","hint":rule_de,"explanation":rule_de,"accessibility_label":"Fehler im deutschen Satz korrigieren"},
+                {"question":f"Correct only the mistake: {wrong}","hint":rule_en,"explanation":rule_en,"accessibility_label":"Correct the mistake in the German sentence"},
+            )
+            reorder_exercise, analogy_exercise, listening_exercise, dialogue_exercise, repeat_exercise = exercises
+            archetype = ((day - 1) % 5) + 1
+            lesson_shapes = {
+                1: (
+                    "build_and_use",
+                    ("Собери и используй", "Bauen und anwenden", "Build and use"),
+                    [reorder_exercise, analogy_exercise, listening_exercise, dialogue_exercise, repeat_exercise],
+                    (("Собрать", "Bauen", "Build"), ("Перенести", "Übertragen", "Transfer"), ("Услышать", "Hören", "Hear"), ("Ответить", "Antworten", "Respond")),
+                ),
+                2: (
+                    "listen_and_reply",
+                    ("Услышь и ответь", "Hören und antworten", "Listen and reply"),
+                    [{**listening_exercise, "stage":"guided"}, context_exercise, {**reorder_exercise, "stage":"independent"}, dialogue_exercise, repeat_exercise],
+                    (("Услышать", "Hören", "Hear"), ("Выбрать", "Wählen", "Choose"), ("Собрать", "Bauen", "Build"), ("Ответить", "Antworten", "Respond")),
+                ),
+                3: (
+                    "notice_and_repair",
+                    ("Заметь и исправь", "Erkennen und korrigieren", "Notice and repair"),
+                    [repair_exercise, context_exercise, listening_exercise, dialogue_exercise, repeat_exercise],
+                    (("Исправить", "Korrigieren", "Repair"), ("Выбрать", "Wählen", "Choose"), ("Проверить слух", "Hören", "Listen"), ("Применить", "Anwenden", "Use")),
+                ),
+                4: (
+                    "transfer_to_life",
+                    ("Перенеси в жизнь", "In den Alltag übertragen", "Transfer to real life"),
+                    [{**analogy_exercise, "stage":"guided"}, listening_exercise, context_exercise, dialogue_exercise, repeat_exercise],
+                    (("Узнать модель", "Muster erkennen", "Spot pattern"), ("Услышать", "Hören", "Hear"), ("Решить", "Entscheiden", "Decide"), ("Использовать", "Anwenden", "Use")),
+                ),
+                5: (
+                    "conversation_checkpoint",
+                    ("Разговорная проверка", "Gesprächs-Check", "Conversation checkpoint"),
+                    [{**listening_exercise, "stage":"guided"}, {**repair_exercise, "stage":"independent"}, analogy_exercise, dialogue_exercise, repeat_exercise],
+                    (("Понять", "Verstehen", "Understand"), ("Исправить", "Korrigieren", "Repair"), ("Перенести", "Übertragen", "Transfer"), ("Пройти миссию", "Mission lösen", "Complete mission")),
+                ),
+            }
+            experience_type, experience_labels, exercises, practice_path = lesson_shapes[archetype]
+        else:
+            experience_type = "build_and_use"
+            experience_labels = ("Собери и используй", "Bauen und anwenden", "Build and use")
+            practice_path = (("Собрать", "Bauen", "Build"), ("Перенести", "Übertragen", "Transfer"), ("Услышать", "Hören", "Hear"), ("Ответить", "Antworten", "Respond"))
         return {
-            "day":day,"week":module,"track":level,"module":module,"quality_version":8,
+            "day":day,"week":module,"track":level,"module":module,"quality_version":10 if level == "A1" else 8,
             "learning_method":"mission_loop_v1","module_title":module_title_ru,
             "module_step":((day - 1) % 5) + 1,"module_size":5,"checkpoint":bool(starter.get("checkpoint")),
+            "experience_type":experience_type,"experience_label":experience_labels[0],
+            "practice_path":[item[0] for item in practice_path],
             "title":title_ru,"objective":can_do_ru,"can_do":can_do_ru,
             "communication_goal":task_ru,"mission":task_ru,"success_evidence":can_do_ru,"scenario":scenario_ru,"rule":rule_ru,
             "examples":[model,starter["alternate"],f"❌ {wrong}"],"audio_text":model,"cefr":level,
@@ -796,11 +850,11 @@ def build_foundation_content(row: tuple, level: str) -> dict:
             "recall_prompt":"Закрой пример и произнеси свою версию без подсказки.",
             "repair_flow":{"mode":"targeted_retry","contrast_before_retry":True,"max_immediate_retries":1},
             "delayed_review":delayed_review,
-            "content_review":{"status":"approved","version":"a1-a2-mastery-v8","languages":{"ru":"reviewed","de":"reviewed"}},
+            "content_review":{"status":"approved","version":"a1-varied-experiences-v10" if level == "A1" else "a1-a2-mastery-v8","languages":{"ru":"reviewed","de":"reviewed"}},
             "i18n":{
-                "ru":{"title":title_ru,"module_title":module_title_ru,"objective":can_do_ru,"can_do":can_do_ru,"communication_goal":task_ru,"mission":task_ru,"success_evidence":can_do_ru,"scenario":scenario_ru,"rule":rule_ru,"recall_prompt":"Закрой пример и произнеси свою версию без подсказки."},
-                "de":{"title":title_de,"module_title":module_title_de,"objective":can_do_de,"can_do":can_do_de,"communication_goal":task_de,"mission":task_de,"success_evidence":can_do_de,"scenario":scenario_de,"rule":rule_de,"recall_prompt":"Verdecke das Beispiel und sage deine eigene Version ohne Hilfe."},
-                "en":{"title":title_en,"module_title":module_title_en,"objective":can_do_en,"can_do":can_do_en,"communication_goal":task_en,"mission":task_en,"success_evidence":can_do_en,"scenario":scenario_en,"rule":rule_en,"recall_prompt":"Hide the example and say your own version without help."},
+                "ru":{"title":title_ru,"module_title":module_title_ru,"objective":can_do_ru,"can_do":can_do_ru,"communication_goal":task_ru,"mission":task_ru,"success_evidence":can_do_ru,"scenario":scenario_ru,"rule":rule_ru,"recall_prompt":"Закрой пример и произнеси свою версию без подсказки.","experience_label":experience_labels[0],"practice_path":[item[0] for item in practice_path]},
+                "de":{"title":title_de,"module_title":module_title_de,"objective":can_do_de,"can_do":can_do_de,"communication_goal":task_de,"mission":task_de,"success_evidence":can_do_de,"scenario":scenario_de,"rule":rule_de,"recall_prompt":"Verdecke das Beispiel und sage deine eigene Version ohne Hilfe.","experience_label":experience_labels[1],"practice_path":[item[1] for item in practice_path]},
+                "en":{"title":title_en,"module_title":module_title_en,"objective":can_do_en,"can_do":can_do_en,"communication_goal":task_en,"mission":task_en,"success_evidence":can_do_en,"scenario":scenario_en,"rule":rule_en,"recall_prompt":"Hide the example and say your own version without help.","experience_label":experience_labels[2],"practice_path":[item[2] for item in practice_path]},
             },
             "exercises":exercises,
         }

@@ -248,7 +248,7 @@ export const Lesson: React.FC = () => {
       </div>}
       {step === 0 && (
         <section className="lesson-step dq-lesson-intro">
-          <div className="dq-lesson-label"><span>{content.cefr || lesson.level}</span><small>{tr(lang, "НОВЫЙ НАВЫК", "NEUES LERNZIEL", "NEW SKILL")}</small></div>
+          <div className="dq-lesson-label"><span>{content.cefr || lesson.level}</span><small>{content.experience_label || tr(lang, "НОВЫЙ НАВЫК", "NEUES LERNZIEL", "NEW SKILL")}</small></div>
           <h1>{cleanTitle(topicLabel(content.title || lesson.topic, lang))}</h1>
           <p className="dq-lesson-scenario">{content.scenario || tr(lang, 'Короткая реальная ситуация на немецком.', 'Eine kurze echte Situation auf Deutsch.', 'A short real-life situation in German.')}</p>
           <div className="dq-lesson-preview">
@@ -265,7 +265,7 @@ export const Lesson: React.FC = () => {
           {content.mission && <div className="lesson-mission-brief"><small>{tr(lang, 'ТВОЯ МИССИЯ', 'DEINE MISSION', 'YOUR MISSION')}</small><strong>{content.mission}</strong></div>}
           <details className="lesson-optional-rule"><summary>{tr(lang, 'Короткое правило', 'Kurze Regel', 'Quick rule')}</summary><div>{content.rule}</div></details>
           <div className="lesson-practice-path" aria-label={tr(lang, 'Путь урока', 'Lektionsweg', 'Lesson path')}>
-            {[tr(lang, 'Услышать', 'Hören', 'Hear'), tr(lang, 'Собрать', 'Bauen', 'Build'), tr(lang, 'Ответить', 'Antworten', 'Respond'), tr(lang, 'Использовать', 'Anwenden', 'Use')].map((label, index) => <span key={label}><i>{index + 1}</i>{label}</span>)}
+            {(content.practice_path || [tr(lang, 'Услышать', 'Hören', 'Hear'), tr(lang, 'Собрать', 'Bauen', 'Build'), tr(lang, 'Ответить', 'Antworten', 'Respond'), tr(lang, 'Использовать', 'Anwenden', 'Use')]).map((label: string, index: number) => <span key={`${label}-${index}`}><i>{index + 1}</i>{label}</span>)}
           </div>
           <button className="primary-action dq-lesson-action" onClick={next}>
             {tr(lang, "Понять на примере", "Am Beispiel verstehen", "Understand with an example")}{" "}
