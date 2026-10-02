@@ -1,5 +1,6 @@
 # backend/app/main.py
 from contextlib import asynccontextmanager
+import asyncio
 import logging
 import time
 import uuid
@@ -13,6 +14,7 @@ import os
 from app.core.config import settings
 from app.core.database import engine
 from sqlalchemy import text
+from aiogram.exceptions import AiogramError
 from aiogram.types import MenuButtonWebApp, WebAppInfo
 from app.bot.main import bot, dp
 from app.core.cloud_runtime import cache_control_for_path, public_origin
@@ -26,19 +28,26 @@ BUILD_COMMIT = os.getenv("RENDER_GIT_COMMIT", os.getenv("GIT_COMMIT", "local"))[
 async def lifespan(_: FastAPI):
     if settings.BOT_MODE == "webhook":
         base_url = settings.WEBAPP_URL.rstrip("/")
-        await bot.set_webhook(
-            url=f"{base_url}{settings.TELEGRAM_WEBHOOK_PATH}",
-            secret_token=settings.TELEGRAM_WEBHOOK_SECRET,
-            drop_pending_updates=False,
-            allowed_updates=dp.resolve_used_update_types(),
-        )
-        await bot.set_chat_menu_button(
-            menu_button=MenuButtonWebApp(
-                text="OPEN DeutschIQ",
-                web_app=WebAppInfo(url=settings.WEBAPP_URL),
+        try:
+            async with asyncio.timeout(15):
+                await bot.set_webhook(
+                    url=f"{base_url}{settings.TELEGRAM_WEBHOOK_PATH}",
+                    secret_token=settings.TELEGRAM_WEBHOOK_SECRET,
+                    drop_pending_updates=False,
+                    allowed_updates=dp.resolve_used_update_types(),
+                )
+                await bot.set_chat_menu_button(
+                    menu_button=MenuButtonWebApp(
+                        text="OPEN DeutschIQ",
+                        web_app=WebAppInfo(url=settings.WEBAPP_URL),
+                    )
+                )
+            logger.info("Telegram webhook configured")
+        except (TimeoutError, AiogramError) as exc:
+            logger.warning(
+                "Telegram webhook setup unavailable; continuing API startup",
+                extra={"error": str(exc)},
             )
-        )
-        logger.info("Telegram webhook configured")
     try:
         yield
     finally:
