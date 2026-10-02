@@ -12,7 +12,8 @@ from app.models.event import ProductEvent
 from app.models.learning import ExerciseAttempt, LearningSession
 from app.models.lesson import Lesson
 from app.models.user import User
-from app.models.beta import BetaEnrollment, BetaInvite
+from app.models.beta import BetaAcceptanceCheck, BetaEnrollment, BetaInvite
+from app.services.beta_acceptance import ACCEPTANCE_CATALOG, acceptance_report
 from app.services.beta_insights import beta_readiness, exercise_health, lesson_content_health, retention_cohorts, summarize_events, tester_progress
 from app.services.bot_links import telegram_beta_invite_url
 from app.services.content_i18n import localize_lesson_content, normalize_language
@@ -34,6 +35,11 @@ class InviteRequest(BaseModel):
 class InviteBatchRequest(BaseModel):
     label_prefix: str = Field(default="Beta tester", min_length=1, max_length=64)
     count: int = Field(default=15, ge=1, le=50)
+
+
+class AcceptanceUpdate(BaseModel):
+    passed: bool
+    notes: str = Field(default="", max_length=500)
 
 
 @router.get("/curriculum", dependencies=[Depends(require_control_key)])
@@ -122,6 +128,22 @@ async def deactivate_invite(invite_id: int, db: Session = Depends(get_db)):
     return {"ok": True}
 
 
+@router.put("/acceptance/{check_id}", dependencies=[Depends(require_control_key)])
+async def update_acceptance_check(check_id: str, payload: AcceptanceUpdate, db: Session = Depends(get_db)):
+    valid_ids = {item[0] for item in ACCEPTANCE_CATALOG}
+    if check_id not in valid_ids:
+        raise HTTPException(status_code=404, detail="Unknown acceptance check")
+    check = db.query(BetaAcceptanceCheck).filter(BetaAcceptanceCheck.check_id == check_id).first()
+    if not check:
+        check = BetaAcceptanceCheck(check_id=check_id)
+        db.add(check)
+    check.passed = payload.passed
+    check.notes = payload.notes.strip() or None
+    db.commit()
+    db.refresh(check)
+    return {"id": check.check_id, "passed": check.passed, "notes": check.notes or "", "updated_at": check.updated_at.isoformat() if check.updated_at else None}
+
+
 @router.get("/beta", dependencies=[Depends(require_control_key)])
 async def beta_control_center(
     days: int = Query(default=30, ge=1, le=90),
@@ -135,6 +157,7 @@ async def beta_control_center(
     lessons = db.query(Lesson).all()
     enrollments = db.query(BetaEnrollment).all()
     invites = db.query(BetaInvite).order_by(BetaInvite.created_at.desc()).all()
+    acceptance = acceptance_report(db.query(BetaAcceptanceCheck).all())
     event_summary = summarize_events(events)
     all_sessions = db.query(LearningSession).all()
     session_users = {item.user_id for item in sessions}
@@ -148,7 +171,7 @@ async def beta_control_center(
     a1_lessons = [item for item in lessons if item.is_active and item.level == "A1"]
     content_health = lesson_content_health(a1_lessons, attempts, sessions, events, publication_blockers)
     journey_issues = curriculum_journey_issues(a1_lessons)
-    readiness = beta_readiness(content_health, event_summary, len(enrollments), len(session_users), journey_issues)
+    readiness = beta_readiness(content_health, event_summary, len(enrollments), len(session_users), journey_issues, acceptance)
     return {
         "window_days": days,
         "generated_at": datetime.now().isoformat(),
@@ -177,6 +200,7 @@ async def beta_control_center(
         "content_health": content_health,
         "readiness": readiness,
         "retention": retention_cohorts(enrollments, all_sessions, datetime.now()),
+        "acceptance": acceptance,
         "beta": {
             "enrolled": len(enrollments),
             "onboarded": sum(1 for item in enrollments if item.consent and item.goal),

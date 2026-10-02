@@ -5,7 +5,11 @@ import hashlib
 import hmac
 
 
-RELIABILITY_EVENTS = {"api_failed", "api_slow", "client_error", "reload_loop_detected", "microphone_failed"}
+RELIABILITY_EVENTS = {
+    "api_failed", "api_slow", "client_error", "reload_loop_detected",
+    "microphone_failed", "audio_failed", "audio_interrupted", "offline_started",
+}
+RECOVERY_EVENTS = {"offline_recovered", "draft_restored", "checkpoint_draft_restored", "app_resumed"}
 
 
 def summarize_events(events) -> dict:
@@ -13,12 +17,15 @@ def summarize_events(events) -> dict:
     users_by_event: dict[str, set[int]] = defaultdict(set)
     modes: dict[str, dict[str, int]] = defaultdict(lambda: {"answers": 0, "correct": 0})
     reliability = Counter()
+    recovery = Counter()
     feedback = []
     for item in events:
         users_by_event[item.event_name].add(int(item.user_id))
         properties = item.properties or {}
         if item.event_name in RELIABILITY_EVENTS:
             reliability[item.event_name] += 1
+        if item.event_name in RECOVERY_EVENTS:
+            recovery[item.event_name] += 1
         if item.event_name == "exercise_answered":
             mode = str(properties.get("learning_mode") or "unknown")
             modes[mode]["answers"] += 1
@@ -43,6 +50,7 @@ def summarize_events(events) -> dict:
         "counts": dict(counts),
         "unique_users": {name: len(values) for name, values in users_by_event.items()},
         "reliability": dict(reliability),
+        "recovery": dict(recovery),
         "learning_modes": mode_rows,
         "feedback": list(reversed(feedback[-30:])),
     }
@@ -148,7 +156,7 @@ def lesson_content_health(lessons, attempts, sessions, events, blocker_for) -> l
     return rows
 
 
-def beta_readiness(content_health: list[dict], event_summary: dict, enrolled: int, active_learners: int, journey_issues: list[str] | None = None) -> dict:
+def beta_readiness(content_health: list[dict], event_summary: dict, enrolled: int, active_learners: int, journey_issues: list[str] | None = None, acceptance: dict | None = None) -> dict:
     """Return explicit release gates. Missing samples stay missing instead of becoming 0%."""
     a1_complete = len(content_health) == 20
     publish_ready = a1_complete and all(item["publish_ready"] for item in content_health)
@@ -165,6 +173,13 @@ def beta_readiness(content_health: list[dict], event_summary: dict, enrolled: in
         {"id": "telemetry", "label": "Starts, answers, skips, repairs and recall are measurable", "passed": True, "evidence": "V9 event contract active"},
         {"id": "sample", "label": "Closed beta has enough learning evidence", "passed": evidence_ready, "evidence": f"{active_learners} active · {completed_lessons} completions · {review_answers} recalls · {observed_lessons} measurable lessons"},
     ]
+    if acceptance is not None:
+        gates.insert(3, {
+            "id": "devices",
+            "label": "Real Telegram device acceptance is complete",
+            "passed": bool(acceptance.get("complete")),
+            "evidence": f"{acceptance.get('passed', 0)}/{acceptance.get('required', 0)} real-device checks passed",
+        })
     if not publish_ready or not journey_ready:
         stage = "blocked"
     elif needs_review:

@@ -75,7 +75,7 @@ class PlanTrackTests(unittest.TestCase):
             },
         }
         row = SimpleNamespace(id=7, content=content, topic="personal_details", level="A1", pillar="speaking", estimated_time=8)
-        result = plan_endpoints.serialize_plan_lesson(row, 1, "en", set(), {}, [], row)
+        result = plan_endpoints.serialize_plan_lesson(row, 1, "en", set(), {}, {}, [], row)
         self.assertEqual("Say where you are from", result["title"])
         self.assertEqual("Someone asks where you are from.", result["scenario"])
         self.assertEqual("You can answer briefly.", result["can_do"])

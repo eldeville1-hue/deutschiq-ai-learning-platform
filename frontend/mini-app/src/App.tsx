@@ -1,12 +1,13 @@
-import { lazy, Suspense, useEffect, useLayoutEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { AppBackButton } from './components/AppBackButton';
 import { BrandMark } from './components/BrandMark';
 import { BottomNav } from './components/BottomNav';
-import { getTelegramUser, hasTelegramIdentity } from './utils/user';
+import { getTelegramUser, getUserId, hasTelegramIdentity } from './utils/user';
 import { normalizeLanguage, tr } from './i18n/language';
+import { api } from './services/api';
 
 const Entry = lazy(() => import('./pages/Entry').then(module => ({ default: module.Entry })));
 const Dashboard = lazy(() => import('./pages/Dashboard').then(module => ({ default: module.Dashboard })));
@@ -27,14 +28,35 @@ const ControlCenter = lazy(() => import('./pages/ControlCenter').then(module => 
 function ConnectionStatus() {
   const { lang } = useLanguage();
   const [online, setOnline] = useState(() => navigator.onLine);
+  const wasOffline = useRef(!navigator.onLine);
+  const offlineAt = useRef(!navigator.onLine ? Date.now() : 0);
+  const offlinePage = useRef(location.pathname);
   useEffect(() => {
-    const connected = () => setOnline(true);
-    const disconnected = () => setOnline(false);
+    const connected = () => {
+      setOnline(true);
+      if (wasOffline.current && getUserId()) {
+        const durationSeconds = Math.max(0, Math.round((Date.now() - offlineAt.current) / 1000));
+        void api.trackEvent({ user_id: getUserId(), event_name: 'offline_started', properties: { page: offlinePage.current, duration_seconds: durationSeconds } });
+        void api.trackEvent({ user_id: getUserId(), event_name: 'offline_recovered', properties: { page: location.pathname, duration_seconds: durationSeconds } });
+      }
+      wasOffline.current = false;
+    };
+    const disconnected = () => {
+      setOnline(false);
+      wasOffline.current = true;
+      offlineAt.current = Date.now();
+      offlinePage.current = location.pathname;
+    };
+    const visibility = () => {
+      if (!document.hidden && getUserId()) void api.trackEvent({ user_id: getUserId(), event_name: 'app_resumed', properties: { page: location.pathname, online: navigator.onLine } });
+    };
     window.addEventListener('online', connected);
     window.addEventListener('offline', disconnected);
+    document.addEventListener('visibilitychange', visibility);
     return () => {
       window.removeEventListener('online', connected);
       window.removeEventListener('offline', disconnected);
+      document.removeEventListener('visibilitychange', visibility);
     };
   }, []);
   if (online) return null;

@@ -4,9 +4,15 @@ const betaData = {
   audience: { total_users: 12, new_users: 3, active_learners: 7, languages: { ru: 7, de: 5 } },
   funnel: { completion_rate: 71, lesson_completed: 5, invite_claimed: 9, onboarding_completed: 8, diagnostic_started: 8, diagnostic_completed: 7, lesson_started: 7 },
   sessions: { abandoned_events: 1, started: 7 },
-  events: { reliability: {}, learning_modes: [], feedback: [] },
+  events: { reliability: { audio_failed: 1 }, recovery: { offline_recovered: 2 }, learning_modes: [], feedback: [] },
   exercise_health: [], retention: { d1: { rate: 70, eligible: 10 }, d3: { rate: 55, eligible: 8 }, d7: { rate: 40, eligible: 5 } },
   beta: { enrolled: 9, onboarded: 8, invites: [] }, testers: [],
+  readiness: { stage: 'collecting_evidence', all_gates_passed: false, gates: [{ id: 'devices', label: 'Real Telegram device acceptance is complete', passed: false, evidence: '0/7 real-device checks passed' }] },
+  content_health: [],
+  acceptance: { passed: 0, required: 7, complete: false, checks: [
+    { id: 'iphone_journey', label: 'iPhone Telegram: diagnostic → lesson → review → checkpoint', passed: false, notes: '' },
+    { id: 'android_journey', label: 'Android Telegram: diagnostic → lesson → review → checkpoint', passed: false, notes: '' },
+  ] },
 };
 
 const catalog = [
@@ -36,6 +42,7 @@ async function mockOwnerApi(page: Page) {
     if (request.headers()['x-control-key'] !== 'owner-test-key') return route.fulfill({ status: 403, json: { detail: 'Invalid control-center key' } });
     if (url.pathname === '/api/internal/beta') return route.fulfill({ json: betaData });
     if (url.pathname === '/api/internal/curriculum') return route.fulfill({ json: catalog });
+    if (url.pathname.startsWith('/api/internal/acceptance/')) return route.fulfill({ json: { ok: true } });
     const match = url.pathname.match(/\/api\/internal\/curriculum\/(\d+)/);
     if (match) return route.fulfill({ json: lesson(Number(match[1]), url.searchParams.get('lang') || 'ru') });
     return route.fulfill({ status: 404, json: {} });
@@ -100,4 +107,15 @@ test('QA lesson uses real exercise and completion components', async ({ page }) 
   await page.getByLabel('Interface state').selectOption('complete');
   await expect(page.getByText('МИССИЯ ВЫПОЛНЕНА')).toBeVisible();
   await expect(page.getByText('Это уже твой немецкий')).toBeVisible();
+});
+
+test('owner records real-device acceptance without pretending automation passed it', async ({ page }) => {
+  const writes = await mockOwnerApi(page);
+  await unlock(page);
+  await page.getByRole('button', { name: 'Content health' }).click();
+  await expect(page.getByText('Human checks that browser automation cannot certify')).toBeVisible();
+  await expect(page.getByText('0/7 checks passed. Automated QA cannot change this gate.')).toBeVisible();
+  await page.getByPlaceholder('Device, OS, Telegram version, result or issue').first().fill('iPhone 15 · iOS 20 · Telegram 14');
+  await page.getByRole('button', { name: 'Mark passed' }).first().click();
+  await expect.poll(() => writes.some(item => item === 'PUT /api/internal/acceptance/iphone_journey')).toBe(true);
 });

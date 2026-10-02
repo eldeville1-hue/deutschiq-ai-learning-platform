@@ -11,8 +11,10 @@ const stageCopy: Record<string, { title: string; body: string }> = {
   evidence_ready: { title: 'A1 evidence gate passed', body: 'The closed beta has enough activity to begin evidence-led curriculum decisions.' },
 };
 
-export const ContentHealth: React.FC<{ data: any }> = ({ data }) => {
+export const ContentHealth: React.FC<{ data: any; onAcceptanceUpdate: (id: string, passed: boolean, notes: string) => Promise<void> }> = ({ data, onAcceptanceUpdate }) => {
   const [filter, setFilter] = useState('all');
+  const [notes, setNotes] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState('');
   const readiness = data.readiness || { stage: 'blocked', gates: [] };
   const copy = stageCopy[readiness.stage] || stageCopy.blocked;
   const rows = useMemo(() => (data.content_health || []).filter((item: any) => filter === 'all' || item.status === filter), [data.content_health, filter]);
@@ -30,6 +32,22 @@ export const ContentHealth: React.FC<{ data: any }> = ({ data }) => {
         <span>{gate.passed ? <FaCheck /> : <FaLock />}</span>
         <div><strong>{gate.label}</strong><small>{gate.evidence}</small></div>
       </article>)}
+    </section>
+
+    <section className="control-panel control-wide acceptance-panel">
+      <header><FaFlask /><div><small>REAL DEVICE ACCEPTANCE</small><h2>Human checks that browser automation cannot certify</h2></div></header>
+      <p className="acceptance-explainer">Mark a check only after completing it in the Telegram app on the named device or failure condition. Notes stay attached to the release gate.</p>
+      <div className="acceptance-list">
+        {(data.acceptance?.checks || []).map((check: any) => {
+          const currentNotes = notes[check.id] ?? check.notes ?? '';
+          return <article className={check.passed ? 'passed' : ''} key={check.id}>
+            <span>{check.passed ? <FaCheck /> : <FaLock />}</span>
+            <div><strong>{check.label}</strong><input maxLength={500} value={currentNotes} onChange={event => setNotes(value => ({ ...value, [check.id]: event.target.value }))} placeholder="Device, OS, Telegram version, result or issue" /></div>
+            <button type="button" disabled={saving === check.id} onClick={async () => { setSaving(check.id); try { await onAcceptanceUpdate(check.id, !check.passed, currentNotes); } finally { setSaving(''); } }}>{saving === check.id ? 'Saving…' : check.passed ? 'Reopen' : 'Mark passed'}</button>
+          </article>;
+        })}
+      </div>
+      <footer>{data.acceptance?.passed || 0}/{data.acceptance?.required || 0} checks passed. Automated QA cannot change this gate.</footer>
     </section>
 
     <section className="control-panel control-wide health-table-panel">

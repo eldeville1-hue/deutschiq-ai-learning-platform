@@ -56,6 +56,8 @@ class FrontendInternationalizationTests(unittest.TestCase):
         api = self.read("services/api.ts")
         self.assertIn("ConnectionStatus", app)
         self.assertIn("window.addEventListener('offline'", app)
+        self.assertIn("offline_recovered", app)
+        self.assertIn("app_resumed", app)
         self.assertIn("const readCache", api)
         self.assertIn("const writeCache", api)
 

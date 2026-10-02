@@ -33,9 +33,9 @@ def main() -> None:
     release = read_json(f"{origin}/api/version")
     if live.get("status") != "ok" or health.get("status") != "ok":
         raise RuntimeError(f"Unhealthy deployment: {health}")
-    if release.get("version") != "70.0.0" or release.get("release") != "a1-audio-resilience-v11":
+    if release.get("version") != "71.0.0" or release.get("release") != "a1-production-acceptance-v12":
         raise RuntimeError(f"Stale deployment: {release}")
-    if health.get("database") != "ok" or health.get("migrations") != "20260922_0009":
+    if health.get("database") != "ok" or health.get("migrations") != "20261002_0010":
         raise RuntimeError(f"Database is not release-ready: {health}")
     html, headers = read(f"{origin}/")
     markup = html.decode("utf-8")

@@ -26,3 +26,11 @@ class BetaEnrollment(Base):
     status = Column(String(20), nullable=False, default="active")
     joined_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
+
+class BetaAcceptanceCheck(Base):
+    __tablename__ = "beta_acceptance_checks"
+    id = Column(Integer, primary_key=True)
+    check_id = Column(String(64), unique=True, index=True, nullable=False)
+    passed = Column(Boolean, nullable=False, default=False)
+    notes = Column(String(500), nullable=True)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)

@@ -11,7 +11,7 @@ const lesson = {
   content: { cefr: 'B1', title: 'Konjunktiv II: advice', objective: 'Give polite advice.', mission: 'Respond to a friend with useful advice.', success_evidence: 'You can give polite advice in a real conversation.', rule: 'Use sollte for advice.', examples: ['Du solltest früher schlafen gehen.'], common_mistakes: [], exercises: [{ type: 'dialogue', stage: 'transfer', mission_role: 'final', question: 'Give a friend polite advice.' }] },
 };
 
-async function mockApi(page: Page, options: { completed?: boolean; dueCount?: number; reviews?: unknown[]; language?: string } = {}) {
+async function mockApi(page: Page, options: { completed?: boolean; dueCount?: number; reviews?: unknown[]; language?: string; events?: string[] } = {}) {
   await page.route('**/api/**', async route => {
     const { pathname } = new URL(route.request().url());
     if (pathname.includes('/api/user/state/')) return route.fulfill({ json: userState(options.completed ?? true, options.language || 'en') });
@@ -26,7 +26,11 @@ async function mockApi(page: Page, options: { completed?: boolean; dueCount?: nu
     if (pathname === '/api/lesson/77') return route.fulfill({ json: lesson });
     if (pathname.includes('/api/checkpoint/') && route.request().method() === 'GET') return route.fulfill({ json: { level: 'A1', pass_score: 70, format: 'independent_missions', items: [{ id: 0, lesson_id: 20, topic: 'a1_final', type: 'dialogue', stage: 'checkpoint', question: 'Introduce yourself and ask one question.', conversation_turns: [{ partner: 'Hallo! Erzähl kurz von dir.', goal: 'Introduce yourself.', placeholder: 'Reply independently in German…' }, { partner: 'Hast du eine Frage an mich?', goal: 'Ask one question.', placeholder: 'Reply independently in German…' }] }] } });
     if (pathname === '/api/checkpoint/submit') return route.fulfill({ json: { passed: true, score: 82, required: 70, completed_level: 'A1', unlocked_level: 'A2', recovery_topics: [], dimensions: { task_completion: 88, grammar: 78, vocabulary: 80, coherence: 82, register: 84 } } });
-    if (pathname === '/api/events') return route.fulfill({ status: 204 });
+    if (pathname === '/api/events') {
+      const payload = route.request().postDataJSON();
+      if (payload?.event_name) options.events?.push(payload.event_name);
+      return route.fulfill({ status: 204 });
+    }
     return route.fulfill({ json: {} });
   });
 }
@@ -59,6 +63,18 @@ test('returning user stays out of diagnostics after reload', async ({ page }) =>
   await page.context().setOffline(false);
   await expect(page.getByRole('status')).toHaveCount(0);
   await expectNoHorizontalOverflow(page);
+});
+
+test('offline recovery is visible to the owner without losing the learner screen', async ({ page }) => {
+  const events: string[] = [];
+  await mockApi(page, { completed: true, events });
+  await page.goto('/dashboard');
+  await page.context().setOffline(true);
+  await expect(page.getByRole('status')).toContainText('Offline');
+  await page.context().setOffline(false);
+  await expect(page.getByRole('status')).toHaveCount(0);
+  await expect.poll(() => events.includes('offline_started') && events.includes('offline_recovered')).toBe(true);
+  await expect(page.getByText('YOUR STEP TODAY')).toBeVisible();
 });
 
 test('daily start connects due review to the recommended lesson', async ({ page }) => {

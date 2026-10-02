@@ -2,6 +2,7 @@ import unittest
 from datetime import datetime, timedelta
 from types import SimpleNamespace
 
+from app.services.beta_acceptance import acceptance_report
 from app.services.beta_insights import beta_readiness, exercise_health, lesson_content_health, retention_cohorts, summarize_events
 
 
@@ -12,11 +13,15 @@ class BetaInsightsTests(unittest.TestCase):
             SimpleNamespace(user_id=7, event_name="exercise_answered", properties={"learning_mode": "supported", "correct": True}, created_at=now),
             SimpleNamespace(user_id=8, event_name="exercise_answered", properties={"learning_mode": "supported", "correct": False}, created_at=now),
             SimpleNamespace(user_id=7, event_name="api_failed", properties={"path": "/api/plan"}, created_at=now),
+            SimpleNamespace(user_id=7, event_name="audio_failed", properties={"lesson_id": 1}, created_at=now),
+            SimpleNamespace(user_id=7, event_name="offline_recovered", properties={"page": "/lesson/1"}, created_at=now),
             SimpleNamespace(user_id=7, event_name="beta_feedback", properties={"message": "Clear lesson", "language": "en", "page": "/lesson/1", "category": "unclear", "lesson_id": 1, "exercise_index": 2, "exercise_type": "reorder", "topic": "word_order"}, created_at=now),
         ]
         summary = summarize_events(events)
         self.assertEqual(50, summary["learning_modes"][0]["accuracy"])
         self.assertEqual(1, summary["reliability"]["api_failed"])
+        self.assertEqual(1, summary["reliability"]["audio_failed"])
+        self.assertEqual(1, summary["recovery"]["offline_recovered"])
         self.assertNotIn("user_id", summary["feedback"][0])
         self.assertEqual("word_order", summary["feedback"][0]["topic"])
         self.assertEqual(2, summary["feedback"][0]["exercise_index"])
@@ -82,6 +87,22 @@ class BetaInsightsTests(unittest.TestCase):
         result = beta_readiness(health, summary, enrolled=8, active_learners=6)
         self.assertEqual("evidence_ready", result["stage"])
         self.assertTrue(result["all_gates_passed"])
+
+    def test_real_device_acceptance_is_explicit_and_blocks_release_gate(self):
+        now = datetime.now()
+        partial = acceptance_report([
+            SimpleNamespace(check_id="iphone_journey", passed=True, notes="iPhone 15", updated_at=now),
+        ])
+        self.assertEqual(1, partial["passed"])
+        self.assertFalse(partial["complete"])
+        self.assertEqual(7, partial["required"])
+
+        health = [{"publish_ready": True, "status": "healthy"} for _ in range(20)]
+        summary = {"counts": {"lesson_completed": 10, "review_answered": 5}}
+        readiness = beta_readiness(health, summary, enrolled=8, active_learners=6, acceptance=partial)
+        device_gate = next(item for item in readiness["gates"] if item["id"] == "devices")
+        self.assertFalse(device_gate["passed"])
+        self.assertFalse(readiness["all_gates_passed"])
 
 
 if __name__ == "__main__":

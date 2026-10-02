@@ -20,6 +20,7 @@ ALLOWED_EVENTS = {
     "invite_claimed", "beta_onboarding_completed", "diagnostic_started",
     "diagnostic_completed",
     "audio_started", "audio_failed", "audio_interrupted",
+    "offline_started", "offline_recovered", "app_resumed",
 }
 
 

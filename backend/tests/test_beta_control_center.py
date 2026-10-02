@@ -8,6 +8,7 @@ from fastapi import HTTPException
 from app.api.endpoints.internal import curriculum_preview_catalog, curriculum_preview_lesson, require_control_key
 from app.core.config import settings
 from app.services.beta_insights import tester_alias, tester_progress
+from app.services.beta_acceptance import ACCEPTANCE_CATALOG
 
 
 class FakeLessonQuery:
@@ -69,6 +70,11 @@ class BetaControlCenterTests(unittest.TestCase):
         self.assertEqual(alias, tester_alias(123456, "test-secret"))
         self.assertTrue(alias.startswith("T-"))
         self.assertNotIn("123456", alias)
+
+    def test_acceptance_catalog_covers_real_telegram_failure_modes(self):
+        identifiers = {item[0] for item in ACCEPTANCE_CATALOG}
+        self.assertEqual(7, len(identifiers))
+        self.assertTrue({"iphone_journey", "android_journey", "offline_recovery", "audio_interruption", "microphone_denied", "cold_reopen"}.issubset(identifiers))
 
     def test_tester_progress_connects_journey_without_telegram_identity(self):
         now = datetime.now()
