@@ -69,6 +69,10 @@ test('offline recovery is visible to the owner without losing the learner screen
   const events: string[] = [];
   await mockApi(page, { completed: true, events });
   await page.goto('/dashboard');
+  // Wait for the learner screen before simulating a connection change. Taking
+  // the context offline during initial navigation races the mocked bootstrap in
+  // WebKit/slow CI runners and tests a failed load rather than recovery.
+  await expect(page.getByText('YOUR STEP TODAY')).toBeVisible();
   await page.context().setOffline(true);
   await expect(page.getByRole('status')).toContainText('Offline');
   await page.context().setOffline(false);

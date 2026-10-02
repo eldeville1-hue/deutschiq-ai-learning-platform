@@ -60,6 +60,10 @@ async function unlock(page: Page) {
 }
 
 test('owner QA stays protected and performs no learner writes', async ({ page }) => {
+  // This assertion targets the desktop owner workbench. Mobile projects still
+  // exercise the nested learner preview, but the workbench sidebar is hidden at
+  // those viewport widths by design.
+  await page.setViewportSize({ width: 1280, height: 1000 });
   const writes = await mockOwnerApi(page);
   await unlock(page);
   await expect(page.getByText('Ready to publish')).toBeVisible();
