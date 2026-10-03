@@ -34,6 +34,16 @@ export const ContentHealth: React.FC<{ data: any; onAcceptanceUpdate: (id: strin
       </article>)}
     </section>
 
+    <section className="control-panel control-wide">
+      <header><FaFlask /><div><small>A1–B2 RELEASE PATH</small><h2>Curriculum readiness by level</h2></div></header>
+      <div className="readiness-gates">
+        {(data.curriculum_readiness || []).map((track: any) => <article className={track.ready ? 'passed' : 'waiting'} key={track.level}>
+          <span>{track.ready ? <FaCheck /> : <FaLock />}</span>
+          <div><strong>{track.level} · {track.publish_ready_lessons}/{track.expected_lessons} publish-ready</strong><small>{track.journey_issues?.[0] || (track.ready ? 'Complete route passes publishing and journey gates' : `${track.lessons}/${track.expected_lessons} lessons available`)}</small></div>
+        </article>)}
+      </div>
+    </section>
+
     <section className="control-panel control-wide acceptance-panel">
       <header><FaFlask /><div><small>REAL DEVICE ACCEPTANCE</small><h2>Human checks that browser automation cannot certify</h2></div></header>
       <p className="acceptance-explainer">Mark a check only after completing it in the Telegram app on the named device or failure condition. Notes stay attached to the release gate.</p>

@@ -171,10 +171,25 @@ async def beta_control_center(
     a1_lessons = [item for item in lessons if item.is_active and item.level == "A1"]
     content_health = lesson_content_health(a1_lessons, attempts, sessions, events, publication_blockers)
     journey_issues = curriculum_journey_issues(a1_lessons)
+    curriculum_readiness = []
+    expected_counts = {"A1": 20, "A2": 20, "B1": 24, "B2": 16}
+    for level, expected in expected_counts.items():
+        track_lessons = [item for item in lessons if item.is_active and item.level == level]
+        blocked = [item for item in track_lessons if publication_blockers(item.content or {})]
+        issues = curriculum_journey_issues(track_lessons, expected) if level in {"A1", "A2"} else []
+        curriculum_readiness.append({
+            "level": level,
+            "lessons": len(track_lessons),
+            "expected_lessons": expected,
+            "publish_ready_lessons": len(track_lessons) - len(blocked),
+            "journey_issues": issues,
+            "ready": len(track_lessons) == expected and not blocked and not issues,
+        })
     readiness = beta_readiness(content_health, event_summary, len(enrollments), len(session_users), journey_issues, acceptance)
     return {
         "window_days": days,
         "generated_at": datetime.now().isoformat(),
+        "curriculum_readiness": curriculum_readiness,
         "audience": {
             "total_users": len(users),
             "new_users": sum(1 for item in users if item.created_at and item.created_at.replace(tzinfo=None) >= since),

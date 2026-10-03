@@ -169,7 +169,7 @@ class ContentQualityTests(unittest.TestCase):
                 exercise_types = {item["type"] for item in content["exercises"]}
                 self.assertTrue({"listening_choice", "dialogue", "repeat"}.issubset(exercise_types))
                 if level == "A2":
-                    self.assertEqual({"reorder", "analogy_choice", "listening_choice", "dialogue", "repeat"}, exercise_types)
+                    self.assertEqual(5, len(exercise_types))
                 self.assertEqual(3, len(set(content["examples"])))
                 self.assertLessEqual(len(content["exercises"][3]["target_patterns"]), 3)
                 for language in ("ru", "de", "en"):
@@ -218,6 +218,42 @@ class ContentQualityTests(unittest.TestCase):
         self.assertGreaterEqual(len(expected_urls), 80)
         audio_root = Path(__file__).resolve().parents[1] / "static" / "audio"
         self.assertEqual(84, len(expected_urls))
+        for url in expected_urls:
+            audio_file = audio_root / url.split("?", 1)[0].removeprefix("/media/audio/")
+            self.assertTrue(audio_file.is_file(), url)
+            self.assertGreater(audio_file.stat().st_size, 1_000, url)
+
+    def test_a2_is_a_varied_publishable_mission_path_with_stable_audio(self):
+        lessons = [build_foundation_content(row, "A2") for row in A2_CURRICULUM]
+        expected_urls = set()
+        self.assertEqual([5, 10, 15, 20], [item["day"] for item in lessons if item.get("checkpoint")])
+        self.assertEqual(5, len({item["experience_type"] for item in lessons}))
+        sequences = [tuple(exercise["type"] for exercise in item["exercises"]) for item in lessons]
+        self.assertEqual(5, len(set(sequences)))
+        self.assertFalse(any(left == right for left, right in zip(sequences, sequences[1:])))
+        for row, content in zip(A2_CURRICULUM, lessons):
+            topic = row[2]
+            prefix = f"/media/audio/a2/{topic}/"
+            self.assertEqual(13, content["quality_version"])
+            self.assertEqual("curated_tts", content["audio_source"])
+            self.assertEqual(f"{prefix}model.mp3?v=13", content["audio_url"])
+            expected_urls.add(content["audio_url"])
+            self.assertEqual([], validate_roadmap_content(content), f"A2 day {content['day']}")
+            self.assertEqual([], publication_blockers(content))
+            listening = next(item for item in content["exercises"] if item["type"] == "listening_choice")
+            repeat = next(item for item in content["exercises"] if item["type"] == "repeat")
+            dialogue = next(item for item in content["exercises"] if item["type"] == "dialogue")
+            self.assertEqual(f"{prefix}model.mp3?v=13", listening["audio_url"])
+            self.assertEqual(f"{prefix}repeat.mp3?v=13", repeat["audio_url"])
+            expected_urls.update((listening["audio_url"], repeat["audio_url"]))
+            self.assertTrue(all(turn.get("audio_url", "").startswith(prefix) for turn in dialogue["conversation_turns"]))
+            expected_urls.update(turn["audio_url"] for turn in dialogue["conversation_turns"])
+            for language in ("ru", "de", "en"):
+                localized = localize_lesson_content(content, language)
+                localized_dialogue = next(item for item in localized["exercises"] if item["type"] == "dialogue")
+                self.assertTrue(all(turn.get("audio_url") for turn in localized_dialogue["conversation_turns"]))
+        self.assertEqual(84, len(expected_urls))
+        audio_root = Path(__file__).resolve().parents[1] / "static" / "audio"
         for url in expected_urls:
             audio_file = audio_root / url.split("?", 1)[0].removeprefix("/media/audio/")
             self.assertTrue(audio_file.is_file(), url)
@@ -337,7 +373,7 @@ class ContentQualityTests(unittest.TestCase):
         lessons = [build_foundation_content(row, "A2") for row in A2_CURRICULUM]
 
         self.assertEqual(20, len(lessons))
-        self.assertTrue(all(item["quality_version"] == 8 for item in lessons))
+        self.assertTrue(all(item["quality_version"] == 13 for item in lessons))
         self.assertTrue(all(item["learning_method"] == "mission_loop_v1" for item in lessons))
         self.assertEqual([5, 10, 15, 20], [item["day"] for item in lessons if item.get("checkpoint")])
         self.assertEqual(4, len({item["module_title"] for item in lessons}))
@@ -348,10 +384,7 @@ class ContentQualityTests(unittest.TestCase):
             self.assertEqual(3, len(module_lessons[-1]["exercises"][3]["conversation_turns"]))
         for content in lessons:
             self.assertEqual([], validate_roadmap_content(content), f"A2 day {content['day']}")
-            self.assertEqual(
-                ["reorder", "analogy_choice", "listening_choice", "dialogue", "repeat"],
-                [exercise["type"] for exercise in content["exercises"]],
-            )
+            self.assertEqual(5, len({exercise["type"] for exercise in content["exercises"]}))
             final = [item for item in content["exercises"] if item.get("mission_role") == "final"]
             self.assertEqual(1, len(final))
             self.assertGreaterEqual(len(final[0]["conversation_turns"]), 2)

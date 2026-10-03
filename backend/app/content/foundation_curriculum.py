@@ -784,22 +784,21 @@ def build_foundation_content(row: tuple, level: str) -> dict:
                 {"question":"Say the sentence aloud.","explanation":"Speak calmly. The key words should be clear.","accessibility_label":"Repeat the German sentence"},
             ),
         ]
-        if level == "A1":
-            context_exercise = _localized(
+        context_exercise = _localized(
                 {"id":f"{exercise_prefix}-{day}-context","type":"context_choice","stage":"independent","question":f"Ситуация: {scenario_ru} Что ты скажешь?","answer":model,"accepted_answers":[model],"options":[model,wrong,"Danke, gleichfalls!"],"explanation":rule_ru,"misconception":"foundation_mission_context","accessibility_label":"Выбери естественный ответ для ситуации"},
                 {"question":f"Ситуация: {scenario_ru} Что ты скажешь?","explanation":rule_ru,"accessibility_label":"Выбери естественный ответ для ситуации"},
                 {"question":f"Situation: {scenario_de} Was sagst du?","explanation":rule_de,"accessibility_label":"Eine natürliche Antwort für die Situation wählen"},
                 {"question":f"Situation: {scenario_en} What would you say?","explanation":rule_en,"accessibility_label":"Choose a natural reply for the situation"},
             )
-            repair_exercise = _localized(
+        repair_exercise = _localized(
                 {"id":f"{exercise_prefix}-{day}-repair","type":"error_repair","stage":"guided","question":f"Исправь только ошибку: {wrong}","answer":model,"model_answer":model,"accepted_answers":[model,model.rstrip(".?!")],"hint":rule_ru,"explanation":rule_ru,"misconception":"foundation_mission_form","accessibility_label":"Исправь ошибку в немецкой фразе"},
                 {"question":f"Исправь только ошибку: {wrong}","hint":rule_ru,"explanation":rule_ru,"accessibility_label":"Исправь ошибку в немецкой фразе"},
                 {"question":f"Korrigiere nur den Fehler: {wrong}","hint":rule_de,"explanation":rule_de,"accessibility_label":"Fehler im deutschen Satz korrigieren"},
                 {"question":f"Correct only the mistake: {wrong}","hint":rule_en,"explanation":rule_en,"accessibility_label":"Correct the mistake in the German sentence"},
             )
-            reorder_exercise, analogy_exercise, listening_exercise, dialogue_exercise, repeat_exercise = exercises
-            archetype = ((day - 1) % 5) + 1
-            lesson_shapes = {
+        reorder_exercise, analogy_exercise, listening_exercise, dialogue_exercise, repeat_exercise = exercises
+        archetype = ((day - 1) % 5) + 1
+        lesson_shapes = {
                 1: (
                     "build_and_use",
                     ("Собери и используй", "Bauen und anwenden", "Build and use"),
@@ -830,37 +829,33 @@ def build_foundation_content(row: tuple, level: str) -> dict:
                     [{**listening_exercise, "stage":"guided"}, {**repair_exercise, "stage":"independent"}, analogy_exercise, dialogue_exercise, repeat_exercise],
                     (("Понять", "Verstehen", "Understand"), ("Исправить", "Korrigieren", "Repair"), ("Перенести", "Übertragen", "Transfer"), ("Пройти миссию", "Mission lösen", "Complete mission")),
                 ),
-            }
-            experience_type, experience_labels, exercises, practice_path = lesson_shapes[archetype]
-            audio_base = f"/media/audio/a1/{topic}"
-            for item in exercises:
-                if item.get("type") == "listening_choice":
-                    item["audio_url"] = f"{audio_base}/model.mp3?v=11"
-                elif item.get("type") == "repeat":
-                    item["audio_url"] = f"{audio_base}/repeat.mp3?v=11"
-                elif item.get("type") == "dialogue":
-                    item["conversation_turns"] = [
-                        {**turn, "audio_url": f"{audio_base}/turn-{index}.mp3?v=11"}
-                        for index, turn in enumerate(item.get("conversation_turns") or [], start=1)
+        }
+        experience_type, experience_labels, exercises, practice_path = lesson_shapes[archetype]
+        audio_version = 11 if level == "A1" else 13
+        audio_base = f"/media/audio/{level.lower()}/{topic}"
+        for item in exercises:
+            if item.get("type") == "listening_choice":
+                item["audio_url"] = f"{audio_base}/model.mp3?v={audio_version}"
+            elif item.get("type") == "repeat":
+                item["audio_url"] = f"{audio_base}/repeat.mp3?v={audio_version}"
+            elif item.get("type") == "dialogue":
+                item["conversation_turns"] = [
+                    {**turn, "audio_url": f"{audio_base}/turn-{index}.mp3?v={audio_version}"}
+                    for index, turn in enumerate(item.get("conversation_turns") or [], start=1)
+                ]
+                for localized in (item.get("i18n") or {}).values():
+                    localized["conversation_turns"] = [
+                        {**turn, "audio_url": f"{audio_base}/turn-{index}.mp3?v={audio_version}"}
+                        for index, turn in enumerate(localized.get("conversation_turns") or [], start=1)
                     ]
-                    for localized in (item.get("i18n") or {}).values():
-                        localized["conversation_turns"] = [
-                            {**turn, "audio_url": f"{audio_base}/turn-{index}.mp3?v=11"}
-                            for index, turn in enumerate(localized.get("conversation_turns") or [], start=1)
-                        ]
-        else:
-            audio_base = None
-            experience_type = "build_and_use"
-            experience_labels = ("Собери и используй", "Bauen und anwenden", "Build and use")
-            practice_path = (("Собрать", "Bauen", "Build"), ("Перенести", "Übertragen", "Transfer"), ("Услышать", "Hören", "Hear"), ("Ответить", "Antworten", "Respond"))
         return {
-            "day":day,"week":module,"track":level,"module":module,"quality_version":10 if level == "A1" else 8,
+            "day":day,"week":module,"track":level,"module":module,"quality_version":10 if level == "A1" else 13,
             "learning_method":"mission_loop_v1","module_title":module_title_ru,
             "module_step":((day - 1) % 5) + 1,"module_size":5,"checkpoint":bool(starter.get("checkpoint")),
             "experience_type":experience_type,"experience_label":experience_labels[0],
             "practice_path":[item[0] for item in practice_path],
-            "audio_url":f"{audio_base}/model.mp3?v=11" if audio_base else None,
-            "audio_source":"curated_tts" if audio_base else "device_voice_fallback",
+            "audio_url":f"{audio_base}/model.mp3?v={audio_version}",
+            "audio_source":"curated_tts",
             "title":title_ru,"objective":can_do_ru,"can_do":can_do_ru,
             "communication_goal":task_ru,"mission":task_ru,"success_evidence":can_do_ru,"scenario":scenario_ru,"rule":rule_ru,
             "examples":[model,starter["alternate"],f"❌ {wrong}"],"audio_text":model,"cefr":level,
@@ -869,7 +864,7 @@ def build_foundation_content(row: tuple, level: str) -> dict:
             "recall_prompt":"Закрой пример и произнеси свою версию без подсказки.",
             "repair_flow":{"mode":"targeted_retry","contrast_before_retry":True,"max_immediate_retries":1},
             "delayed_review":delayed_review,
-            "content_review":{"status":"approved","version":"a1-varied-experiences-v10" if level == "A1" else "a1-a2-mastery-v8","languages":{"ru":"reviewed","de":"reviewed"}},
+            "content_review":{"status":"approved","version":"a1-varied-experiences-v10" if level == "A1" else "a2-production-path-v13","languages":{"ru":"reviewed","de":"reviewed"}},
             "i18n":{
                 "ru":{"title":title_ru,"module_title":module_title_ru,"objective":can_do_ru,"can_do":can_do_ru,"communication_goal":task_ru,"mission":task_ru,"success_evidence":can_do_ru,"scenario":scenario_ru,"rule":rule_ru,"recall_prompt":"Закрой пример и произнеси свою версию без подсказки.","experience_label":experience_labels[0],"practice_path":[item[0] for item in practice_path]},
                 "de":{"title":title_de,"module_title":module_title_de,"objective":can_do_de,"can_do":can_do_de,"communication_goal":task_de,"mission":task_de,"success_evidence":can_do_de,"scenario":scenario_de,"rule":rule_de,"recall_prompt":"Verdecke das Beispiel und sage deine eigene Version ohne Hilfe.","experience_label":experience_labels[1],"practice_path":[item[1] for item in practice_path]},
