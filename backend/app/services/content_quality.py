@@ -35,17 +35,26 @@ def publication_blockers(content: dict) -> list[str]:
     return blockers
 
 
-def curriculum_journey_issues(lessons, expected_lessons: int = 20) -> list[str]:
+def curriculum_journey_issues(
+    lessons,
+    expected_lessons: int = 20,
+    expected_days: list[int] | None = None,
+    expected_checkpoints: list[int] | None = None,
+) -> list[str]:
     """Validate the complete ordered learning journey, not only isolated lessons."""
     ordered = sorted(lessons, key=lambda item: int((item.content or {}).get("day") or 999))
     issues = []
     if len(ordered) != expected_lessons:
         issues.append(f"journey:expected_{expected_lessons}_lessons:found_{len(ordered)}")
     days = [int((item.content or {}).get("day") or 0) for item in ordered]
-    if days != list(range(1, expected_lessons + 1)):
+    if expected_days is None:
+        expected_days = list(range(1, expected_lessons + 1))
+    if expected_checkpoints is None:
+        expected_checkpoints = [5, 10, 15, 20]
+    if days != expected_days:
         issues.append("journey:days_not_contiguous")
     checkpoints = [int((item.content or {}).get("day") or 0) for item in ordered if (item.content or {}).get("checkpoint")]
-    if checkpoints != [5, 10, 15, 20]:
+    if checkpoints != expected_checkpoints:
         issues.append("journey:checkpoint_sequence_invalid")
     sequences = [tuple(item.get("type") for item in ((lesson.content or {}).get("exercises") or [])) for lesson in ordered]
     if len(set(sequences)) < 4:

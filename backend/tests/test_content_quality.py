@@ -73,23 +73,28 @@ class ContentQualityTests(unittest.TestCase):
             self.assertEqual([], validate_roadmap_content(content), f"day {row[0]}")
             self.assertEqual("B1", content["track"])
             self.assertEqual("B1", content["cefr"])
-            self.assertEqual(5, content["quality_version"])
+            self.assertEqual(14, content["quality_version"])
             self.assertEqual(3, len(content["assessment_rubric"]))
             self.assertEqual(3, len(set(content["examples"])))
-            self.assertLessEqual(len(content["exercises"][3]["target_patterns"]), 3)
+            final = next(exercise for exercise in content["exercises"] if exercise.get("mission_role") == "final")
+            self.assertLessEqual(len(final["target_patterns"]), 3)
             self.assertEqual(5, len(content["exercises"]))
-            self.assertEqual("notice_build_use_reflect", content["learning_method"])
+            self.assertEqual("mission_loop_v1", content["learning_method"])
             self.assertEqual(5, len({exercise["id"] for exercise in content["exercises"]}))
             self.assertTrue(all(exercise.get("accessibility_label") for exercise in content["exercises"]))
-            self.assertTrue(content["exercises"][2].get("audio_text"))
-            self.assertTrue(content["exercises"][4].get("audio_text"))
-            self.assertNotEqual(content["exercises"][2].get("audio_text"), content["exercises"][4].get("audio_text"))
-            guided_types.add(content["exercises"][0]["type"])
+            listening = next(exercise for exercise in content["exercises"] if exercise["type"] == "listening_choice")
+            repeat = next(exercise for exercise in content["exercises"] if exercise["type"] == "repeat")
+            self.assertTrue(listening.get("audio_text"))
+            self.assertTrue(repeat.get("audio_text"))
+            self.assertNotEqual(listening.get("audio_text"), repeat.get("audio_text"))
+            guided_types.update(exercise["type"] for exercise in content["exercises"] if exercise["stage"] == "guided")
             self.assertTrue(all(exercise.get("misconception") for exercise in content["exercises"]))
             self.assertEqual(
                 {"context_choice", "dialogue", "listening_choice", "repeat"},
-                {exercise["type"] for exercise in content["exercises"][1:]},
+                {exercise["type"] for exercise in content["exercises"] if exercise["type"] not in {"error_repair", "reorder"}},
             )
+            self.assertEqual([], publication_blockers(content))
+            self.assertEqual(2, len(final["conversation_turns"]))
             for language in ("ru", "de", "en"):
                 localized = localize_lesson_content(content, language)
                 self.assertTrue(localized["title"])
@@ -115,13 +120,15 @@ class ContentQualityTests(unittest.TestCase):
         exercises = content["exercises"]
 
         self.assertEqual(
-            ["reorder", "context_choice", "listening_choice", "dialogue", "repeat"],
-            [exercise["type"] for exercise in exercises],
+            {"reorder", "context_choice", "listening_choice", "dialogue", "repeat"},
+            {exercise["type"] for exercise in exercises},
         )
         self.assertEqual(5, len({exercise["id"] for exercise in exercises}))
         self.assertTrue(all(exercise.get("stage") for exercise in exercises))
-        self.assertIn("Während der Besprechung", exercises[2]["audio_text"])
-        self.assertIn("Aufgrund eines technischen Problems", exercises[4]["audio_text"])
+        listening = next(exercise for exercise in exercises if exercise["type"] == "listening_choice")
+        repeat = next(exercise for exercise in exercises if exercise["type"] == "repeat")
+        self.assertIn("Während der Besprechung", listening["audio_text"])
+        self.assertIn("Aufgrund eines technischen Problems", repeat["audio_text"])
 
         localized_answers = {
             "ru": "Время действия",
@@ -130,7 +137,7 @@ class ContentQualityTests(unittest.TestCase):
         }
         for language, expected in localized_answers.items():
             localized = localize_lesson_content(content, language)
-            listening = localized["exercises"][2]
+            listening = next(exercise for exercise in localized["exercises"] if exercise["type"] == "listening_choice")
             self.assertEqual(expected, listening["answer"])
             self.assertIn(expected, listening["options"])
 
@@ -357,6 +364,20 @@ class ContentQualityTests(unittest.TestCase):
             lesson.content["exercises"] = lessons[0].content["exercises"]
         self.assertIn("journey:exercise_shapes_too_repetitive", curriculum_journey_issues(lessons))
         self.assertIn("journey:adjacent_exercise_shapes_repeat", curriculum_journey_issues(lessons))
+
+    def test_complete_b1_journey_is_publishable_and_connected(self):
+        lessons = [
+            type("Lesson", (), {"id": index, "topic": row[2], "content": build_b1_content(row)})()
+            for index, row in enumerate(B1_CURRICULUM, start=1)
+        ]
+
+        self.assertEqual(
+            [],
+            curriculum_journey_issues(lessons, 24, list(range(31, 55)), [36, 42, 48, 54]),
+        )
+        self.assertEqual([36, 42, 48, 54], [lesson.content["day"] for lesson in lessons if lesson.content["checkpoint"]])
+        self.assertEqual(6, len({tuple(exercise["type"] for exercise in lesson.content["exercises"]) for lesson in lessons}))
+        self.assertTrue(all(not publication_blockers(lesson.content) for lesson in lessons))
 
     def test_v8_publication_gate_blocks_unreviewed_content(self):
         content = build_foundation_content(A1_CURRICULUM[0], "A1")

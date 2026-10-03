@@ -176,7 +176,12 @@ async def beta_control_center(
     for level, expected in expected_counts.items():
         track_lessons = [item for item in lessons if item.is_active and item.level == level]
         blocked = [item for item in track_lessons if publication_blockers(item.content or {})]
-        issues = curriculum_journey_issues(track_lessons, expected) if level in {"A1", "A2"} else []
+        if level in {"A1", "A2"}:
+            issues = curriculum_journey_issues(track_lessons, expected)
+        elif level == "B1":
+            issues = curriculum_journey_issues(track_lessons, expected, list(range(31, 55)), [36, 42, 48, 54])
+        else:
+            issues = []
         curriculum_readiness.append({
             "level": level,
             "lessons": len(track_lessons),

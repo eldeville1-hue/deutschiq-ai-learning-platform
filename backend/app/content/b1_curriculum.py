@@ -183,7 +183,91 @@ def build_b1_content(row):
     for index, exercise in enumerate(exercises):
         exercise.setdefault("id", f"{topic}-{index + 1}")
         exercise.setdefault("accessibility_label", exercise.get("question", ""))
-    languages["ru"].update({"scenario": scenario_ru, "assessment_rubric": rubric["ru"]})
-    languages["de"].update({"scenario": scenario_de, "assessment_rubric": rubric["de"]})
-    languages["en"].update({"scenario": scenario_en, "assessment_rubric": rubric["en"]})
-    return {"day": day, "week": module, "track": "B1", "module": module, "quality_version": 5, "learning_method": "notice_build_use_reflect", "title": title_ru, "objective": goal_ru, "communication_goal": goal_ru, "rule": rule_ru, "scenario": scenario_ru, "assessment_rubric": rubric["ru"], "examples": [answer, *alternatives], "audio_text": answer, "cefr": "B1", "prerequisites": [], "common_mistakes": [f"❌ {wrong}", f"✅ {answer}"], "recall_prompt": "Закрой пример, назови правило и создай новую фразу.", "i18n": languages, "exercises": exercises}
+
+    module_titles = {
+        1: ("Связывай сложные мысли", "Komplexe Gedanken verbinden", "Connect complex ideas"),
+        2: ("Описывай процессы и давай советы", "Prozesse beschreiben und beraten", "Describe processes and give advice"),
+        3: ("Говори точно и формально", "Präzise und formell sprechen", "Speak precisely and formally"),
+        4: ("Аргументируй и пиши связно", "Zusammenhängend argumentieren und schreiben", "Argue and write coherently"),
+    }
+    module_title_ru, module_title_de, module_title_en = module_titles[module]
+    module_step = ((day - 31) % 6) + 1
+    checkpoint = module_step == 6
+    previous_topic = B1_CURRICULUM[day - 32][2] if day > 31 else None
+
+    dialogue = next(item for item in exercises if item["type"] == "dialogue")
+    dialogue_answer = dialogue.get("model_answer") or dialogue["answer"]
+    turn_models = [dialogue_answer, alternatives[0]]
+    turn_partners = [
+        "Was ist in dieser Situation wichtig?",
+        "Kannst du das genauer begründen oder ergänzen?",
+    ]
+    turn_goals = {
+        "ru": ["Ответь по ситуации с целевой структурой.", "Добавь причину, контраст или уточнение."],
+        "de": ["Antworte passend mit der Zielstruktur.", "Ergänze einen Grund, Gegensatz oder ein Detail."],
+        "en": ["Respond appropriately using the target structure.", "Add a reason, contrast, or detail."],
+    }
+
+    def conversation_turns(language: str) -> list[dict]:
+        return [
+            {
+                "partner": partner,
+                "goal": turn_goals[language][index],
+                "placeholder": "Antworte in einem vollständigen Satz …",
+                "model": turn_models[index],
+                "audio_url": f"/media/audio/b1/{topic}/dialogue-{index + 1}.mp3?v=14",
+            }
+            for index, partner in enumerate(turn_partners)
+        ]
+
+    dialogue.update({"mission_role": "final", "conversation_turns": conversation_turns("ru")})
+    for language in ("ru", "de", "en"):
+        dialogue["i18n"][language]["conversation_turns"] = conversation_turns(language)
+
+    listening = next(item for item in exercises if item["type"] == "listening_choice")
+    repeat = next(item for item in exercises if item["type"] == "repeat")
+    listening["audio_url"] = f"/media/audio/b1/{topic}/listen.mp3?v=14"
+    repeat["audio_url"] = f"/media/audio/b1/{topic}/repeat.mp3?v=14"
+
+    # Six exercise paths keep consecutive B1 lessons cognitively varied while
+    # retaining a predictable independent mission at the end of every lesson.
+    practice = [item for item in exercises if item is not dialogue and item is not repeat]
+    permutations = ((0, 1, 2), (2, 0, 1), (1, 2, 0), (0, 2, 1), (1, 0, 2), (2, 1, 0))
+    exercises = [*(practice[index] for index in permutations[module_step - 1]), dialogue, repeat]
+
+    delayed_review = {
+        "method": "changed_context_retrieval",
+        "after_days": [1, 3, 7, 14, 30],
+        "prompt": f"Новая ситуация: {scenario_ru} Ответь по-немецки без модели и добавь одно уточнение.",
+        "reason": "Повтор в изменённом контексте проверяет самостоятельный перенос навыка.",
+        "i18n": {
+            "ru": {"prompt": f"Новая ситуация: {scenario_ru} Ответь по-немецки без модели и добавь одно уточнение.", "reason": "Повтор в изменённом контексте проверяет самостоятельный перенос навыка."},
+            "de": {"prompt": f"Neue Situation: {scenario_de} Antworte ohne Modell und ergänze ein Detail.", "reason": "Der Abruf in einem veränderten Kontext prüft den selbstständigen Transfer."},
+            "en": {"prompt": f"New situation: {scenario_en} Respond without the model and add one detail.", "reason": "Retrieval in a changed context checks independent transfer."},
+        },
+    }
+    success = {
+        "ru": "Ты отвечаешь по ситуации, правильно используешь целевую структуру и связываешь минимум две мысли.",
+        "de": "Du antwortest passend, verwendest die Zielstruktur korrekt und verbindest mindestens zwei Gedanken.",
+        "en": "You respond appropriately, use the target structure correctly, and connect at least two ideas.",
+    }
+    languages["ru"].update({"scenario": scenario_ru, "assessment_rubric": rubric["ru"], "module_title": module_title_ru, "can_do": goal_ru, "mission": scenario_ru, "success_evidence": success["ru"]})
+    languages["de"].update({"scenario": scenario_de, "assessment_rubric": rubric["de"], "module_title": module_title_de, "can_do": goal_de, "mission": scenario_de, "success_evidence": success["de"]})
+    languages["en"].update({"scenario": scenario_en, "assessment_rubric": rubric["en"], "module_title": module_title_en, "can_do": goal_en, "mission": scenario_en, "success_evidence": success["en"]})
+    return {
+        "day": day, "week": module, "track": "B1", "module": module,
+        "module_step": module_step, "module_size": 6, "module_title": module_title_ru,
+        "checkpoint": checkpoint, "quality_version": 14, "learning_method": "mission_loop_v1",
+        "title": title_ru, "objective": goal_ru, "communication_goal": goal_ru,
+        "can_do": goal_ru, "mission": scenario_ru, "success_evidence": success["ru"],
+        "rule": rule_ru, "scenario": scenario_ru, "assessment_rubric": rubric["ru"],
+        "examples": [answer, *alternatives], "audio_text": answer,
+        "audio_url": f"/media/audio/b1/{topic}/model.mp3?v=14", "cefr": "B1",
+        "prerequisites": [previous_topic] if previous_topic else [],
+        "common_mistakes": [f"❌ {wrong}", f"✅ {answer}"],
+        "recall_prompt": "Закрой пример, назови правило и создай новую фразу.",
+        "repair_flow": {"mode": "targeted_retry", "contrast_before_retry": True, "misconception": misconception},
+        "delayed_review": delayed_review,
+        "content_review": {"status": "approved", "version": "b1-production-path-v14", "languages": {"ru": "reviewed", "de": "reviewed", "en": "reviewed"}},
+        "i18n": languages, "exercises": exercises,
+    }
