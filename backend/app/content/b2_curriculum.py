@@ -70,48 +70,107 @@ def build_b2_content(row: tuple) -> dict:
     }
     exercises = [
         _localized(
-            {"type": guided_type, "stage": "guided", "question": guided_questions["ru"], "answer": model, "accepted_answers": [model, model.rstrip(".")], "hint": rule["ru"], "explanation": rule["ru"], "misconception": "b2_structure"},
+            {"id": f"{topic}-guided", "type": guided_type, "stage": "guided", "question": guided_questions["ru"], "answer": model, "accepted_answers": [model, model.rstrip(".")], "hint": rule["ru"], "explanation": rule["ru"], "misconception": "b2_structure", "accessibility_label": guided_questions["ru"]},
             {"question": guided_questions["ru"], "hint": rule["ru"], "explanation": rule["ru"]},
             {"question": guided_questions["de"], "hint": rule["de"], "explanation": rule["de"]},
             {"question": guided_questions["en"], "hint": rule["en"], "explanation": rule["en"]},
         ),
         _localized(
-            {"type": "context_choice", "stage": "independent", "question": scenario_ru, "answer": model, "accepted_answers": [model], "options": [model, wrong, "Das ist halt so und irgendwie auch gut."], "explanation": rule["ru"], "misconception": "register"},
+            {"id": f"{topic}-choice", "type": "context_choice", "stage": "independent", "question": scenario_ru, "answer": model, "accepted_answers": [model], "options": [model, wrong, "Das ist halt so und irgendwie auch gut."], "explanation": rule["ru"], "misconception": "register", "accessibility_label": scenario_ru},
             {"question": scenario_ru, "explanation": rule["ru"]},
             {"question": scenario_de, "explanation": rule["de"]},
             {"question": scenario_en, "explanation": rule["en"]},
         ),
         _localized(
-            {"type": "listening_choice", "stage": "independent", "question": "Какую функцию выполняет фраза?", "answer": focus, "accepted_answers": [focus], "options": [focus, "Beispiel", "Begrüßung"], "explanation": model, "misconception": "discourse_function"},
+            {"id": f"{topic}-listen", "type": "listening_choice", "stage": "independent", "question": "Какую функцию выполняет фраза?", "audio_text": alternatives[0], "answer": focus, "accepted_answers": [focus], "options": [focus, "Beispiel", "Begrüßung"], "explanation": alternatives[0], "misconception": "discourse_function", "accessibility_label": "Прослушать аргумент и определить его функцию."},
             {"question": "Какую функцию выполняет фраза?", "explanation": model},
             {"question": "Welche Funktion erfüllt der Satz?", "explanation": model},
             {"question": "What function does the sentence serve?", "explanation": model},
         ),
         _localized(
-            {"type": "dialogue", "stage": "transfer", "question": f"Сформулируй собственный ответ: {scenario_ru}", "answer": model, "model_answer": model, "accepted_answers": [model, model.rstrip(".")], "target_patterns": patterns, "hint": rule["ru"], "explanation": "Ответ может отличаться от модели: оцени выполнение задачи, связность и регистр.", "misconception": "transfer"},
+            {"id": f"{topic}-dialogue", "type": "dialogue", "stage": "transfer", "mission_role": "final", "question": f"Сформулируй собственный ответ: {scenario_ru}", "answer": model, "model_answer": model, "accepted_answers": [model, model.rstrip(".")], "target_patterns": patterns, "hint": rule["ru"], "explanation": "Ответ может отличаться от модели: оцени выполнение задачи, связность и регистр.", "misconception": "transfer", "accessibility_label": scenario_ru},
             {"question": f"Сформулируй собственный ответ: {scenario_ru}", "hint": rule["ru"], "explanation": "Ответ может отличаться от модели: оцени выполнение задачи, связность и регистр."},
             {"question": f"Formuliere eine eigene Antwort: {scenario_de}", "hint": rule["de"], "explanation": "Die Antwort darf abweichen: Prüfe Aufgabenerfüllung, Kohärenz und Register."},
             {"question": f"Give your own response: {scenario_en}", "hint": rule["en"], "explanation": "The response may differ: check task completion, coherence, and register."},
         ),
         _localized(
-            {"type": "repeat", "stage": "transfer", "question": "Произнеси модель вслух.", "answer": model, "accepted_answers": [model, model.rstrip(".")], "explanation": "Сохраняй логическое ударение и темп.", "misconception": "fluency"},
+            {"id": f"{topic}-repeat", "type": "repeat", "stage": "transfer", "question": "Произнеси новую модель вслух.", "audio_text": alternatives[1], "answer": alternatives[1], "accepted_answers": [alternatives[1], alternatives[1].rstrip(".")], "explanation": "Сохраняй логическое ударение и темп.", "misconception": "fluency", "accessibility_label": "Произнести аргумент уровня B2."},
             {"question": "Произнеси модель вслух.", "explanation": "Сохраняй логическое ударение и темп."},
             {"question": "Sprich das Modell laut nach.", "explanation": "Achte auf Satzakzent und Tempo."},
             {"question": "Say the model aloud.", "explanation": "Keep the sentence stress and pace natural."},
         ),
     ]
+    module_titles = {
+        1: ("Строй сложные связи", "Komplexe Zusammenhänge", "Build complex connections"),
+        2: ("Пиши точно и объективно", "Präzise und objektiv schreiben", "Write precisely and objectively"),
+        3: ("Доказывай свою позицию", "Eine Position belegen", "Support a position"),
+        4: ("Убеждай в речи и тексте", "Mündlich und schriftlich überzeugen", "Persuade in speech and writing"),
+    }
+    module_title_ru, module_title_de, module_title_en = module_titles[module]
+    module_step = ((day - 55) % 4) + 1
+    checkpoint = module_step == 4
+    previous_topic = B2_CURRICULUM[day - 56][2] if day > 55 else None
+    dialogue = next(item for item in exercises if item["type"] == "dialogue")
+    partners = [
+        "Wie beurteilen Sie die Ausgangslage?",
+        "Welcher Beleg stützt Ihre Position?",
+        "Was entgegnen Sie dem wichtigsten Gegenargument?",
+    ]
+    turn_models = [model, alternatives[0], alternatives[1]]
+    turn_goals = {
+        "ru": ["Чётко сформулируй позицию.", "Добавь конкретное обоснование.", "Учти возражение и сделай вывод."],
+        "de": ["Formuliere eine klare Position.", "Füge eine konkrete Begründung hinzu.", "Berücksichtige einen Einwand und ziehe ein Fazit."],
+        "en": ["State a clear position.", "Add specific support.", "Address an objection and conclude."],
+    }
+
+    def conversation_turns(language: str) -> list[dict]:
+        return [
+            {"partner": partner, "goal": turn_goals[language][index], "placeholder": "Antworten Sie in einem vollständigen Satz …", "model": turn_models[index]}
+            for index, partner in enumerate(partners)
+        ]
+
+    dialogue["conversation_turns"] = conversation_turns("ru")
+    for language in ("ru", "de", "en"):
+        dialogue["i18n"][language]["conversation_turns"] = conversation_turns(language)
+    listening = next(item for item in exercises if item["type"] == "listening_choice")
+    repeat = next(item for item in exercises if item["type"] == "repeat")
+
+    practice = [item for item in exercises if item is not dialogue and item is not repeat]
+    permutations = ((0, 1, 2), (2, 0, 1), (1, 2, 0), (0, 2, 1))
+    exercises = [*(practice[index] for index in permutations[module_step - 1]), dialogue, repeat]
+    success = {
+        "ru": "Ты формулируешь ясную позицию, развиваешь её доказательством и отвечаешь на возражение в подходящем регистре.",
+        "de": "Du formulierst eine klare Position, belegst sie und reagierst im passenden Register auf einen Einwand.",
+        "en": "You state a clear position, support it, and address an objection in an appropriate register.",
+    }
+    delayed_review = {
+        "method": "changed_context_retrieval", "after_days": [1, 3, 7, 14, 30],
+        "prompt": f"Новый контекст: {scenario_ru} Ответь без модели, добавив доказательство и оговорку.",
+        "reason": "Перенос в новый контекст проверяет самостоятельную аргументацию, а не запоминание модели.",
+        "i18n": {
+            "ru": {"prompt": f"Новый контекст: {scenario_ru} Ответь без модели, добавив доказательство и оговорку.", "reason": "Перенос в новый контекст проверяет самостоятельную аргументацию, а не запоминание модели."},
+            "de": {"prompt": f"Neuer Kontext: {scenario_de} Antworte ohne Modell mit einem Beleg und einer Einschränkung.", "reason": "Der Transfer prüft selbstständiges Argumentieren statt das Auswendiglernen eines Modells."},
+            "en": {"prompt": f"New context: {scenario_en} Respond without the model, adding evidence and a qualification.", "reason": "Transfer checks independent argumentation rather than memorisation."},
+        },
+    }
+    localized = {
+        "ru": {"title": title_ru, "rule": rule["ru"], "objective": objective["ru"], "scenario": scenario_ru, "assessment_rubric": rubric["ru"], "module_title": module_title_ru, "can_do": objective["ru"], "mission": scenario_ru, "success_evidence": success["ru"]},
+        "de": {"title": title_de, "rule": rule["de"], "objective": objective["de"], "scenario": scenario_de, "assessment_rubric": rubric["de"], "module_title": module_title_de, "can_do": objective["de"], "mission": scenario_de, "success_evidence": success["de"]},
+        "en": {"title": title_en, "rule": rule["en"], "objective": objective["en"], "scenario": scenario_en, "assessment_rubric": rubric["en"], "module_title": module_title_en, "can_do": objective["en"], "mission": scenario_en, "success_evidence": success["en"]},
+    }
     return {
         "day": day, "week": module, "track": "B2", "module": module,
-        "quality_version": 5, "learning_method": "notice_build_use_reflect",
+        "module_step": module_step, "module_size": 4, "module_title": module_title_ru, "checkpoint": checkpoint,
+        "quality_version": 15, "learning_method": "mission_loop_v1",
         "title": title_ru, "objective": objective["ru"], "communication_goal": objective["ru"],
+        "can_do": objective["ru"], "mission": scenario_ru, "success_evidence": success["ru"],
         "rule": rule["ru"], "scenario": scenario_ru, "assessment_rubric": rubric["ru"], "examples": [model, *alternatives],
-        "audio_text": model, "cefr": "B2", "prerequisites": [],
+        "audio_text": model, "cefr": "B2", "prerequisites": [previous_topic] if previous_topic else [],
         "common_mistakes": [f"❌ {wrong}", f"✅ {model}"],
         "recall_prompt": "Закрой пример, назови функцию структуры и создай собственный аргумент.",
-        "i18n": {
-            "ru": {"title": title_ru, "rule": rule["ru"], "objective": objective["ru"], "scenario": scenario_ru, "assessment_rubric": rubric["ru"]},
-            "de": {"title": title_de, "rule": rule["de"], "objective": objective["de"], "scenario": scenario_de, "assessment_rubric": rubric["de"]},
-            "en": {"title": title_en, "rule": rule["en"], "objective": objective["en"], "scenario": scenario_en, "assessment_rubric": rubric["en"]},
-        },
+        "repair_flow": {"mode": "targeted_retry", "contrast_before_retry": True, "misconception": "b2_structure"},
+        "delayed_review": delayed_review,
+        "content_review": {"status": "approved", "version": "b2-production-path-v15", "languages": {"ru": "reviewed", "de": "reviewed", "en": "reviewed"}},
+        "i18n": localized,
         "exercises": exercises,
     }

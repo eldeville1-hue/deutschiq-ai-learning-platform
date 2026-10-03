@@ -141,18 +141,27 @@ class ContentQualityTests(unittest.TestCase):
             self.assertEqual(expected, listening["answer"])
             self.assertIn(expected, listening["options"])
 
-    def test_b2_track_has_16_multilingual_lessons(self):
+    def test_b2_track_has_16_publishable_multilingual_missions(self):
         self.assertEqual(16, len(B2_CURRICULUM))
         self.assertEqual({1, 2, 3, 4}, {row[1] for row in B2_CURRICULUM})
         for row in B2_CURRICULUM:
             content = build_b2_content(row)
             self.assertEqual([], validate_roadmap_content(content), f"day {row[0]}")
             self.assertEqual("B2", content["track"])
-            self.assertEqual(5, content["quality_version"])
+            self.assertEqual(15, content["quality_version"])
+            self.assertEqual("mission_loop_v1", content["learning_method"])
             self.assertEqual(5, len(content["exercises"]))
             self.assertEqual(3, len(content["assessment_rubric"]))
             self.assertEqual(3, len(set(content["examples"])))
-            self.assertLessEqual(len(content["exercises"][3]["target_patterns"]), 3)
+            final = next(exercise for exercise in content["exercises"] if exercise.get("mission_role") == "final")
+            self.assertLessEqual(len(final["target_patterns"]), 3)
+            self.assertEqual(3, len(final["conversation_turns"]))
+            self.assertEqual([], publication_blockers(content))
+            self.assertTrue(all(exercise.get("id") for exercise in content["exercises"]))
+            self.assertTrue(all(exercise.get("accessibility_label") for exercise in content["exercises"]))
+            self.assertNotIn("audio_url", content)
+            self.assertTrue(all("audio_url" not in exercise for exercise in content["exercises"]))
+            self.assertTrue(all("audio_url" not in turn for turn in final["conversation_turns"]))
             for language in ("ru", "de", "en"):
                 localized = localize_lesson_content(content, language)
                 self.assertTrue(localized["title"])
@@ -160,6 +169,16 @@ class ContentQualityTests(unittest.TestCase):
                 self.assertTrue(localized["scenario"])
                 self.assertEqual(3, len(localized["assessment_rubric"]))
                 self.assertTrue(all("i18n" not in exercise for exercise in localized["exercises"]))
+
+    def test_complete_b2_journey_is_connected_and_varied(self):
+        lessons = [
+            type("Lesson", (), {"id": index, "topic": row[2], "content": build_b2_content(row)})()
+            for index, row in enumerate(B2_CURRICULUM, start=1)
+        ]
+
+        self.assertEqual([], curriculum_journey_issues(lessons, 16, list(range(55, 71)), [58, 62, 66, 70]))
+        self.assertEqual([58, 62, 66, 70], [lesson.content["day"] for lesson in lessons if lesson.content["checkpoint"]])
+        self.assertEqual(4, len({tuple(exercise["type"] for exercise in lesson.content["exercises"]) for lesson in lessons}))
 
     def test_a1_and_a2_have_complete_multilingual_learning_loops(self):
         guided_types = set()

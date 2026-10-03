@@ -180,6 +180,8 @@ async def beta_control_center(
             issues = curriculum_journey_issues(track_lessons, expected)
         elif level == "B1":
             issues = curriculum_journey_issues(track_lessons, expected, list(range(31, 55)), [36, 42, 48, 54])
+        elif level == "B2":
+            issues = curriculum_journey_issues(track_lessons, expected, list(range(55, 71)), [58, 62, 66, 70])
         else:
             issues = []
         curriculum_readiness.append({
