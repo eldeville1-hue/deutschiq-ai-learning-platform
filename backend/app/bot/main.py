@@ -2,16 +2,18 @@
 import asyncio
 import json
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command
 from aiogram.types import WebAppInfo, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton, LabeledPrice, PreCheckoutQuery, Message, MenuButtonWebApp
 from app.core.config import settings
 from app.models.user import User
+from app.models.payment import Payment
 from app.core.database import SessionLocal
 from app.bot.scheduler import schedule_daily_reminders
 from app.core.single_instance import acquire_bot_lock
 from app.services.bot_links import build_web_app_url as compose_web_app_url, invite_code_from_payload, parse_start_payload
+from app.services.subscription import monthly_invoice_payload, validate_pre_checkout
 
 _start_cooldowns: dict[int, datetime] = {}
 
@@ -104,20 +106,21 @@ async def cmd_subscribe(message: Message):
         lang = user_language(db.query(User).filter(User.telegram_id == message.from_user.id).first())
     finally:
         db.close()
-    if settings.BETA_FREE_ACCESS:
+    if settings.BETA_FREE_ACCESS or not settings.PAYMENTS_ENABLED:
         await message.answer(
-            tr(lang, "Во время тестирования все функции бесплатны.", "Während der Testphase sind alle Funktionen kostenlos.", "All features are free during testing.")
+            tr(lang, "Платный запуск ещё не активирован. Во время тестирования все функции бесплатны.", "Der kostenpflichtige Start ist noch nicht aktiviert. Während der Testphase sind alle Funktionen kostenlos.", "Paid launch is not active yet. All features are free during testing.")
         )
         return
-    prices = [LabeledPrice(label=tr(lang, "30 дней Pro", "30 Tage Pro", "30 days of Pro"), amount=700)]
+    prices = [LabeledPrice(label=tr(lang, "DeutschIQ Pro · 30 дней", "DeutschIQ Pro · 30 Tage", "DeutschIQ Pro · 30 days"), amount=settings.PRO_PRICE_STARS)]
     await message.answer_invoice(
         title="DeutschIQ Pro",
         description=tr(lang, "30 дней Pro", "30 Tage Pro", "30 days of Pro"),
-        payload=f"sub_{message.from_user.id}_monthly",
+        payload=monthly_invoice_payload(message.from_user.id),
         provider_token="",
         currency="XTR",
         prices=prices,
-        start_parameter="deutschiq_pro_30"
+        start_parameter="deutschiq_pro_30",
+        subscription_period=settings.PRO_SUBSCRIPTION_PERIOD,
     )
 
 @dp.message(Command("help"))
@@ -176,20 +179,48 @@ async def help_button(message: Message):
 
 @dp.pre_checkout_query()
 async def pre_checkout(query: PreCheckoutQuery):
-    await query.answer(ok=True)
+    rejection = validate_pre_checkout(query)
+    await query.answer(ok=not rejection, error_message=rejection)
 
 @dp.message(lambda m: m.successful_payment is not None)
 async def successful_payment(message: Message):
     user_id = message.from_user.id
     db = SessionLocal()
-    user = db.query(User).filter(User.telegram_id == user_id).first()
-    lang = user_language(user)
-    if user:
+    try:
+        user = db.query(User).filter(User.telegram_id == user_id).first()
+        lang = user_language(user)
+        payment = message.successful_payment
+        if not user or payment.currency != "XTR" or payment.total_amount != settings.PRO_PRICE_STARS or payment.invoice_payload != monthly_invoice_payload(user_id):
+            logging.error("Rejected inconsistent successful payment for Telegram user %s", user_id)
+            return
+        existing = db.query(Payment).filter(Payment.telegram_payment_charge_id == payment.telegram_payment_charge_id).first()
+        if existing:
+            await message.answer(tr(lang, "Этот платёж уже обработан.", "Diese Zahlung wurde bereits verarbeitet.", "This payment was already processed."))
+            return
+        expires_at = datetime.fromtimestamp(payment.subscription_expiration_date, tz=timezone.utc).replace(tzinfo=None) if payment.subscription_expiration_date else datetime.utcnow() + timedelta(days=30)
+        db.add(Payment(
+            user_id=user.id,
+            telegram_payment_charge_id=payment.telegram_payment_charge_id,
+            invoice_payload=payment.invoice_payload, amount=payment.total_amount, currency=payment.currency,
+            status="completed", plan_type="pro_monthly", completed_at=datetime.utcnow(),
+            subscription_expires_at=expires_at, is_recurring=bool(payment.is_recurring),
+            is_first_recurring=bool(payment.is_first_recurring),
+        ))
         user.subscription_status = "pro"
-        user.subscription_end_date = datetime.now() + timedelta(days=30)
+        user.subscription_end_date = expires_at
         db.commit()
-    db.close()
-    await message.answer(tr(lang, "Оплата прошла. Pro активирован.", "Zahlung erfolgreich. Pro ist aktiv.", "Payment successful. Pro is active."))
+        await message.answer(tr(lang, "Оплата прошла. Pro активирован.", "Zahlung erfolgreich. Pro ist aktiv.", "Payment successful. Pro is active."))
+    finally:
+        db.close()
+
+@dp.message(Command("paysupport"))
+async def payment_support(message: Message):
+    contact = settings.SELLER_SUPPORT_EMAIL or "Support wird vor dem kostenpflichtigen Start veröffentlicht."
+    await message.answer(f"DeutschIQ payment support: {contact}\nTelegram cannot resolve purchases made from this bot.")
+
+@dp.message(Command("terms"))
+async def payment_terms(message: Message):
+    await message.answer(f"DeutschIQ terms: {settings.WEBAPP_URL.rstrip('/')}/terms")
 
 @dp.message(lambda m: m.web_app_data is not None)
 async def handle_web_app_data(message: Message):

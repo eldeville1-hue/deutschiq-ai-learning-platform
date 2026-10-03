@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { FaArrowRight, FaCheck, FaChevronDown, FaChevronRight, FaCommentDots, FaDownload, FaMedal, FaMoon, FaPaperPlane, FaRedo, FaShareAlt, FaSun, FaTrash } from 'react-icons/fa';
+import { FaArrowRight, FaCheck, FaChevronDown, FaChevronRight, FaCommentDots, FaCrown, FaDownload, FaMedal, FaMoon, FaPaperPlane, FaRedo, FaShareAlt, FaStar, FaSun, FaTrash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
@@ -82,10 +82,32 @@ export const Profile: React.FC = () => {
     }
   };
   const weekdays = lang === 'ru' ? ['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'] : lang === 'de' ? ['MO','DI','MI','DO','FR','SA','SO'] : ['MO','TU','WE','TH','FR','SA','SU'];
+  const proActive = data.subscription_status === 'pro';
+  const paidLaunchReady = Boolean(data.payments_enabled && data.commerce_ready && !data.beta_free);
+  const openSubscription = () => {
+    const url = 'https://t.me/DeutschIQ_bot?start=subscribe';
+    const telegram = (window as any).Telegram?.WebApp;
+    if (telegram?.openTelegramLink) telegram.openTelegramLink(url);
+    else window.open(url, '_blank', 'noopener,noreferrer');
+  };
   return (
     <main className="app-shell profile-page precision-profile v30-page v30-profile dq-profile page-enter">
       <header className="profile-masthead page-stagger-1"><span>{tr(lang, 'ПРОФИЛЬ', 'PROFIL', 'PROFILE')}</span><b>DeutschIQ</b></header>
       <section className="profile-passport page-stagger-1"><div className="avatar">{initials}</div><div><small>{tr(lang, 'УЧЕНИК', 'LERNENDE', 'LEARNER')}</small><h1>{name}</h1><p>{tr(lang, 'Немецкий каждый день', 'Deutsch jeden Tag', 'German every day')}</p></div><strong>{data.level || 'A1'}</strong></section>
+      <section className={`subscription-card page-stagger-2${proActive ? ' active' : ''}`}>
+        <header><span>{proActive ? <FaCrown /> : <FaStar />}{proActive ? 'DEUTSCHIQ PRO' : tr(lang, 'ДОСТУП', 'ZUGANG', 'ACCESS')}</span><b>{proActive ? 'PRO' : data.beta_free ? 'BETA' : 'FREE'}</b></header>
+        <h2>{proActive
+          ? tr(lang, 'Все возможности открыты', 'Alle Funktionen sind freigeschaltet', 'All features are unlocked')
+          : data.beta_free
+            ? tr(lang, 'Во время теста всё бесплатно', 'Während des Tests ist alles kostenlos', 'Everything is free during testing')
+            : tr(lang, `Pro за ${data.pro_price_stars || 700} Stars`, `Pro für ${data.pro_price_stars || 700} Stars`, `Pro for ${data.pro_price_stars || 700} Stars`)}</h2>
+        <p>{proActive
+          ? (data.subscription_end_date ? tr(lang, `Доступ до ${new Date(data.subscription_end_date).toLocaleDateString()}`, `Zugang bis ${new Date(data.subscription_end_date).toLocaleDateString('de-DE')}`, `Access until ${new Date(data.subscription_end_date).toLocaleDateString('en-GB')}`) : tr(lang, 'Активная подписка', 'Aktives Abo', 'Active subscription'))
+          : data.beta_free
+            ? tr(lang, 'Уроки A1–B2 и AI-репетитор доступны без оплаты. Платный запуск выключен.', 'Lektionen A1–B2 und der KI-Tutor sind kostenlos verfügbar. Der kostenpflichtige Start ist deaktiviert.', 'A1–B2 lessons and the AI tutor are free. Paid launch is disabled.')
+            : tr(lang, '30 дней полного доступа. Оплата внутри Telegram.', '30 Tage Vollzugang. Bezahlung innerhalb von Telegram.', '30 days of full access. Payment inside Telegram.')}</p>
+        {paidLaunchReady && <button type="button" onClick={openSubscription}><span>{tr(lang, 'Условия и подписка', 'Bedingungen & abonnieren', 'Terms & subscribe')}</span><FaArrowRight /></button>}
+      </section>
       <section className="profile-settings page-stagger-3"><div className="profile-language"><strong>{tr(lang, 'Язык интерфейса', 'App-Sprache', 'App language')}</strong><LanguagePicker compact /></div><button onClick={toggleTheme}><span>{theme === 'dark' ? <FaMoon /> : <FaSun />}{tr(lang, 'Оформление', 'Darstellung', 'Appearance')}</span><small>{theme === 'dark' ? tr(lang, 'Тёмное', 'Dunkel', 'Dark') : tr(lang, 'Светлое', 'Hell', 'Light')}</small></button><button onClick={share}><span><FaShareAlt />{tr(lang, 'Пригласить друга', 'Freund einladen', 'Invite a friend')}</span><FaChevronRight /></button></section>
       <section className="profile-learning-pass page-stagger-2">
         <header><small>{tr(lang, 'ТВОЙ ПРОГРЕСС', 'DEIN FORTSCHRITT', 'YOUR PROGRESS')}</small><button type="button" onClick={() => navigate(withUser('/plan'))}>{tr(lang, 'Открыть план', 'Plan öffnen', 'Open plan')} <FaArrowRight /></button></header>

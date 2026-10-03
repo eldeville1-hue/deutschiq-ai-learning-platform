@@ -37,6 +37,12 @@ class Settings:
     BETA_FREE_ACCESS = os.getenv("BETA_FREE_ACCESS", "true").lower() == "true"
     BETA_TUTOR_DAILY_LIMIT = int(os.getenv("BETA_TUTOR_DAILY_LIMIT", "25"))
     BETA_INVITE_REQUIRED = os.getenv("BETA_INVITE_REQUIRED", "true").lower() == "true"
+    PAYMENTS_ENABLED = os.getenv("PAYMENTS_ENABLED", "false").lower() == "true"
+    PRO_PRICE_STARS = int(os.getenv("PRO_PRICE_STARS", "700"))
+    PRO_SUBSCRIPTION_PERIOD = 2592000
+    SELLER_LEGAL_NAME = os.getenv("SELLER_LEGAL_NAME", "").strip()
+    SELLER_POSTAL_ADDRESS = os.getenv("SELLER_POSTAL_ADDRESS", "").strip()
+    SELLER_SUPPORT_EMAIL = os.getenv("SELLER_SUPPORT_EMAIL", "").strip()
     WEBAPP_URL = os.getenv("WEBAPP_URL", "http://localhost:5173")
     SECRET_KEY = os.getenv("SECRET_KEY", "change-me-in-production")
     DEBUG = os.getenv("DEBUG", "false").lower() == "true"
@@ -64,5 +70,14 @@ class Settings:
                 )
             if len(self.TASK_SECRET) < 24:
                 raise ValueError("TASK_SECRET must contain at least 24 characters in webhook mode.")
+        if not 1 <= self.PRO_PRICE_STARS <= 10000:
+            raise ValueError("PRO_PRICE_STARS must be between 1 and 10000.")
+        if self.PAYMENTS_ENABLED and (
+            self.BETA_FREE_ACCESS
+            or not self.SELLER_LEGAL_NAME
+            or not self.SELLER_POSTAL_ADDRESS
+            or not self.SELLER_SUPPORT_EMAIL
+        ):
+            raise ValueError("Paid launch requires beta access off and complete German seller details.")
 
 settings = Settings()
