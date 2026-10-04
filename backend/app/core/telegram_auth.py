@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 import json
+import time
 from urllib.parse import parse_qsl
 
 from fastapi import Header, HTTPException
@@ -8,7 +9,7 @@ from fastapi import Header, HTTPException
 from app.core.config import settings
 
 
-def verify_telegram_init_data(init_data: str) -> int:
+def verify_telegram_init_data(init_data: str, now: int | None = None) -> int:
     values = dict(parse_qsl(init_data, keep_blank_values=True))
     received_hash = values.pop("hash", "")
     if not received_hash:
@@ -19,6 +20,11 @@ def verify_telegram_init_data(init_data: str) -> int:
     if not hmac.compare_digest(expected_hash, received_hash):
         raise HTTPException(status_code=401, detail="Invalid Telegram signature")
     try:
+        auth_date = int(values["auth_date"])
+        current = int(time.time()) if now is None else now
+        age = current - auth_date
+        if age < -30 or age > settings.TELEGRAM_AUTH_MAX_AGE_SECONDS:
+            raise HTTPException(status_code=401, detail="Telegram session expired")
         return int(json.loads(values["user"])["id"])
     except (KeyError, TypeError, ValueError, json.JSONDecodeError):
         raise HTTPException(status_code=401, detail="Telegram user is missing")

@@ -50,6 +50,7 @@ class Settings:
     TELEGRAM_WEBHOOK_PATH = os.getenv("TELEGRAM_WEBHOOK_PATH", "/api/telegram/webhook").strip()
     TELEGRAM_WEBHOOK_SECRET = os.getenv("TELEGRAM_WEBHOOK_SECRET", "").strip()
     TASK_SECRET = os.getenv("TASK_SECRET", "").strip()
+    TELEGRAM_AUTH_MAX_AGE_SECONDS = int(os.getenv("TELEGRAM_AUTH_MAX_AGE_SECONDS", "3600"))
 
     def __init__(self):
         # Проверяем, что критические переменные загружены
@@ -72,6 +73,8 @@ class Settings:
                 raise ValueError("TASK_SECRET must contain at least 24 characters in webhook mode.")
         if not 1 <= self.PRO_PRICE_STARS <= 10000:
             raise ValueError("PRO_PRICE_STARS must be between 1 and 10000.")
+        if not 60 <= self.TELEGRAM_AUTH_MAX_AGE_SECONDS <= 86400:
+            raise ValueError("TELEGRAM_AUTH_MAX_AGE_SECONDS must be between 60 and 86400.")
         if self.PAYMENTS_ENABLED and (
             self.BETA_FREE_ACCESS
             or not self.SELLER_LEGAL_NAME

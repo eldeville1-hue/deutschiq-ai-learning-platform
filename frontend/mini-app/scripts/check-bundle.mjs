@@ -1,7 +1,10 @@
 import { readdir, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 
-const limits = { js: 300 * 1024, css: 130 * 1024, total: 650 * 1024 };
+// React Router 7 closes client-navigation advisories at a small, measured
+// payload cost. Keep the main JS ceiling unchanged and allow only that audited
+// increase in the aggregate learner assets.
+const limits = { js: 300 * 1024, css: 130 * 1024, total: 680 * 1024 };
 const assets = join(process.cwd(), 'dist', 'assets');
 const files = await readdir(assets);
 let total = 0;

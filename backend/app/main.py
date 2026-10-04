@@ -19,10 +19,11 @@ from aiogram.types import MenuButtonWebApp, WebAppInfo
 from app.bot.main import bot, dp
 from app.core.cloud_runtime import cache_control_for_path, public_origin
 from app.core.logging_config import configure_logging
+from app.core.security import apply_security_headers
 
 configure_logging()
 logger = logging.getLogger("deutschiq.api")
-VERSION = "77.0.0"
+VERSION = "78.0.0"
 BUILD_COMMIT = os.getenv("RENDER_GIT_COMMIT", os.getenv("GIT_COMMIT", "local"))[:12]
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -66,6 +67,7 @@ async def request_logging(request: Request, call_next):
         logger.exception("Unhandled request error", extra={"request_id": request_id, "method": request.method, "path": request.url.path})
         raise
     response.headers["X-Request-ID"] = request_id
+    apply_security_headers(response, secure=request.url.scheme == "https")
     cache_control = cache_control_for_path(request.url.path, response.headers.get("content-type", ""))
     if cache_control:
         response.headers["Cache-Control"] = cache_control
@@ -78,7 +80,7 @@ async def request_logging(request: Request, call_next):
 
 @app.get("/api/version")
 async def version():
-    return {"version": VERSION, "release": "soft-launch-evidence-v18", "commit": BUILD_COMMIT}
+    return {"version": VERSION, "release": "launch-hardening-v19", "commit": BUILD_COMMIT}
 
 @app.get("/api/health/live")
 async def liveness():
@@ -117,8 +119,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[public_origin(settings.WEBAPP_URL)],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "X-Telegram-Init-Data", "X-Request-ID"],
 )
 
 app.include_router(diagnostic.router)

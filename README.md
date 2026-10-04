@@ -1,6 +1,6 @@
 # DeutschIQ
 
-> v18 Soft Launch Evidence combines an adaptive A1–B2 learning journey with
+> v19 Launch Hardening combines an adaptive A1–B2 learning journey with
 > contextual beta feedback, privacy-safe product analytics, explicit payment
 > evidence gates, and an owner-only quality center.
 
@@ -27,7 +27,7 @@
 
 DeutschIQ is an AI-assisted Telegram Mini App for adaptive German learning. It combines a protected level diagnostic, a personalized 30-day curriculum, mastery-based exercises, spaced review, progress analytics, and an AI tutor in a mobile-first learning flow.
 
-**v18 Soft Launch Evidence** turns the visual product into an explainable daily learning system and a measurable free preview. It models prerequisites, retention stability, lapses, confidence and response time; composes a review → learn → transfer session; and records usefulness, confusion and genuine Pro intent without enabling payments.
+**v19 Launch Hardening** turns the visual product into an explainable daily learning system and a measurable, security-hardened free preview. It models prerequisites, retention stability, lapses, confidence and response time; composes a review → learn → transfer session; and records usefulness, confusion and genuine Pro intent without enabling payments.
 
 The public application runs as a Docker service on Render with a signed Telegram webhook and managed PostgreSQL on Neon.
 
@@ -165,7 +165,7 @@ python -m app.bot.main
 
 Render rebuilds the service from GitHub when the production branch changes. On startup it applies database migrations and idempotently synchronizes the validated curriculum. Production credentials are stored as hosting environment variables, never in the repository.
 
-Release `77.0.0` runs as an invite-only free soft launch. The future Pro offer can be previewed and measured, while `PAYMENTS_ENABLED=false` and `BETA_FREE_ACCESS=true` prevent any Stars charge.
+Release `78.0.0` runs as an invite-only free soft launch. The future Pro offer can be previewed and measured, while `PAYMENTS_ENABLED=false` and `BETA_FREE_ACCESS=true` prevent any Stars charge.
 
 Operational documents: [beta guide](docs/BETA_SOFT_LAUNCH.md), [testing report](docs/TESTING_REPORT.md), [portfolio case study](docs/PORTFOLIO_CASE_STUDY.md), and [monetisation checklist](docs/MONETISATION_CHECKLIST.md).
 

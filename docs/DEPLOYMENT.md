@@ -25,6 +25,7 @@ Add these under **Render > deutschiq > Environment**. Never paste them into GitH
 | `SECRET_KEY` | Long random value |
 | `TELEGRAM_WEBHOOK_SECRET` | 16-256 letters, digits, `_` or `-` |
 | `TASK_SECRET` | Random value of at least 24 characters |
+| `TELEGRAM_AUTH_MAX_AGE_SECONDS` | `3600` (reject stale Mini App login data) |
 | `BETA_FREE_ACCESS` | `true` during the closed beta |
 | `BETA_INVITE_REQUIRED` | `true` |
 | `PAYMENTS_ENABLED` | `false` until the legal launch gate is complete |
@@ -45,7 +46,7 @@ No `init_db.py`, seed script, Render shell, Google Cloud CLI, or local ngrok tun
 
 - `https://deutschiq.onrender.com/api/health/live` — process is running
 - `https://deutschiq.onrender.com/api/health` — database and migration state
-- `https://deutschiq.onrender.com/api/version` — must report `77.0.0`, `soft-launch-evidence-v18`, and the deployed commit
+- `https://deutschiq.onrender.com/api/version` — must report `78.0.0`, `launch-hardening-v19`, and the deployed commit
 - `https://deutschiq.onrender.com/privacy` — public legal route
 
 Or run from the repository root:
