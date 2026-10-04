@@ -22,7 +22,7 @@ Profile collects three short answers in Russian, German or English:
 2. Was DeutschIQ useful? — Yes / Partly / No
 3. Would you buy Pro for 700 Telegram Stars? — Yes / Maybe / No
 
-The floating contextual reporter also records the current page and, inside lessons, the lesson/exercise context.
+The lesson-completion and Profile feedback controls stay inside the page flow, so they never cover learning content or mobile navigation.
 
 ## Payment evidence gate
 

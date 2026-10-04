@@ -84,11 +84,9 @@ class FrontendInternationalizationTests(unittest.TestCase):
 
     def test_beta_feedback_collects_usefulness_and_price_intent(self):
         profile = self.read("pages/Profile.tsx")
-        app = self.read("App.tsx")
         self.assertIn("feedbackUseful", profile)
         self.assertIn("feedbackProIntent", profile)
         self.assertIn("700 Stars", profile)
-        self.assertIn("<BetaIssueReporter />", app)
 
 
 if __name__ == "__main__":
