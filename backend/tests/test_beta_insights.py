@@ -15,6 +15,8 @@ class BetaInsightsTests(unittest.TestCase):
             SimpleNamespace(user_id=7, event_name="api_failed", properties={"path": "/api/plan"}, created_at=now),
             SimpleNamespace(user_id=7, event_name="audio_failed", properties={"lesson_id": 1}, created_at=now),
             SimpleNamespace(user_id=7, event_name="offline_recovered", properties={"page": "/lesson/1"}, created_at=now),
+            SimpleNamespace(user_id=7, event_name="pro_preview_viewed", properties={"language": "en"}, created_at=now),
+            SimpleNamespace(user_id=8, event_name="pro_interest_clicked", properties={"price_stars": 700}, created_at=now),
             SimpleNamespace(user_id=7, event_name="beta_feedback", properties={"message": "Clear lesson", "language": "en", "page": "/lesson/1", "category": "unclear", "lesson_id": 1, "exercise_index": 2, "exercise_type": "reorder", "topic": "word_order"}, created_at=now),
         ]
         summary = summarize_events(events)
@@ -22,6 +24,9 @@ class BetaInsightsTests(unittest.TestCase):
         self.assertEqual(1, summary["reliability"]["api_failed"])
         self.assertEqual(1, summary["reliability"]["audio_failed"])
         self.assertEqual(1, summary["recovery"]["offline_recovered"])
+        self.assertEqual(1, summary["commerce"]["pro_preview_viewed"])
+        self.assertEqual(1, summary["commerce"]["pro_interest_clicked"])
+        self.assertEqual(1, summary["unique_users"]["pro_interest_clicked"])
         self.assertNotIn("user_id", summary["feedback"][0])
         self.assertEqual("word_order", summary["feedback"][0]["topic"])
         self.assertEqual(2, summary["feedback"][0]["exercise_index"])

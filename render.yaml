@@ -27,6 +27,8 @@ services:
       - key: BETA_TUTOR_DAILY_LIMIT
         value: "25"
       - key: BETA_INVITE_REQUIRED
+        value: "true"
+      - key: PAYMENTS_ENABLED
         value: "false"
       - key: DEBUG
         value: "false"

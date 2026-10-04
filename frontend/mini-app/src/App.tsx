@@ -24,6 +24,7 @@ const Legal = lazy(() => import('./pages/Legal').then(module => ({ default: modu
 const Portfolio = lazy(() => import('./pages/Portfolio').then(module => ({ default: module.Portfolio })));
 const Checkpoint = lazy(() => import('./pages/Checkpoint').then(module => ({ default: module.Checkpoint })));
 const ControlCenter = lazy(() => import('./pages/ControlCenter').then(module => ({ default: module.ControlCenter })));
+const ProPreview = lazy(() => import('./pages/ProPreview').then(module => ({ default: module.ProPreview })));
 
 function ConnectionStatus() {
   const { lang } = useLanguage();
@@ -112,6 +113,7 @@ function AppRoutes() {
           <Route path="/mistakes" element={<Mistakes />} />
           <Route path="/review" element={<Review />} />
           <Route path="/checkpoint/:level" element={<Checkpoint />} />
+          <Route path="/pro" element={<ProPreview />} />
         </Routes>
       </Suspense>
       {showPrimaryNav && <BottomNav />}

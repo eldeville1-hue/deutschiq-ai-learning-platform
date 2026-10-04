@@ -10,6 +10,7 @@ RELIABILITY_EVENTS = {
     "microphone_failed", "audio_failed", "audio_interrupted", "offline_started",
 }
 RECOVERY_EVENTS = {"offline_recovered", "draft_restored", "checkpoint_draft_restored", "app_resumed"}
+COMMERCE_EVENTS = {"pro_preview_viewed", "pro_interest_clicked", "subscription_restore_requested"}
 
 
 def summarize_events(events) -> dict:
@@ -18,6 +19,7 @@ def summarize_events(events) -> dict:
     modes: dict[str, dict[str, int]] = defaultdict(lambda: {"answers": 0, "correct": 0})
     reliability = Counter()
     recovery = Counter()
+    commerce = Counter()
     feedback = []
     for item in events:
         users_by_event[item.event_name].add(int(item.user_id))
@@ -26,6 +28,8 @@ def summarize_events(events) -> dict:
             reliability[item.event_name] += 1
         if item.event_name in RECOVERY_EVENTS:
             recovery[item.event_name] += 1
+        if item.event_name in COMMERCE_EVENTS:
+            commerce[item.event_name] += 1
         if item.event_name == "exercise_answered":
             mode = str(properties.get("learning_mode") or "unknown")
             modes[mode]["answers"] += 1
@@ -51,6 +55,7 @@ def summarize_events(events) -> dict:
         "unique_users": {name: len(values) for name, values in users_by_event.items()},
         "reliability": dict(reliability),
         "recovery": dict(recovery),
+        "commerce": dict(commerce),
         "learning_modes": mode_rows,
         "feedback": list(reversed(feedback[-30:])),
     }

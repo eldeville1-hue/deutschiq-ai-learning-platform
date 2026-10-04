@@ -855,6 +855,22 @@ body:has(.precision-tutor) .bottom-nav span{font-size:8px!important}
   .rc-today-secondary button{min-height:32px}
 }
 
+/* V17 — commercial preview without live billing. */
+.pro-preview{display:grid;align-content:start;gap:14px;padding-top:28px!important}
+.pro-preview-hero{display:grid;justify-items:center;gap:8px;padding:18px 8px;text-align:center}
+.pro-preview-hero>svg{width:38px;height:38px;color:var(--dq-gold)}
+.pro-preview-hero small{color:var(--dq-gold-soft);font-size:10px;font-weight:850;letter-spacing:.14em}
+.pro-preview-hero h1{margin:0;color:var(--dq-text);font-size:30px;line-height:1.05}
+.pro-preview-hero p{max-width:360px;margin:0;color:var(--dq-muted);font-size:13px;line-height:1.55}
+.pro-plan-card,.pro-beta-notice{border:1px solid var(--dq-border-strong);border-radius:var(--dq-radius-xl);background:linear-gradient(145deg,rgba(244,191,85,.08),var(--dq-surface));box-shadow:var(--dq-shadow)}
+.pro-plan-card{display:grid;gap:18px;padding:22px}
+.pro-price{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.pro-price span{color:var(--dq-text);font-size:28px;font-weight:850}.pro-price span b{color:var(--dq-gold);font-size:16px}.pro-price small{color:var(--dq-muted);font-size:11px}
+.pro-plan-card ul{display:grid;gap:12px;margin:0;padding:0;list-style:none}.pro-plan-card li{display:flex;align-items:center;gap:10px;color:var(--dq-text);font-size:13px}.pro-plan-card li svg{flex:0 0 auto;color:var(--dq-green)}
+.pro-beta-notice{display:flex;gap:12px;padding:16px;background:var(--dq-surface)}.pro-beta-notice>svg{flex:0 0 auto;color:var(--dq-blue)}.pro-beta-notice strong{color:var(--dq-text);font-size:13px}.pro-beta-notice p{margin:5px 0 0;color:var(--dq-muted);font-size:11px;line-height:1.45}
+.pro-interest,.pro-restore{width:100%;min-height:52px;border:0;border-radius:15px;font-weight:850}.pro-interest{background:linear-gradient(135deg,var(--dq-gold-soft),var(--dq-gold));color:#10151e}.pro-restore{display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--dq-border);background:transparent;color:var(--dq-muted)}
+.pro-status{margin:0;padding:12px;border-radius:12px;background:rgba(99,215,170,.08);color:var(--dq-green);font-size:12px;text-align:center}.pro-legal{display:flex;justify-content:center;gap:18px;padding:6px}.pro-legal a{color:var(--dq-muted);font-size:10px}
+
 /* Release 60 — Mobile Lesson System v2. */
 .lesson-flow.precision-lesson{padding:calc(14px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));background:radial-gradient(circle at 50% 0,color-mix(in srgb,var(--dq-level) 9%,transparent),transparent 28%),var(--dq-bg)}
 .precision-lesson .lesson-progress-head{min-height:36px;display:grid;grid-template-columns:1fr auto;align-items:center;gap:7px 12px;padding:0}

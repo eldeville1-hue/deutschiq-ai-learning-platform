@@ -21,6 +21,7 @@ ALLOWED_EVENTS = {
     "diagnostic_completed",
     "audio_started", "audio_failed", "audio_interrupted",
     "offline_started", "offline_recovered", "app_resumed",
+    "pro_preview_viewed", "pro_interest_clicked", "subscription_restore_requested",
 }
 
 

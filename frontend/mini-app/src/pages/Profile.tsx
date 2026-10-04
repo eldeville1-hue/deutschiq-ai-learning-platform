@@ -106,7 +106,9 @@ export const Profile: React.FC = () => {
           : data.beta_free
             ? tr(lang, 'Уроки A1–B2 и AI-репетитор доступны без оплаты. Платный запуск выключен.', 'Lektionen A1–B2 und der KI-Tutor sind kostenlos verfügbar. Der kostenpflichtige Start ist deaktiviert.', 'A1–B2 lessons and the AI tutor are free. Paid launch is disabled.')
             : tr(lang, '30 дней полного доступа. Оплата внутри Telegram.', '30 Tage Vollzugang. Bezahlung innerhalb von Telegram.', '30 days of full access. Payment inside Telegram.')}</p>
-        {paidLaunchReady && <button type="button" onClick={openSubscription}><span>{tr(lang, 'Условия и подписка', 'Bedingungen & abonnieren', 'Terms & subscribe')}</span><FaArrowRight /></button>}
+        <button type="button" onClick={() => paidLaunchReady ? openSubscription() : navigate(withUser('/pro'))}><span>{paidLaunchReady
+          ? tr(lang, 'Условия и подписка', 'Bedingungen & abonnieren', 'Terms & subscribe')
+          : tr(lang, 'Посмотреть будущий Pro', 'Künftiges Pro ansehen', 'Preview the future Pro')}</span><FaArrowRight /></button>
       </section>
       <section className="profile-settings page-stagger-3"><div className="profile-language"><strong>{tr(lang, 'Язык интерфейса', 'App-Sprache', 'App language')}</strong><LanguagePicker compact /></div><button onClick={toggleTheme}><span>{theme === 'dark' ? <FaMoon /> : <FaSun />}{tr(lang, 'Оформление', 'Darstellung', 'Appearance')}</span><small>{theme === 'dark' ? tr(lang, 'Тёмное', 'Dunkel', 'Dark') : tr(lang, 'Светлое', 'Hell', 'Light')}</small></button><button onClick={share}><span><FaShareAlt />{tr(lang, 'Пригласить друга', 'Freund einladen', 'Invite a friend')}</span><FaChevronRight /></button></section>
       <section className="profile-learning-pass page-stagger-2">

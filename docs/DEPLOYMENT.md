@@ -25,6 +25,9 @@ Add these under **Render > deutschiq > Environment**. Never paste them into GitH
 | `SECRET_KEY` | Long random value |
 | `TELEGRAM_WEBHOOK_SECRET` | 16-256 letters, digits, `_` or `-` |
 | `TASK_SECRET` | Random value of at least 24 characters |
+| `BETA_FREE_ACCESS` | `true` during the closed beta |
+| `BETA_INVITE_REQUIRED` | `true` |
+| `PAYMENTS_ENABLED` | `false` until the legal launch gate is complete |
 | `DEBUG` | `false` |
 
 The included `render.yaml` documents the service settings. Existing Render services can continue using Dashboard-managed variables.
@@ -42,7 +45,7 @@ No `init_db.py`, seed script, Render shell, Google Cloud CLI, or local ngrok tun
 
 - `https://deutschiq.onrender.com/api/health/live` — process is running
 - `https://deutschiq.onrender.com/api/health` — database and migration state
-- `https://deutschiq.onrender.com/api/version` — must report `17.0.0`, `learning-engine`, and the deployed commit
+- `https://deutschiq.onrender.com/api/version` — must report `76.0.0`, `closed-beta-insights-v17`, and the deployed commit
 - `https://deutschiq.onrender.com/privacy` — public legal route
 
 Or run from the repository root:

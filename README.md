@@ -158,6 +158,8 @@ python -m app.bot.main
 
 Render rebuilds the service from GitHub when the production branch changes. On startup it applies database migrations and idempotently synchronizes the validated curriculum. Production credentials are stored as hosting environment variables, never in the repository.
 
+Release `76.0.0` runs as an invite-only closed beta. The future Pro offer can be previewed and measured, while `PAYMENTS_ENABLED=false` and `BETA_FREE_ACCESS=true` prevent any Stars charge.
+
 ## Testing
 
 ```powershell

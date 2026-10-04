@@ -144,6 +144,21 @@ test('primary screens do not float beta controls over product content', async ({
   await expect(page.locator('.beta-report-trigger')).toHaveCount(0);
 });
 
+test('commercial preview measures interest without enabling payment', async ({ page }) => {
+  const events: string[] = [];
+  await mockApi(page, { completed: true, events });
+  await page.route('**/api/dashboard/**', route => route.fulfill({ json: {
+    ...dashboard, beta_free: true, payments_enabled: false, commerce_ready: false, pro_price_stars: 700,
+  }}));
+  await page.goto('/pro');
+  await expect(page.getByText('700')).toBeVisible();
+  await expect(page.getByText(/Paid launch is still closed/i)).toBeVisible();
+  await page.getByRole('button', { name: /I am interested in Pro/i }).click();
+  await expect(page.getByRole('status')).toContainText(/do not need to pay/i);
+  await expect.poll(() => events.includes('pro_preview_viewed') && events.includes('pro_interest_clicked')).toBe(true);
+  await expectNoHorizontalOverflow(page);
+});
+
 test('iPhone WebView keeps product controls styled', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await mockApi(page, { completed: true });
