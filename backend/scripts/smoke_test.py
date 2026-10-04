@@ -38,7 +38,7 @@ def main() -> None:
     release = read_json(f"{origin}/api/version")
     if live.get("status") != "ok" or health.get("status") != "ok":
         raise RuntimeError(f"Unhealthy deployment: {health}")
-    if release.get("version") != "78.0.0" or release.get("release") != "launch-hardening-v19":
+    if release.get("version") != "79.0.0" or release.get("release") != "beta-evidence-v20":
         raise RuntimeError(f"Stale deployment: {release}")
     if health.get("database") != "ok" or health.get("migrations") != "20261003_0011":
         raise RuntimeError(f"Database is not release-ready: {health}")

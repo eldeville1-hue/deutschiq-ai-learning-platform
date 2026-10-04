@@ -116,7 +116,7 @@ class BetaControlCenterTests(unittest.TestCase):
         self.assertTrue(result["payments_ready"])
         self.assertEqual(5, len(result["checks"]))
 
-        events.append(SimpleNamespace(user_id=1, event_name="api_failed", properties={}, created_at=now))
+        events.append(SimpleNamespace(user_id=1, event_name="api_failed", properties={"status": 503}, created_at=now))
         result = soft_launch_gate(summarize_events(events), users, sessions)
         self.assertFalse(result["payments_ready"])
         self.assertFalse(next(item for item in result["checks"] if item["id"] == "errors")["passed"])

@@ -7,7 +7,7 @@ import hmac
 
 RELIABILITY_EVENTS = {
     "api_failed", "api_slow", "client_error", "reload_loop_detected",
-    "microphone_failed", "audio_failed", "audio_interrupted", "offline_started",
+    "microphone_denied", "microphone_failed", "audio_failed", "audio_interrupted", "offline_started",
 }
 RECOVERY_EVENTS = {"offline_recovered", "draft_restored", "checkpoint_draft_restored", "app_resumed"}
 COMMERCE_EVENTS = {"pro_preview_viewed", "pro_interest_clicked", "subscription_restore_requested"}
@@ -21,11 +21,20 @@ def summarize_events(events) -> dict:
     recovery = Counter()
     commerce = Counter()
     feedback = []
+    api_failure_details = Counter()
     for item in events:
         users_by_event[item.event_name].add(int(item.user_id))
         properties = item.properties or {}
         if item.event_name in RELIABILITY_EVENTS:
             reliability[item.event_name] += 1
+        if item.event_name == "api_failed":
+            status = properties.get("status", 0)
+            try:
+                status = int(status)
+            except (TypeError, ValueError):
+                status = 0
+            path = str(properties.get("path") or "unknown")[:160]
+            api_failure_details[(path, status)] += 1
         if item.event_name in RECOVERY_EVENTS:
             recovery[item.event_name] += 1
         if item.event_name in COMMERCE_EVENTS:
@@ -52,10 +61,22 @@ def summarize_events(events) -> dict:
         {"mode": mode, **values, "accuracy": round(values["correct"] / values["answers"] * 100) if values["answers"] else None}
         for mode, values in sorted(modes.items())
     ]
+    serious_api_failures = sum(
+        count for (_path, status), count in api_failure_details.items()
+        if status == 0 or status >= 500
+    )
+    serious_errors = serious_api_failures + int(reliability.get("client_error", 0)) + int(reliability.get("reload_loop_detected", 0))
     return {
         "counts": dict(counts),
         "unique_users": {name: len(values) for name, values in users_by_event.items()},
         "reliability": dict(reliability),
+        "reliability_detail": {
+            "serious_errors": serious_errors,
+            "api_failures": [
+                {"path": path, "status": status, "count": count, "serious": status == 0 or status >= 500}
+                for (path, status), count in sorted(api_failure_details.items())
+            ],
+        },
         "recovery": dict(recovery),
         "commerce": dict(commerce),
         "learning_modes": mode_rows,
@@ -83,7 +104,10 @@ def soft_launch_gate(event_summary: dict, users, sessions) -> dict:
             sessions_by_user[int(item.user_id)].append(item.started_at.replace(tzinfo=None).date())
     returning_learners = sum(len(set(days)) >= 2 for days in sessions_by_user.values())
     pro_signals = int(unique.get("pro_interest_clicked", 0))
-    serious_errors = sum(int(reliability.get(name, 0)) for name in ("api_failed", "client_error", "reload_loop_detected"))
+    serious_errors = int(event_summary.get("reliability_detail", {}).get(
+        "serious_errors",
+        sum(int(reliability.get(name, 0)) for name in ("api_failed", "client_error", "reload_loop_detected")),
+    ))
     checks = [
         {"id": "diagnostics", "label": "10 completed diagnostics", "current": completed_diagnostics, "target": 10, "passed": completed_diagnostics >= 10},
         {"id": "lessons", "label": "5 completed lessons", "current": completed_lessons, "target": 5, "passed": completed_lessons >= 5},

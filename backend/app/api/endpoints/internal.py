@@ -159,11 +159,16 @@ async def beta_control_center(
     invites = db.query(BetaInvite).order_by(BetaInvite.created_at.desc()).all()
     acceptance = acceptance_report(db.query(BetaAcceptanceCheck).all())
     event_summary = summarize_events(events)
+    cohort_user_ids = {item.user_id for item in enrollments}
+    cohort_events = [item for item in events if item.user_id in cohort_user_ids]
+    cohort_sessions = [item for item in sessions if item.user_id in cohort_user_ids]
+    cohort_users = [item for item in users if item.id in cohort_user_ids]
+    cohort_event_summary = summarize_events(cohort_events)
     all_sessions = db.query(LearningSession).all()
     session_users = {item.user_id for item in sessions}
     completed_sessions = [item for item in sessions if item.status in {"passed", "practice_needed"}]
-    started_count = event_summary["unique_users"].get("lesson_started", 0)
-    completed_count = event_summary["unique_users"].get("lesson_completed", 0)
+    started_count = cohort_event_summary["unique_users"].get("lesson_started", 0)
+    completed_count = cohort_event_summary["unique_users"].get("lesson_completed", 0)
     languages = {}
     for user in users:
         language = user.language_code or "unknown"
@@ -204,10 +209,10 @@ async def beta_control_center(
             "languages": languages,
         },
         "funnel": {
-            "invite_claimed": event_summary["unique_users"].get("invite_claimed", len(enrollments)),
-            "onboarding_completed": event_summary["unique_users"].get("beta_onboarding_completed", sum(1 for item in enrollments if item.consent and item.goal)),
-            "diagnostic_started": event_summary["unique_users"].get("diagnostic_started", 0),
-            "diagnostic_completed": event_summary["unique_users"].get("diagnostic_completed", sum(1 for item in users if item.diagnostic_completed)),
+            "invite_claimed": cohort_event_summary["unique_users"].get("invite_claimed", len(enrollments)),
+            "onboarding_completed": cohort_event_summary["unique_users"].get("beta_onboarding_completed", sum(1 for item in enrollments if item.consent and item.goal)),
+            "diagnostic_started": cohort_event_summary["unique_users"].get("diagnostic_started", 0),
+            "diagnostic_completed": cohort_event_summary["unique_users"].get("diagnostic_completed", sum(1 for item in cohort_users if item.diagnostic_completed)),
             "lesson_started": started_count,
             "lesson_completed": completed_count,
             "completion_rate": round(completed_count / started_count * 100) if started_count else 0,
@@ -222,7 +227,7 @@ async def beta_control_center(
         "content_health": content_health,
         "readiness": readiness,
         "retention": retention_cohorts(enrollments, all_sessions, datetime.now()),
-        "soft_launch": soft_launch_gate(event_summary, users, sessions),
+        "soft_launch": soft_launch_gate(cohort_event_summary, cohort_users, cohort_sessions),
         "acceptance": acceptance,
         "beta": {
             "enrolled": len(enrollments),

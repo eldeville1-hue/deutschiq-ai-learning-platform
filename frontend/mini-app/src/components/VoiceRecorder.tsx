@@ -19,9 +19,9 @@ export const VoiceRecorder: React.FC<Props> = ({ compact = false, disabled, lang
   const stopTimer = useRef<number | null>(null);
   const [state, setState] = useState<"idle" | "recording" | "sending" | "error">("idle");
   const [seconds, setSeconds] = useState(0);
-  const reportFailure = (stage: string, error?: unknown) => {
+  const reportFailure = (stage: string, error?: unknown, denied = false) => {
     if (!getUserId()) return;
-    void api.trackEvent({ user_id: getUserId(), event_name: 'microphone_failed', properties: {
+    void api.trackEvent({ user_id: getUserId(), event_name: denied ? 'microphone_denied' : 'microphone_failed', properties: {
       stage, error: error instanceof Error ? error.name : String(error || 'unavailable'),
       media_recorder: typeof MediaRecorder !== 'undefined',
     }});
@@ -70,7 +70,9 @@ export const VoiceRecorder: React.FC<Props> = ({ compact = false, disabled, lang
       setState("recording");
     } catch (error) {
       setState("error");
-      reportFailure('permission_or_recording', error);
+      const errorName = error instanceof Error ? error.name : '';
+      const denied = ['NotAllowedError', 'PermissionDeniedError', 'SecurityError'].includes(errorName);
+      reportFailure(denied ? 'permission_denied' : 'recording', error, denied);
     }
   };
 

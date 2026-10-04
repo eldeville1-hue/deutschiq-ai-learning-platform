@@ -12,7 +12,7 @@ class BetaInsightsTests(unittest.TestCase):
         events = [
             SimpleNamespace(user_id=7, event_name="exercise_answered", properties={"learning_mode": "supported", "correct": True}, created_at=now),
             SimpleNamespace(user_id=8, event_name="exercise_answered", properties={"learning_mode": "supported", "correct": False}, created_at=now),
-            SimpleNamespace(user_id=7, event_name="api_failed", properties={"path": "/api/plan"}, created_at=now),
+            SimpleNamespace(user_id=7, event_name="api_failed", properties={"path": "/api/plan", "status": 503}, created_at=now),
             SimpleNamespace(user_id=7, event_name="audio_failed", properties={"lesson_id": 1}, created_at=now),
             SimpleNamespace(user_id=7, event_name="offline_recovered", properties={"page": "/lesson/1"}, created_at=now),
             SimpleNamespace(user_id=7, event_name="pro_preview_viewed", properties={"language": "en"}, created_at=now),
@@ -23,6 +23,8 @@ class BetaInsightsTests(unittest.TestCase):
         self.assertEqual(50, summary["learning_modes"][0]["accuracy"])
         self.assertEqual(1, summary["reliability"]["api_failed"])
         self.assertEqual(1, summary["reliability"]["audio_failed"])
+        self.assertEqual(1, summary["reliability_detail"]["serious_errors"])
+        self.assertEqual(503, summary["reliability_detail"]["api_failures"][0]["status"])
         self.assertEqual(1, summary["recovery"]["offline_recovered"])
         self.assertEqual(1, summary["commerce"]["pro_preview_viewed"])
         self.assertEqual(1, summary["commerce"]["pro_interest_clicked"])
@@ -30,6 +32,15 @@ class BetaInsightsTests(unittest.TestCase):
         self.assertNotIn("user_id", summary["feedback"][0])
         self.assertEqual("word_order", summary["feedback"][0]["topic"])
         self.assertEqual(2, summary["feedback"][0]["exercise_index"])
+
+    def test_expected_client_rejection_is_visible_but_not_a_serious_error(self):
+        now = datetime.now()
+        summary = summarize_events([
+            SimpleNamespace(user_id=7, event_name="api_failed", properties={"path": "/api/internal/beta", "status": 403}, created_at=now),
+        ])
+        self.assertEqual(1, summary["reliability"]["api_failed"])
+        self.assertEqual(0, summary["reliability_detail"]["serious_errors"])
+        self.assertFalse(summary["reliability_detail"]["api_failures"][0]["serious"])
 
     def test_exercise_health_flags_only_after_enough_attempts(self):
         hard = [SimpleNamespace(lesson_id=3, exercise_index=1, user_id=index, correct=index == 0) for index in range(6)]
