@@ -23,6 +23,8 @@ export const Profile: React.FC = () => {
   const [actionStatus, setActionStatus] = useState('');
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackText, setFeedbackText] = useState('');
+  const [feedbackUseful, setFeedbackUseful] = useState<'yes'|'partly'|'no'|''>('');
+  const [feedbackProIntent, setFeedbackProIntent] = useState<'yes'|'maybe'|'no'|''>('');
   const user = getTelegramUser();
   const rawName = user?.first_name || '';
   const name = /[\p{L}\p{N}]/u.test(rawName) ? rawName : tr(lang, 'Ученик', 'Lernende', 'Learner');
@@ -70,11 +72,13 @@ export const Profile: React.FC = () => {
   };
   const sendFeedback = async () => {
     const message = feedbackText.trim();
-    if (!message) return;
+    if (!message || !feedbackUseful || !feedbackProIntent) return;
     setActionStatus(tr(lang, 'Отправляем отзыв…', 'Feedback wird gesendet…', 'Sending feedback…'));
     try {
-      await api.submitBetaFeedback({ user_id: getUserId(), message, language: lang, page: 'profile' });
+      await api.submitBetaFeedback({ user_id: getUserId(), message, language: lang, page: 'profile', useful: feedbackUseful, pro_intent: feedbackProIntent });
       setFeedbackText('');
+      setFeedbackUseful('');
+      setFeedbackProIntent('');
       setFeedbackOpen(false);
       setActionStatus(tr(lang, 'Спасибо. Отзыв сохранён.', 'Danke. Dein Feedback wurde gespeichert.', 'Thank you. Your feedback was saved.'));
     } catch {
@@ -124,7 +128,7 @@ export const Profile: React.FC = () => {
         <section className="streak-section"><small>{tr(lang, 'ТВОЯ СЕРИЯ', 'DEINE SERIE', 'YOUR STREAK')}</small><h2>{data.streak || 0} {tr(lang, 'дней', 'Tage', 'days')}</h2><div className="week-row">{weekdays.map((day, index) => <div key={day} style={{ animationDelay: `${index * 55}ms` }}><span>{day}</span><i className={index < (data.streak || 0) ? 'active' : ''} /></div>)}</div></section>
         <section className="achievement-section"><header><small>{tr(lang, 'ДОСТИЖЕНИЯ', 'ERFOLGE', 'ACHIEVEMENTS')}</small><span>1 / 8</span></header><button type="button" className="achievement-card" onClick={() => navigate(withUser('/analytics'))}><FaMedal /><span><b>{tr(lang, 'Первый шаг', 'Erster Schritt', 'First step')}</b><small>{tr(lang, 'Диагностика завершена', 'Diagnose abgeschlossen', 'Placement test completed')} <FaCheck /></small></span><FaChevronRight /></button></section>
       </details>
-      <details className="profile-beta-feedback"><summary><FaCommentDots /> {tr(lang, 'Помочь улучшить DeutschIQ', 'DeutschIQ verbessern helfen', 'Help improve DeutschIQ')}</summary><p>{tr(lang, 'Во время беты все функции доступны. Напиши, что было непонятно.', 'Während der Beta sind alle Funktionen verfügbar. Sag uns, was unklar war.', 'All features are available during beta. Tell us what felt unclear.')}</p><button type="button" className="beta-feedback-trigger" onClick={() => setFeedbackOpen(value => !value)}>{tr(lang, 'Написать отзыв', 'Feedback schreiben', 'Write feedback')}</button>{feedbackOpen && <div className="beta-feedback-form"><textarea autoFocus maxLength={800} value={feedbackText} onChange={event => setFeedbackText(event.target.value)} placeholder={tr(lang, 'Что было непонятно или не работало?', 'Was war unklar oder hat nicht funktioniert?', 'What was unclear or did not work?')} /><button type="button" disabled={!feedbackText.trim()} onClick={sendFeedback}><FaPaperPlane /> {tr(lang, 'Отправить', 'Senden', 'Send')}</button></div>}</details>
+      <details className="profile-beta-feedback"><summary><FaCommentDots /> {tr(lang, 'Помочь улучшить DeutschIQ', 'DeutschIQ verbessern helfen', 'Help improve DeutschIQ')}</summary><p>{tr(lang, 'Три коротких ответа помогут решить, что улучшить перед запуском.', 'Drei kurze Antworten helfen uns, vor dem Start das Richtige zu verbessern.', 'Three short answers help us improve the right things before launch.')}</p><button type="button" className="beta-feedback-trigger" onClick={() => setFeedbackOpen(value => !value)}>{tr(lang, 'Оставить отзыв', 'Feedback geben', 'Give feedback')}</button>{feedbackOpen && <div className="beta-feedback-form"><label>{tr(lang, '1. Что было непонятно?', '1. Was war unklar?', '1. What was confusing?')}</label><textarea autoFocus maxLength={800} value={feedbackText} onChange={event => setFeedbackText(event.target.value)} placeholder={tr(lang, 'Коротко опиши экран, урок или проблему.', 'Beschreibe kurz den Bildschirm, die Lektion oder das Problem.', 'Briefly describe the screen, lesson, or problem.')} /><fieldset><legend>{tr(lang, '2. Было ли это полезно?', '2. War DeutschIQ hilfreich?', '2. Was DeutschIQ useful?')}</legend>{(['yes','partly','no'] as const).map(value=><button type="button" className={feedbackUseful===value?'selected':''} onClick={()=>setFeedbackUseful(value)} key={value}>{value==='yes'?tr(lang,'Да','Ja','Yes'):value==='partly'?tr(lang,'Частично','Teilweise','Partly'):tr(lang,'Нет','Nein','No')}</button>)}</fieldset><fieldset><legend>{tr(lang, '3. Купил(а) бы Pro за 700 Stars?', '3. Würdest du Pro für 700 Stars kaufen?', '3. Would you buy Pro for 700 Stars?')}</legend>{(['yes','maybe','no'] as const).map(value=><button type="button" className={feedbackProIntent===value?'selected':''} onClick={()=>setFeedbackProIntent(value)} key={value}>{value==='yes'?tr(lang,'Да','Ja','Yes'):value==='maybe'?tr(lang,'Возможно','Vielleicht','Maybe'):tr(lang,'Нет','Nein','No')}</button>)}</fieldset><button type="button" disabled={!feedbackText.trim()||!feedbackUseful||!feedbackProIntent} onClick={sendFeedback}><FaPaperPlane /> {tr(lang, 'Отправить', 'Senden', 'Send')}</button></div>}</details>
       <details className="profile-account-details">
         <summary><span>{tr(lang, 'Аккаунт и данные', 'Konto und Daten', 'Account and data')}</span><FaChevronDown /></summary>
         <div>

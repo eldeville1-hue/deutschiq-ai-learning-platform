@@ -114,12 +114,8 @@ export const api = {
   getVersion: () => apiClient.get('/api/version').then(r => r.data),
   trackEvent: (payload: { user_id: number; event_name: string; properties?: Record<string, string | number | boolean> }) =>
     apiClient.post('/api/events', payload).catch(() => undefined),
-  submitBetaFeedback: (payload: { user_id: number; message: string; language: AppLanguage; page: string }) =>
-    apiClient.post('/api/events', {
-      user_id: payload.user_id,
-      event_name: 'beta_feedback',
-      properties: { message: payload.message, language: payload.language, page: payload.page },
-    }),
+  submitBetaFeedback: (payload: { user_id: number; message: string; language: AppLanguage; page: string; useful?: 'yes'|'partly'|'no'; pro_intent?: 'yes'|'maybe'|'no' }) =>
+    apiClient.post('/api/beta/issue', { ...payload, category: 'experience' }).then(r => r.data),
   exportUserData: (userId: number) => apiClient.get(`/api/user-data/${userId}`).then(r => r.data),
   deleteUserData: (userId: number) => apiClient.delete(`/api/user-data/${userId}`),
   resetTestJourney: (userId: number) => apiClient.post(`/api/user-data/${userId}/reset-test`),
@@ -132,7 +128,7 @@ export const api = {
   updateBetaAcceptance: (key: string, checkId: string, payload: { passed: boolean; notes: string }) => apiClient.put(`/api/internal/acceptance/${checkId}`, payload, { headers: { 'X-Control-Key': key }, __telemetry: true } as any).then(r => r.data),
   claimBetaInvite: (payload: { user_id: number; code: string; language: AppLanguage }) => apiClient.post('/api/beta/claim', payload).then(r => { removeCached(userCacheKey('state', payload.user_id)); return r.data; }),
   completeBetaOnboarding: (payload: { user_id: number; goal: string; study_minutes: number; consent: boolean }) => apiClient.put('/api/beta/onboarding', payload).then(r => { removeCached(userCacheKey('state', payload.user_id)); return r.data; }),
-  reportBetaIssue: (payload: { user_id: number; category: string; message: string; page: string; lesson_id?: number; exercise_index?: number; exercise_type?: string; topic?: string }) => apiClient.post('/api/beta/issue', payload).then(r => r.data),
+  reportBetaIssue: (payload: { user_id: number; category: string; message: string; page: string; lesson_id?: number; exercise_index?: number; exercise_type?: string; topic?: string; useful?: 'yes'|'partly'|'no'; pro_intent?: 'yes'|'maybe'|'no' }) => apiClient.post('/api/beta/issue', payload).then(r => r.data),
   // Диагностика
   getQuestions: (lang: AppLanguage = 'en') => {
     return cachedGet(`deutschiq-questions-${lang}`, () => apiClient.get(`/api/diagnostic/questions?lang=${lang}`).then(r => r.data));

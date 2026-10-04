@@ -503,6 +503,11 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .beta-feedback-form { display: grid; gap: 9px; padding-top: 3px; }
 .beta-feedback-form textarea { width: 100%; min-height: 94px; resize: vertical; padding: 12px; border: 1px solid var(--dq-border); border-radius: 13px; outline: 0; background: rgba(6,10,16,.55); color: var(--dq-text); font: inherit; font-size: 13px; line-height: 1.45; }
 .beta-feedback-form textarea:focus { border-color: rgba(244,191,85,.45); }
+.beta-feedback-form label,.beta-feedback-form legend { color: var(--dq-text); font-size: 11px; font-weight: 800; }
+.beta-feedback-form fieldset { display: grid; grid-template-columns: repeat(3,1fr); gap: 7px; margin: 0; padding: 0; border: 0; }
+.beta-feedback-form legend { grid-column: 1/-1; margin-bottom: 7px; }
+.beta-feedback-form fieldset button { min-height: 38px; border: 1px solid var(--dq-border); background: rgba(255,255,255,.025); color: var(--dq-muted); }
+.beta-feedback-form fieldset button.selected { border-color: rgba(244,191,85,.55); background: rgba(244,191,85,.12); color: var(--dq-gold-soft); }
 .beta-feedback-form button { min-height: 42px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 13px; background: var(--dq-gold-soft); color: #10151d; font: inherit; font-size: 12px; font-weight: 850; }
 .subscription-card p { margin: 0; color: var(--dq-muted); font-size: 11px; line-height: 1.48; }
 .subscription-card > button { min-height: 43px; display: flex; align-items: center; justify-content: space-between; padding: 0 13px; border: 0; border-radius: 12px; background: var(--dq-gold); color: #11151c; font-size: 11px; font-weight: 850; }

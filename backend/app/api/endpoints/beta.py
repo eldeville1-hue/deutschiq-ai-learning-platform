@@ -30,6 +30,8 @@ class Issue(BaseModel):
     exercise_index: int | None = Field(default=None, ge=0, le=100)
     exercise_type: str | None = Field(default=None, max_length=40)
     topic: str | None = Field(default=None, max_length=100)
+    useful: str | None = Field(default=None, pattern="^(yes|partly|no)$")
+    pro_intent: str | None = Field(default=None, pattern="^(yes|maybe|no)$")
 
 @router.post("/claim")
 async def claim(data: Claim, db: Session = Depends(get_db), authenticated_id: int = Depends(telegram_user_id)):
@@ -74,7 +76,7 @@ async def report_issue(data: Issue, db: Session = Depends(get_db), authenticated
     user = db.query(User).filter(User.telegram_id == data.user_id).first()
     if not user: raise HTTPException(status_code=403, detail="Beta access required")
     properties = {"kind":"issue","category":data.category,"message":data.message.strip(),"page":data.page,"language":user.language_code,"release":"real-closed-beta"}
-    for key in ("lesson_id", "exercise_index", "exercise_type", "topic"):
+    for key in ("lesson_id", "exercise_index", "exercise_type", "topic", "useful", "pro_intent"):
         value = getattr(data, key)
         if value is not None:
             properties[key] = value

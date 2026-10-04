@@ -23,7 +23,7 @@ export const Portfolio: React.FC = () => {
         <h1>{tr(lang, 'Немецкий, который помнит твои ошибки.', 'Deutsch, das sich deine Fehler merkt.', 'German that remembers your mistakes.')}</h1>
         <p className="portfolio-lead">{tr(lang, 'Диагностика, персональный маршрут и ИИ‑репетитор — в одном Telegram-приложении.', 'Einstufung, persönlicher Lernweg und KI‑Tutor in einer Telegram-App.', 'Placement, a personal learning path and an AI tutor in one Telegram app.')}</p>
         <div className="portfolio-actions"><a className="launch-primary" href={telegramUrl} target="_blank" rel="noreferrer"><FaTelegramPlane /> {tr(lang, 'Открыть DeutschIQ', 'DeutschIQ öffnen', 'Open DeutschIQ')} <FaArrowRight /></a><a href={githubUrl} target="_blank" rel="noreferrer"><FaGithub /> {tr(lang, 'Посмотреть код', 'Code ansehen', 'View code')}</a></div>
-        <div className="portfolio-proof"><span><b>30</b> {tr(lang, 'уроков', 'Lektionen', 'lessons')}</span><span><b>120</b> {tr(lang, 'заданий', 'Aufgaben', 'exercises')}</span><span><b>A1—B2</b> {tr(lang, 'маршрут', 'Lernweg', 'path')}</span></div>
+        <div className="portfolio-proof"><span><b>80</b> {tr(lang, 'уроков', 'Lektionen', 'lessons')}</span><span><b>3</b> {tr(lang, 'языка интерфейса', 'App-Sprachen', 'interface languages')}</span><span><b>A1—B2</b> {tr(lang, 'маршрут', 'Lernweg', 'path')}</span></div>
       </div>
       <div className="hero-device" aria-label="DeutschIQ mobile application preview">
         <div className="device-glow"/><div className="phone-frame"><span className="phone-island"/><img src="/portfolio/01-home.png" alt="DeutschIQ personalized home screen" /></div>

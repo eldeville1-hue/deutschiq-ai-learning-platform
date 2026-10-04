@@ -5,6 +5,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { AppBackButton } from './components/AppBackButton';
 import { BrandMark } from './components/BrandMark';
 import { BottomNav } from './components/BottomNav';
+import { BetaIssueReporter } from './components/BetaIssueReporter';
 import { getTelegramUser, getUserId, hasTelegramIdentity } from './utils/user';
 import { normalizeLanguage, tr } from './i18n/language';
 import { api } from './services/api';
@@ -117,6 +118,7 @@ function AppRoutes() {
         </Routes>
       </Suspense>
       {showPrimaryNav && <BottomNav />}
+      <BetaIssueReporter />
     </div>
   );
 }

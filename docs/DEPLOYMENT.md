@@ -45,7 +45,7 @@ No `init_db.py`, seed script, Render shell, Google Cloud CLI, or local ngrok tun
 
 - `https://deutschiq.onrender.com/api/health/live` — process is running
 - `https://deutschiq.onrender.com/api/health` — database and migration state
-- `https://deutschiq.onrender.com/api/version` — must report `76.0.0`, `closed-beta-insights-v17`, and the deployed commit
+- `https://deutschiq.onrender.com/api/version` — must report `77.0.0`, `soft-launch-evidence-v18`, and the deployed commit
 - `https://deutschiq.onrender.com/privacy` — public legal route
 
 Or run from the repository root:

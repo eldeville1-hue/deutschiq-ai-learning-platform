@@ -14,7 +14,7 @@ from app.models.lesson import Lesson
 from app.models.user import User
 from app.models.beta import BetaAcceptanceCheck, BetaEnrollment, BetaInvite
 from app.services.beta_acceptance import ACCEPTANCE_CATALOG, acceptance_report
-from app.services.beta_insights import beta_readiness, exercise_health, lesson_content_health, retention_cohorts, summarize_events, tester_progress
+from app.services.beta_insights import beta_readiness, exercise_health, lesson_content_health, retention_cohorts, soft_launch_gate, summarize_events, tester_progress
 from app.services.bot_links import telegram_beta_invite_url
 from app.services.content_i18n import localize_lesson_content, normalize_language
 from app.services.content_quality import curriculum_journey_issues, normalize_lesson_content, publication_blockers
@@ -222,6 +222,7 @@ async def beta_control_center(
         "content_health": content_health,
         "readiness": readiness,
         "retention": retention_cohorts(enrollments, all_sessions, datetime.now()),
+        "soft_launch": soft_launch_gate(event_summary, users, sessions),
         "acceptance": acceptance,
         "beta": {
             "enrolled": len(enrollments),

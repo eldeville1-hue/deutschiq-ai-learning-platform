@@ -22,7 +22,7 @@ from app.core.logging_config import configure_logging
 
 configure_logging()
 logger = logging.getLogger("deutschiq.api")
-VERSION = "76.0.0"
+VERSION = "77.0.0"
 BUILD_COMMIT = os.getenv("RENDER_GIT_COMMIT", os.getenv("GIT_COMMIT", "local"))[:12]
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -78,7 +78,7 @@ async def request_logging(request: Request, call_next):
 
 @app.get("/api/version")
 async def version():
-    return {"version": VERSION, "release": "closed-beta-insights-v17", "commit": BUILD_COMMIT}
+    return {"version": VERSION, "release": "soft-launch-evidence-v18", "commit": BUILD_COMMIT}
 
 @app.get("/api/health/live")
 async def liveness():

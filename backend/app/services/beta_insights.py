@@ -44,6 +44,8 @@ def summarize_events(events) -> dict:
                 "exercise_index": properties.get("exercise_index"),
                 "exercise_type": str(properties.get("exercise_type") or "")[:40] or None,
                 "topic": str(properties.get("topic") or "")[:100] or None,
+                "useful": str(properties.get("useful") or "")[:12] or None,
+                "pro_intent": str(properties.get("pro_intent") or "")[:12] or None,
                 "created_at": item.created_at.isoformat() if item.created_at else None,
             })
     mode_rows = [
@@ -58,7 +60,38 @@ def summarize_events(events) -> dict:
         "commerce": dict(commerce),
         "learning_modes": mode_rows,
         "feedback": list(reversed(feedback[-30:])),
+        "feedback_signals": {
+            "useful_yes": sum(item.get("useful") == "yes" for item in feedback),
+            "useful_partly": sum(item.get("useful") == "partly" for item in feedback),
+            "useful_no": sum(item.get("useful") == "no" for item in feedback),
+            "would_pay_yes": sum(item.get("pro_intent") == "yes" for item in feedback),
+            "would_pay_maybe": sum(item.get("pro_intent") == "maybe" for item in feedback),
+            "would_pay_no": sum(item.get("pro_intent") == "no" for item in feedback),
+        },
     }
+
+
+def soft_launch_gate(event_summary: dict, users, sessions) -> dict:
+    """Conservative evidence gate for enabling payments after the free preview."""
+    unique = event_summary.get("unique_users", {})
+    reliability = event_summary.get("reliability", {})
+    completed_diagnostics = max(int(unique.get("diagnostic_completed", 0)), sum(bool(item.diagnostic_completed) for item in users))
+    completed_lessons = sum(item.status in {"passed", "practice_needed"} for item in sessions)
+    sessions_by_user = defaultdict(list)
+    for item in sessions:
+        if item.started_at:
+            sessions_by_user[int(item.user_id)].append(item.started_at.replace(tzinfo=None).date())
+    returning_learners = sum(len(set(days)) >= 2 for days in sessions_by_user.values())
+    pro_signals = int(unique.get("pro_interest_clicked", 0))
+    serious_errors = sum(int(reliability.get(name, 0)) for name in ("api_failed", "client_error", "reload_loop_detected"))
+    checks = [
+        {"id": "diagnostics", "label": "10 completed diagnostics", "current": completed_diagnostics, "target": 10, "passed": completed_diagnostics >= 10},
+        {"id": "lessons", "label": "5 completed lessons", "current": completed_lessons, "target": 5, "passed": completed_lessons >= 5},
+        {"id": "returners", "label": "3 returning learners", "current": returning_learners, "target": 3, "passed": returning_learners >= 3},
+        {"id": "interest", "label": "2 genuine Pro-interest signals", "current": pro_signals, "target": 2, "passed": pro_signals >= 2},
+        {"id": "errors", "label": "No serious production errors", "current": serious_errors, "target": 0, "passed": serious_errors == 0},
+    ]
+    return {"payments_ready": all(item["passed"] for item in checks), "checks": checks}
 
 
 def exercise_health(attempts, lesson_topics: dict[int, str]) -> list[dict]:

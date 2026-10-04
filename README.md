@@ -1,8 +1,8 @@
 # DeutschIQ
 
-> v22 Balanced Placement turns diagnosis into a 16-item A1–B2 assessment with
-> equal evidence per difficulty band, four German listening tasks, honest skill
-> coverage, and server-side CEFR calibration.
+> v18 Soft Launch Evidence combines an adaptive A1–B2 learning journey with
+> contextual beta feedback, privacy-safe product analytics, explicit payment
+> evidence gates, and an owner-only quality center.
 
 <p align="center">
   <img src="docs/screenshots/deutschiq-cover.png" alt="DeutschIQ — adaptive German learning inside Telegram">
@@ -27,7 +27,7 @@
 
 DeutschIQ is an AI-assisted Telegram Mini App for adaptive German learning. It combines a protected level diagnostic, a personalized 30-day curriculum, mastery-based exercises, spaced review, progress analytics, and an AI tutor in a mobile-first learning flow.
 
-**v17 Learning Engine** turns the visual product into an explainable daily learning system. It models prerequisites, retention stability, lapses, confidence and response time; composes a review → learn → transfer session; and gives the AI tutor recent mastery and error context.
+**v18 Soft Launch Evidence** turns the visual product into an explainable daily learning system and a measurable free preview. It models prerequisites, retention stability, lapses, confidence and response time; composes a review → learn → transfer session; and records usefulness, confusion and genuine Pro intent without enabling payments.
 
 The public application runs as a Docker service on Render with a signed Telegram webhook and managed PostgreSQL on Neon.
 
@@ -49,8 +49,7 @@ The public application runs as a Docker service on Render with a signed Telegram
 
 <p align="center">
   <img src="docs/screenshots/07-profile.png" width="230" alt="Learner profile">
-  <img src="docs/screenshots/09-lesson-listening.png" width="230" alt="Listening exercise">
-  <img src="docs/screenshots/10-lesson-feedback.png" width="230" alt="Learning feedback">
+  <img src="docs/screenshots/08-result.png" width="230" alt="Placement result">
 </p>
 
 ## Key features
@@ -71,6 +70,8 @@ The public application runs as a Docker service on Render with a signed Telegram
 - Signed webhook for permanent cloud operation
 - Privacy controls for learner-data export and deletion
 - First-party learning funnel events without storing answer text
+- Three-question asynchronous beta feedback: confusion, usefulness, and Pro intent
+- Explicit soft-launch evidence gate that keeps payments disabled until thresholds are met
 
 ## Architecture
 
@@ -158,7 +159,9 @@ python -m app.bot.main
 
 Render rebuilds the service from GitHub when the production branch changes. On startup it applies database migrations and idempotently synchronizes the validated curriculum. Production credentials are stored as hosting environment variables, never in the repository.
 
-Release `76.0.0` runs as an invite-only closed beta. The future Pro offer can be previewed and measured, while `PAYMENTS_ENABLED=false` and `BETA_FREE_ACCESS=true` prevent any Stars charge.
+Release `77.0.0` runs as an invite-only free soft launch. The future Pro offer can be previewed and measured, while `PAYMENTS_ENABLED=false` and `BETA_FREE_ACCESS=true` prevent any Stars charge.
+
+Operational documents: [beta guide](docs/BETA_SOFT_LAUNCH.md), [testing report](docs/TESTING_REPORT.md), [portfolio case study](docs/PORTFOLIO_CASE_STUDY.md), and [monetisation checklist](docs/MONETISATION_CHECKLIST.md).
 
 ## Testing
 

@@ -1,13 +1,13 @@
 import unittest
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 from types import SimpleNamespace
 
 from fastapi import HTTPException
 
 from app.api.endpoints.internal import curriculum_preview_catalog, curriculum_preview_lesson, require_control_key
 from app.core.config import settings
-from app.services.beta_insights import tester_alias, tester_progress
+from app.services.beta_insights import soft_launch_gate, summarize_events, tester_alias, tester_progress
 from app.services.beta_acceptance import ACCEPTANCE_CATALOG
 
 
@@ -94,6 +94,32 @@ class BetaControlCenterTests(unittest.TestCase):
         self.assertEqual(1, result["lessons_completed"])
         self.assertEqual(1, result["feedback_count"])
         self.assertNotIn("user_id", result)
+
+    def test_soft_launch_gate_requires_real_evidence_and_zero_serious_errors(self):
+        now = datetime.now()
+        events = []
+        for user_id in range(1, 11):
+            events.append(SimpleNamespace(user_id=user_id, event_name="diagnostic_completed", properties={}, created_at=now))
+        for user_id in (1, 2):
+            events.append(SimpleNamespace(user_id=user_id, event_name="pro_interest_clicked", properties={}, created_at=now))
+        users = [SimpleNamespace(diagnostic_completed=True) for _ in range(10)]
+        sessions = [
+            SimpleNamespace(user_id=user_id, status="passed", started_at=now)
+            for user_id in (1, 2, 3, 4, 5)
+        ] + [
+            SimpleNamespace(user_id=user_id, status="active", started_at=now - timedelta(days=1))
+            for user_id in (1, 2, 3)
+        ]
+
+        result = soft_launch_gate(summarize_events(events), users, sessions)
+
+        self.assertTrue(result["payments_ready"])
+        self.assertEqual(5, len(result["checks"]))
+
+        events.append(SimpleNamespace(user_id=1, event_name="api_failed", properties={}, created_at=now))
+        result = soft_launch_gate(summarize_events(events), users, sessions)
+        self.assertFalse(result["payments_ready"])
+        self.assertFalse(next(item for item in result["checks"] if item["id"] == "errors")["passed"])
 
 
 if __name__ == "__main__":
