@@ -36,21 +36,27 @@ The public application runs as a Docker service on Render with a signed Telegram
 ## Product preview
 
 <p align="center">
-  <img src="docs/screenshots/01-home.png" width="230" alt="Personalized home screen">
-  <img src="docs/screenshots/02-diagnostic.png" width="230" alt="Adaptive German diagnostic">
-  <img src="docs/screenshots/03-lesson.png" width="230" alt="Interactive German lesson">
+  <img src="docs/screenshots/deutschiq-product-preview.png" alt="DeutschIQ product journey from placement to personal progress">
 </p>
 
-<p align="center">
-  <img src="docs/screenshots/04-plan.png" width="230" alt="Personalized learning plan">
-  <img src="docs/screenshots/05-analytics.png" width="230" alt="Knowledge analytics">
-  <img src="docs/screenshots/06-ai-tutor.png" width="230" alt="AI German tutor">
-</p>
-
-<p align="center">
-  <img src="docs/screenshots/07-profile.png" width="230" alt="Learner profile">
-  <img src="docs/screenshots/08-result.png" width="230" alt="Placement result">
-</p>
+<details>
+  <summary><strong>View individual app screens</strong></summary>
+  <br>
+  <p align="center">
+    <img src="docs/screenshots/01-home.png" width="230" alt="Personalized home screen">
+    <img src="docs/screenshots/02-diagnostic.png" width="230" alt="Adaptive German diagnostic">
+    <img src="docs/screenshots/03-lesson.png" width="230" alt="Interactive German lesson">
+  </p>
+  <p align="center">
+    <img src="docs/screenshots/04-plan.png" width="230" alt="Personalized learning plan">
+    <img src="docs/screenshots/05-analytics.png" width="230" alt="Knowledge analytics">
+    <img src="docs/screenshots/06-ai-tutor.png" width="230" alt="AI German tutor">
+  </p>
+  <p align="center">
+    <img src="docs/screenshots/07-profile.png" width="230" alt="Learner profile">
+    <img src="docs/screenshots/08-result.png" width="230" alt="Placement result">
+  </p>
+</details>
 
 ## Key features
 
