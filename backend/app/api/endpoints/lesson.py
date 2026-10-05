@@ -23,7 +23,7 @@ from pathlib import Path
 from app.services.misconception_feedback import misconception_feedback
 from app.services.learning_route import next_cefr_track, normalize_cefr
 from app.services.answer_intelligence import evaluate_structured_answer
-from app.services.lesson_coaching import learning_profile, repair_plan, supported_retry_exercise
+from app.services.lesson_coaching import feedback_focus, learning_profile, repair_plan, success_feedback, supported_retry_exercise
 from app.services.assessment_insights import evidence_gate
 
 router = APIRouter(prefix="/api/lesson", tags=["lesson"])
@@ -168,7 +168,7 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
     return {
         "correct": correct,
         "correct_answer": production_feedback["corrected_answer"] if production_feedback else accepted[0],
-        "explanation": production_feedback["feedback"] if production_feedback else exercise.get("explanation", ""),
+        "explanation": success_feedback(production_feedback["feedback"] if production_feedback else exercise.get("explanation", ""), data.language),
         "production_score": production_feedback["score"] if production_feedback else None,
         "dimension_scores": production_feedback.get("dimension_scores") if production_feedback else None,
         "improvement": production_feedback.get("improvement") if production_feedback else None,
@@ -186,6 +186,7 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
         "production": exercise.get("type") in {"production", "dialogue"},
         "missing_words": missing_words,
         "extra_words": extra_words,
+        "feedback_focus": feedback_focus(error_type, missing_words, extra_words, data.language) if not correct else None,
         "repair_steps": repair_plan(error_type, missing_words, extra_words, normalize_language(data.language)) if not correct else [],
         "next_action": "retry" if not correct else ("advance" if data.confidence == "sure" else "reinforce"),
     }

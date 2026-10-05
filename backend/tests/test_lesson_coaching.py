@@ -1,6 +1,6 @@
 import unittest
 
-from app.services.lesson_coaching import learning_profile, repair_plan, supported_retry_exercise
+from app.services.lesson_coaching import feedback_focus, learning_profile, repair_plan, success_feedback, supported_retry_exercise
 
 
 class LessonCoachingTests(unittest.TestCase):
@@ -27,6 +27,15 @@ class LessonCoachingTests(unittest.TestCase):
         self.assertEqual(3, len(steps))
         self.assertIn("habe", steps[1])
         self.assertIn("Wortstellung", steps[2])
+
+    def test_feedback_focus_names_the_smallest_action_without_revealing_model(self):
+        self.assertEqual("Ergänze: habe, gearbeitet.", feedback_focus("missing_words", ["habe", "gearbeitet"], [], "de"))
+        self.assertEqual("Remove or replace: is.", feedback_focus("answer_mismatch", [], ["is"], "en"))
+        self.assertIn("порядок", feedback_focus("answer_mismatch", [], [], "ru"))
+
+    def test_success_feedback_has_localized_fallback(self):
+        self.assertEqual("Die Verbform ist richtig.", success_feedback(" Die Verbform ist richtig. ", "de"))
+        self.assertIn("situation", success_feedback("", "en").lower())
 
 
 if __name__ == "__main__":

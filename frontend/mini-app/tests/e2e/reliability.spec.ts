@@ -248,6 +248,33 @@ test('learner completes a mission and sees their own usable German', async ({ pa
   await expectNoHorizontalOverflow(page);
 });
 
+test('wrong answer gives one focused repair before revealing the model', async ({ page }) => {
+  await mockApi(page, { completed: true });
+  await page.route('**/api/lesson/check-answer', route => route.fulfill({ json: {
+    correct: false,
+    correct_answer: 'Du solltest früher schlafen gehen.',
+    feedback_focus: 'Add: solltest.',
+    error_type: 'missing_words',
+    missing_words: ['solltest'],
+    extra_words: [],
+    retry_instruction: 'Use sollte to give advice.',
+    repair_steps: ['Name the lesson rule.', 'Add solltest.', 'Check the word order.'],
+    retry_exercise: { id: 'advice-retry', type: 'reorder', question: 'Build a fresh example.', tokens: ['mehr', 'Du', 'schlafen', 'solltest'], hint: 'Use sollte for advice.' },
+  }}));
+  await page.goto('/lesson/77');
+  await page.getByRole('button', { name: /Understand with an example/i }).click();
+  await page.getByRole('button', { name: /Start practice/i }).click();
+  await page.getByRole('textbox').fill('Du früher schlafen gehen.');
+  await page.getByRole('button', { name: /^Check$/i }).click();
+
+  await expect(page.getByText('ONE FIX')).toBeVisible();
+  await expect(page.getByText('Add: solltest.')).toBeVisible();
+  await expect(page.getByText('Du solltest früher schlafen gehen.')).toBeHidden();
+  await page.getByText('Show model').click();
+  await expect(page.getByText('Du solltest früher schlafen gehen.')).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+});
+
 test('graduation checkpoint uses independent dialogue and opens the next level', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await mockApi(page, { completed: true });

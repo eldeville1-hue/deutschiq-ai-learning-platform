@@ -395,12 +395,21 @@ export const Lesson: React.FC = () => {
                     : tr(lang, "Почти", "Fast richtig", "Almost")}
                 </b>
                 {checked && <p>{feedback?.explanation}</p>}
-                {!checked && feedback?.correct_answer && (
+                {!checked && feedback?.feedback_focus && <div className="feedback-focus">
+                  <small>{tr(lang, 'ИСПРАВЬ ОДНО', 'EIN SCHRITT', 'ONE FIX')}</small>
+                  <strong>{feedback.feedback_focus}</strong>
+                </div>}
+                {!checked && feedback?.correct_answer && (retried[exerciseIndex] ? (
                   <div className="corrected-model">
-                    <small>{tr(lang, 'ПРАВИЛЬНАЯ МОДЕЛЬ', 'RICHTIGES MODELL', 'CORRECT MODEL')}</small>
+                    <small>{tr(lang, 'СРАВНИ С МОДЕЛЬЮ', 'MIT DEM MODELL VERGLEICHEN', 'COMPARE WITH THE MODEL')}</small>
                     <strong>{feedback.correct_answer}</strong>
                   </div>
-                )}
+                ) : (
+                  <details className="corrected-model model-reveal">
+                    <summary>{tr(lang, 'Показать модель', 'Modell anzeigen', 'Show model')}</summary>
+                    <strong>{feedback.correct_answer}</strong>
+                  </details>
+                ))}
                 {!checked && feedback?.error_type && <details className="error-diagnosis"><summary>{tr(lang, 'Почему?', 'Warum?', 'Why?')}</summary>
                   {Array.isArray(feedback.contrast) && feedback.contrast.map((line: string, index: number) => <p key={index}>{line}</p>)}
                   <em>{feedback.retry_instruction || tr(lang, 'Сначала назови правило, затем составь ответ заново.', 'Nenne zuerst die Regel und bilde die Antwort dann neu.', 'State the rule first, then build the answer again.')}</em>

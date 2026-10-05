@@ -23,7 +23,7 @@ from app.core.security import apply_security_headers
 
 configure_logging()
 logger = logging.getLogger("deutschiq.api")
-VERSION = "79.0.0"
+VERSION = "80.0.0"
 BUILD_COMMIT = os.getenv("RENDER_GIT_COMMIT", os.getenv("GIT_COMMIT", "local"))[:12]
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -80,7 +80,7 @@ async def request_logging(request: Request, call_next):
 
 @app.get("/api/version")
 async def version():
-    return {"version": VERSION, "release": "beta-evidence-v20", "commit": BUILD_COMMIT}
+    return {"version": VERSION, "release": "focused-repair-v21", "commit": BUILD_COMMIT}
 
 @app.get("/api/health/live")
 async def liveness():

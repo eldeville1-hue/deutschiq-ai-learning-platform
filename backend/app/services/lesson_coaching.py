@@ -1,6 +1,7 @@
 """Explainable adaptation and repair guidance for a learning session."""
 
 from app.services.content_i18n import normalize_language
+from app.services.misconception_feedback import misconception_feedback
 
 
 def supported_retry_exercise(exercise: dict, lesson_content: dict, language: str) -> dict:
@@ -89,3 +90,44 @@ def repair_plan(error_type: str | None, missing_words: list[str], extra_words: l
         steps.append(copy["build"])
     steps.append(copy["check"])
     return steps
+
+
+def feedback_focus(error_type: str | None, missing_words: list[str], extra_words: list[str], language: str) -> str:
+    """Return one actionable correction before revealing the complete model."""
+    lang = normalize_language(language)
+    copy = {
+        "ru": {
+            "missing": "Добавь: {words}.",
+            "extra": "Убери или замени: {words}.",
+            "order": "Все нужные слова есть — теперь проверь их порядок.",
+        },
+        "de": {
+            "missing": "Ergänze: {words}.",
+            "extra": "Entferne oder ersetze: {words}.",
+            "order": "Alle nötigen Wörter sind da – prüfe jetzt ihre Reihenfolge.",
+        },
+        "en": {
+            "missing": "Add: {words}.",
+            "extra": "Remove or replace: {words}.",
+            "order": "All required words are present—now check their order.",
+        },
+    }[lang]
+    if missing_words:
+        return copy["missing"].format(words=", ".join(missing_words[:4]))
+    if extra_words:
+        return copy["extra"].format(words=", ".join(extra_words[:4]))
+    if error_type in {"answer_mismatch", "verb_not_final", "word_order"}:
+        return copy["order"]
+    return misconception_feedback(error_type, lang)
+
+
+def success_feedback(explanation: str | None, language: str) -> str:
+    """Never return an empty success state to the learner."""
+    if explanation and explanation.strip():
+        return explanation.strip()
+    lang = normalize_language(language)
+    return {
+        "ru": "Форма и смысл подходят этой ситуации.",
+        "de": "Form und Bedeutung passen zu dieser Situation.",
+        "en": "The form and meaning fit this situation.",
+    }[lang]
