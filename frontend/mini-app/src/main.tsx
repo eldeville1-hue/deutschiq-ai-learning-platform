@@ -2,6 +2,9 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './styles/global.css';
+import './styles/product.css';
+import './styles/product-polish.css';
+import './styles/learning-system.css';
 import { api } from './services/api';
 import { getUserId } from './utils/user';
 
@@ -28,18 +31,12 @@ const telegram = (window as any).Telegram?.WebApp;
 telegram?.ready();
 telegram?.expand();
 
-const renderApp = async () => {
-  // These layers stay split until the legacy rules are consolidated. Importing
-  // them statically creates one oversized render-blocking stylesheet.
-  await import('./styles/product.css');
-  await import('./styles/product-polish.css');
-  await import('./styles/learning-system.css');
-  ReactDOM.createRoot(document.getElementById('root')!).render(
-    <React.StrictMode><App /></React.StrictMode>
-  );
-};
-
-void renderApp();
+// Product styling is part of the application shell. Loading these layers before
+// React mounts prevents Telegram WebViews from painting partially styled routes
+// when a dynamically imported CSS chunk is delayed or discarded.
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode><App /></React.StrictMode>
+);
 
 window.setTimeout(() => {
   if (!getUserId()) return;
