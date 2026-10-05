@@ -1,0 +1,136 @@
+/*
+ * Small, independent foundations for every learner route.
+ *
+ * Keep these rules separate from the legacy product sheet. Some embedded
+ * WebViews have been observed attaching that large sheet without applying its
+ * CSSOM rules. These controls must never fall back to native white widgets.
+ */
+button,
+input,
+textarea,
+select {
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  font: inherit;
+}
+
+.language-picker {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  padding: 4px;
+  border: 1px solid var(--dq-border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .025);
+}
+.language-picker button {
+  min-width: 0;
+  min-height: 40px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--dq-muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+.language-picker.compact { max-width: none; margin: 0; }
+.language-picker.compact button { min-height: 34px; }
+.profile-language { display: grid; gap: 10px; padding: 14px; border-bottom: 1px solid var(--dq-border); }
+.profile-language > strong { color: var(--dq-text); font-size: 12px; }
+
+.precision-profile .subscription-card {
+  display: grid;
+  gap: 10px;
+  padding: 17px;
+  border: 1px solid rgba(130, 174, 248, .18);
+  border-radius: 18px;
+  background: radial-gradient(circle at 100% 0, rgba(130, 174, 248, .13), transparent 44%), var(--dq-surface);
+}
+.subscription-card > header { display: flex; align-items: center; justify-content: space-between; color: var(--dq-blue); font-size: 9px; font-weight: 850; letter-spacing: .12em; }
+.subscription-card > header span { display: flex; align-items: center; gap: 7px; }
+.subscription-card > header b { padding: 5px 8px; border-radius: 8px; background: rgba(130, 174, 248, .1); }
+.subscription-card h2 { margin: 2px 0 0; font-size: 18px; }
+.subscription-card p { margin: 0; color: var(--dq-muted); font-size: 11px; line-height: 1.48; }
+.subscription-card > button {
+  min-height: 43px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 13px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--dq-gold);
+  color: #11151c;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.profile-learning-pass > header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.profile-learning-pass > header button { display: flex; align-items: center; gap: 7px; border: 0; background: transparent; color: var(--dq-gold); font-size: 10px; font-weight: 800; }
+.profile-quick-stats { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 !important; }
+.profile-quick-stats > span { min-width: 0; display: grid !important; justify-items: center; gap: 4px !important; }
+.profile-quick-stats > span + span { border-left: 1px solid var(--dq-border); }
+
+.rc-analysis-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px 16px;
+}
+.rc-level-block { min-width: 0; display: grid; align-content: center; gap: 2px; }
+.rc-level-block small { color: var(--dq-muted); font-size: 8px; font-weight: 800; letter-spacing: .15em; }
+.rc-level-block strong { display: flex; align-items: center; gap: 9px; color: var(--dq-gold-soft); font-size: 43px; line-height: 1; letter-spacing: -.055em; }
+.rc-level-block span { color: var(--dq-muted); font-size: 10px; }
+.rc-score-ring { --score: 0deg; width: 72px; height: 72px; display: grid; place-items: center; border-radius: 50%; background: conic-gradient(var(--dq-blue) var(--score), rgba(255, 255, 255, .07) 0); }
+.rc-score-ring::before { content: ""; grid-area: 1 / 1; width: 60px; height: 60px; border-radius: 50%; background: #121b29; }
+.rc-score-ring span { position: relative; grid-area: 1 / 1; display: grid; justify-items: center; color: var(--dq-blue); font-size: 11px; text-align: center; }
+.rc-score-ring strong { font-size: 22px; }
+.rc-journey { grid-column: 1 / -1; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 9px; color: var(--dq-muted); font-size: 9px; }
+.rc-journey > div { height: 4px; overflow: hidden; border-radius: 9px; background: rgba(255, 255, 255, .08); }
+.rc-journey i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #729ff0, #a7c7ff); }
+.rc-analysis-overview > p { grid-column: 1 / -1; }
+
+.rc-next-action {
+  width: 100%;
+  min-height: 72px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px 13px 16px;
+  border: 0;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--dq-gold-soft), var(--dq-gold));
+  color: #10151e;
+  text-align: left;
+}
+.rc-next-action > span { min-width: 0; display: grid; gap: 3px; }
+.rc-next-action small, .rc-next-action strong, .rc-next-action em { color: #10151e; }
+.rc-next-action small { font-size: 8px; font-weight: 850; letter-spacing: .14em; }
+.rc-next-action strong { font-size: 14px; }
+.rc-next-action em { overflow: hidden; font-size: 10px; font-style: normal; text-overflow: ellipsis; white-space: nowrap; }
+.rc-evidence-toggle { width: 100%; min-height: 68px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid var(--dq-border); border-radius: 17px; background: var(--dq-surface); color: var(--dq-text); text-align: left; }
+.rc-evidence-toggle > span { min-width: 0; display: grid; gap: 4px; }
+.rc-evidence-toggle small { color: var(--dq-muted); font-size: 9px; font-weight: 850; letter-spacing: .12em; }
+.rc-evidence-toggle strong { font-size: 13px; }
+.rc-text-action { min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 7px; border: 0; background: transparent; color: var(--dq-muted); font-size: 12px; }
+
+.exercise-conversation { display: grid; gap: 12px; }
+.conversation-progress { display: flex; align-items: center; justify-content: space-between; color: var(--dq-muted); font-size: 9px; font-weight: 900; letter-spacing: .12em; }
+.conversation-progress b { color: var(--dq-gold); font-size: 11px; }
+.conversation-thread { max-height: 260px; display: grid; gap: 8px; overflow: auto; padding: 3px 2px; }
+.conversation-bubble { max-width: 88%; display: grid; grid-template-columns: 1fr auto; gap: 3px; padding: 11px 13px; border-radius: 16px; }
+.conversation-bubble small { font-size: 8px; font-weight: 900; letter-spacing: .1em; }
+.conversation-bubble p { grid-column: 1 / -1; margin: 0; font-size: 14px; line-height: 1.4; }
+.conversation-bubble.partner { justify-self: start; border: 1px solid var(--dq-border); border-bottom-left-radius: 5px; background: rgba(255, 255, 255, .045); }
+.conversation-bubble.learner { justify-self: end; border: 1px solid rgba(244, 191, 85, .3); border-bottom-right-radius: 5px; background: rgba(244, 191, 85, .1); }
+.conversation-audio { width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid var(--dq-border); border-radius: 9px; background: rgba(130, 174, 248, .07); color: var(--dq-blue); }
+.conversation-compose { display: grid; gap: 8px; padding: 12px; border: 1px solid rgba(130, 174, 248, .25); border-radius: 17px; background: rgba(130, 174, 248, .055); }
+.conversation-compose > small { color: var(--dq-text); font-size: 12px; font-weight: 750; line-height: 1.4; }
+.conversation-compose textarea { width: 100%; min-height: 66px; padding: 12px 13px; border: 1px solid var(--dq-border-strong); border-radius: 13px; background: #0b111b; color: var(--dq-text); font-size: 15px; line-height: 1.4; resize: none; }
+.conversation-compose > button { min-height: 46px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 13px; background: var(--dq-blue); color: #10151e; font-weight: 850; }
+.conversation-compose > button:disabled { opacity: .4; }
+
+.lesson-support-row { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; overflow: visible; }
+.lesson-support-row button { min-width: 0; min-height: 38px; padding: 0 11px; border: 1px solid var(--dq-border); border-radius: 999px; background: rgba(255, 255, 255, .025); color: var(--dq-blue); font-size: 10px; font-weight: 800; line-height: 1.2; }
