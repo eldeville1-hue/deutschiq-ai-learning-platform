@@ -21,6 +21,7 @@ export default defineConfig({
     assetsDir: 'assets',
     emptyOutDir: true,
     cssMinify: 'esbuild',
+    cssTarget: ['chrome111', 'safari16.4'],
     chunkSizeWarningLimit: 320,
   },
 });
