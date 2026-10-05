@@ -63,6 +63,8 @@ class SecurityHardeningTests(unittest.TestCase):
         self.assertEqual(SECURITY_HEADERS, insecure.headers)
         self.assertIn("Strict-Transport-Security", secure.headers)
         self.assertEqual("nosniff", secure.headers["X-Content-Type-Options"])
+        self.assertNotIn("X-Frame-Options", secure.headers)
+        self.assertIn("https://*.telegram.org", secure.headers["Content-Security-Policy"])
 
 
 if __name__ == "__main__":
