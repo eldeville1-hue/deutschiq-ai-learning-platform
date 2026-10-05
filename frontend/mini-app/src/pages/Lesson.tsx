@@ -351,7 +351,7 @@ export const Lesson: React.FC = () => {
           <div className="exercise-stage-row"><p className="eyebrow">{activityLabel}{retried[exerciseIndex] ? tr(lang, " · ещё раз", " · noch einmal", " · try again") : ""}</p><span>{exerciseIndex + 1}/{exercises.length}</span></div>
           {activeExercise.mission_role === 'final' && <div className="mission-stage-banner"><span>{tr(lang, 'БЕЗ МОДЕЛИ', 'OHNE MODELL', 'WITHOUT THE MODEL')}</span><strong>{tr(lang, 'Покажи, что ты можешь сделать это сам', 'Zeige, dass du es selbst kannst', 'Show that you can do it independently')}</strong></div>}
           <div className="exercise-prompt"><h1>{activeExercise.type === "repeat" ? tr(lang, "Произнеси фразу", "Sprich den Satz", "Say the sentence") : activeExercise.question}</h1></div>
-          <div className="lesson-task-surface">
+          {checked === null && <div className="lesson-task-surface">
           {(activeExercise.type === "listening" || activeExercise.type === "listening_choice") && (
             <div className="listening-challenge simple">
               <button type="button" className={`listen-main ${audioState}`} onClick={() => playAudio(activeExercise.audio_url, activeExercise.audio_text, 0.92)}><FaVolumeUp /> {audioState === 'loading' ? tr(lang, 'Загрузка…', 'Wird geladen…', 'Loading…') : audioState === 'paused' ? tr(lang, 'Продолжить', 'Fortsetzen', 'Continue') : tr(lang, "Слушать", "Anhören", "Listen")}</button>
@@ -360,7 +360,7 @@ export const Lesson: React.FC = () => {
           )}
           {(showTranscript || easyMode) && activeExercise.audio_text && <div className="listening-transcript"><small>{tr(lang, 'ТЕКСТ', 'TEXT', 'TRANSCRIPT')}</small><span>{activeExercise.audio_text}</span></div>}
           <ExerciseInteraction exercise={{ ...activeExercise, id: `${id}-${exerciseIndex}-${retried[exerciseIndex] ? 'retry' : 'first'}` }} answer={answer} onAnswer={setAnswer} disabled={checked !== null} lang={lang} onAudio={sessionId ? transcribe : undefined} onPlayAudio={playAudio} guided={easyMode || exerciseKind(activeExercise) === 'repair'} />
-          </div>
+          </div>}
             {speechResult?.transcript && (
               <div className="speech-result">
                 <small>{tr(lang, "РАСПОЗНАНО", "ERKANNT", "RECOGNISED")}</small>
