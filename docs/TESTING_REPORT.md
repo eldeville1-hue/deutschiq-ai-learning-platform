@@ -28,9 +28,24 @@ Every production change follows the same sequence:
 
 ## Database recovery gate
 
-Before paid launch, create a Neon branch from the latest production restore point, connect it as an isolated restore target, apply `alembic upgrade head`, and run the production smoke checks against a temporary service wired only to that branch. Never test restoration by overwriting the production branch. Record the restore-point time, temporary branch, migration head and verification result, then delete the isolated branch after the evidence is retained.
+Completed on 2026-10-05 with the temporary Neon branch `restore-drill-2026-10-05`, created from `production`. Read-only verification confirmed migration head `20261003_0011` and restored learner, lesson, session, event, diagnostic and exercise-attempt records. Production was not modified, and the temporary branch was deleted after verification.
 
-The closed beta remains payment-disabled until this isolated restore drill and the seller/legal checklist are complete.
+The closed beta remains payment-disabled until the seller/legal checklist and genuine learner-evidence gate are complete.
+
+## Final v79 acceptance audit — 2026-10-05
+
+- Production release: `79.0.0` / `beta-evidence-v20` / commit `d6e7b7a471b7`
+- Local backend: 128/128 tests passed
+- Curriculum gate: 80 lessons, 400 exercises and RU/DE/EN copy passed with no publication blockers
+- Frontend: production build, ESLint, bundle budget and production dependency audit passed; 0 known production vulnerabilities
+- GitHub Actions run `37229698240`: backend, frontend and all 62 Chromium/WebKit mobile journeys passed
+- Scheduled production smoke run `37268268814`: passed on the deployed v79 commit
+- Live verification: API version, database, migration head, frontend shell and versioned assets returned successfully
+- Render deployment: `live`; recent error/critical logs: 0; recent HTTP 5xx responses: 0
+- Bounded production load: 60/60 HTTP 200 responses and 0 request errors; p50 6.41 seconds, p95 9.30 seconds and maximum 9.65 seconds, failing the 2.5-second paid-launch latency gate
+- Payments remained disabled and no production learner evidence was fabricated during the audit
+
+The remaining infrastructure limitation is the free Render instance's cold start and concurrent-request queueing. In this audit, the first command-line request completed in about 24 seconds after an earlier 60-second timeout, and the warm bounded load probe remained above the release latency threshold. This is a hosting-capacity constraint, not an application assertion failure, and an always-on instance remains required before paid launch.
 
 ## Scope boundary
 
