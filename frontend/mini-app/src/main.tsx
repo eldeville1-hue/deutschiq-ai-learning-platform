@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import './styles/global.css';
 import './styles/product.css';
+import './styles/product-critical.css';
 import './styles/product-polish.css';
 import './styles/learning-system.css';
 import { api } from './services/api';
