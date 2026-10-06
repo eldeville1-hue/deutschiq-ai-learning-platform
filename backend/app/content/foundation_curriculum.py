@@ -1,5 +1,7 @@
 """Dedicated multilingual A1 and A2 routes for Adaptive Foundation v2."""
 
+from app.content.a2_editorial import A2_GRAMMAR_RULES, A2_LISTENING_MEANINGS, A2_LISTENING_DISTRACTORS, A2_REPAIR_ALTERNATIVES
+
 # day, module, skill id, pillar, RU/DE/EN title, target focus, model, typical error
 A1_CURRICULUM = [
     (1,1,"greetings","speaking","Приветствие","Begrüßung","Greetings","Begrüßung","Guten Morgen! Ich heiße Mia.","Guten Morgen! Ich heißen Mia."),
@@ -27,7 +29,7 @@ A1_CURRICULUM = [
 A2_CURRICULUM = [
     (1,1,"dative_a2","grammar","Dativ","Dativ","Dative","Empfänger im Dativ","Ich gebe meiner Freundin das Buch.","Ich gebe meine Freundin das Buch."),
     (2,1,"dative_accusative","grammar","Dativ и Akkusativ","Dativ und Akkusativ","Dative and accusative","Person vor Sache","Der Lehrer erklärt den Schülern die Aufgabe.","Der Lehrer erklärt die Schüler die Aufgabe."),
-    (3,1,"two_way_prepositions","grammar","Wechselpräpositionen","Wechselpräpositionen","Two-way prepositions","wo = Dativ, wohin = Akkusativ","Ich stelle die Vase auf den Tisch.","Ich stelle die Vase auf dem Tisch."),
+    (3,1,"two_way_prepositions","grammar","Wechselpräpositionen","Wechselpräpositionen","Two-way prepositions","wo = Dativ, wohin = Akkusativ","Ich stelle die Vase auf den Tisch.","Ich stelle die Vase auf der Tisch."),
     (4,1,"dative_prepositions","grammar","Предлоги с Dativ","Dativpräpositionen","Dative prepositions","mit / nach / bei / seit","Seit einem Jahr wohne ich bei meiner Tante.","Seit einen Jahr wohne ich bei meine Tante."),
     (5,1,"accusative_prepositions","grammar","Предлоги с Akkusativ","Akkusativpräpositionen","Accusative prepositions","für / ohne / durch / gegen","Das Geschenk ist für meinen Bruder.","Das Geschenk ist für meinem Bruder."),
     (6,2,"perfect_haben","grammar","Perfekt с haben","Perfekt mit haben","Perfect with haben","haben + Partizip II","Ich habe gestern einen Film gesehen.","Ich bin gestern einen Film gesehen."),
@@ -537,7 +539,7 @@ A2_MISSION_BLUEPRINTS = {
         "title": ("Передай важную информацию", "Gib wichtige Informationen weiter", "Pass on important information"),
         "scenario": ("Ты сообщаешь коллеге изменения в расписании.", "Du informierst eine Kollegin über Änderungen im Zeitplan.", "You tell a colleague about changes to the schedule."),
         "can_do": ("Ты сможешь передать мнение или информацию с dass.", "Du kannst eine Meinung oder Information mit dass weitergeben.", "You can report an opinion or information using dass."),
-        "task": ("Передай две важные новости с dass.", "Gib zwei wichtige Informationen mit dass weiter.", "Pass on two important pieces of information using dass."),
+        "task": ("Передай информацию и своё мнение с dass.", "Gib eine Information und deine Meinung mit dass weiter.", "Report information and give your opinion using dass."),
         "alternate": "Ich glaube, dass die Besprechung später beginnt.",
         "turns": [
             ("Was hat Frau Weber über den Termin gesagt?", ("Передай информацию с dass.", "Gib die Information mit dass weiter.", "Report the information using dass."), "Sie hat gesagt, dass …", "Sie hat gesagt, dass der Termin später beginnt."),
@@ -590,7 +592,7 @@ A2_MISSION_BLUEPRINTS = {
         "task": ("Поздоровайся, сформулируй просьбу и уточни следующий шаг.", "Begrüße die Person, formuliere deine Bitte und frage nach dem nächsten Schritt.", "Greet the person, make your request, and ask about the next step."),
         "alternate": "Entschuldigung, könnten Sie mir bitte mit diesem Formular helfen?",
         "turns": [
-            ("Guten Tag. Was kann ich für Sie tun?", ("Сформулируй вежливую просьбу.", "Formuliere eine höfliche Bitte.", "Make a polite request."), "Könnten Sie mir bitte …?", "Könnten Sie mir bitte mit diesem Formular helfen?"),
+            ("Guten Tag. Was kann ich für Sie tun?", ("Сформулируй вежливую просьбу.", "Formuliere eine höfliche Bitte.", "Make a polite request."), "Guten Tag. Könnten Sie mir bitte …?", "Guten Tag. Könnten Sie mir bitte mit diesem Formular helfen?"),
             ("Natürlich. Haben Sie Ihren Ausweis dabei?", ("Ответь и уточни следующий шаг.", "Antworte und frage nach dem nächsten Schritt.", "Answer and ask about the next step."), "Ja. Was muss ich …?", "Ja. Was muss ich danach machen?"),
         ],
     },
@@ -599,11 +601,11 @@ A2_MISSION_BLUEPRINTS = {
         "title": ("Перенеси встречу письменно", "Verschiebe einen Termin schriftlich", "Reschedule an appointment in writing"),
         "scenario": ("Ты не можешь прийти к врачу и пишешь короткое сообщение.", "Du kannst nicht zum Arzttermin kommen und schreibst eine kurze Nachricht.", "You cannot attend a medical appointment and write a short message."),
         "can_do": ("Ты сможешь написать понятное официальное сообщение.", "Du kannst eine klare formelle Nachricht schreiben.", "You can write a clear formal message."),
-        "task": ("Напиши обращение, причину, просьбу о новой дате и прощание.", "Schreibe Anrede, Grund, Bitte um einen neuen Termin und Gruß.", "Write a greeting, reason, request for a new date, and closing."),
+        "task": ("Напиши обращение, объясни, что не можешь прийти, попроси новую дату и заверши письмо своим именем.", "Schreibe eine Anrede, erkläre, dass du nicht kommen kannst, bitte um einen neuen Termin und schließe mit Gruß und Namen.", "Write a greeting, explain that you cannot attend, request a new date, and close with your name."),
         "alternate": "Sehr geehrte Frau Klein, leider kann ich morgen nicht kommen. Könnten Sie mir bitte einen neuen Termin geben? Mit freundlichen Grüßen",
         "turns": [
             ("Schreiben Sie zuerst, warum Sie sich melden.", ("Начни официально и назови проблему.", "Beginne formell und nenne das Problem.", "Start formally and state the problem."), "Sehr geehrte …, leider …", "Sehr geehrte Frau Klein, leider kann ich morgen nicht kommen."),
-            ("Welche Lösung möchten Sie?", ("Вежливо попроси новую дату.", "Bitte höflich um einen neuen Termin.", "Politely request a new date."), "Könnten Sie …?", "Könnten Sie mir bitte einen neuen Termin geben?"),
+            ("Welche Lösung möchten Sie?", ("Вежливо попроси новую дату и заверши письмо своим именем.", "Bitte höflich um einen neuen Termin und schließe mit Gruß und Namen.", "Politely request a new date and close with your name."), "Könnten Sie …? Mit freundlichen Grüßen …", "Könnten Sie mir bitte einen neuen Termin geben?\nMit freundlichen Grüßen\nAlex Weber"),
         ],
     },
     "opinions_a2": {
@@ -621,7 +623,7 @@ A2_MISSION_BLUEPRINTS = {
     "problem_solution_a2": {
         "module_title": ("Решение проблем", "Probleme lösen", "Solving problems"),
         "title": ("Реши проблему в сервисе", "Löse ein Problem beim Service", "Solve a service problem"),
-        "scenario": ("Твой поезд отменён, и тебе нужна другая связь.", "Dein Zug fällt aus, und du brauchst eine andere Verbindung.", "Your train is cancelled and you need another connection."),
+        "scenario": ("Твой поезд отменён, и тебе нужен другой вариант поездки.", "Dein Zug fällt aus, und du brauchst eine andere Verbindung.", "Your train is cancelled and you need another connection."),
         "can_do": ("Ты сможешь объяснить проблему и попросить конкретное решение.", "Du kannst ein Problem erklären und um eine konkrete Lösung bitten.", "You can explain a problem and request a specific solution."),
         "task": ("Объясни отмену, назови цель поездки и попроси альтернативу.", "Erkläre den Ausfall, nenne dein Reiseziel und bitte um eine Alternative.", "Explain the cancellation, give your destination, and ask for an alternative."),
         "alternate": "Mein Zug nach Berlin fällt aus. Deshalb brauche ich eine andere Verbindung. Können Sie mir helfen?",
@@ -753,6 +755,8 @@ for _level, _curriculum, _blueprints in (
     )
     if _level == "A1":
         _rule = A1_GRAMMAR_RULES[_topic]
+    else:
+        _rule = A2_GRAMMAR_RULES[_topic]
     A1_FIRST_CONVERSATION[_topic] = {
         "module_title": _blueprint["module_title"],
         "title": _blueprint["title"],
@@ -778,6 +782,17 @@ for _level, _curriculum, _blueprints in (
         "checkpoint": bool(_blueprint.get("checkpoint")),
     }
     A1_MISSION_DIALOGUES[_topic] = _blueprint["turns"]
+    if _level == "A2":
+        _starter = A1_FIRST_CONVERSATION[_topic]
+        _starter["context_model"] = (
+            "\n".join(turn[3] for turn in _blueprint["turns"])
+            if _topic == "formal_message_a2" else _blueprint["turns"][0][3]
+        )
+        _starter["listen_answer"] = A2_LISTENING_MEANINGS[_topic]
+        _starter["listen_options"] = tuple(
+            (meaning, *distractors)
+            for meaning, distractors in zip(A2_LISTENING_MEANINGS[_topic], A2_LISTENING_DISTRACTORS[_topic])
+        )
 
 
 # Alternative repairs preserve the facts while allowing natural word order.
@@ -824,7 +839,8 @@ def build_foundation_content(row: tuple, level: str) -> dict:
         rule_ru, rule_de, rule_en = starter["rule"]
         model = starter["model"]
         wrong = starter["wrong"]
-        choices = [model, wrong, "Danke, gleichfalls!"]
+        context_model = starter.get("context_model", model)
+        choices = [context_model, wrong, "Danke, gleichfalls!"]
         listen_ru, listen_de, listen_en = starter["listen_answer"]
         options_ru, options_de, options_en = starter["listen_options"]
         task_ru, task_de, task_en = starter["task"]
@@ -864,7 +880,7 @@ def build_foundation_content(row: tuple, level: str) -> dict:
                 {"question":"Build the useful sentence.","hint":rule_en,"explanation":rule_en,"accessibility_label":"Build the German sentence"},
             ),
             _localized(
-                {"id":f"{exercise_prefix}-{day}-analogy","type":"analogy_choice","stage":"independent","question":starter["choice"][0],"answer":model,"accepted_answers":[model],"options":choices,"analogy_source":starter["alternate"],"analogy_target":scenario_ru,"pattern_label":"Та же структура — новая ситуация","explanation":rule_ru,"misconception":"foundation_mission_transfer","accessibility_label":"Перенеси знакомую структуру в новую ситуацию"},
+                {"id":f"{exercise_prefix}-{day}-analogy","type":"analogy_choice","stage":"independent","question":starter["choice"][0],"answer":context_model,"accepted_answers":[context_model],"options":choices,"analogy_source":starter["alternate"],"analogy_target":scenario_ru,"pattern_label":"Та же структура — новая ситуация","explanation":rule_ru,"misconception":"foundation_mission_transfer","accessibility_label":"Перенеси знакомую структуру в новую ситуацию"},
                 {"question":starter["choice"][0],"analogy_target":scenario_ru,"pattern_label":"Та же структура — новая ситуация","explanation":rule_ru,"accessibility_label":"Перенеси знакомую структуру в новую ситуацию"},
                 {"question":starter["choice"][1],"analogy_target":scenario_de,"pattern_label":"Gleiches Muster – neue Situation","explanation":rule_de,"accessibility_label":"Bekanntes Muster auf eine neue Situation übertragen"},
                 {"question":starter["choice"][2],"analogy_target":scenario_en,"pattern_label":"Same pattern — new situation","explanation":rule_en,"accessibility_label":"Transfer a familiar pattern to a new situation"},
@@ -889,7 +905,7 @@ def build_foundation_content(row: tuple, level: str) -> dict:
             ),
         ]
         context_exercise = _localized(
-                {"id":f"{exercise_prefix}-{day}-context","type":"context_choice","stage":"independent","question":f"Ситуация: {scenario_ru} Что ты скажешь?","answer":model,"accepted_answers":[model],"options":[model,wrong,"Danke, gleichfalls!"],"explanation":rule_ru,"misconception":"foundation_mission_context","accessibility_label":"Выбери естественный ответ для ситуации"},
+                {"id":f"{exercise_prefix}-{day}-context","type":"context_choice","stage":"independent","question":f"Ситуация: {scenario_ru} Что ты скажешь?","answer":context_model,"accepted_answers":[context_model],"options":choices,"explanation":rule_ru,"misconception":"foundation_mission_context","accessibility_label":"Выбери естественный ответ для ситуации"},
                 {"question":f"Ситуация: {scenario_ru} Что ты скажешь?","explanation":rule_ru,"accessibility_label":"Выбери естественный ответ для ситуации"},
                 {"question":f"Situation: {scenario_de} Was sagst du?","explanation":rule_de,"accessibility_label":"Eine natürliche Antwort für die Situation wählen"},
                 {"question":f"Situation: {scenario_en} What would you say?","explanation":rule_en,"accessibility_label":"Choose a natural reply for the situation"},
@@ -902,6 +918,8 @@ def build_foundation_content(row: tuple, level: str) -> dict:
             )
         if level == "A1":
             repair_exercise["accepted_answers"] += A1_REPAIR_ALTERNATIVES.get(topic, [])
+        else:
+            repair_exercise["accepted_answers"] += A2_REPAIR_ALTERNATIVES.get(topic, [])
         reorder_exercise, analogy_exercise, listening_exercise, dialogue_exercise, repeat_exercise = exercises
         archetype = ((day - 1) % 5) + 1
         lesson_shapes = {
@@ -970,7 +988,7 @@ def build_foundation_content(row: tuple, level: str) -> dict:
             "recall_prompt":"Закрой пример и произнеси свою версию без подсказки.",
             "repair_flow":{"mode":"targeted_retry","contrast_before_retry":True,"max_immediate_retries":1},
             "delayed_review":delayed_review,
-            "content_review":{"status":"approved","version":"a1-editorial-review-v25" if level == "A1" else "a2-production-path-v13","languages":{"ru":"reviewed","de":"reviewed"}},
+            "content_review":{"status":"approved","version":"a1-editorial-review-v25" if level == "A1" else "a2-editorial-review-v26","languages":{"ru":"reviewed","de":"reviewed"}},
             "i18n":{
                 "ru":{"title":title_ru,"module_title":module_title_ru,"objective":can_do_ru,"can_do":can_do_ru,"communication_goal":task_ru,"mission":task_ru,"success_evidence":can_do_ru,"scenario":scenario_ru,"rule":rule_ru,"recall_prompt":"Закрой пример и произнеси свою версию без подсказки.","experience_label":experience_labels[0],"practice_path":[item[0] for item in practice_path]},
                 "de":{"title":title_de,"module_title":module_title_de,"objective":can_do_de,"can_do":can_do_de,"communication_goal":task_de,"mission":task_de,"success_evidence":can_do_de,"scenario":scenario_de,"rule":rule_de,"recall_prompt":"Verdecke das Beispiel und sage deine eigene Version ohne Hilfe.","experience_label":experience_labels[1],"practice_path":[item[1] for item in practice_path]},

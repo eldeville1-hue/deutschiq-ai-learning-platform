@@ -7,7 +7,9 @@ import unicodedata
 
 def normalize_text(value: str) -> str:
     value = unicodedata.normalize("NFKC", value or "").casefold().replace("ß", "ss")
-    value = re.sub(r"[^a-z0-9äöü\s]", " ", value)
+    # Listening options are localized. Preserve Unicode letters, including
+    # Cyrillic, so distinct Russian answers cannot collapse to empty strings.
+    value = re.sub(r"[\W_]+", " ", value, flags=re.UNICODE)
     return re.sub(r"\s+", " ", value).strip()
 
 
@@ -23,7 +25,7 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
     normalized = normalize_text(answer)
     comparisons = [(model, SequenceMatcher(None, normalized, normalize_text(model)).ratio()) for model in accepted]
     model, similarity = max(comparisons, key=lambda item: item[1], default=("", 0.0))
-    exact = normalized == normalize_text(model)
+    exact = bool(normalized) and normalized == normalize_text(model)
     actual_words, model_words = normalized.split(), normalize_text(model).split()
     changed = [(actual, expected) for actual, expected in zip(actual_words, model_words) if actual != expected]
     # Selection and token-building tasks have no typing errors. For typed
