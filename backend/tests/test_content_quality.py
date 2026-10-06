@@ -170,6 +170,33 @@ class ContentQualityTests(unittest.TestCase):
                 self.assertEqual(3, len(localized["assessment_rubric"]))
                 self.assertTrue(all("i18n" not in exercise for exercise in localized["exercises"]))
 
+    def test_b2_listening_functions_are_localized_and_models_match_tasks(self):
+        expected_listening = {
+            "ru": "Описание изменения данных",
+            "de": "Beschreibung einer Datenentwicklung",
+            "en": "Description of a data trend",
+        }
+        data_row = next(row for row in B2_CURRICULUM if row[2] == "data_description")
+        data_content = build_b2_content(data_row)
+        self.assertIn("36 auf 48 Prozent", data_content["examples"][0])
+        for language, expected in expected_listening.items():
+            localized = localize_lesson_content(data_content, language)
+            listening = next(exercise for exercise in localized["exercises"] if exercise["type"] == "listening_choice")
+            self.assertEqual(expected, listening["answer"])
+            self.assertIn(expected, listening["options"])
+
+        argument_row = next(row for row in B2_CURRICULUM if row[2] == "argument_structure")
+        argument_content = build_b2_content(argument_row)
+        argument_final = next(exercise for exercise in argument_content["exercises"] if exercise.get("mission_role") == "final")
+        self.assertIn("Radwege", argument_final["model_answer"])
+
+        final_row = next(row for row in B2_CURRICULUM if row[2] == "b2_final")
+        final_content = build_b2_content(final_row)
+        final_model = next(exercise for exercise in final_content["exercises"] if exercise.get("mission_role") == "final")["model_answer"]
+        self.assertIn("Einerseits", final_model)
+        self.assertIn("andererseits", final_model)
+        self.assertIn("Insgesamt", final_model)
+
     def test_complete_b2_journey_is_connected_and_varied(self):
         lessons = [
             type("Lesson", (), {"id": index, "topic": row[2], "content": build_b2_content(row)})()
