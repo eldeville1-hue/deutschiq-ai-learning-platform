@@ -1,5 +1,6 @@
 """Deterministic answer evaluation used when AI feedback is unavailable or unnecessary."""
 from difflib import SequenceMatcher
+from collections import Counter
 import re
 import unicodedata
 
@@ -12,8 +13,8 @@ def normalize_text(value: str) -> str:
 
 def word_diff(answer: str, model: str) -> dict:
     actual, expected = normalize_text(answer).split(), normalize_text(model).split()
-    missing = [word for word in expected if word not in actual]
-    extra = [word for word in actual if word not in expected]
+    missing = list((Counter(expected) - Counter(actual)).elements())
+    extra = list((Counter(actual) - Counter(expected)).elements())
     return {"missing": missing[:5], "extra": extra[:5]}
 
 
@@ -23,10 +24,21 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
     comparisons = [(model, SequenceMatcher(None, normalized, normalize_text(model)).ratio()) for model in accepted]
     model, similarity = max(comparisons, key=lambda item: item[1], default=("", 0.0))
     exact = normalized == normalize_text(model)
-    same_word_count = len(normalized.split()) == len(normalize_text(model).split())
-    # A very close answer with the same token count is treated as a harmless
-    # spelling variation. Word-order and missing-word mistakes still fail.
-    minor_spelling = same_word_count and similarity >= 0.93
+    actual_words, model_words = normalized.split(), normalize_text(model).split()
+    changed = [(actual, expected) for actual, expected in zip(actual_words, model_words) if actual != expected]
+    # Selection and token-building tasks have no typing errors. For typed
+    # answers, allow one omitted internal letter in a long word. A global
+    # similarity threshold alone also accepts changed articles and verb forms.
+    minor_spelling = (
+        exercise.get("type") not in {"reorder", "error_repair", "analogy_choice", "context_choice", "listening_choice", "choice"}
+        and len(actual_words) == len(model_words)
+        and len(changed) == 1
+        and similarity >= 0.93
+        and all(len(expected) >= 7 and len(actual) == len(expected) - 1
+                and any(actual == expected[:index] + expected[index + 1:]
+                        for index in range(2, len(expected) - 1))
+                for actual, expected in changed)
+    )
     correct = exact or minor_spelling
     diff = word_diff(answer, model)
     error_type = None if correct else (exercise.get("misconception") or ("missing_words" if diff["missing"] else "answer_mismatch"))

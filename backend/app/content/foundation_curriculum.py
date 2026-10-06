@@ -116,7 +116,7 @@ A1_FIRST_CONVERSATION = {
         "title": ("Скажи, откуда ты", "Sage, woher du kommst", "Say where you are from"),
         "scenario": ("Сосед по курсу спрашивает, откуда ты и где живёшь.", "Eine Person im Kurs fragt, woher du kommst und wo du wohnst.", "Someone in the course asks where you are from and where you live."),
         "can_do": ("Ты сможешь коротко рассказать, откуда ты и где живёшь.", "Du kannst kurz sagen, woher du kommst und wo du wohnst.", "You can briefly say where you are from and where you live."),
-        "rule": ("Ich komme aus + страна/город. Ich wohne in + город.", "Ich komme aus + Land/Stadt. Ich wohne in + Stadt.", "Use Ich komme aus + country/city and Ich wohne in + city."),
+        "rule": ("Ich komme aus Hamburg / aus Deutschland, но aus der Ukraine / aus der Türkei. Ich wohne in + город.", "Ich komme aus Hamburg / aus Deutschland, aber aus der Ukraine / aus der Türkei. Ich wohne in + Stadt.", "Use Ich komme aus Hamburg / aus Deutschland, but aus der Ukraine / aus der Türkei. Use Ich wohne in + city."),
         "model": "Ich komme aus Kyjiw und wohne in Hamburg.",
         "alternate": "Ich komme aus Syrien und wohne in Bremen.",
         "wrong": "Ich aus Kyjiw und ich wohnen Hamburg.",
@@ -147,7 +147,7 @@ A1_FIRST_CONVERSATION = {
         "rule": ("В вопросе без вопросительного слова действие стоит первым: Kommst du morgen?", "In einer Ja-/Nein-Frage steht das Verb zuerst: Kommst du morgen?", "In a yes-or-no question, the verb comes first: Kommst du morgen?"),
         "model": "Kommst du morgen zum Kurs?",
         "alternate": "Lernst du auch Deutsch?",
-        "wrong": "Du kommst morgen zum Kurs?",
+        "wrong": "Kommst morgen du zum Kurs?",
         "choice": ("Как прямо спросить о завтрашнем курсе?", "Wie fragst du direkt nach dem Kurs morgen?", "How do you ask directly about tomorrow's course?"),
         "listen_answer": ("Вопрос с ja или nein", "Frage mit ja oder nein", "A yes-or-no question"),
         "listen_options": (("Вопрос с ja или nein", "Рассказ о вчера", "Просьба в магазине"), ("Frage mit ja oder nein", "Erzählung über gestern", "Bitte im Geschäft"), ("A yes-or-no question", "A story about yesterday", "A request in a shop")),
@@ -230,7 +230,7 @@ A1_MISSION_BLUEPRINTS = {
     "noun_gender": {
         "module_title": ("Повседневная жизнь", "Alltag", "Everyday life"),
         "title": ("Назови вещи вокруг", "Benenne Dinge um dich herum", "Name things around you"),
-        "scenario": ("Ты показываешь новому соседу вещи в общей кухне.", "Du zeigst einem neuen Mitbewohner Dinge in der gemeinsamen Küche.", "You show a new flatmate things in the shared kitchen."),
+        "scenario": ("Ты показываешь новому соседу вещи в общей комнате.", "Du zeigst einem neuen Mitbewohner Dinge im gemeinsamen Zimmer.", "You show a new flatmate things in a shared room."),
         "can_do": ("Ты сможешь назвать предметы с правильным артиклем.", "Du kannst Gegenstände mit dem richtigen Artikel nennen.", "You can name objects with the correct article."),
         "task": ("Покажи и назови два предмета с ein или eine.", "Zeige und benenne zwei Gegenstände mit ein oder eine.", "Point out and name two objects using ein or eine."),
         "alternate": "Hier sind ein Tisch und eine Lampe.",
@@ -366,7 +366,7 @@ A1_MISSION_BLUEPRINTS = {
     "simple_past_experience": {
         "module_title": ("Самостоятельность", "Selbstständig im Alltag", "Independent everyday life"),
         "title": ("Расскажи о вчерашнем дне", "Erzähle von gestern", "Talk about yesterday"),
-        "scenario": ("Коллега спрашивает, почему вчера тебя не было.", "Eine Kollegin fragt, warum du gestern nicht da warst.", "A colleague asks why you were absent yesterday."),
+        "scenario": ("Коллега спрашивает, что ты делал вчера.", "Eine Kollegin fragt, was du gestern gemacht hast.", "A colleague asks what you did yesterday."),
         "can_do": ("Ты сможешь назвать два завершённых действия.", "Du kannst zwei abgeschlossene Handlungen nennen.", "You can name two completed activities."),
         "task": ("Расскажи двумя фразами, что ты делал вчера.", "Erzähle in zwei Sätzen, was du gestern gemacht hast.", "Use two sentences to say what you did yesterday."),
         "alternate": "Gestern habe ich gearbeitet und danach meine Freundin besucht.",
@@ -378,7 +378,7 @@ A1_MISSION_BLUEPRINTS = {
     "a1_final": {
         "module_title": ("Самостоятельность", "Selbstständig im Alltag", "Independent everyday life"),
         "title": ("Проведи настоящий разговор", "Führe ein echtes Gespräch", "Have a real conversation"),
-        "scenario": ("Ты знакомишься с новой группой и договариваешься о встрече.", "Du lernst eine neue Gruppe kennen und verabredest dich.", "You meet a new group and arrange to meet."),
+        "scenario": ("Ты знакомишься с новой группой и узнаёшь больше о собеседнике.", "Du lernst eine neue Gruppe kennen und erfährst mehr über dein Gegenüber.", "You meet a new group and get to know the other person."),
         "can_do": ("Ты сможешь представиться, рассказать о себе и задать вопрос без подсказки.", "Du kannst dich vorstellen, von dir erzählen und ohne Hilfe eine Frage stellen.", "You can introduce yourself, talk about yourself, and ask a question without help."),
         "task": ("Представься, назови город и занятие, затем задай собеседнику вопрос.", "Stelle dich vor, nenne deinen Wohnort und deine Tätigkeit und stelle dann eine Frage.", "Introduce yourself, give your city and activity, then ask the other person a question."),
         "alternate": "Ich heiße Lina, wohne in Bremen und lerne jeden Tag Deutsch. Wo wohnst du?",
@@ -647,6 +647,95 @@ A2_MISSION_BLUEPRINTS = {
 }
 
 
+A1_GRAMMAR_RULES = {'present_regular': ('В Präsens: ich lerne, du lernst, er/sie lernt, wir/sie lernen, ihr lernt. С wir используй '
+                     'lernen, а не lernt.',
+                     'Im Präsens: ich lerne, du lernst, er/sie lernt, wir/sie lernen, ihr lernt. Zu wir gehört '
+                     'lernen, nicht lernt.',
+                     'In the present tense: ich lerne, du lernst, er/sie lernt, wir/sie lernen, ihr lernt. Use '
+                     'lernen with wir.'),
+ 'sein_haben': ('Состояние: ich bin, du bist, er/sie ist. Наличие: ich habe, du hast, er/sie hat. Ich bin müde, '
+                'aber ich habe Zeit.',
+                'Zustand: ich bin, du bist, er/sie ist. Besitz: ich habe, du hast, er/sie hat. Ich bin müde, aber '
+                'ich habe Zeit.',
+                'Use sein for a state: ich bin, du bist, er/sie ist. Use haben for possession: ich habe, du hast, '
+                'er/sie hat.'),
+ 'noun_gender': ('Учи существительное вместе с артиклем: das Buch → ein Buch; die Lampe → eine Lampe; der Tisch → '
+                 'ein Tisch.',
+                 'Lerne Nomen mit Artikel: das Buch → ein Buch; die Lampe → eine Lampe; der Tisch → ein Tisch.',
+                 'Learn nouns with their article: das Buch → ein Buch; die Lampe → eine Lampe; der Tisch → ein '
+                 'Tisch.'),
+ 'plural': ('В Nominativ определённый артикль во множественном числе — die: die Bücher. Глагол тоже во '
+            'множественном числе: Die Bücher liegen …',
+            'Im Nominativ lautet der bestimmte Artikel im Plural die: die Bücher. Auch das Verb steht im Plural: '
+            'Die Bücher liegen …',
+            'In the nominative plural, use the definite article die: die Bücher. Use a plural verb too: Die '
+            'Bücher liegen …'),
+ 'negation': ('Kein отрицает существительное без артикля или с ein: kein Auto, keine Fahrkarte. Nicht отрицает '
+              'действие: Ich fahre heute nicht.',
+              'Kein verneint Nomen ohne Artikel oder mit ein: kein Auto, keine Fahrkarte. Nicht verneint eine '
+              'Handlung: Ich fahre heute nicht.',
+              'Use kein with nouns that have no article or ein: kein Auto, keine Fahrkarte. Use nicht to negate '
+              'an action: Ich fahre heute nicht.'),
+ 'accusative_a1': ('После kaufen или nehmen прямое дополнение стоит в Akkusativ: der Kaffee → einen Kaffee; das '
+                   'Brötchen → ein Brötchen; die Suppe → eine Suppe.',
+                   'Nach kaufen oder nehmen steht das direkte Objekt im Akkusativ: der Kaffee → einen Kaffee; das '
+                   'Brötchen → ein Brötchen; die Suppe → eine Suppe.',
+                   'The direct object of kaufen or nehmen is accusative: der Kaffee → einen Kaffee; das Brötchen '
+                   '→ ein Brötchen; die Suppe → eine Suppe.'),
+ 'modal_verbs_a1': ('Модальный глагол изменяется и стоит на втором месте; смысловой глагол — в конце в '
+                    'инфинитиве: Ich muss arbeiten. Ich kann kommen.',
+                    'Das konjugierte Modalverb steht an zweiter Stelle; der Infinitiv steht am Ende: Ich muss '
+                    'arbeiten. Ich kann kommen.',
+                    'Put the conjugated modal verb second and the infinitive at the end: Ich muss arbeiten. Ich '
+                    'kann kommen.'),
+ 'separable_verbs_a1': ('В главном предложении изменяемая часть глагола стоит на втором месте, приставка — в '
+                        'конце: Der Kurs fängt um neun Uhr an.',
+                        'Im Hauptsatz steht der konjugierte Verbteil an zweiter Stelle, die Vorsilbe am Ende: Der '
+                        'Kurs fängt um neun Uhr an.',
+                        'In a main clause, put the conjugated verb part second and the prefix at the end: Der '
+                        'Kurs fängt um neun Uhr an.'),
+ 'time_daily_routine': ('Um + время: um sieben Uhr. Если время стоит в начале, после него идёт глагол, затем ich: '
+                        'Um sieben Uhr stehe ich auf.',
+                        'Um + Uhrzeit: um sieben Uhr. Steht die Zeit am Satzanfang, folgen Verb und Subjekt: Um '
+                        'sieben Uhr stehe ich auf.',
+                        'Use um with a clock time: um sieben Uhr. After an opening time phrase, put the verb '
+                        'before the subject: Um sieben Uhr stehe ich auf.'),
+ 'directions': ('Начни с Entschuldigung. В прямом вопросе: wo + глагол + подлежащее: Wo ist der Bahnhof? Для '
+                'маршрута: Wie komme ich zum Bahnhof?',
+                'Beginne mit Entschuldigung. Direkte Frage: wo + Verb + Subjekt: Wo ist der Bahnhof? Nach dem Weg '
+                'fragen: Wie komme ich zum Bahnhof?',
+                'Start with Entschuldigung. In a direct question, use wo + verb + subject: Wo ist der Bahnhof? '
+                'Ask for a route with Wie komme ich zum Bahnhof?'),
+ 'shopping': ('Вежливая просьба: Ich hätte gern … Количество: ein Kilo Äpfel, zwei Brötchen. Цена: Was kostet das '
+              'zusammen?',
+              'Höflicher Wunsch: Ich hätte gern … Mengen: ein Kilo Äpfel, zwei Brötchen. Preis: Was kostet das '
+              'zusammen?',
+              'Make a polite request with Ich hätte gern … Give amounts: ein Kilo Äpfel, zwei Brötchen. Ask the '
+              'total price: Was kostet das zusammen?'),
+ 'appointments': ('День: am Montag. Время: um zehn Uhr. Der Termin ist am Montag um zehn Uhr.',
+                  'Wochentag: am Montag. Uhrzeit: um zehn Uhr. Der Termin ist am Montag um zehn Uhr.',
+                  'Use am for a weekday and um for a clock time: Der Termin ist am Montag um zehn Uhr.'),
+ 'family': ('Перед Schwester: meine Schwester. После mit нужен Dativ: mit ihrem Mann, mit meiner Familie. Meine '
+            'Schwester wohnt mit ihrem Mann in Köln.',
+            'Vor Schwester: meine Schwester. Nach mit steht der Dativ: mit ihrem Mann, mit meiner Familie. Meine '
+            'Schwester wohnt mit ihrem Mann in Köln.',
+            'Use meine with Schwester. After mit, use the dative: mit ihrem Mann, mit meiner Familie. Meine '
+            'Schwester wohnt mit ihrem Mann in Köln.'),
+ 'simple_past_experience': ('Perfekt: изменяемый haben на втором месте + Partizip II в конце: Gestern habe ich '
+                            'lange gearbeitet. Arbeiten → gearbeitet, besuchen → besucht.',
+                            'Perfekt: konjugiertes haben an zweiter Stelle + Partizip II am Ende: Gestern habe '
+                            'ich lange gearbeitet. Arbeiten → gearbeitet, besuchen → besucht.',
+                            'For these perfect-tense examples, put conjugated haben second and the past '
+                            'participle last: Gestern habe ich lange gearbeitet. Arbeiten → gearbeitet; besuchen '
+                            '→ besucht.'),
+ 'a1_final': ('Представься, назови город и привычку: Ich heiße …, wohne in … und lerne … Задай прямой вопрос: Wo '
+              'wohnst du? / Lernst du Deutsch?',
+              'Nenne deinen Namen, Wohnort und eine Gewohnheit: Ich heiße …, wohne in … und lerne … Frage direkt: '
+              'Wo wohnst du? / Lernst du Deutsch?',
+              'Give your name, city and a habit: Ich heiße …, wohne in … und lerne … Ask a direct question: Wo '
+              'wohnst du? / Lernst du Deutsch?')}
+
+
 for _level, _curriculum, _blueprints in (
     ("A1", A1_CURRICULUM[5:], A1_MISSION_BLUEPRINTS),
     ("A2", A2_CURRICULUM, A2_MISSION_BLUEPRINTS),
@@ -662,6 +751,8 @@ for _level, _curriculum, _blueprints in (
         f"Nutze das Muster „{_focus}“ in deinem eigenen Satz; persönliche Details dürfen anders sein.",
         f"Use the “{_focus}” pattern in your own sentence; personal details may be different.",
     )
+    if _level == "A1":
+        _rule = A1_GRAMMAR_RULES[_topic]
     A1_FIRST_CONVERSATION[_topic] = {
         "module_title": _blueprint["module_title"],
         "title": _blueprint["title"],
@@ -687,6 +778,19 @@ for _level, _curriculum, _blueprints in (
         "checkpoint": bool(_blueprint.get("checkpoint")),
     }
     A1_MISSION_DIALOGUES[_topic] = _blueprint["turns"]
+
+
+# Alternative repairs preserve the facts while allowing natural word order.
+# Reorder tasks still use only the displayed tokens and their target sentence.
+A1_REPAIR_ALTERNATIVES = {
+    "main_clause": ["Ich lerne heute Deutsch."],
+    "noun_gender": ["Das ist ein Buch. Das ist eine Lampe."],
+    "negation": ["Ich habe kein Auto, aber ich fahre gerne Rad."],
+    "separable_verbs_a1": ["Um neun Uhr fängt der Kurs an."],
+    "directions": ["Entschuldigung, wo befindet sich der Bahnhof?"],
+    "family": ["Meine Schwester wohnt in Köln mit ihrem Mann.", "Mit ihrem Mann wohnt meine Schwester in Köln."],
+    "a1_final": ["Ich heiße Lina. Ich wohne in Bremen und lerne jeden Tag Deutsch."],
+}
 
 
 def _mission_turns(topic: str, language_index: int) -> list[dict]:
@@ -791,11 +895,13 @@ def build_foundation_content(row: tuple, level: str) -> dict:
                 {"question":f"Situation: {scenario_en} What would you say?","explanation":rule_en,"accessibility_label":"Choose a natural reply for the situation"},
             )
         repair_exercise = _localized(
-                {"id":f"{exercise_prefix}-{day}-repair","type":"error_repair","stage":"guided","question":f"Исправь только ошибку: {wrong}","answer":model,"model_answer":model,"accepted_answers":[model,model.rstrip(".?!")],"hint":rule_ru,"explanation":rule_ru,"misconception":"foundation_mission_form","accessibility_label":"Исправь ошибку в немецкой фразе"},
-                {"question":f"Исправь только ошибку: {wrong}","hint":rule_ru,"explanation":rule_ru,"accessibility_label":"Исправь ошибку в немецкой фразе"},
-                {"question":f"Korrigiere nur den Fehler: {wrong}","hint":rule_de,"explanation":rule_de,"accessibility_label":"Fehler im deutschen Satz korrigieren"},
-                {"question":f"Correct only the mistake: {wrong}","hint":rule_en,"explanation":rule_en,"accessibility_label":"Correct the mistake in the German sentence"},
+                {"id":f"{exercise_prefix}-{day}-repair","type":"error_repair","stage":"guided","question":f"Исправь предложение, сохранив смысл: {wrong}","answer":model,"model_answer":model,"accepted_answers":[model,model.rstrip(".?!")],"hint":rule_ru,"explanation":rule_ru,"misconception":"foundation_mission_form","accessibility_label":"Исправь ошибку в немецкой фразе"},
+                {"question":f"Исправь предложение, сохранив смысл: {wrong}","hint":rule_ru,"explanation":rule_ru,"accessibility_label":"Исправь ошибку в немецкой фразе"},
+                {"question":f"Korrigiere den Satz, ohne die Bedeutung zu ändern: {wrong}","hint":rule_de,"explanation":rule_de,"accessibility_label":"Fehler im deutschen Satz korrigieren"},
+                {"question":f"Correct the sentence while keeping its meaning: {wrong}","hint":rule_en,"explanation":rule_en,"accessibility_label":"Correct the mistake in the German sentence"},
             )
+        if level == "A1":
+            repair_exercise["accepted_answers"] += A1_REPAIR_ALTERNATIVES.get(topic, [])
         reorder_exercise, analogy_exercise, listening_exercise, dialogue_exercise, repeat_exercise = exercises
         archetype = ((day - 1) % 5) + 1
         lesson_shapes = {
@@ -864,7 +970,7 @@ def build_foundation_content(row: tuple, level: str) -> dict:
             "recall_prompt":"Закрой пример и произнеси свою версию без подсказки.",
             "repair_flow":{"mode":"targeted_retry","contrast_before_retry":True,"max_immediate_retries":1},
             "delayed_review":delayed_review,
-            "content_review":{"status":"approved","version":"a1-varied-experiences-v10" if level == "A1" else "a2-production-path-v13","languages":{"ru":"reviewed","de":"reviewed"}},
+            "content_review":{"status":"approved","version":"a1-editorial-review-v25" if level == "A1" else "a2-production-path-v13","languages":{"ru":"reviewed","de":"reviewed"}},
             "i18n":{
                 "ru":{"title":title_ru,"module_title":module_title_ru,"objective":can_do_ru,"can_do":can_do_ru,"communication_goal":task_ru,"mission":task_ru,"success_evidence":can_do_ru,"scenario":scenario_ru,"rule":rule_ru,"recall_prompt":"Закрой пример и произнеси свою версию без подсказки.","experience_label":experience_labels[0],"practice_path":[item[0] for item in practice_path]},
                 "de":{"title":title_de,"module_title":module_title_de,"objective":can_do_de,"can_do":can_do_de,"communication_goal":task_de,"mission":task_de,"success_evidence":can_do_de,"scenario":scenario_de,"rule":rule_de,"recall_prompt":"Verdecke das Beispiel und sage deine eigene Version ohne Hilfe.","experience_label":experience_labels[1],"practice_path":[item[1] for item in practice_path]},
