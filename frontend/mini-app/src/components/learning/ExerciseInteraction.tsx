@@ -26,7 +26,6 @@ export const ExerciseInteraction: React.FC<Props> = ({ exercise, answer, onAnswe
   const turns = useMemo(() => Array.isArray(exercise.conversation_turns) ? exercise.conversation_turns : [], [exercise.conversation_turns]);
 
   useEffect(() => {
-    setSelectedTokens([]);
     setConversationStep(0);
     setConversationDraft('');
     setConversationReplies([]);
@@ -54,6 +53,20 @@ export const ExerciseInteraction: React.FC<Props> = ({ exercise, answer, onAnswe
     const pivot = Math.ceil(words.length / 2);
     return [...words.slice(pivot), ...words.slice(0, pivot)];
   }, [exercise.answer, exercise.model_answer, guided, kind]);
+
+  useEffect(() => {
+    const bank = kind === 'repair' && guided ? guidedRepairTokens : tokens;
+    let remaining = answer.trim();
+    const used: number[] = [];
+    while (remaining) {
+      const index = bank.findIndex((token, position) => !used.includes(position)
+        && (remaining === token || remaining.startsWith(`${token} `)));
+      if (index < 0) { used.length = 0; break; }
+      used.push(index);
+      remaining = remaining.slice(bank[index].length).trimStart();
+    }
+    setSelectedTokens(used);
+  }, [answer, tokens, guidedRepairTokens, guided, kind]);
 
   const addConversationReply = () => {
     const reply = conversationDraft.trim();

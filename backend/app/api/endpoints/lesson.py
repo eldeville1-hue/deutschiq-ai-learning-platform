@@ -31,6 +31,7 @@ router = APIRouter(prefix="/api/lesson", tags=["lesson"])
 class StartLessonRequest(BaseModel):
     user_id: int
     lesson_id: int
+    resume_session_id: str | None = None
 
 @router.post("/start")
 async def start_lesson(data: StartLessonRequest, db: Session = Depends(get_db), authenticated_id: int = Depends(telegram_user_id)):
@@ -39,10 +40,19 @@ async def start_lesson(data: StartLessonRequest, db: Session = Depends(get_db), 
     lesson = db.query(Lesson).filter(Lesson.id == data.lesson_id).first()
     if not user or not lesson:
         raise HTTPException(status_code=404, detail="User or lesson not found")
+    if data.resume_session_id:
+        previous = db.query(LearningSession).filter(
+            LearningSession.id == data.resume_session_id,
+            LearningSession.user_id == user.id,
+            LearningSession.lesson_id == lesson.id,
+            LearningSession.status == "active",
+        ).first()
+        if previous:
+            return {"session_id": previous.id, "resumed": True}
     session = LearningSession(id=str(uuid.uuid4()), user_id=user.id, lesson_id=lesson.id, status="active")
     db.add(session)
     db.commit()
-    return {"session_id": session.id}
+    return {"session_id": session.id, "resumed": False}
 
 # Получить урок
 @router.get("/{lesson_id}")

@@ -7,8 +7,12 @@ from app.services.misconception_feedback import misconception_feedback
 def supported_retry_exercise(exercise: dict, lesson_content: dict, language: str) -> dict:
     """Build a fresh, easier phone task without exposing the answer key."""
     examples = [str(item).strip() for item in lesson_content.get("examples", []) if str(item).strip()]
-    original_answers = set(exercise.get("accepted_answers") or [exercise.get("answer", "")])
-    model = next((item for item in examples[1:] if item not in original_answers), examples[0] if examples else str(exercise.get("answer", "")))
+    def sentence_key(value):
+        return " ".join(str(value).split()).rstrip(".?!").casefold()
+
+    original_answers = {sentence_key(item) for item in exercise.get("accepted_answers") or [exercise.get("answer", "")]}
+    model = next((item for item in examples if sentence_key(item) not in original_answers), examples[0] if examples else str(exercise.get("answer", "")))
+    fresh = sentence_key(model) not in original_answers
     model = model.rstrip(".?!")
     tokens = model.split()
     tokens = tokens[2:] + tokens[:2] if len(tokens) > 3 else list(reversed(tokens))
@@ -18,6 +22,12 @@ def supported_retry_exercise(exercise: dict, lesson_content: dict, language: str
         "de": "Versuche es mit einem neuen Beispiel. Baue den Satz.",
         "en": "Try a new example. Build the sentence.",
     }
+    if not fresh:
+        questions = {
+            "ru": "Закрепи структуру. Собери фразу с подсказкой.",
+            "de": "Festige das Muster. Baue den Satz mit Hilfe.",
+            "en": "Practise the pattern. Build the sentence with support.",
+        }
     hints = {
         "ru": "Нажимай слова по порядку. Нажми слово в ответе, чтобы убрать его.",
         "de": "Tippe die Wörter der Reihe nach an. Tippe oben auf ein Wort, um es zu entfernen.",
@@ -32,7 +42,7 @@ def supported_retry_exercise(exercise: dict, lesson_content: dict, language: str
         "accepted_answers": [model, f"{model}."],
         "tokens": tokens,
         "hint": hints[lang],
-        "explanation": str(exercise.get("explanation", "")),
+        "explanation": str(lesson_content.get("rule") or exercise.get("explanation", "")),
         "misconception": exercise.get("misconception"),
         "mission_role": exercise.get("mission_role"),
     }

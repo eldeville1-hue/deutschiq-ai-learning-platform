@@ -10,10 +10,16 @@ import { LessonCompletion, type LessonOutcome } from "../components/learning/Les
 import { exerciseKind } from "../learning/exercises";
 import { tr } from "../i18n/language";
 import { clearDailySession, saveDailySession } from "../learning/dailySession";
+import { ProductState } from "../components/ProductState";
 
 export const cleanTitle = (value: string) => value.replace(/^(?:tag|day|день)\s*\d+\s*[:·—-]\s*/i, "").trim();
 
 export const Lesson: React.FC = () => {
+  const { id } = useParams();
+  return <LessonScreen key={id} />;
+};
+
+const LessonScreen: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { lang } = useLanguage();
@@ -22,15 +28,17 @@ export const Lesson: React.FC = () => {
     try { return JSON.parse(localStorage.getItem(draftKey) || 'null'); } catch { return null; }
   };
   const initialDraft = useRef<any>(readDraft());
+  const resumeSessionRef = useRef<string>(initialDraft.current?.sessionId || '');
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [lesson, setLesson] = useState<any>(null);
   const [step, setStep] = useState(() => Number(initialDraft.current?.step || 0));
   const [answer, setAnswer] = useState(() => String(initialDraft.current?.answer || ""));
-  const [checked, setChecked] = useState<boolean | null>(null);
-  const [feedback, setFeedback] = useState<any>(null);
+  const [checked, setChecked] = useState<boolean | null>(() => typeof initialDraft.current?.checked === 'boolean' ? initialDraft.current.checked : null);
+  const [feedback, setFeedback] = useState<any>(initialDraft.current?.feedback || null);
   const [confidence, setConfidence] = useState<"guess" | "okay" | "sure">(initialDraft.current?.confidence || "okay");
   const [startedAt, setStartedAt] = useState(() => Date.now());
-  const [retried, setRetried] = useState<Record<number, boolean>>({});
-  const [retryExercises, setRetryExercises] = useState<Record<number, any>>({});
+  const [retried, setRetried] = useState<Record<number, boolean>>(initialDraft.current?.retried || {});
+  const [retryExercises, setRetryExercises] = useState<Record<number, any>>(initialDraft.current?.retryExercises || {});
   const [outcome, setOutcome] = useState<LessonOutcome | null>(null);
   const [completionState, setCompletionState] = useState<"idle" | "saving" | "ready" | "error">("idle");
   const [sessionId, setSessionId] = useState("");
@@ -69,26 +77,41 @@ export const Lesson: React.FC = () => {
     write: tr(lang, "Напиши", "Schreibe", "Write"),
   } as const)[exerciseKind(activeExercise)] : "";
   useEffect(() => {
+    let cancelled = false;
+    setLesson(null);
     saveDailySession(getUserId(), { nextLessonId: Number(id), stage: 'lesson' });
     Promise.all([
       api.getLesson(Number(id), lang),
-      api.startLesson({ user_id: getUserId(), lesson_id: Number(id) }),
+      api.startLesson({ user_id: getUserId(), lesson_id: Number(id), resume_session_id: resumeSessionRef.current || undefined }),
     ])
       .then(([lessonData, session]) => {
+        if (cancelled) return;
+        if ((initialDraft.current || resumeSessionRef.current) && !session.resumed) {
+          setStep(0); setAnswer(''); setChecked(null); setFeedback(null);
+          setRetried({}); setRetryExercises({});
+        } else {
+          const maxStep = 2 + Math.min(5, lessonData.content?.exercises?.length || 0);
+          setStep(value => Math.max(0, Math.min(Number.isFinite(value) ? value : 0, maxStep)));
+        }
+        resumeSessionRef.current = session.session_id;
         setLesson(lessonData);
         setSessionId(session.session_id);
+        if (initialDraft.current && session.resumed && Number(initialDraft.current.step) >= 2 + Math.min(5, lessonData.content?.exercises?.length || 0)) {
+          setCompletionState('error');
+        }
         void api.trackEvent({ user_id: getUserId(), event_name: 'lesson_started', properties: { lesson_id: Number(id), topic: lessonData.topic } });
         if (initialDraft.current) {
           void api.trackEvent({ user_id: getUserId(), event_name: 'draft_restored', properties: { lesson_id: Number(id), step: Number(initialDraft.current.step || 0) } });
           initialDraft.current = null;
         }
       })
-      .catch(() => setLesson(false));
-  }, [id, lang]);
+      .catch(() => { if (!cancelled) setLesson(false); });
+    return () => { cancelled = true; };
+  }, [id, lang, loadAttempt]);
   useEffect(() => {
-    if (!lesson || step >= total) return;
-    try { localStorage.setItem(draftKey, JSON.stringify({ step, answer, confidence, savedAt: Date.now() })); } catch { /* Recovery is best-effort. */ }
-  }, [answer, confidence, draftKey, lesson, step, total]);
+    if (!lesson || !sessionId || completionState === 'ready') return;
+    try { localStorage.setItem(draftKey, JSON.stringify({ sessionId, step, answer, confidence, checked, feedback, retried, retryExercises, savedAt: Date.now() })); } catch { /* Recovery is best-effort. */ }
+  }, [answer, confidence, draftKey, lesson, step, sessionId, checked, feedback, retried, retryExercises, completionState]);
   useEffect(() => {
     if (!lesson || !sessionId) return;
     const stage = step === 0 ? 'learn' : step === 1 ? 'model' : step >= total ? 'result' : exercises[step - introSteps]?.stage || 'practice';
@@ -135,7 +158,11 @@ export const Lesson: React.FC = () => {
   if (!lesson)
     return (
       <div className="app-shell empty-state">
-        {tr(lang, "Урок не найден", "Lektion nicht gefunden", "Lesson not found")}
+        <ProductState kind="error" eyebrow={tr(lang, 'УРОК', 'LEKTION', 'LESSON')}
+          title={tr(lang, 'Урок не загрузился', 'Lektion konnte nicht geladen werden', 'Could not load lesson')}
+          detail={tr(lang, 'Проверь соединение и попробуй снова.', 'Prüfe die Verbindung und versuche es erneut.', 'Check your connection and try again.')}
+          action={tr(lang, 'Попробовать снова', 'Erneut versuchen', 'Try again')}
+          onAction={() => setLoadAttempt(value => value + 1)} />
       </div>
     );
   const content = lesson.content || {};
@@ -216,10 +243,15 @@ export const Lesson: React.FC = () => {
       setCheckError(tr(lang, 'Не удалось проверить. Попробуй ещё раз.', 'Prüfung fehlgeschlagen. Versuche es erneut.', 'Could not check your answer. Try again.'));
     } finally { setChecking(false); }
   };
-  const finish = () =>
-    navigate(withUser(outcome?.passed ? "/dashboard" : `/lesson/${id}`), {
-      replace: true,
-    });
+  const finish = () => {
+    if (outcome?.passed) { navigate(withUser('/dashboard'), { replace: true }); return; }
+    resumeSessionRef.current = '';
+    initialDraft.current = null;
+    completedRef.current = false;
+    setStep(0); resetAnswer(); setRetried({}); setRetryExercises({});
+    setOutcome(null); setCompletionState('idle'); setSessionId('');
+    setLoadAttempt(value => value + 1);
+  };
   const sendMilestone = (rating: string) => {
     void api.submitBetaFeedback({ user_id: getUserId(), message: `First lesson rating: ${rating}`, language: lang, page: 'lesson_complete' });
     localStorage.setItem(`deutschiq-beta-milestone-${getUserId()}`, '1');

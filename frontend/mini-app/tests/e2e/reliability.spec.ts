@@ -23,7 +23,7 @@ async function mockApi(page: Page, options: { completed?: boolean; dueCount?: nu
     if (pathname.includes('/api/dashboard/')) return route.fulfill({ json: dashboard });
     if (pathname.includes('/api/plan/journey/')) return route.fulfill({ json: journey });
     if (pathname.includes('/api/plan/')) return route.fulfill({ json: plan });
-    if (pathname === '/api/lesson/start') return route.fulfill({ json: { session_id: 'test-session' } });
+    if (pathname === '/api/lesson/start') return route.fulfill({ json: { session_id: 'test-session', resumed: Boolean(route.request().postDataJSON()?.resume_session_id) } });
     if (pathname === '/api/lesson/check-answer') return route.fulfill({ json: { correct: true, explanation: 'Task completed.', correct_answer: 'Du solltest früher schlafen gehen.', production: true, production_score: 82, cefr_standard: 'B1', pass_mark: 70, dimension_scores: { task_completion: 85, grammar: 80, vocabulary: 78, coherence: 80, register: 86 }, improvement: 'Add one concrete reason.' } });
     if (pathname === '/api/lesson/complete') return route.fulfill({ json: { passed: true, score: 100, mastery: 76, xp_gained: 70, first_try_correct: 1, corrected_retries: 0, needs_review: 0, exercise_count: 1, mission_attempted: true, mission_passed: true, mission_score: 82, mission_answer: 'Du solltest früher schlafen gehen, weil du oft müde bist.', review_in_days: 1, review_at: '2026-09-30T12:00:00' } });
     if (pathname === '/api/lesson/77') return route.fulfill({ json: lesson });
@@ -381,3 +381,69 @@ test('Telegram BackButton owns nested navigation without duplicate browser contr
   await expect(page.locator('.app-back-button')).toHaveCount(0);
   await expect.poll(() => page.evaluate(() => (window as any).__backCalls.shown)).toBeGreaterThan(0);
 });
+
+
+test('lesson reload preserves the active session and checked feedback', async ({ page }) => {
+  await mockApi(page, { completed: true });
+  const starts: any[] = [];
+  page.on('request', request => { if (new URL(request.url()).pathname === '/api/lesson/start') starts.push(request.postDataJSON()); });
+  await page.goto('/lesson/77');
+  await page.getByRole('button', { name: /Understand with an example/i }).click();
+  await page.getByRole('button', { name: /Start practice/i }).click();
+  await page.getByRole('textbox').fill('Du solltest früher schlafen gehen.');
+  await page.getByRole('button', { name: /^Check$/i }).click();
+  await expect(page.locator('.answer-feedback.correct')).toBeVisible();
+  await page.reload();
+  await expect(page.locator('.answer-feedback.correct')).toBeVisible();
+  expect(starts.at(-1).resume_session_id).toBe('test-session');
+  await expectNoHorizontalOverflow(page);
+});
+
+test('reorder draft restores repeated word tokens after reload', async ({ page }) => {
+  await mockApi(page, { completed: true });
+  await page.route('**/api/lesson/77', route => route.fulfill({ json: { ...lesson, content: { ...lesson.content,
+    exercises: [{ type: 'reorder', question: 'Build the sentence.', tokens: ['Deutsch', 'Ich', 'lerne', 'Deutsch'], hint: 'Start with Ich.' }] } } }));
+  await page.goto('/lesson/77');
+  await page.getByRole('button', { name: /Understand with an example/i }).click();
+  await page.getByRole('button', { name: /Start practice/i }).click();
+  await page.locator('.reorder-bank').getByRole('button', { name: 'Ich', exact: true }).click();
+  await page.locator('.reorder-bank').getByRole('button', { name: 'Deutsch', exact: true }).first().click();
+  await page.reload();
+  await expect(page.locator('.reorder-built button')).toHaveCount(2);
+  await expect(page.locator('.reorder-built')).toContainText('Ich');
+  await page.locator('.reorder-bank').getByRole('button', { name: 'lerne', exact: true }).click();
+  await expect(page.locator('.reorder-built button')).toHaveCount(3);
+  await expectNoHorizontalOverflow(page);
+});
+
+for (const route of ['/lesson/77', '/review']) {
+  test(`failed loading offers a working retry on ${route}`, async ({ page }) => {
+    await mockApi(page, { completed: true });
+    let fail = true;
+    const pattern = route.startsWith('/lesson') ? '**/api/lesson/77' : '**/api/learning/reviews/**';
+    await page.route(pattern, request => fail ? request.fulfill({ status: 503, json: { detail: 'Unavailable' } }) : request.fallback());
+    await page.goto(route);
+    await expect(page.getByRole('button', { name: 'Try again', exact: true })).toBeVisible();
+    fail = false;
+    await page.getByRole('button', { name: 'Try again', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Try again', exact: true })).toHaveCount(0);
+    if (route.startsWith('/lesson')) await expect(page.getByRole('button', { name: /Understand with an example/i })).toBeVisible();
+    else await expect(page.getByRole('heading', { name: 'All done for today' })).toBeVisible();
+  });
+}
+
+for (const language of ['ru', 'de', 'en']) {
+  test(`core routes fit desktop in ${language}`, async ({ page }) => {
+    await mockApi(page, { completed: true, language });
+    await page.setViewportSize({ width: 1280, height: 800 });
+    for (const route of ['/profile', '/analytics', '/plan', '/lesson/77']) {
+      await page.goto(route);
+      const surface = route === '/profile' ? '.subscription-card' : route === '/analytics' ? '.rc-next-action' : route === '/plan' ? '.rc-text-action' : '.dq-lesson-intro';
+      await expect(page.locator(surface)).toBeVisible();
+      await expect(page.locator('.skeleton')).toHaveCount(0);
+      await expectNoHorizontalOverflow(page);
+      await expect(page.locator('body')).not.toContainText('undefined');
+      if (language === 'en') await page.screenshot({ path: test.info().outputPath(`${route.split('/')[1]}-desktop.png`), fullPage: true });
+    }
+  });
+}

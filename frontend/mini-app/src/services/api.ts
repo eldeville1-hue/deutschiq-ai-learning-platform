@@ -172,7 +172,7 @@ export const api = {
   getLesson: (lessonId: number, lang: AppLanguage) => {
     return apiClient.get(`/api/lesson/${lessonId}?lang=${lang}`).then(r => r.data);
   },
-  startLesson: (payload: { user_id: number; lesson_id: number }) => apiClient.post('/api/lesson/start', payload).then(r => r.data),
+  startLesson: (payload: { user_id: number; lesson_id: number; resume_session_id?: string }) => apiClient.post('/api/lesson/start', payload).then(r => r.data),
   completeLesson: (payload: { user_id: number; lesson_id: number; session_id: string }) => {
     return apiClient.post('/api/lesson/complete', payload).then(r => {
       invalidateLearningData(payload.user_id);

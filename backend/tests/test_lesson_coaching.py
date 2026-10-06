@@ -4,6 +4,24 @@ from app.services.lesson_coaching import feedback_focus, learning_profile, repai
 
 
 class LessonCoachingTests(unittest.TestCase):
+    def test_retry_uses_first_example_when_second_is_original_answer(self):
+        retry = supported_retry_exercise({"answer": "Ich wohne in Berlin."},
+            {"examples": ["Ich wohne in Hamburg.", "Ich wohne in Berlin."], "rule": "Das Verb steht auf Position zwei."}, "en")
+        self.assertEqual("Ich wohne in Hamburg", retry["answer"])
+        self.assertEqual("Das Verb steht auf Position zwei.", retry["explanation"])
+
+    def test_retry_normalizes_punctuation_before_claiming_a_fresh_example(self):
+        retry = supported_retry_exercise({"answer": "Ich lerne Deutsch."},
+            {"examples": ["Ich lerne Deutsch!", "Ich lerne Englisch."]}, "de")
+        self.assertEqual("Ich lerne Englisch", retry["answer"])
+
+    def test_retry_does_not_claim_new_context_when_only_original_model_exists(self):
+        for lang in ('ru', 'de', 'en'):
+            retry = supported_retry_exercise({"answer": "Ich lerne Deutsch."}, {"examples": ["Ich lerne Deutsch."]}, lang)
+            self.assertNotIn("new example", retry["question"])
+            self.assertNotIn("neuen Beispiel", retry["question"])
+            self.assertNotIn("новом примере", retry["question"])
+
     def test_supported_retry_uses_a_fresh_sentence_and_localized_phone_prompt(self):
         exercise = {"id": "obwohl-guided", "answer": "Obwohl es regnet, gehen wir spazieren.", "accepted_answers": ["Obwohl es regnet, gehen wir spazieren."], "misconception": "verb_not_final"}
         content = {"examples": ["Obwohl es regnet, gehen wir spazieren.", "Obwohl ich müde bin, gehe ich zum Kurs."]}
