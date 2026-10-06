@@ -56,7 +56,44 @@ def build_b2_content(row: tuple) -> dict:
         "en": f"Use {focus} independently in a reasoned response.",
     }
     scenario_ru, scenario_de, scenario_en, alternatives, patterns = B2_TRANSFER[topic]
-    wrong = model.replace(",", "", 1) if "," in model else model[:1].lower() + model[1:]
+    function_labels = {
+        "advanced_connectors": ("Причина и следствие", "Ursache und Folge", "Cause and effect"),
+        "concessive_connectors": ("Уступка", "Einräumung", "Concession"),
+        "paired_connectors_b2": ("Зависимость двух изменений", "Abhängigkeit zweier Entwicklungen", "Relationship between two changes"),
+        "participle_clauses": ("Краткое определение существительного", "Kompaktes Attribut", "Compact noun modification"),
+        "nominal_style": ("Формальная номинализация", "Formelle Nominalisierung", "Formal nominalisation"),
+        "passive_alternatives": ("Возможность без обычного пассива", "Möglichkeit ohne gewöhnliches Passiv", "Possibility without the standard passive"),
+        "reported_speech": ("Нейтральная передача чужой речи", "Neutrale Wiedergabe fremder Aussage", "Neutral reported speech"),
+        "subjective_modals_b2": ("Оценка вероятности", "Wahrscheinlichkeitseinschätzung", "Assessment of probability"),
+        "formal_register": ("Вежливая формальная просьба", "Höfliche formelle Bitte", "Polite formal request"),
+        "argument_structure": ("Аргумент с обоснованием", "Begründetes Argument", "Supported argument"),
+        "counterargument": ("Уступка и контраргумент", "Einräumung und Gegenargument", "Concession and counterargument"),
+        "data_description": ("Описание изменения данных", "Beschreibung einer Datenentwicklung", "Description of a data trend"),
+        "discussion_language": ("Вежливое несогласие", "Höflicher Widerspruch", "Polite disagreement"),
+        "presentation_structure": ("Структурирование презентации", "Gliederung einer Präsentation", "Presentation signposting"),
+        "text_cohesion": ("Логический переход", "Logischer Übergang", "Logical transition"),
+        "b2_final": ("Взвешенный вывод", "Abgewogenes Fazit", "Balanced conclusion"),
+    }
+    listening_function_ru, listening_function_de, listening_function_en = function_labels[topic]
+    wrong_examples = {
+        "advanced_connectors": "Da die Nachfrage gestiegen ist wurden zusätzliche Kurse angeboten.",
+        "concessive_connectors": "Obwohl die Lösung teuer ist, aber lohnt sie sich langfristig.",
+        "paired_connectors_b2": "Je genauer wir planen, desto entstehen weniger Fehler.",
+        "participle_clauses": "Die gestern veröffentlichen Studie löste eine Debatte aus.",
+        "nominal_style": "Die Einführung von flexible Arbeitszeiten führte zu höherer Zufriedenheit.",
+        "passive_alternatives": "Das Problem lässt ohne zusätzliche Kosten lösen.",
+        "reported_speech": "Die Ministerin erklärte, die Maßnahmen sind notwendig.",
+        "subjective_modals_b2": "Die Änderung dürfte betrifft vor allem kleine Betriebe.",
+        "formal_register": "Bestätigen Sie mir das schriftlich.",
+        "argument_structure": "Dafür spricht vor allem, dadurch nachweislich Ressourcen gespart werden.",
+        "counterargument": "Zwar entstehen zunächst Kosten, aber jedoch überwiegen langfristig die Vorteile.",
+        "data_description": "Der Anteil stieg innerhalb von fünf Jahren auf zwölf Prozentpunkte.",
+        "discussion_language": "Ich verstehe deinen Einwand, aber deine Schlussfolgerung ist einfach falsch.",
+        "presentation_structure": "Zunächst erläutere ich die Ausgangslage, anschließend ich gehe auf mögliche Lösungen ein.",
+        "text_cohesion": "Dieser Ansatz ist überzeugend. Aber außerdem lässt er sich schnell umsetzen.",
+        "b2_final": "Insgesamt überwiegen die Vorteile, weil Datenschutz und Zugänglichkeit gewährleistet sind.",
+    }
+    wrong = wrong_examples[topic]
     rubric = {
         "ru": ["Задача полностью выполнена и позиция ясна.", "Аргументы логично связаны и развиты.", "Регистр и грамматика соответствуют уровню B2."],
         "de": ["Die Aufgabe ist vollständig erfüllt und die Position klar.", "Die Argumente sind logisch verknüpft und entwickelt.", "Register und Grammatik entsprechen dem B2-Niveau."],
@@ -82,10 +119,10 @@ def build_b2_content(row: tuple) -> dict:
             {"question": scenario_en, "explanation": rule["en"]},
         ),
         _localized(
-            {"id": f"{topic}-listen", "type": "listening_choice", "stage": "independent", "question": "Какую функцию выполняет фраза?", "audio_text": alternatives[0], "answer": focus, "accepted_answers": [focus], "options": [focus, "Beispiel", "Begrüßung"], "explanation": alternatives[0], "misconception": "discourse_function", "accessibility_label": "Прослушать аргумент и определить его функцию."},
-            {"question": "Какую функцию выполняет фраза?", "explanation": model},
-            {"question": "Welche Funktion erfüllt der Satz?", "explanation": model},
-            {"question": "What function does the sentence serve?", "explanation": model},
+            {"id": f"{topic}-listen", "type": "listening_choice", "stage": "independent", "question": "Какую функцию выполняет фраза?", "audio_text": alternatives[0], "answer": listening_function_ru, "accepted_answers": [listening_function_ru], "options": [listening_function_ru, "Пример", "Приветствие"], "explanation": alternatives[0], "misconception": "discourse_function", "accessibility_label": "Прослушать фразу уровня B2 и определить её функцию."},
+            {"question": "Какую функцию выполняет фраза?", "answer": listening_function_ru, "accepted_answers": [listening_function_ru], "options": [listening_function_ru, "Пример", "Приветствие"], "explanation": alternatives[0]},
+            {"question": "Welche Funktion erfüllt der Satz?", "answer": listening_function_de, "accepted_answers": [listening_function_de], "options": [listening_function_de, "Beispiel", "Begrüßung"], "explanation": alternatives[0]},
+            {"question": "What function does the sentence serve?", "answer": listening_function_en, "accepted_answers": [listening_function_en], "options": [listening_function_en, "Example", "Greeting"], "explanation": alternatives[0]},
         ),
         _localized(
             {"id": f"{topic}-dialogue", "type": "dialogue", "stage": "transfer", "mission_role": "final", "question": f"Сформулируй собственный ответ: {scenario_ru}", "answer": model, "model_answer": model, "accepted_answers": [model, model.rstrip(".")], "target_patterns": patterns, "hint": rule["ru"], "explanation": "Ответ может отличаться от модели: оцени выполнение задачи, связность и регистр.", "misconception": "transfer", "accessibility_label": scenario_ru},
