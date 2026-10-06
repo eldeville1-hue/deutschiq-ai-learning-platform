@@ -134,7 +134,7 @@ export const LessonCompletion: React.FC<Props> = ({
       <div className="lesson-result-actions">
         <button className="primary-action" onClick={onFinish}>{passed
           ? tr(lang, 'Продолжить маршрут', 'Lernweg fortsetzen', 'Continue my path')
-          : tr(lang, 'Повторить финальную миссию', 'Mission erneut versuchen', 'Retry final mission')} <FaArrowRight /></button>
+          : tr(lang, 'Повторить урок', 'Lektion erneut versuchen', 'Retry lesson')} <FaArrowRight /></button>
         {!passed && <button type="button" className="lesson-result-secondary" onClick={onBackToPlan}>{tr(lang, 'Вернуться к плану', 'Zurück zum Lernplan', 'Back to plan')}</button>}
       </div>
 

@@ -401,7 +401,7 @@ test('lesson reload preserves the active session and checked feedback', async ({
 
 test('reorder draft restores repeated word tokens after reload', async ({ page }) => {
   await mockApi(page, { completed: true });
-  await page.route('**/api/lesson/77', route => route.fulfill({ json: { ...lesson, content: { ...lesson.content,
+  await page.route('**/api/lesson/77*', route => route.fulfill({ json: { ...lesson, content: { ...lesson.content,
     exercises: [{ type: 'reorder', question: 'Build the sentence.', tokens: ['Deutsch', 'Ich', 'lerne', 'Deutsch'], hint: 'Start with Ich.' }] } } }));
   await page.goto('/lesson/77');
   await page.getByRole('button', { name: /Understand with an example/i }).click();
@@ -420,7 +420,7 @@ for (const route of ['/lesson/77', '/review']) {
   test(`failed loading offers a working retry on ${route}`, async ({ page }) => {
     await mockApi(page, { completed: true });
     let fail = true;
-    const pattern = route.startsWith('/lesson') ? '**/api/lesson/77' : '**/api/learning/reviews/**';
+    const pattern = route.startsWith('/lesson') ? '**/api/lesson/77*' : '**/api/learning/reviews/**';
     await page.route(pattern, request => fail ? request.fulfill({ status: 503, json: { detail: 'Unavailable' } }) : request.fallback());
     await page.goto(route);
     await expect(page.getByRole('button', { name: 'Try again', exact: true })).toBeVisible();
@@ -443,7 +443,24 @@ for (const language of ['ru', 'de', 'en']) {
       await expect(page.locator('.skeleton')).toHaveCount(0);
       await expectNoHorizontalOverflow(page);
       await expect(page.locator('body')).not.toContainText('undefined');
-      if (language === 'en') await page.screenshot({ path: test.info().outputPath(`${route.split('/')[1]}-desktop.png`), fullPage: true });
+      if (language === 'en') await page.screenshot({ path: test.info().outputPath(`${route.split('/')[1]}-desktop.png`), fullPage: true, animations: 'disabled' });
     }
   });
 }
+
+
+test('retrying an unsuccessful lesson opens fresh practice instead of the old result', async ({ page }) => {
+  await mockApi(page, { completed: true });
+  const starts: any[] = [];
+  page.on('request', request => { if (new URL(request.url()).pathname === '/api/lesson/start') starts.push(request.postDataJSON()); });
+  await page.route('**/api/lesson/complete', route => route.fulfill({ json: { passed: false, score: 60, exercise_count: 1, mission_attempted: true, mission_passed: false } }));
+  await page.goto('/lesson/77');
+  await page.getByRole('button', { name: /Understand with an example/i }).click();
+  await page.getByRole('button', { name: /Start practice/i }).click();
+  await page.getByRole('textbox').fill('Du solltest früher schlafen gehen.');
+  await page.getByRole('button', { name: /^Check$/i }).click();
+  await page.locator('.answer-feedback > button').click();
+  await page.getByRole('button', { name: 'Retry lesson', exact: true }).click();
+  await expect(page.getByRole('button', { name: /Understand with an example/i })).toBeVisible();
+  expect(starts.at(-1).resume_session_id).toBeUndefined();
+});
