@@ -195,6 +195,8 @@ test('iPhone WebView loads the complete design system on every product route', a
   await expect(page.locator('.rc-text-action')).toHaveCSS('display', 'flex');
 
   await page.goto('/lesson/77');
+  await page.getByRole('button', { name: /Understand with an example/i }).click();
+  await page.getByRole('button', { name: /Start practice/i }).click();
   await expect(page.locator('.lesson-support-row button').first()).toHaveCSS('appearance', 'none');
   await expect(page.locator('.lesson-support-row button').first()).not.toHaveCSS('background-color', 'rgb(239, 239, 239)');
   await expectNoHorizontalOverflow(page);

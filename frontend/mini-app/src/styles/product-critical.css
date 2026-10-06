@@ -1,9 +1,9 @@
 /*
  * Small, independent foundations for every learner route.
  *
- * Keep these rules separate from the legacy product sheet. Some embedded
- * WebViews have been observed attaching that large sheet without applying its
- * CSSOM rules. These controls must never fall back to native white widgets.
+ * Keep essential controls explicit across embedded WebViews. The legacy sheet
+ * was restored after source encoding corruption; the build validates UTF-8.
+ * These controls must never fall back to native white widgets.
  */
 button,
 input,
@@ -14,6 +14,13 @@ select {
   box-sizing: border-box;
   font: inherit;
 }
+
+.feedback-focus { display: grid; gap: 6px; margin: 10px 0; }
+.feedback-focus small { font-size: 10px; font-weight: 800; letter-spacing: .08em; }
+.feedback-focus strong { color: var(--dq-text); line-height: 1.45; }
+.model-reveal { margin-top: 10px; }
+.model-reveal summary { cursor: pointer; padding: 10px 0; font-weight: 700; }
+.model-reveal p { overflow-wrap: anywhere; }
 
 .language-picker {
   width: 100%;
