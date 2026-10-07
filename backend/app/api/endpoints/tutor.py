@@ -10,6 +10,7 @@ from openai import OpenAI
 from app.core.config import settings
 from app.core.telegram_auth import telegram_user_id, assert_owner
 from app.models.tutor import TutorMessage, TutorUsage
+from app.models.event import ProductEvent
 from app.models.learning import ExerciseAttempt, TopicMastery
 from app.models.lesson import Lesson
 from app.models.progress import UserProgress
@@ -26,6 +27,7 @@ def save_exchange(db: Session, user_id: int, question: str, answer: str, usage: 
     db.add(TutorMessage(user_id=user_id, role="user", content=question, language=language))
     db.add(TutorMessage(user_id=user_id, role="assistant", content=answer, language=language))
     usage.questions_used += 1
+    db.add(ProductEvent(user_id=user_id, event_name="tutor_answered", properties={"mode": mode, "language": language}))
     db.commit()
     return {"answer": answer, "remaining": max(0, daily_limit - usage.questions_used), "mode": mode}
 
