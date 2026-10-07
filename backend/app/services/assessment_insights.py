@@ -57,4 +57,11 @@ def evidence_gate(attempts, required_samples: int = 3) -> dict:
     dimensions = insight["dimensions"]
     thresholds = {"task_completion": 60, "grammar": 55, "coherence": 50}
     gaps = [name for name in CORE_DIMENSIONS if dimensions.get(name, {}).get("score", 0) < thresholds[name]]
+    # A healthy global average must not hide a recurring topic-specific misconception.
+    # If a priority topic repeatedly demonstrates a core-dimension gap, keep the
+    # progression gate in repair mode until independent evidence clears it.
+    for topic in insight["priority_topics"]:
+        dimension = topic["dimension"]
+        if dimension in CORE_DIMENSIONS and topic["score"] < thresholds[dimension] and dimension not in gaps:
+            gaps.append(dimension)
     return {"eligible": not gaps, "status": "ready" if not gaps else "repair_needed", "gaps": gaps, **insight}
