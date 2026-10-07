@@ -96,7 +96,7 @@ def lesson_blockers(lesson, lessons, completed_ids: set[int], mastery: dict[str,
     return list(dict.fromkeys(blockers))
 
 
-def select_recommended_lesson(lessons, completed_ids: set[int], mastery: dict[str, float], weak_points: dict):
+def select_recommended_lesson(lessons, completed_ids: set[int], mastery: dict[str, float], weak_points: dict, priority_strength: dict[str, float] | None = None):
     """Adapt the next action without renumbering or reshuffling the route."""
     candidates = [
         lesson for lesson in lessons
@@ -108,7 +108,9 @@ def select_recommended_lesson(lessons, completed_ids: set[int], mastery: dict[st
 
     def priority(lesson):
         weakness = sum(float(weak_points.get(tag, 0) or 0) for tag in (lesson.weak_point_tags or []))
-        known_mastery = float(mastery.get(lesson.topic, 50))
-        return (-weakness, known_mastery, roadmap_order(lesson))
+        # Unlocking still uses demonstrated mastery, while recommendation
+        # priority uses decayed retention when available.
+        known_strength = float((priority_strength or mastery).get(lesson.topic, 50))
+        return (-weakness, known_strength, roadmap_order(lesson))
 
     return min(candidates, key=priority)
