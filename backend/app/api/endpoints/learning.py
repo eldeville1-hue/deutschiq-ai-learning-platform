@@ -10,7 +10,7 @@ from app.models.lesson import Lesson
 from app.models.progress import UserProgress
 from app.models.diagnostic import DiagnosticResult
 from app.models.user import User
-from app.services.learning_engine import retention_score
+from app.services.learning_engine import adaptive_priority_score, retention_score
 from app.services.plan import generate_plan
 from app.services.learning_route import lesson_blockers, select_recommended_lesson
 from app.services.skill_graph import skill_for
@@ -43,6 +43,14 @@ async def today(user_id: int, lang: str | None = None, db: Session = Depends(get
     ).order_by(TopicMastery.mastery.asc()).all()
     mastery = db.query(TopicMastery).filter(TopicMastery.user_id == user.id).order_by(TopicMastery.mastery.asc()).all()
     mastery_map = {item.topic: item.mastery for item in mastery}
+    retention_map = {
+        item.topic: adaptive_priority_score(
+            item.mastery,
+            item.stability_days or 1,
+            _days_overdue(item.next_review_at, now),
+        )
+        for item in mastery
+    }
     plan = generate_plan(db, user.id, limit=30)
     completed_ids = {
         row[0] for row in db.query(UserProgress.lesson_id).filter(
@@ -52,7 +60,7 @@ async def today(user_id: int, lang: str | None = None, db: Session = Depends(get
     }
     diagnostic = db.query(DiagnosticResult).filter(DiagnosticResult.user_id == user.id).order_by(DiagnosticResult.created_at.desc()).first()
     weak_points = diagnostic.weak_points if diagnostic and diagnostic.weak_points else {}
-    next_lesson = select_recommended_lesson(plan, completed_ids, mastery_map, weak_points)
+    next_lesson = select_recommended_lesson(plan, completed_ids, mastery_map, weak_points, retention_map)
     production_attempts = db.query(ExerciseAttempt).filter(
         ExerciseAttempt.user_id == user.id, ExerciseAttempt.assessment.isnot(None)
     ).order_by(ExerciseAttempt.created_at.desc()).limit(100).all()
