@@ -110,3 +110,35 @@ def next_stability(current: float, correct: bool, confidence: str | None) -> flo
         return max(1.0, current * .45)
     multiplier = 2.15 if confidence == "sure" else 1.55 if confidence == "guess" else 1.85
     return min(120.0, max(1.0, current) * multiplier)
+
+
+def adaptive_mastery_update(
+    current: float,
+    correct: bool,
+    confidence: str | None,
+    response_ms: int | None = None,
+    *,
+    retry: bool = False,
+    retrieval: bool = False,
+    production_score: int | None = None,
+) -> float:
+    """Update mastery according to evidence independence.
+
+    Supported retries prove repair, not durable recall, so positive gains are
+    deliberately smaller. Independent delayed retrieval is stronger evidence
+    and earns a modest boost. Errors are never softened by retry/review mode.
+    """
+    if production_score is not None:
+        target = mastery_update_from_evidence(current, production_score, confidence, response_ms)
+    else:
+        target = mastery_update(current, correct, confidence, response_ms)
+    delta = target - current
+    if delta <= 0:
+        return target
+    evidence_weight = 0.45 if retry else (1.20 if retrieval else 1.0)
+    return max(0.0, min(100.0, current + delta * evidence_weight))
+
+
+def adaptive_priority_score(mastery: float, stability_days: float, days_overdue: float = 0.0) -> int:
+    """Expose the decayed skill strength used when choosing what to learn next."""
+    return retention_score(mastery, stability_days, days_overdue)
