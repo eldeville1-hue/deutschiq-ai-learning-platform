@@ -1,6 +1,6 @@
 import unittest
 from types import SimpleNamespace
-from app.services.learning_engine import mastery_update, mastery_update_from_evidence, next_stability, retention_score, retrieval_review_interval, review_interval, session_score, summarize_attempts, summarize_mission
+from app.services.learning_engine import adaptive_mastery_update, adaptive_priority_score, mastery_update, mastery_update_from_evidence, next_stability, retention_score, retrieval_review_interval, review_interval, session_score, summarize_attempts, summarize_mission
 from app.services.skill_graph import blocked_by, prerequisites_met
 from app.services.learning_route import lesson_blockers, select_recommended_lesson
 
@@ -51,6 +51,28 @@ class LearningEngineTests(unittest.TestCase):
         self.assertGreater(mastery_update_from_evidence(50, 92, "okay"), mastery_update_from_evidence(50, 72, "okay"))
         self.assertLess(mastery_update_from_evidence(50, 45, "okay"), 50)
 
+    def test_supported_retry_grows_mastery_less_than_independent_recall(self):
+        independent = adaptive_mastery_update(40, True, "sure")
+        supported_retry = adaptive_mastery_update(40, True, "sure", retry=True)
+        self.assertGreater(independent, supported_retry)
+        self.assertGreater(supported_retry, 40)
+
+    def test_delayed_retrieval_is_stronger_positive_evidence(self):
+        lesson_gain = adaptive_mastery_update(40, True, "sure")
+        retrieval_gain = adaptive_mastery_update(40, True, "sure", retrieval=True)
+        self.assertGreater(retrieval_gain, lesson_gain)
+
+    def test_errors_are_not_softened_by_evidence_mode(self):
+        regular = adaptive_mastery_update(50, False, "sure")
+        retry_error = adaptive_mastery_update(50, False, "sure", retry=True)
+        review_error = adaptive_mastery_update(50, False, "sure", retrieval=True)
+        self.assertEqual(regular, retry_error)
+        self.assertEqual(regular, review_error)
+
+    def test_adaptive_priority_uses_retention_decay(self):
+        self.assertEqual(70, adaptive_priority_score(70, 7, 0))
+        self.assertLess(adaptive_priority_score(70, 7, 5), 70)
+
     def test_review_intervals_expand(self):
         self.assertEqual(review_interval(False, 8), 1)
         self.assertEqual(review_interval(True, 1), 1)
@@ -98,6 +120,15 @@ class LearningEngineTests(unittest.TestCase):
         self.assertEqual(["previous_step"], lesson_blockers(second, [first, second], set(), {}))
         self.assertEqual([], lesson_blockers(second, [first, second], {1}, {}))
         self.assertEqual([], lesson_blockers(second, [first, second], set(), {"greetings": 72}))
+
+    def test_recommendation_can_prioritize_forgotten_skill_without_relocking_route(self):
+        stable = SimpleNamespace(id=1, topic="word_order", content={"day": 1}, weak_point_tags=[])
+        fading = SimpleNamespace(id=2, topic="articles", content={"day": 2}, weak_point_tags=[])
+        lessons = [stable, fading]
+        mastery = {"word_order": 75, "articles": 80}
+        retained_strength = {"word_order": 72, "articles": 45}
+        picked = select_recommended_lesson(lessons, set(), mastery, {}, retained_strength)
+        self.assertIs(picked, fading)
 
     def test_recommendation_adapts_without_reordering_route(self):
         first = SimpleNamespace(id=1, topic="word_order", content={"day": 1}, weak_point_tags=["word_order"])
