@@ -221,3 +221,16 @@
 }
 
 @media(prefers-reduced-motion:reduce){.dq-result-glow i,.dq-page-skeleton span{animation:none}.dq-main-action:active{transform:none}}
+
+
+/* DeutschIQ 87 — calm, stable exercise-state transitions. */
+.dq-exercise .lesson-task-surface,.dq-exercise .guided-hint,.dq-exercise .speech-result,.dq-exercise .answer-feedback{animation:dqStateIn 210ms cubic-bezier(.2,.8,.2,1) both;transform-origin:top center}
+.dq-exercise .primary-action,.dq-exercise .lesson-support-row button,.dq-exercise .exercise-choice>button,.dq-exercise .reorder-bank button{transition:transform 120ms ease,opacity 160ms ease,border-color 180ms ease,background-color 180ms ease,box-shadow 180ms ease}
+.dq-exercise .primary-action:active:not(:disabled),.dq-exercise .lesson-support-row button:active:not(:disabled),.dq-exercise .exercise-choice>button:active:not(:disabled),.dq-exercise .reorder-bank button:active:not(:disabled){transform:scale(.975)}
+.dq-exercise .lesson-action-dock{min-height:69px;display:flex;align-items:flex-end}
+.dq-exercise .answer-feedback{min-height:132px;overflow-wrap:anywhere}
+.dq-exercise .guided-hint{overflow-wrap:anywhere}
+@keyframes dqStateIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+@media (prefers-reduced-motion:reduce){.dq-exercise .lesson-task-surface,.dq-exercise .guided-hint,.dq-exercise .speech-result,.dq-exercise .answer-feedback{animation:none}.dq-exercise .primary-action,.dq-exercise .lesson-support-row button,.dq-exercise .exercise-choice>button,.dq-exercise .reorder-bank button{transition:none}}
+@media (max-width:430px){.dq-exercise .lesson-support-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}.dq-exercise .lesson-support-row button{width:100%;white-space:normal}.dq-exercise .exercise-prompt h1,.dq-exercise .guided-hint,.dq-exercise .answer-feedback{overflow-wrap:anywhere}.dq-exercise .conversation-thread{max-height:min(260px,32vh)}}
+@media (max-width:340px){.dq-exercise .lesson-support-row{grid-template-columns:1fr}}
