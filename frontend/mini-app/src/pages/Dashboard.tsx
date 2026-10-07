@@ -35,6 +35,9 @@ export const Dashboard: React.FC = () => {
       setLesson(selectCurrentLesson(normalizeJourneyLessons(plan.value)));
     }
     setLearning(today.status === 'fulfilled' ? today.value : null);
+    if (today.status === 'fulfilled') {
+      void api.trackEvent({ user_id: userId, event_name: 'today_viewed', properties: { due_count: Number(today.value?.due_count || 0), topic: String(today.value?.next_lesson?.topic || '') } });
+    }
     const hasLesson = today.status === 'fulfilled' && Boolean(today.value?.next_lesson)
       || plan.status === 'fulfilled' && Array.isArray(plan.value) && plan.value.length > 0;
     setStatus(dashboard.status === 'fulfilled'
