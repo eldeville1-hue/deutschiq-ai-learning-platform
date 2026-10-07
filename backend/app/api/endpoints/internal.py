@@ -9,12 +9,13 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.database import get_db
 from app.models.event import ProductEvent
-from app.models.learning import ExerciseAttempt, LearningSession
+from app.models.learning import ExerciseAttempt, LearningSession, TopicMastery
 from app.models.lesson import Lesson
 from app.models.user import User
 from app.models.beta import BetaAcceptanceCheck, BetaEnrollment, BetaInvite
 from app.services.beta_acceptance import ACCEPTANCE_CATALOG, acceptance_report
 from app.services.beta_insights import beta_readiness, exercise_health, lesson_content_health, retention_cohorts, soft_launch_gate, summarize_events, tester_progress
+from app.services.learning_analytics import learning_analytics, production_alerts
 from app.services.bot_links import telegram_beta_invite_url
 from app.services.content_i18n import localize_lesson_content, normalize_language
 from app.services.content_quality import curriculum_journey_issues, normalize_lesson_content, publication_blockers
@@ -159,6 +160,9 @@ async def beta_control_center(
     invites = db.query(BetaInvite).order_by(BetaInvite.created_at.desc()).all()
     acceptance = acceptance_report(db.query(BetaAcceptanceCheck).all())
     event_summary = summarize_events(events)
+    mastery_rows = db.query(TopicMastery).all()
+    learning_metrics = learning_analytics(events, attempts, mastery_rows)
+    operational_alerts = production_alerts(event_summary, learning_metrics)
     cohort_user_ids = {item.user_id for item in enrollments}
     cohort_events = [item for item in events if item.user_id in cohort_user_ids]
     cohort_sessions = [item for item in sessions if item.user_id in cohort_user_ids]
@@ -223,6 +227,8 @@ async def beta_control_center(
             "abandoned_events": event_summary["counts"].get("lesson_abandoned", 0),
         },
         "events": event_summary,
+        "learning_analytics": learning_metrics,
+        "operational_alerts": operational_alerts,
         "exercise_health": exercise_health(attempts, {item.id: item.topic for item in lessons}),
         "content_health": content_health,
         "readiness": readiness,
