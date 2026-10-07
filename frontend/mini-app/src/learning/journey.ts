@@ -4,6 +4,11 @@ export type LearningPhase = {
   kind: LearningPhaseKind;
   count?: number;
   minutes?: number;
+  topic?: string;
+  reason?: string;
+  dimension?: string;
+  score?: number;
+  lessonId?: number;
 };
 
 export type JourneyLesson = {
@@ -89,6 +94,11 @@ export const normalizeLearningPhases = (value: unknown): LearningPhase[] => {
       kind: String(phase.kind) as LearningPhaseKind,
       count: positiveNumber(phase.count) || undefined,
       minutes: positiveNumber(phase.minutes) || undefined,
+      topic: text(phase.topic) || undefined,
+      reason: text(phase.reason) || undefined,
+      dimension: text(phase.dimension) || undefined,
+      score: phase.score == null ? undefined : Math.max(0, Math.min(100, Number(phase.score) || 0)),
+      lessonId: positiveNumber(phase.lesson_id) || undefined,
     }];
   });
 };
