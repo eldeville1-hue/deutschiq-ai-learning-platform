@@ -2,7 +2,7 @@ import { expect, Page, test } from '@playwright/test';
 
 const userState = (completed: boolean, language = 'en') => ({ exists: completed, diagnostic_completed: completed, language, level: completed ? 'B1' : 'A1', xp: 120, streak: 3, beta_access: true, beta_onboarding_completed: true });
 const nextLesson = { id: 77, topic: 'konjunktiv_ii', title: 'Konjunktiv II: advice', level: 'B1', track: 'B1', week: 2, module_title: 'Voice & modality', module_step: 2, module_size: 5, scenario: 'A friend asks you for advice.', can_do: 'Give polite advice in a real conversation.', minutes: 8, reason: 'weakest_ready_skill' };
-const today = (dueCount = 0) => ({ due_count: dueCount, next_lesson: nextLesson, session: { phases: [{ kind: 'review', count: Math.min(2, dueCount), minutes: 3 }, { kind: 'learn', count: 1, minutes: 4 }, { kind: 'mission', count: 1, minutes: 2 }].filter(item => item.kind !== 'review' || dueCount), minutes: dueCount ? 9 : 6 }, assessment: { samples: 4, weakest_dimension: 'coherence', weakest_score: 52, dimensions: { coherence: { score: 52, samples: 4 } }, priority_topics: [{ topic: 'konjunktiv_ii', dimension: 'coherence', score: 52 }] } });
+const today = (dueCount = 0) => ({ due_count: dueCount, next_lesson: nextLesson, session: { phases: [{ kind: 'review', count: Math.min(2, dueCount), minutes: 3, topic: 'word_order', reason: 'due' }, { kind: 'repair', count: 1, minutes: 2, topic: 'konjunktiv_ii', reason: 'weak_assessment_dimension', score: 52 }, { kind: 'learn', count: 1, minutes: 4, topic: 'konjunktiv_ii', reason: 'weakest_ready_skill' }, { kind: 'mission', count: 1, minutes: 2, topic: 'konjunktiv_ii', reason: 'independent_transfer' }].filter(item => item.kind !== 'review' || dueCount).filter(item => item.kind !== 'repair' || !dueCount), minutes: dueCount ? 9 : 8 }, assessment: { samples: 4, weakest_dimension: 'coherence', weakest_score: 52, dimensions: { coherence: { score: 52, samples: 4 } }, priority_topics: [{ topic: 'konjunktiv_ii', dimension: 'coherence', score: 52 }] } });
 const plan = [
   { ...nextLesson, week: 2, track: 'B1', completed: false, blocked_by: [], recommended: true },
   ...[78, 79, 80, 81].map((id, index) => ({ ...nextLesson, id, title: `Next skill ${index + 1}`, week: 2, track: 'B1', completed: false, blocked_by: ['previous_step'], recommended: false })),
@@ -82,6 +82,19 @@ test('offline recovery is visible to the owner without losing the learner screen
   await expect(page.getByRole('status')).toHaveCount(0);
   await expect.poll(() => events.includes('offline_started') && events.includes('offline_recovered')).toBe(true);
   await expect(page.getByText('YOUR STEP TODAY')).toBeVisible();
+});
+
+test('Today explains the adaptive session without duplicating repair during due review', async ({ page }) => {
+  await mockApi(page, { completed: true, dueCount: 2, reviews: [] });
+  await page.goto('/dashboard');
+  await expect(page.locator('.dq-session-path > span')).toHaveCount(3);
+  await expect(page.getByText('Recall')).toBeVisible();
+  await expect(page.getByText('Learn')).toBeVisible();
+  await expect(page.getByText('Use')).toBeVisible();
+  await expect(page.getByText('Repair')).toHaveCount(0);
+  await expect(page.getByText('WHY TODAY')).toBeVisible();
+  await expect(page.getByText('Due for retrieval')).toBeVisible();
+  await expectNoHorizontalOverflow(page);
 });
 
 test('daily start connects due review to the recommended lesson', async ({ page }) => {
@@ -173,6 +186,8 @@ test('iPhone WebView keeps product controls styled', async ({ page }) => {
   await expect(control).toHaveCSS('display', 'flex');
   await expect(control).toHaveCSS('background-image', /linear-gradient/);
   await expect(page.locator('.dq-session-path > span')).toHaveCount(3);
+  await expect(page.getByText('WHY TODAY')).toBeVisible();
+  await expect(page.getByText('Repair a recurring gap')).toBeVisible();
   await expect(page.getByText('Give polite advice in a real conversation.')).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
