@@ -1,9 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { FaArrowRight, FaCheck, FaChevronDown, FaChevronRight, FaCommentDots, FaCrown, FaDownload, FaMedal, FaMoon, FaPaperPlane, FaRedo, FaShareAlt, FaStar, FaSun, FaTrash } from 'react-icons/fa';
+import { FaArrowRight, FaCheck, FaChevronDown, FaChevronRight, FaCommentDots, FaCrown, FaDownload, FaMedal, FaPaperPlane, FaRedo, FaShareAlt, FaStar, FaTrash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
-import { useTheme } from '../context/ThemeContext';
 import { getTelegramUser, getUserId, withUser } from '../utils/user';
 import { LanguagePicker } from '../components/LanguagePicker';
 import { tr } from '../i18n/language';
@@ -16,7 +15,6 @@ const CountUp: React.FC<{ value: number }> = ({ value }) => {
 
 export const Profile: React.FC = () => {
   const { lang } = useLanguage();
-  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [data, setData] = useState<any>(null);
   const [lessons, setLessons] = useState<any[]>([]);
@@ -114,7 +112,7 @@ export const Profile: React.FC = () => {
           ? tr(lang, 'Условия и подписка', 'Bedingungen & abonnieren', 'Terms & subscribe')
           : tr(lang, 'Посмотреть будущий Pro', 'Künftiges Pro ansehen', 'Preview the future Pro')}</span><FaArrowRight /></button>
       </section>
-      <section className="profile-settings page-stagger-3"><div className="profile-language"><strong>{tr(lang, 'Язык интерфейса', 'App-Sprache', 'App language')}</strong><LanguagePicker compact /></div><button onClick={toggleTheme}><span>{theme === 'dark' ? <FaMoon /> : <FaSun />}{tr(lang, 'Оформление', 'Darstellung', 'Appearance')}</span><small>{theme === 'dark' ? tr(lang, 'Тёмное', 'Dunkel', 'Dark') : tr(lang, 'Светлое', 'Hell', 'Light')}</small></button><button onClick={share}><span><FaShareAlt />{tr(lang, 'Пригласить друга', 'Freund einladen', 'Invite a friend')}</span><FaChevronRight /></button></section>
+      <section className="profile-settings page-stagger-3"><div className="profile-language"><strong>{tr(lang, 'Язык интерфейса', 'App-Sprache', 'App language')}</strong><LanguagePicker compact /></div><button onClick={share}><span><FaShareAlt />{tr(lang, 'Пригласить друга', 'Freund einladen', 'Invite a friend')}</span><FaChevronRight /></button></section>
       <section className="profile-learning-pass page-stagger-2">
         <header><small>{tr(lang, 'ТВОЙ ПРОГРЕСС', 'DEIN FORTSCHRITT', 'YOUR PROGRESS')}</small><button type="button" onClick={() => navigate(withUser('/plan'))}>{tr(lang, 'Открыть план', 'Plan öffnen', 'Open plan')} <FaArrowRight /></button></header>
         <div className="profile-quick-stats">
