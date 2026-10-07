@@ -479,3 +479,36 @@ test('retrying an unsuccessful lesson opens fresh practice instead of the old re
   await expect(page.getByRole('button', { name: /Understand with an example/i })).toBeVisible();
   expect(starts.at(-1).resume_session_id).toBeUndefined();
 });
+
+
+test('lesson help supports without revealing the model answer', async ({ page }) => {
+  await mockApi(page, { completed: true });
+  await page.goto('/lesson/77');
+  await page.getByRole('button', { name: /Understand with an example/i }).click();
+  await page.getByRole('button', { name: /Start practice/i }).click();
+  await expect(page.getByRole('button', { name: /More help/i })).toBeVisible();
+  await page.getByRole('button', { name: /More help/i }).click();
+  await expect(page.locator('.guided-hint')).toBeVisible();
+  await expect(page.locator('.guided-writing-starter')).toHaveCount(0);
+  await expectNoHorizontalOverflow(page);
+});
+
+test('profile exposes only the production-ready dark appearance', async ({ page }) => {
+  await mockApi(page, { completed: true });
+  await page.goto('/profile');
+  await expect(page.getByText('Appearance', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('Light', { exact: true })).toHaveCount(0);
+  await expectNoHorizontalOverflow(page);
+});
+
+for (const width of [320, 375, 390, 430]) {
+  test(`lesson help controls stay stable at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 740 });
+    await mockApi(page, { completed: true });
+    await page.goto('/lesson/77');
+    await page.getByRole('button', { name: /Understand with an example/i }).click();
+    await page.getByRole('button', { name: /Start practice/i }).click();
+    await expect(page.locator('.lesson-support-row')).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+  });
+}
