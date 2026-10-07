@@ -14,7 +14,7 @@ from typing import Literal
 from app.core.telegram_auth import telegram_user_id, assert_owner
 from app.services.srs import schedule_review
 from app.models.learning import ExerciseAttempt, TopicMastery, LearningSession
-from app.services.learning_engine import mastery_update, mastery_update_from_evidence, next_stability, retrieval_review_interval, retention_score, summarize_attempts, summarize_mission
+from app.services.learning_engine import adaptive_mastery_update, next_stability, retrieval_review_interval, retention_score, summarize_attempts, summarize_mission
 from app.services.skill_graph import skill_for
 from app.services.content_quality import normalize_lesson_content
 from app.services.content_i18n import localize_lesson_content, normalize_language
@@ -149,9 +149,15 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
         db.add(mastery)
     mastery.attempts = (mastery.attempts or 0) + 1
     mastery.correct_streak = (mastery.correct_streak or 0) + 1 if correct else 0
-    mastery.mastery = mastery_update_from_evidence(
-        mastery.mastery or 0, production_feedback["score"], data.confidence, data.response_ms
-    ) if production_feedback else mastery_update(mastery.mastery or 0, correct, data.confidence, data.response_ms)
+    mastery.mastery = adaptive_mastery_update(
+        mastery.mastery or 0,
+        correct,
+        data.confidence,
+        data.response_ms,
+        retry=data.retry,
+        retrieval=data.mode == "review",
+        production_score=(production_feedback or {}).get("score"),
+    )
     mastery.correct_total = (mastery.correct_total or 0) + (1 if correct else 0)
     mastery.lapse_count = (mastery.lapse_count or 0) + (0 if correct else 1)
     mastery.last_answer_at = datetime.now()
