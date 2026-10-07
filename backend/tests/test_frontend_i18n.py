@@ -75,7 +75,7 @@ class FrontendInternationalizationTests(unittest.TestCase):
     def test_lesson_offers_low_pressure_mobile_alternatives(self):
         lesson = self.read("pages/Lesson.tsx")
         interaction = self.read("components/learning/ExerciseInteraction.tsx")
-        self.assertIn("Make easier", lesson)
+        self.assertIn("More help", lesson)\n        self.assertIn("guided={Boolean(retried[exerciseIndex])", lesson)
         self.assertIn("Skip for now", lesson)
         self.assertIn("I can't listen", lesson)
         self.assertIn("exercise_skipped", lesson)
