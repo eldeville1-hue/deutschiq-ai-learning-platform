@@ -12,8 +12,11 @@ from app.core.telegram_auth import telegram_user_id, assert_owner
 from app.models.tutor import TutorMessage, TutorUsage
 from app.models.learning import ExerciseAttempt, TopicMastery
 from app.models.lesson import Lesson
+from app.models.progress import UserProgress
+from app.services.plan import generate_plan
+from app.services.tutor_context import build_tutor_learning_context, tutor_context_prompt
 from app.services.tutor_fallback import fallback_answer
-from datetime import date
+from datetime import date, datetime, timezone
 from app.services.subscription import has_active_pro
 from app.services.content_i18n import normalize_language
 
@@ -65,16 +68,32 @@ async def ask_tutor(data: TutorRequest, db: Session = Depends(get_db), authentic
         DiagnosticResult.user_id == user.id
     ).order_by(DiagnosticResult.created_at.desc()).first()
     weak_points = list((diagnostic.weak_points or {}).keys())[:4] if diagnostic else []
-    mastery = db.query(TopicMastery).filter(TopicMastery.user_id == user.id).order_by(TopicMastery.mastery.asc()).limit(5).all()
-    recent_errors = db.query(ExerciseAttempt).filter(
+    mastery = db.query(TopicMastery).filter(TopicMastery.user_id == user.id).all()
+    recent_attempts = db.query(ExerciseAttempt).filter(
         ExerciseAttempt.user_id == user.id,
-        ExerciseAttempt.correct == False,
-    ).order_by(ExerciseAttempt.created_at.desc()).limit(4).all()
-    latest_lesson_id = recent_errors[0].lesson_id if recent_errors else None
-    latest_lesson = db.query(Lesson).filter(Lesson.id == latest_lesson_id).first() if latest_lesson_id else None
-    mastery_context = ", ".join(f"{item.topic}: {round(item.mastery)}%" for item in mastery) or "no practice data"
-    error_context = ", ".join(item.topic for item in recent_errors) or "no recent errors"
-    fallback_topics = [item.topic for item in recent_errors] + weak_points + [item.topic for item in mastery]
+    ).order_by(ExerciseAttempt.created_at.desc()).limit(100).all()
+    plan = generate_plan(db, user.id, limit=30)
+    completed_ids = {
+        row[0] for row in db.query(UserProgress.lesson_id).filter(
+            UserProgress.user_id == user.id,
+            UserProgress.completed == True,
+        ).all()
+    }
+    learner_context = build_tutor_learning_context(
+        level=level,
+        mastery_rows=mastery,
+        recent_attempts=recent_attempts,
+        plan=plan,
+        completed_ids=completed_ids,
+        weak_points=diagnostic.weak_points if diagnostic and diagnostic.weak_points else {},
+        now=datetime.now(timezone.utc),
+    )
+    fallback_topics = (
+        [item["topic"] for item in learner_context["recurring_errors"]]
+        + learner_context["due_reviews"]
+        + weak_points
+        + [item["topic"] for item in learner_context["weak_skills"]]
+    )
 
     # A provider outage or exhausted credit must not turn the tutor into a dead button.
     if not client:
@@ -86,10 +105,8 @@ async def ask_tutor(data: TutorRequest, db: Session = Depends(get_db), authentic
 You are DeutschIQ Tutor, a C2-level German teacher.
 User level: {level}
 Respond only in: { {'ru': 'Russian', 'de': 'German', 'en': 'English'}[lang] }
-Known weak areas: {', '.join(weak_points) if weak_points else 'not diagnosed yet'}
-Current mastery: {mastery_context}
-Recent error topics: {error_context}
-Current lesson: {latest_lesson.topic if latest_lesson else 'not started'}
+Known diagnostic weak areas: {', '.join(weak_points) if weak_points else 'not diagnosed yet'}
+{tutor_context_prompt(learner_context)}
 
 Rules:
 - Explain grammar simply (max 3 sentences), give 2 examples
@@ -100,9 +117,13 @@ Rules:
 - Keep answers under 200 words
 - When relevant, connect the explanation to one known weak area, without repeating it in every answer
 - Never introduce grammar more than one CEFR step above the user's level
+- Prioritize the current learning target, due retrieval, recurring errors, and production repair when relevant
+- If the user asks about today's topic, use Current learning target; never infer it from the latest chat message
 - If the user asks for practice, ask exactly one question, wait for the answer, then give corrective feedback
+- During active practice, coach before revealing: give one small hint first. Do not provide the target answer unless the learner explicitly asks after trying or says they are stuck
 - When correcting, identify the error category, show a minimal contrast, and ask for one fresh retry
-- Do not pretend that a generated answer changes course mastery; only validated lesson attempts do
+- Treat recurring errors as misconceptions to repair, not as labels about the learner
+- Do not pretend that a generated answer changes course mastery; only validated lesson/review attempts do
 """
     
     # 5. Собираем сообщения: системный промпт + история (если есть) + текущий вопрос
