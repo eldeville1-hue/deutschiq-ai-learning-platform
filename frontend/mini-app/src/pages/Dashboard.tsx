@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { FaArrowRight, FaCheck, FaComments, FaFire, FaLightbulb, FaPlay, FaRedoAlt } from 'react-icons/fa';
+import { FaArrowRight, FaCheck, FaComments, FaFire, FaLightbulb, FaPlay, FaRedoAlt, FaTools } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
@@ -46,6 +46,13 @@ export const Dashboard: React.FC = () => {
 
   const selectedLesson = useMemo(() => normalizeJourneyLesson(learning?.next_lesson) || lesson, [learning, lesson]);
   const phases = useMemo(() => normalizeLearningPhases(learning?.session?.phases), [learning]);
+  const phaseCopy = (kind: string) => ({
+    review: { label: tr(lang, 'Вспомнить', 'Abrufen', 'Recall'), why: tr(lang, 'Пора вернуть это в память', 'Jetzt wieder aus dem Gedächtnis abrufen', 'Due for retrieval'), icon: <FaRedoAlt /> },
+    repair: { label: tr(lang, 'Исправить', 'Reparieren', 'Repair'), why: tr(lang, 'Закрываем повторяющуюся ошибку', 'Wir schließen eine wiederkehrende Lücke', 'Repair a recurring gap'), icon: <FaTools /> },
+    learn: { label: tr(lang, 'Изучить', 'Lernen', 'Learn'), why: tr(lang, 'Следующий готовый навык', 'Das nächste bereite Lernziel', 'Your next ready skill'), icon: <FaLightbulb /> },
+    mission: { label: tr(lang, 'Применить', 'Anwenden', 'Use'), why: tr(lang, 'Самостоятельно применить навык', 'Die Fähigkeit selbstständig anwenden', 'Use it independently'), icon: <FaComments /> },
+  } as Record<string, { label: string; why: string; icon: React.ReactNode }>)[kind];
+  const visiblePhases = phases.length ? phases : [{ kind: 'learn' as const, count: 1, minutes: selectedLesson?.minutes || 6 }];
   if (status === 'loading') return <main className="app-shell dq-home" aria-busy="true"><div className="dq-page-skeleton"><span /><span /><span /></div></main>;
   if (status === 'error') return <main className="app-shell dq-home page-enter"><ProductState kind="error" eyebrow={tr(lang, 'СВЯЗЬ ПРЕРВАЛАСЬ', 'VERBINDUNG UNTERBROCHEN', 'CONNECTION INTERRUPTED')} title={tr(lang, 'Не удалось подготовить урок', 'Die Lektion konnte nicht vorbereitet werden', 'We could not prepare your lesson')} detail={tr(lang, 'Твои результаты сохранены. Проверь соединение и попробуй ещё раз.', 'Dein Fortschritt ist sicher. Prüfe die Verbindung und versuche es erneut.', 'Your progress is safe. Check your connection and try again.')} action={tr(lang, 'Повторить', 'Erneut versuchen', 'Try again')} onAction={() => void load()} /></main>;
   if (!selectedLesson) return <main className="app-shell dq-home page-enter"><ProductState eyebrow={tr(lang, 'СЛЕДУЮЩИЙ ШАГ', 'NÄCHSTER SCHRITT', 'NEXT STEP')} title={tr(lang, 'Подготовим новый урок', 'Wir bereiten eine neue Lektion vor', 'Let’s prepare your next lesson')} detail={tr(lang, 'Открой план, чтобы выбрать доступный навык или обновить маршрут.', 'Öffne den Lernweg, um eine verfügbare Fähigkeit auszuwählen.', 'Open your path to choose an available skill or refresh the route.')} action={tr(lang, 'Открыть план', 'Lernweg öffnen', 'Open learning path')} onAction={() => navigate(withUser('/plan'))} /></main>;
@@ -84,14 +91,23 @@ export const Dashboard: React.FC = () => {
           <h1>{selectedLesson.title || topicLabel(topic, lang)}</h1>
           <p>{selectedLesson.scenario || selectedLesson.canDo || tr(lang, 'Один короткий урок для реальной ситуации.', 'Eine kurze Lektion für eine echte Situation.', 'One short lesson for a real situation.')}</p>
           <div className="dq-session-path" aria-label={tr(lang, 'Путь занятия', 'Ablauf der Einheit', 'Session path')}>
-            <span className={learning?.due_count ? 'active' : 'ready'}><FaRedoAlt /><small>{tr(lang, 'Повторить', 'Wiederholen', 'Review')}</small>{learning?.due_count ? <b>{learning.due_count}</b> : <FaCheck />}</span>
-            <i />
-            <span className="active"><FaLightbulb /><small>{tr(lang, 'Понять', 'Verstehen', 'Learn')}</small><b>{phases.find(item => item.kind === 'learn')?.count || 1}</b></span>
-            <i />
-            <span className="ready"><FaComments /><small>{tr(lang, 'Применить', 'Anwenden', 'Use')}</small><FaCheck /></span>
+            {visiblePhases.map((phase, index) => {
+              const copy = phaseCopy(phase.kind);
+              return <React.Fragment key={`${phase.kind}-${index}`}>
+                {index > 0 && <i />}
+                <span className={index === 0 ? 'active' : 'ready'} title={copy.why}>
+                  {copy.icon}<small>{copy.label}</small><b>{phase.count || 1}</b>
+                </span>
+              </React.Fragment>;
+            })}
+          </div>
+          <div className="dq-adaptive-reason">
+            <small>{tr(lang, 'ПОЧЕМУ ЭТО СЕГОДНЯ', 'WARUM HEUTE', 'WHY TODAY')}</small>
+            <strong>{phaseCopy(visiblePhases[0].kind).why}</strong>
+            {visiblePhases[0].topic ? <span>{topicLabel(visiblePhases[0].topic || '', lang)}{visiblePhases[0].score != null ? ` · ${Math.round(visiblePhases[0].score)}%` : ''}</span> : null}
           </div>
           <div className="dq-daily-outcome"><FaCheck /><span><small>{tr(lang, 'ПОСЛЕ УРОКА', 'NACH DER LEKTION', 'AFTER THIS LESSON')}</small><strong>{selectedLesson.canDo || tr(lang, 'Ты применишь навык в коротком разговоре.', 'Du nutzt die Fähigkeit in einem kurzen Gespräch.', 'You will use the skill in a short conversation.')}</strong></span></div>
-          <div className="dq-daily-meta"><span>{Math.max(1, phases.length || 1)} {tr(lang, 'шага', 'Schritte', 'steps')}</span><span>≈ {Math.min(10, Number(learning?.session?.minutes || selectedLesson.minutes))} {tr(lang, 'мин', 'Min.', 'min')}</span></div>
+          <div className="dq-daily-meta"><span>{Math.max(1, visiblePhases.length)} {tr(lang, 'шага', 'Schritte', 'steps')}</span><span>≈ {Math.min(10, Number(learning?.session?.minutes || selectedLesson.minutes))} {tr(lang, 'мин', 'Min.', 'min')}</span></div>
           <button type="button" className="dq-main-action" onClick={startLesson}><span><FaPlay /> {selectedLesson?.id ? (resume ? tr(lang, 'Продолжить занятие', 'Einheit fortsetzen', 'Continue session') : learning?.due_count ? tr(lang, 'Начать с повторения', 'Mit Wiederholung starten', 'Start with review') : tr(lang, 'Начать урок', 'Lektion starten', 'Start lesson')) : tr(lang, 'Открыть план', 'Plan öffnen', 'Open plan')}</span><FaArrowRight /></button>
         </div>
       </section>
