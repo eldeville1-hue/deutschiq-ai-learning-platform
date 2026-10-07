@@ -238,7 +238,7 @@ const LessonScreen: React.FC = () => {
     try {
       const result = await api.checkLessonAnswer({ user_id: getUserId(), lesson_id: Number(id), exercise_index: exerciseIndex, answer, session_id: sessionId, language: lang, confidence, response_ms: Date.now() - startedAt, retry: Boolean(retried[exerciseIndex]) });
       setChecked(Boolean(result.correct)); setFeedback(result);
-      void api.trackEvent({ user_id: getUserId(), event_name: 'exercise_answered', properties: { lesson_id: Number(id), exercise_index: exerciseIndex, correct: Boolean(result.correct), confidence, misconception: String(result.error_type || ''), learning_mode: String(learningProfile.mode) } });
+      void api.trackEvent({ user_id: getUserId(), event_name: 'exercise_answered', properties: { lesson_id: Number(id), exercise_index: exerciseIndex, correct: Boolean(result.correct), confidence, misconception: String(result.error_type || ''), learning_mode: String(learningProfile.mode), retry: Boolean(retried[exerciseIndex]) } });
     } catch {
       setCheckError(tr(lang, 'Не удалось проверить. Попробуй ещё раз.', 'Prüfung fehlgeschlagen. Versuche es erneut.', 'Could not check your answer. Try again.'));
     } finally { setChecking(false); }
@@ -391,7 +391,7 @@ const LessonScreen: React.FC = () => {
             </div>
           )}
           {(showTranscript || easyMode) && activeExercise.audio_text && <div className="listening-transcript"><small>{tr(lang, 'ТЕКСТ', 'TEXT', 'TRANSCRIPT')}</small><span>{activeExercise.audio_text}</span></div>}
-          <ExerciseInteraction exercise={{ ...activeExercise, id: `${id}-${exerciseIndex}-${retried[exerciseIndex] ? 'retry' : 'first'}` }} answer={answer} onAnswer={setAnswer} disabled={checked !== null} lang={lang} onAudio={sessionId ? transcribe : undefined} onPlayAudio={playAudio} guided={easyMode || exerciseKind(activeExercise) === 'repair'} />
+          <ExerciseInteraction exercise={{ ...activeExercise, id: `${id}-${exerciseIndex}-${retried[exerciseIndex] ? 'retry' : 'first'}` }} answer={answer} onAnswer={setAnswer} disabled={checked !== null} lang={lang} onAudio={sessionId ? transcribe : undefined} onPlayAudio={playAudio} guided={Boolean(retried[exerciseIndex]) || exerciseKind(activeExercise) === 'repair'} />
           </div>}
             {speechResult?.transcript && (
               <div className="speech-result">
@@ -409,7 +409,7 @@ const LessonScreen: React.FC = () => {
           )}
           {checked === null && <div className="lesson-support-row" aria-label={tr(lang, 'Помощь с заданием', 'Hilfe zur Aufgabe', 'Exercise help')}>
             {activeExercise.hint && !showHint && !learningProfile.show_guided_hint && <button type="button" onClick={() => setShowHint(true)}>{tr(lang, 'Подсказка', 'Hinweis', 'Hint')}</button>}
-            {!easyMode && <button type="button" onClick={() => { setEasyMode(true); setShowHint(true); }}>{tr(lang, 'Сделать проще', 'Einfacher machen', 'Make easier')}</button>}
+            {!easyMode && <button type="button" onClick={() => { setEasyMode(true); setShowHint(true); }}>{tr(lang, 'Больше помощи', 'Mehr Hilfe', 'More help')}</button>}
             {(activeExercise.type === 'listening' || activeExercise.type === 'listening_choice') && !showTranscript && <button type="button" onClick={() => setShowTranscript(true)}>{tr(lang, 'Не могу слушать', 'Kann gerade nicht hören', "I can't listen")}</button>}
             {activeExercise.mission_role !== 'final' && <button type="button" className="skip" onClick={() => void skipExercise('learner_choice')}>{tr(lang, 'Пропустить', 'Jetzt überspringen', 'Skip for now')}</button>}
           </div>}
