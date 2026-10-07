@@ -18,7 +18,7 @@ ALLOWED_EVENTS = {
     "reload_loop_detected", "api_failed", "api_slow", "client_error",
     "microphone_denied", "microphone_failed", "draft_restored", "checkpoint_draft_restored", "checkpoint_completed",
     "invite_claimed", "beta_onboarding_completed", "diagnostic_started",
-    "diagnostic_completed",
+    "diagnostic_completed", "today_viewed", "tutor_answered",
     "audio_started", "audio_failed", "audio_interrupted",
     "offline_started", "offline_recovered", "app_resumed",
     "pro_preview_viewed", "pro_interest_clicked", "subscription_restore_requested",
