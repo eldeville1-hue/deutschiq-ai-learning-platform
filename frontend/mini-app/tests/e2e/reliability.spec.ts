@@ -88,10 +88,10 @@ test('Today explains the adaptive session without duplicating repair during due 
   await mockApi(page, { completed: true, dueCount: 2, reviews: [] });
   await page.goto('/dashboard');
   await expect(page.locator('.dq-session-path > span')).toHaveCount(3);
-  await expect(page.getByText('Recall')).toBeVisible();
-  await expect(page.getByText('Learn')).toBeVisible();
-  await expect(page.getByText('Use')).toBeVisible();
-  await expect(page.getByText('Repair')).toHaveCount(0);
+  await expect(page.getByText('Recall', { exact: true })).toBeVisible();
+  await expect(page.getByText('Learn', { exact: true })).toBeVisible();
+  await expect(page.getByText('Use', { exact: true })).toBeVisible();
+  await expect(page.getByText('Repair', { exact: true })).toHaveCount(0);
   await expect(page.getByText('WHY TODAY')).toBeVisible();
   await expect(page.getByText('Due for retrieval')).toBeVisible();
   await expectNoHorizontalOverflow(page);
