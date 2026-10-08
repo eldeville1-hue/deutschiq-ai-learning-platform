@@ -166,9 +166,27 @@ def compare_triage(current, baseline):
             "warning": "Differences are against provisional labels, not verified accuracy."}
 
 
+def safety_gate(rows=None, evaluator=evaluate_structured_answer):
+    """Fail closed on rewards for uncertain responses and false acceptance of
+    provisional negative development cases. This is NOT linguistic validation.
+    """
+    rows = build_diverse_cases() if rows is None else rows
+    violations = []
+    for row in rows:
+        result = evaluator(row["learner_answer"], row["exercise"])
+        status = result.get("evaluation_status")
+        if status != "verified" and result.get("correct"):
+            violations.append({"id": row["id"], "issue": "uncertain_marked_correct"})
+        if row.get("provisional_expected") == "incorrect" and status == "verified" and result.get("correct"):
+            violations.append({"id": row["id"], "issue": "provisional_negative_accepted"})
+    return {"checked": len(rows), "violations": violations,
+            "passed": not violations, "independently_validated": False}
+
+
 def main():
     report = audit()
     triage_report = triage()
+    safety = safety_gate()
     triage_path = Path(__file__).resolve().parent / "fixtures" / "evaluation_v88_triage.json"
     triage_path.parent.mkdir(parents=True, exist_ok=True)
     triage_path.write_text(json.dumps(triage_report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -177,7 +195,8 @@ def main():
     path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({k: v for k, v in report.items() if k not in {"provisional_error_outcomes", "structural_issues"}}, indent=2))
     print(json.dumps({"triaged": triage_report["triaged"], "by_issue": triage_report["by_issue"], "by_level_category": triage_report["by_level_category"]}, ensure_ascii=False, indent=2))
-    if report["structural_issue_count"]:
+    print(json.dumps({"safety_gate": safety}, ensure_ascii=False))
+    if report["structural_issue_count"] or not safety["passed"]:
         raise SystemExit(1)
 
 if __name__ == "__main__":
