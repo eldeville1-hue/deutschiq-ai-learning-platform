@@ -154,6 +154,34 @@ class StructuredEvaluationV88Tests(unittest.TestCase):
         self.assertEqual(result["evaluation_status"], "uncertain")
         self.assertFalse(result["correct"])
 
+    def test_triaged_irregular_lesen(self):
+        result = evaluate_structured_answer("Sie lesen eine Zeitung.", {
+            "type": "error_repair", "answer": "Sie liest eine Zeitung.",
+            "target_feature": "conjugation",
+        })
+        self.assertEqual(result["errors"][0]["type"], "conjugation")
+
+    def test_triaged_separable_infinitive_zu(self):
+        result = evaluate_structured_answer("Ich bin daran gewöhnt, früh aufstehen.", {
+            "type": "error_repair", "answer": "Ich bin daran gewöhnt, früh aufzustehen.",
+            "target_feature": "infinitive",
+        })
+        self.assertEqual(result["errors"][0]["type"], "infinitive")
+
+    def test_triaged_modal_infinitive(self):
+        result = evaluate_structured_answer("Ich muss morgen früh aufgestanden.", {
+            "type": "error_repair", "answer": "Ich muss morgen früh aufstehen.",
+            "target_feature": "infinitive",
+        })
+        self.assertEqual(result["errors"][0]["type"], "infinitive")
+
+    def test_triaged_lassen_infinitive(self):
+        result = evaluate_structured_answer("Das Problem lässt sich leicht gelöst.", {
+            "type": "error_repair", "answer": "Das Problem lässt sich leicht lösen.",
+            "target_feature": "passive",
+        })
+        self.assertEqual(result["errors"][0]["type"], "passive")
+
     def test_triaged_possessive_ending(self):
         result = evaluate_structured_answer("Meine Bruder ist zwanzig Jahre alt.", {
             "type": "error_repair", "answer": "Mein Bruder ist zwanzig Jahre alt.",
