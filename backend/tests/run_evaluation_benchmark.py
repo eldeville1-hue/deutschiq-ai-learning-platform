@@ -147,10 +147,43 @@ def run(rows, evaluator=evaluate_structured_answer):
     report["release_gate"] = "blocked" if failures else "requires_manual_signoff"
     return report
 
+def validation_report(rows, evaluator=evaluate_structured_answer):
+    """Produce a fail-closed release report from reviewed rows only."""
+    report = run(rows, evaluator=evaluator)
+    review_failures = []
+    holdout = [row for row in rows if row.get("split") == "holdout"]
+    if not holdout:
+        review_failures.append("independent_holdout_missing")
+    for level in LEVELS:
+        approved = [
+            row for row in holdout if row.get("cefr") == level
+            and (row.get("human_review") or {}).get("status") == "approved"
+            and (row.get("human_review") or {}).get("independent_of_generation") is True
+            and (row.get("human_review") or {}).get("blind_to_prediction") is True
+        ]
+        if len(approved) < MIN_PER_LEVEL:
+            review_failures.append(f"{level}:independent_holdout_insufficient")
+    report["holdout_total"] = len(holdout)
+    report["validation_type"] = "reviewed_holdout_pending_external_signoff"
+    report["release_checks"] = {
+        "independent_holdout": not review_failures,
+        "human_signoff": False,
+        "ai_assisted_latency": False,
+        "failure_rate": False,
+        "frontend_mobile_e2e": False,
+        "production_smoke": False,
+    }
+    report["failed_gates"] = sorted(set(report["failed_gates"] + review_failures +
+        [f"manual:{name}" for name, passed in report["release_checks"].items() if not passed]))
+    report["release_gate"] = "blocked"
+    report["independent_accuracy_demonstrated"] = False
+    return report
+
+
 def main():
     fixture = Path(__file__).resolve().parent / "fixtures" / "evaluation_v88_synthetic.jsonl"
     rows = [json.loads(line) for line in fixture.read_text(encoding="utf-8").splitlines()] if fixture.exists() else build_cases()
-    report = run(rows)
+    report = validation_report(rows)
     print(json.dumps(report, ensure_ascii=False, indent=2))
     if report["release_gate"] == "blocked":
         raise SystemExit(2)
