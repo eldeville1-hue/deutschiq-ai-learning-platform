@@ -36,19 +36,56 @@ CONTEXTS = (
     "Compare the model answer with your response.",
 )
 
+# Level-specific constructions; labels remain provisional and never count as reviews.
+LEVEL_SENTENCES = {
+    "A1": ("Ich trinke Wasser.", "Sie wohnt in Berlin.", "Wir lernen Deutsch.", "Er hat einen Hund.", "Ich brauche einen Stift.", "Das Buch liegt auf dem Tisch.", "Heute ist Montag.", "Meine Schwester kocht Reis.", "Ich fahre mit dem Bus.", "Wir kaufen frisches Brot."),
+    "A2": ("Gestern habe ich meine Freundin besucht.", "Wenn es regnet, bleibe ich zu Hause.", "Ich muss morgen früh aufstehen.", "Wir sind letztes Jahr nach Hamburg gefahren.", "Kannst du mir bitte den Weg erklären?", "Ich interessiere mich für deutsche Musik.", "Sie hat sich über das Geschenk gefreut.", "Obwohl ich müde bin, gehe ich spazieren.", "Er wartet seit einer Stunde auf den Zug.", "Ich habe vergessen, die Tür zu schließen."),
+    "B1": ("Ich lerne Deutsch, damit ich eine Ausbildung machen kann.", "Nachdem wir gegessen hatten, gingen wir ins Kino.", "Das Fahrrad, das ich gestern gekauft habe, ist gebraucht.", "Ich würde lieber zu Hause bleiben, wenn ich könnte.", "Er behauptet, dass er die E-Mail nicht erhalten hat.", "Trotz des schlechten Wetters fand das Konzert statt.", "Die Wohnung wird nächste Woche renoviert.", "Sie hat vor, sich für die Stelle zu bewerben.", "Je mehr ich übe, desto sicherer spreche ich.", "Ich frage mich, ob der Termin verschoben wurde."),
+    "B2": ("Die Entscheidung wurde getroffen, obwohl erhebliche Zweifel bestanden.", "Hätte ich früher davon erfahren, hätte ich anders gehandelt.", "Es lässt sich kaum bestreiten, dass Bildung Chancen eröffnet.", "Der Bericht, auf den sich die Kommission bezieht, ist umstritten.", "Anstatt die Ursachen zu untersuchen, wurden nur Symptome behandelt.", "Die Maßnahme soll dazu beitragen, den Energieverbrauch zu senken.", "Obgleich die Ergebnisse vielversprechend sind, fehlen Langzeitdaten.", "Unter der Voraussetzung, dass alle zustimmen, kann das Projekt beginnen.", "Die zunehmende Digitalisierung stellt Unternehmen vor neue Herausforderungen.", "Es wäre sinnvoll gewesen, die Betroffenen rechtzeitig einzubeziehen."),
+}
+VARIANTS = ("exact", "punctuation", "lowercase", "empty", "omit_first", "omit_last", "swap_first", "repeat_first", "reverse", "negate", "prefix", "suffix")
+
 def build_cases():
     rows = []
     for level in LEVELS:
-        for context_index, objective in enumerate(CONTEXTS):
-            for template_index, (model, response, label, kind) in enumerate(TEMPLATES):
-                case_id = f"{level}-{context_index:02d}-{template_index:02d}"
+        for index, model in enumerate(LEVEL_SENTENCES[level]):
+            words = model.rstrip(".?!").split()
+            objective = f"Reproduce the German sentence accurately: {model}"
+            for variant in VARIANTS:
+                if variant == "exact":
+                    response = model
+                elif variant == "punctuation":
+                    response = model.rstrip(".?!")
+                elif variant == "lowercase":
+                    response = model.lower()
+                elif variant == "empty":
+                    response = ""
+                elif variant == "omit_first":
+                    response = " ".join(words[1:])
+                elif variant == "omit_last":
+                    response = " ".join(words[:-1])
+                elif variant == "swap_first":
+                    response = " ".join([words[1], words[0], *words[2:])
+                elif variant == "repeat_first":
+                    response = " ".join([words[0], *words])
+                elif variant == "reverse":
+                    response = " ".join(reversed(words))
+                elif variant == "negate":
+                    response = model.rstrip(".?!") + " nicht."
+                elif variant == "prefix":
+                    response = "Vielleicht " + model[0].lower() + model[1:]
+                else:
+                    response = model.rstrip(".?!") + " heute."
                 rows.append({
-                    "id": case_id, "cefr": level, "objective": objective,
-                    "exercise": {"type": kind, "question": objective, "answer": model},
+                    "id": f"{level}-{index:02d}-{variant}",
+                    "cefr": level,
+                    "objective": objective,
+                    "exercise": {"type": "translation", "question": objective, "answer": model},
                     "learner_answer": response,
-                    "provisional_expected": label,
+                    "provisional_expected": "correct" if variant in {"exact", "punctuation", "lowercase"} else "unverified",
                     "human_review": {"status": "pending", "reviewer": None, "decision": None, "notes": ""},
-                    "source": "synthetic_template",
+                    "source": "synthetic_level_specific",
+                    "split": "development" if index < 8 else "holdout",
                 })
     return rows
 
