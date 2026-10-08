@@ -72,19 +72,29 @@ def audit(rows=None, evaluator=evaluate_structured_answer):
     rows = build_challenges() if rows is None else rows
     failures = []
     confusion = Counter()
+    diagnosis_confusion = Counter()
     for row in rows:
         result = evaluator(row["learner_answer"], row["exercise"])
         prediction = ("uncertain" if result["evaluation_status"] != "verified"
                       else "correct" if result["correct"] else "incorrect")
         expected = row["provisional_expected"]
         confusion[f"{expected}->{prediction}"] += 1
-        if prediction != expected:
+        expected_error = row.get("provisional_error_type")
+        predicted_errors = [e["type"] for e in result.get("errors", [])]
+        # Diagnostic labels are provisional hypotheses; mismatches are review
+        # candidates, not automatically confirmed model errors.
+        if expected_error and prediction == "incorrect":
+            diagnosis_confusion["match" if expected_error in predicted_errors else "mismatch"] += 1
+        if prediction != expected or (expected_error and prediction == "incorrect" and expected_error not in predicted_errors):
             failures.append({"id": row["id"], "cefr": row["cefr"],
                              "task_family": row["task_family"],
                              "provisional_expected": expected, "predicted": prediction,
                              "answer": row["learner_answer"],
-                             "predicted_errors": [e["type"] for e in result.get("errors", [])]})
+                             "provisional_error_type": expected_error,
+                             "predicted_errors": predicted_errors,
+                             "decision_disagreement": prediction != expected})
     return {"cases": len(rows), "provisional_confusion": dict(sorted(confusion.items())),
+            "diagnosis_comparison": dict(sorted(diagnosis_confusion.items())),
             "disagreements": failures, "disagreement_count": len(failures),
             "human_reviewed": 0, "release_evidence": False}
 
