@@ -1,8 +1,22 @@
 import unittest
 from tests.generate_evaluation_benchmark import build_cases
+from tests.generate_curated_evaluation_v88 import build_cases as build_curated_cases
 from tests.run_evaluation_benchmark import run
 
 class EvaluationBenchmarkTests(unittest.TestCase):
+    def test_curated_development_examples_are_balanced_and_unreviewed(self):
+        rows = build_curated_cases()
+        self.assertEqual(len(rows), 400)
+        self.assertEqual(len({r["id"] for r in rows}), 400)
+        for level in ("A1", "A2", "B1", "B2"):
+            samples = [r for r in rows if r["cefr"] == level]
+            self.assertEqual(len(samples), 100)
+            self.assertEqual(len({r["objective"] for r in samples}), 20)
+            self.assertEqual(sum(r["provisional_expected"] == "correct" for r in samples), 40)
+            self.assertTrue(all(r["human_review"]["status"] == "pending" for r in samples))
+        self.assertEqual(run(rows)["reviewed"], 0)
+        self.assertEqual(run(rows)["release_gate"], "blocked")
+
     def test_fixture_size_and_level_balance(self):
         rows = build_cases()
         self.assertEqual(len(rows), 480)
