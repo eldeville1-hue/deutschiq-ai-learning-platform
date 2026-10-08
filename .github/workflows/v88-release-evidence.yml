@@ -47,6 +47,15 @@ jobs:
           BOT_MODE: "polling"
           SECRET_KEY: "ci-only-secret"
         run: python -m tests.profile_structured_evaluator_v88 structured_profile_v88.json
+      - name: Export blind uncertain-case review packet
+        working-directory: backend
+        env:
+          BOT_TOKEN: "123456:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghi"
+          DATABASE_URL: "sqlite:///:memory:"
+          WEBAPP_URL: "http://localhost:8000"
+          BOT_MODE: "polling"
+          SECRET_KEY: "ci-only-secret"
+        run: python -m tests.export_uncertain_review_v88 uncertain_review_v88.csv uncertain_review_manifest_v88.json
       - name: Upload v88 release evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -55,5 +64,7 @@ jobs:
           path: |
             backend/release_evidence_v88.json
             backend/structured_profile_v88.json
+            backend/uncertain_review_v88.csv
+            backend/uncertain_review_manifest_v88.json
           if-no-files-found: warn
           retention-days: 30
