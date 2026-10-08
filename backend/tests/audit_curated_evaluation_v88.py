@@ -159,6 +159,7 @@ def main():
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({k: v for k, v in report.items() if k not in {"provisional_error_outcomes", "structural_issues"}}, indent=2))
+    print(json.dumps({"triaged": triage_report["triaged"], "by_issue": triage_report["by_issue"], "by_level_category": triage_report["by_level_category"]}, ensure_ascii=False, indent=2))
     if report["structural_issue_count"]:
         raise SystemExit(1)
 
