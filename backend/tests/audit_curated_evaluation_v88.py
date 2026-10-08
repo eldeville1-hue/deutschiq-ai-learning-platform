@@ -117,7 +117,10 @@ def triage(rows=None, evaluator=evaluate_structured_answer):
                           "error_category": row.get("provisional_error_type") or "unspecified",
                           "expected_provisional": expected, "predicted": predicted,
                           "prompt": row["objective"], "learner_answer": row["learner_answer"],
-                          "reference_answer": row["exercise"]["answer"], "review_required": True})
+                          "reference_answer": row["exercise"]["answer"],
+                          "predicted_error_types": sorted({e.get("type") for e in result.get("errors", []) if isinstance(e, dict) and e.get("type")}),
+                          "evaluation_status": result.get("evaluation_status"),
+                          "review_required": True})
     cases.sort(key=lambda item: (item["priority"], item["cefr"], item["id"]))
     grouped = Counter((case["cefr"], case["error_category"], case["issue"]) for case in cases)
     return {"total": len(rows), "triaged": len(cases),
