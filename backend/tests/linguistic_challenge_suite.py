@@ -52,6 +52,12 @@ CASES = [
  ("B2","sentence","Die Digitalisierung stellt Unternehmen vor neue Herausforderungen.","Die Digitalisierung stellt Unternehmen keine neuen Herausforderungen.","incorrect","negation"),
 ]
 
+GRAMMAR_TARGETS = {
+    ("A2", "Ich warte auf den Bus."): "case",
+    ("A2", "Ich habe meine Freundin besucht."): "participle",
+    ("B1", "Das Fahrrad, das ich gekauft habe, ist neu."): "relative_pronoun",
+}
+
 KNOWN_ALTERNATIVES = {
     ("A2", "Ich bin gestern nach Hause gegangen."): ["Gestern bin ich nach Hause gegangen."],
     ("A2", "Ich muss morgen arbeiten."): ["Morgen muss ich arbeiten."],
@@ -82,7 +88,8 @@ def build_challenges():
             "objective": challenge_instruction(family, target),
             "exercise": {"type": family, "question": challenge_instruction(family, target),
                          "answer": target,
-                         "accepted_answers": [target, *KNOWN_ALTERNATIVES.get((level, target), [])]},
+                         "accepted_answers": [target, *KNOWN_ALTERNATIVES.get((level, target), [])],
+                         "target_feature": GRAMMAR_TARGETS.get((level, target))},
             "learner_answer": answer, "task_family": family,
             "provisional_expected": verdict, "provisional_error_type": error,
             "source": "hand_authored_unreviewed",
