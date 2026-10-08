@@ -4,6 +4,7 @@ This is a triage aid, NOT an independent holdout or release approval.
 Run: python -m tests.export_uncertain_review_v88 OUTPUT.csv MANIFEST.json
 """
 import json
+import hashlib
 import sys
 from collections import Counter
 from pathlib import Path
@@ -30,6 +31,8 @@ def select_uncertain(rows=None, evaluator=evaluate_structured_answer):
         if status != "verified":
             selected.append(row)
             counts[row["cefr"]] += 1
+    canonical = [{key: row.get(key) for key in ("id", "cefr", "objective", "learner_answer")} | {"exercise": row["exercise"]} for row in selected]
+    fingerprint = hashlib.sha256(json.dumps(canonical, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode("utf-8")).hexdigest()
     return selected, {
         "version": "v88",
         "purpose": "blind_development_uncertainty_triage",
@@ -38,6 +41,7 @@ def select_uncertain(rows=None, evaluator=evaluate_structured_answer):
         "reviewer_independence_verified": False,
         "release_gate": "blocked",
         "total": len(selected),
+        "case_content_sha256": fingerprint,
         "counts_by_level": {level: counts[level] for level in ("A1", "A2", "B1", "B2")},
         "case_ids": [row["id"] for row in selected],
         "note": "CSV excludes evaluator predictions and provisional labels. Reviews are not independent holdout evidence.",
