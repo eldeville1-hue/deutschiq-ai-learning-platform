@@ -23,6 +23,7 @@ from pathlib import Path
 from app.services.misconception_feedback import misconception_feedback
 from app.services.learning_route import next_cefr_track, normalize_cefr
 from app.services.answer_intelligence import evaluate_structured_answer
+from app.services.evaluation_contract import EvaluationResult, evidence_from_evaluation
 from app.services.lesson_coaching import feedback_focus, learning_profile, repair_plan, success_feedback, supported_retry_exercise
 from app.services.assessment_insights import evidence_gate
 
@@ -126,6 +127,24 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
     else:
         structured_feedback = evaluate_structured_answer(data.answer, exercise)
         correct = structured_feedback["correct"]
+    evaluation = structured_feedback or {}
+    if structured_feedback and evaluation.get("evaluation_status") != "verified":
+        # No attempt, mastery, XP, or review mutation for unverified judgments.
+        return {
+            "correct": False,
+            "evaluation_status": evaluation["evaluation_status"],
+            "grammar_correct": evaluation.get("grammar_correct"),
+            "meaning_correct": evaluation.get("meaning_correct"),
+            "task_satisfied": evaluation.get("task_satisfied"),
+            "errors": evaluation.get("errors", []),
+            "needs_support": True,
+            "next_action": "clarify",
+            "retry_instruction": {
+                "ru": "Ответ не удалось надёжно оценить. Попробуй переформулировать.",
+                "de": "Die Antwort konnte nicht sicher bewertet werden. Formuliere sie bitte anders.",
+                "en": "We couldn't assess that answer reliably. Please rephrase it.",
+            }[normalize_language(data.language)],
+        }
     user = db.query(User).filter(User.telegram_id == data.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -133,6 +152,22 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
     if not session:
         raise HTTPException(status_code=409, detail="Learning session is missing or closed")
     topic = lesson.topic
+    prior_attempts = db.query(ExerciseAttempt).filter(
+        ExerciseAttempt.session_id == session.id,
+        ExerciseAttempt.exercise_index == data.exercise_index,
+    ).count()
+    assistance = "guided_retry" if data.retry or prior_attempts else "independent"
+    evidence_result = EvaluationResult(
+        grammar_correct=evaluation.get("grammar_correct"),
+        meaning_correct=evaluation.get("meaning_correct"),
+        task_satisfied=correct,
+        correct=correct,
+        evaluation_status="verified",
+        assistance_level=assistance,
+    )
+    evidence = evidence_from_evaluation(
+        evidence_result, skill=topic, attempt_number=prior_attempts + 1,
+    )
     db.add(ExerciseAttempt(
         user_id=user.id, lesson_id=lesson.id, session_id=session.id, exercise_index=data.exercise_index,
         topic=topic, answer=data.answer, correct=correct, confidence=data.confidence, response_ms=data.response_ms,
@@ -141,7 +176,10 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
             "dimensions": (production_feedback or {}).get("dimension_scores", {}),
             "cefr": (production_feedback or {}).get("cefr_standard"),
             "source": (production_feedback or {}).get("source"),
-        } if production_feedback else None,
+        } if production_feedback else {
+            "evaluation": evaluation,
+            "learning_evidence": evidence,
+        },
     ))
     mastery = db.query(TopicMastery).filter(TopicMastery.user_id == user.id, TopicMastery.topic == topic).first()
     if not mastery:
@@ -182,6 +220,12 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
     missing_words = (production_feedback or {}).get("missing_words", []) if production_feedback else (structured_feedback or {}).get("missing_words", [])
     extra_words = (production_feedback or {}).get("extra_words", []) if production_feedback else (structured_feedback or {}).get("extra_words", [])
     return {
+        "evaluation_status": "verified",
+        "grammar_correct": evaluation.get("grammar_correct"),
+        "meaning_correct": evaluation.get("meaning_correct"),
+        "task_satisfied": correct,
+        "errors": evaluation.get("errors", []),
+        "learning_evidence": evidence,
         "correct": correct,
         "correct_answer": production_feedback["corrected_answer"] if production_feedback else accepted[0],
         "explanation": success_feedback(production_feedback["feedback"] if production_feedback else exercise.get("explanation", ""), data.language),
