@@ -3,6 +3,32 @@ from app.services.answer_intelligence import evaluate_structured_answer
 
 
 class StructuredEvaluationV88Tests(unittest.TestCase):
+    def test_unlisted_near_match_in_open_answer_needs_review(self):
+        exercise = {"type": "translation", "answer": "Ich besuche meine Freundin morgen."}
+        result = evaluate_structured_answer("Ich besuche meine Freundin morgn.", exercise)
+        self.assertEqual(result["evaluation_status"], "uncertain")
+        self.assertFalse(result["correct"])
+        self.assertEqual(result["score"], 0)
+        self.assertEqual(result["errors"], [])
+
+    def test_explicitly_accepted_near_match_remains_verified(self):
+        response = "Ich besuche meine Freundin morgn."
+        result = evaluate_structured_answer(response, {
+            "type": "translation", "answer": "Ich besuche meine Freundin morgen.",
+            "accepted_answers": ["Ich besuche meine Freundin morgen.", response],
+        })
+        self.assertEqual(result["evaluation_status"], "verified")
+        self.assertTrue(result["correct"])
+
+    def test_tagged_missing_zu_is_tentative_for_open_translation(self):
+        result = evaluate_structured_answer("Ich habe vor, morgen arbeiten.", {
+            "type": "translation", "answer": "Ich habe vor, morgen zu arbeiten.",
+            "target_feature": "infinitive",
+        })
+        self.assertEqual(result["evaluation_status"], "uncertain")
+        self.assertIn("infinitive", result["candidate_error_types"])
+        self.assertFalse(result["correct"])
+
     def test_explicit_alternatives_are_verified(self):
         result = evaluate_structured_answer("Ich hole einen Kaffee.", {
             "type": "translation", "answer": "Ich kaufe einen Kaffee.",
