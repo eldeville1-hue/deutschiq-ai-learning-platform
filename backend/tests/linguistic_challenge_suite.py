@@ -58,6 +58,7 @@ KNOWN_ALTERNATIVES = {
     ("A1", "Sie wohnt in Berlin."): ["Sie lebt in Berlin."],
     ("A2", "Kannst du mir helfen?"): ["Kannst du mir bitte helfen?"],
     ("B1", "Der Brief wurde gestern geschrieben."): ["Gestern wurde der Brief geschrieben."],
+    ("B1", "Wenn ich Zeit hätte, würde ich mitkommen."): ["Hätte ich Zeit, würde ich mitkommen."],
 }
 
 def build_challenges():
