@@ -16,6 +16,8 @@ class LinguisticChallengeSuiteTests(unittest.TestCase):
         self.assertFalse(report["release_evidence"])
         self.assertEqual(report["human_reviewed"], 0)
         self.assertEqual(sum(report["provisional_confusion"].values()), 40)
+        self.assertIn("diagnosis_comparison", report)
+        self.assertTrue(all("decision_disagreement" in item for item in report["disagreements"]))
 
     def test_audit_detects_false_acceptance(self):
         def always_accept(answer, exercise):
