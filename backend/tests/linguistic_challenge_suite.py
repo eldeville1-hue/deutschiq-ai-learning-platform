@@ -59,6 +59,7 @@ KNOWN_ALTERNATIVES = {
     ("A2", "Kannst du mir helfen?"): ["Kannst du mir bitte helfen?"],
     ("B1", "Der Brief wurde gestern geschrieben."): ["Gestern wurde der Brief geschrieben."],
     ("B1", "Wenn ich Zeit hätte, würde ich mitkommen."): ["Hätte ich Zeit, würde ich mitkommen."],
+    ("B1", "Ich lerne Deutsch, damit ich eine Ausbildung machen kann."): ["Ich lerne Deutsch, um eine Ausbildung machen zu können."],
 }
 
 def challenge_instruction(family, target):
