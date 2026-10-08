@@ -43,10 +43,47 @@ def build_cases():
                 })
     return rows
 
+def build_error_repair_cases():
+    """80 additional task-specific repairs, separate from translation cases.
+
+    All decisions remain provisional until independent blind review.
+    """
+    rows = []
+    for level in LEVELS:
+        for index, (prompt, model, alternative, mistake, error_type) in enumerate(SEEDS[level]):
+            if mistake == model:
+                raise ValueError(f"Non-distinct repair example: {level}-{index}")
+            objective = f"Correct the grammar of this German sentence: {mistake}"
+            rows.append({
+                "id": f"repair-{level}-{index:02d}",
+                "cefr": level,
+                "objective": objective,
+                "exercise": {
+                    "type": "error_repair",
+                    "question": objective,
+                    "answer": model,
+                    "accepted_answers": [model],
+                    "target_feature": error_type,
+                },
+                "learner_answer": mistake,
+                "provisional_expected": "incorrect",
+                "provisional_error_type": error_type,
+                "human_review": {"status": "pending", "reviewer": None, "decision": None, "notes": ""},
+                "source": "curated_author_written_unreviewed",
+                "task_family": "error_repair",
+                "split": "development",
+            })
+    return rows
+
+
+def build_diverse_cases():
+    return build_cases() + build_error_repair_cases()
+
+
 def main():
     path = Path(__file__).resolve().parent / "fixtures" / "evaluation_v88_curated_development.jsonl"
     path.parent.mkdir(parents=True, exist_ok=True)
-    rows = build_cases()
+    rows = build_diverse_cases()
     path.write_text("".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows), encoding="utf-8")
     print(f"Wrote {len(rows)} unreviewed curated development cases to {path}")
 
