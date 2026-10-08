@@ -1,6 +1,6 @@
 import unittest
 from tests.generate_evaluation_benchmark import build_cases
-from tests.generate_curated_evaluation_v88 import build_cases as build_curated_cases
+from tests.generate_curated_evaluation_v88 import build_cases as build_curated_cases, build_diverse_cases
 from tests.run_evaluation_benchmark import run
 
 class EvaluationBenchmarkTests(unittest.TestCase):
@@ -16,6 +16,17 @@ class EvaluationBenchmarkTests(unittest.TestCase):
             self.assertTrue(all(r["human_review"]["status"] == "pending" for r in samples))
         self.assertEqual(run(rows)["reviewed"], 0)
         self.assertEqual(run(rows)["release_gate"], "blocked")
+
+    def test_diverse_curated_repair_tasks_are_separate_and_unreviewed(self):
+        rows = build_diverse_cases()
+        self.assertEqual(len(rows), 480)
+        self.assertEqual(len({row["id"] for row in rows}), 480)
+        for level in ("A1", "A2", "B1", "B2"):
+            repairs = [row for row in rows if row["cefr"] == level and row["task_family"] == "error_repair"]
+            self.assertEqual(len(repairs), 20)
+            self.assertTrue(all(row["human_review"]["status"] == "pending" for row in repairs))
+            self.assertTrue(all(row["learner_answer"] != row["exercise"]["answer"] for row in repairs))
+        self.assertEqual(run(rows)["reviewed"], 0)
 
     def test_fixture_size_and_level_balance(self):
         rows = build_cases()
