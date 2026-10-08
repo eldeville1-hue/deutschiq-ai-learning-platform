@@ -47,46 +47,61 @@ def _legacy_evaluate_structured_answer(answer: str, exercise: dict) -> dict:
     return {"correct": correct, "score": 100 if exact else 90 if minor_spelling else round(similarity * 100), "model": model, "similarity": round(similarity * 100), "missing_words": diff["missing"], "extra_words": diff["extra"], "error_type": error_type}
 
 
+def _classify_aligned_errors(answer: str, model: str) -> list:
+    """High-precision token differences; do not infer grammar from similarity alone."""
+    from app.services.evaluation_contract import LinguisticError
+    actual = normalize_text(answer).split()
+    expected = normalize_text(model).split()
+    if len(actual) != len(expected):
+        return []
+    article_forms = {"ein", "eine", "einen", "einem", "einer", "eines", "der", "die", "das", "den", "dem", "des"}
+    negations = {"nicht", "kein", "keine", "keinen", "keinem", "keiner", "keines"}
+    errors = []
+    for got, want in zip(actual, expected):
+        if got == want:
+            continue
+        if got in negations or want in negations:
+            kind = "negation"
+            explanation = "The negation changes the meaning or required form."
+        elif got in article_forms and want in article_forms:
+            kind = "article"
+            explanation = "Check the article and its case or gender ending."
+        elif got.endswith("en") and want.endswith("e") and got[:-2] == want[:-1]:
+            kind = "conjugation"
+            explanation = "The verb ending does not match the required subject."
+        else:
+            kind = "vocabulary"
+            explanation = "This word differs from the expected wording; verify its meaning."
+        errors.append(LinguisticError(type=kind, span=got, correction=want, explanation=explanation))
+    return errors
+
+
 def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
-    """Evaluate against authored answers without guessing unseen linguistic alternatives.
-
-    The existing response keys remain intact. Ambiguous open answers are marked
-    uncertain instead of being silently accepted or declared grammatically wrong.
-    """
+    """Conservative objective-aware comparison; unsupported open responses need review."""
     from app.services.evaluation_contract import EvaluationResult, LinguisticError
-
     legacy = _legacy_evaluate_structured_answer(answer, exercise)
     accepted = [str(x) for x in (exercise.get("accepted_answers") or [exercise.get("answer", "")]) if str(x).strip()]
     exact = bool(normalize_text(answer)) and any(normalize_text(answer) == normalize_text(x) for x in accepted)
-    typed = exercise.get("type") not in {
-        "reorder", "error_repair", "analogy_choice", "context_choice",
-        "listening_choice", "choice",
-    }
+    closed_types = {"reorder", "error_repair", "analogy_choice", "context_choice", "listening_choice", "choice"}
     open_ended = exercise.get("type") in {"translation", "translate", "free_text", "sentence", "writing"}
-    if not accepted:
-        status = "needs_review"
-    elif exact or legacy["correct"]:
-        status = "verified"
-    elif open_ended:
-        status = "uncertain"
-    else:
-        status = "verified"
-
+    status = ("needs_review" if not accepted else "verified" if legacy["correct"] or not open_ended else "uncertain")
     errors = []
-    if status == "verified" and not legacy["correct"]:
-        errors.append(LinguisticError(
-            type=legacy["error_type"] or "answer_mismatch",
-            span=answer,
-            correction=legacy["model"],
-            explanation="This answer does not match the required response.",
-        ))
-    if legacy["correct"] and not exact and typed:
-        errors.append(LinguisticError(
-            type="spelling",
-            span=answer,
-            correction=legacy["model"],
-            explanation="Minor spelling difference; review the model spelling.",
-        ))
+    if legacy["correct"] and not exact:
+        errors = [LinguisticError(
+            type="spelling", span=answer, correction=legacy["model"],
+            explanation="Check the spelling against the model answer.",
+        )]
+    elif status == "verified" and not legacy["correct"]:
+        errors = _classify_aligned_errors(answer, legacy["model"])
+        if not errors:
+            errors = [LinguisticError(
+                type=legacy["error_type"] or "answer_mismatch", span=answer,
+                correction=legacy["model"],
+                explanation="This response does not match the exercise requirement.",
+            )]
+    elif status == "uncertain":
+        # These are candidate differences, not confirmed linguistic mistakes.
+        errors = _classify_aligned_errors(answer, legacy["model"])
     result = EvaluationResult(
         grammar_correct=True if exact else None,
         meaning_correct=True if exact else None,
@@ -97,8 +112,7 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
         error_type=errors[0].type if errors else None,
     )
     return {
-        **legacy,
-        **result.to_dict(),
+        **legacy, **result.to_dict(),
         "score": legacy["score"] if status == "verified" else 0,
         "legacy_error_type": legacy["error_type"],
     }
