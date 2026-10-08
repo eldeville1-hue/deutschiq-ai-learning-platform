@@ -1,6 +1,6 @@
 """Reproducible *synthetic* evaluation fixture generator for DeutschIQ 88.
 
-Generated labels are provisional and MUST NOT be described as human-reviewed.
+Generated labels are provisional and MUST NOT be described as human-reviewed.\nThis synthetic stress fixture is not a linguistically validated held-out dataset.
 Run: python -m tests.generate_evaluation_benchmark
 """
 import json
@@ -50,7 +50,22 @@ def build_cases():
     for level in LEVELS:
         for index, model in enumerate(LEVEL_SENTENCES[level]):
             words = model.rstrip(".?!").split()
-            objective = f"Reproduce the German sentence accurately: {model}"
+            # Rotate objectives across distinct exercise families. All labels
+            # remain synthetic hypotheses, never independent review evidence.
+            families = ("reorder", "error_repair", "translation", "sentence",
+                        "writing", "choice", "free_text", "context_choice",
+                        "reorder", "translation")
+            family = families[index]
+            objective = {
+                "reorder": f"Put the tokens into the original German sentence: {model}",
+                "error_repair": f"Repair the German sentence to match the target: {model}",
+                "translation": f"Express this target meaning in German: {model}",
+                "sentence": f"Write a grammatical sentence conveying: {model}",
+                "writing": f"Write a natural German sentence with this meaning: {model}",
+                "choice": f"Select the option matching the target exactly: {model}",
+                "free_text": f"Respond in German, expressing this idea: {model}",
+                "context_choice": f"Choose the answer matching this situation: {model}",
+            }[family]
             for variant in VARIANTS:
                 if variant == "exact":
                     response = model
@@ -80,12 +95,12 @@ def build_cases():
                     "id": f"{level}-{index:02d}-{variant}",
                     "cefr": level,
                     "objective": objective,
-                    "exercise": {"type": "reorder", "question": objective, "answer": model},
+                    "exercise": {"type": family, "question": objective, "answer": model},
                     "learner_answer": response,
-                    "provisional_expected": "correct" if variant in {"exact", "punctuation", "lowercase"} else "incorrect",
+                    "provisional_expected": ("correct" if variant in {"exact", "punctuation", "lowercase"}\n                                             else "uncertain" if family in {"translation", "sentence", "writing", "free_text"}\n                                             else "incorrect"),
                     "human_review": {"status": "pending", "reviewer": None, "decision": None, "notes": ""},
                     "source": "synthetic_level_specific",
-                    "task_family": "exact_sentence_reproduction",
+                    "task_family": family,
                     "split": "development" if index < 8 else "holdout",
                 })
     return rows
