@@ -7,12 +7,13 @@ import asyncio
 import json
 import os
 import sys
+from pathlib import Path
 
 from app.services.production_feedback import _ai_feedback
 from tests.benchmark_ai_evaluation_v88 import measure_ai
-from tests.prepare_ai_workload_v88 import prepare, LEVELS, MIN_PER_LEVEL
+from tests.prepare_ai_workload_v88 import prepare
 
-CASES = [
+SMOKE_CASES = [
     {"learner_answer": "Ich denke, dass Deutsch lernen wichtig ist, weil es mir bei der Arbeit hilft.",
      "exercise": {"type": "production", "question": "Warum lernst du Deutsch?",
                   "model_answer": "Ich lerne Deutsch, weil ich in Deutschland arbeiten möchte."}},
@@ -30,7 +31,14 @@ async def production_adapter(answer, exercise):
     return result
 
 
-async def main():
+def save_report(report, path):
+    if path:
+        output = Path(path)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+async def main(output_path=None):
     if not os.environ.get("OPENAI_API_KEY"):
         report = {"measured": False, "release_gate": "blocked",
                   "reason": "OPENAI_API_KEY missing; no real AI measurements"}
@@ -38,6 +46,9 @@ async def main():
         manifest = prepare()
         if manifest["validation_errors"]:
             report = {"measured": False, "release_gate": "blocked", "validation_errors": manifest["validation_errors"]}
+            report["benchmark_target"] = "production_feedback._ai_feedback"
+            report["v88_structured_evaluator_coverage"] = False
+            save_report(report, output_path)
             print(json.dumps(report, indent=2))
             return 2
         rows = []
@@ -50,9 +61,13 @@ async def main():
         report["workload_source"] = manifest["source"]
         report["representative_release_sample"] = False
         report["release_gate"] = "blocked"
+    report["benchmark_target"] = "production_feedback._ai_feedback"
+    report["v88_structured_evaluator_coverage"] = False
+    report["note"] = "Production free-response scorer, not v88 structured evaluation; development-only evidence."
+    save_report(report, output_path)
     print(json.dumps(report, indent=2))
     return 2
 
 
 if __name__ == "__main__":
-    sys.exit(asyncio.run(main()))
+    sys.exit(asyncio.run(main(sys.argv[1] if len(sys.argv) > 1 else None)))
