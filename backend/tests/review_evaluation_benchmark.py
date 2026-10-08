@@ -68,10 +68,17 @@ def import_reviews(packet, output, rows=None):
                 continue
             if decision not in DECISIONS or not reviewer:
                 raise ValueError("Incomplete or invalid review: " + identifier)
+            error_types = [x.strip() for x in record["error_types"].split(";") if x.strip()]
+            if decision == "incorrect" and not error_types:
+                raise ValueError("Incorrect review needs at least one diagnosed error: " + identifier)
+            if decision == "correct" and error_types:
+                raise ValueError("Correct review cannot contain diagnosed errors: " + identifier)
+            if decision == "uncertain" and not record["notes"].strip():
+                raise ValueError("Uncertain review needs an explanation: " + identifier)
             original["human_review"] = {
                 "status": "pending_independence_verification",
                 "reviewer": reviewer, "decision": decision,
-                "error_types": [x.strip() for x in record["error_types"].split(";") if x.strip()],
+                "error_types": error_types,
                 "notes": record["notes"], "reviewed_at": datetime.now(timezone.utc).isoformat(),
                 "protocol_version": "v88-1",
                 "blind_to_prediction": True,
