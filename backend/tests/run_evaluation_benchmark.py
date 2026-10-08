@@ -79,7 +79,6 @@ def run(rows, evaluator=evaluate_structured_answer):
         expected_errors = set(review.get("error_types") or [])
         predicted_errors = {x["type"] for x in result.get("errors", [])} if predicted == "incorrect" else set()
         groups[row["cefr"]].append((review["decision"], predicted, expected_errors, predicted_errors, elapsed))
-    from difflib import SequenceMatcher
     split_names = sorted(split_sentences)
     for i, left_split in enumerate(split_names):
         for right_split in split_names[i + 1:]:
