@@ -20,6 +20,15 @@ class StructuredProfilerTests(unittest.TestCase):
             self.assertEqual(report["levels"][level]["status_counts"]["verified"], 1)
             self.assertFalse(report["levels"][level]["deterministic_latency_gate"])
 
+    def test_uncertainty_is_broken_down_by_family(self):
+        rows = [{"id": "review-me", "cefr": "B1", "task_family": "translation",
+                 "learner_answer": "x", "exercise": {"answer": "y"}}]
+        report = profile(rows, evaluator=lambda a, e: {"evaluation_status": "uncertain"})
+        level = report["levels"]["B1"]
+        self.assertEqual(level["definitive_coverage"], 0.0)
+        self.assertEqual(level["task_family_status_counts"]["translation"]["uncertain"], 1)
+        self.assertEqual(level["uncertain_examples"][0]["id"], "review-me")
+
     def test_invalid_status_is_counted_as_failure(self):
         rows = [{"cefr": "A1", "learner_answer": "x", "exercise": {}}]
         report = profile(rows, evaluator=lambda a, e: {"evaluation_status": "made_up"})
