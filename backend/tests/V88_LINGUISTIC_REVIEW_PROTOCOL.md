@@ -31,3 +31,15 @@ Import only records reviewer claims as **pending_independence_verification**; it
 - Human signoff, deployment smoke test and rollback plan
 
 A green development benchmark or CI does **not** satisfy these gates. Do not deploy v88 until all are met.
+
+## Targeted uncertainty review (development triage only)
+
+The release-evidence workflow exports `uncertain_review_v88.csv` and `uncertain_review_manifest_v88.json` from the current evaluator. The CSV intentionally hides evaluator predictions and provisional labels. A reviewer may complete the decision, error_types, reviewer and notes columns.
+
+After receiving a completed packet, from `backend/` run:
+
+```bash
+python -m tests.import_uncertain_review_v88 completed_uncertain.csv reviewed_uncertain.jsonl uncertain_review_manifest_v88.json
+```
+
+The importer checks that the manifest identifies the exact current uncertain cases and that CSV content has not been changed. Imported decisions remain `pending_independence_verification` and **cannot** be counted as an independent holdout or release signoff. Re-export if the evaluator or development set changes. Never auto-apply reviewer corrections to the production evaluator.
