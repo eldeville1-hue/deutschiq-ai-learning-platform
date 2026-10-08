@@ -72,6 +72,7 @@ def _classify_aligned_errors(answer: str, model: str, target_feature: str = "") 
                                 explanation="Check the required word order.")]
     prepositions = {"auf", "an", "in", "mit", "für", "um", "über", "von", "zu", "nach", "bei", "aus", "durch", "gegen", "ohne"}
     auxiliaries = {"bin", "bist", "ist", "sind", "seid", "habe", "hast", "hat", "haben", "habt"}
+    case_pronouns = {"ich", "mich", "mir", "du", "dich", "dir", "er", "ihn", "ihm", "sie", "ihr", "wir", "uns", "euch"}
     for got, want in zip(actual, expected):
         if got == want:
             continue
@@ -79,8 +80,14 @@ def _classify_aligned_errors(answer: str, model: str, target_feature: str = "") 
             kind = "negation"
             explanation = "The negation changes the meaning or required form."
         elif got in auxiliaries and want in auxiliaries:
-            kind = "auxiliary"
-            explanation = "Check the auxiliary verb."
+            kind = "conjugation" if target_feature == "conjugation" else "auxiliary"
+            explanation = "Check the verb form for the required subject." if kind == "conjugation" else "Check the auxiliary verb."
+        elif target_feature == "case" and got in case_pronouns and want in case_pronouns:
+            kind = "case"
+            explanation = "Check the pronoun case required by the verb or construction."
+        elif target_feature == "preposition" and (got in prepositions or want in prepositions):
+            kind = "preposition"
+            explanation = "Check the preposition required by the construction."
         elif got in prepositions and want in prepositions:
             kind = "preposition"
             explanation = "Check the required preposition."
