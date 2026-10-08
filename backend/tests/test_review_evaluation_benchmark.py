@@ -32,6 +32,28 @@ class ReviewWorkflowTests(unittest.TestCase):
             self.assertEqual(rows[0]["human_review"]["status"], "pending_independence_verification")
             self.assertEqual(run(rows)["reviewed"], 0)
 
+    def test_rejects_unsupported_review_decisions(self):
+        cases = build_cases()[:1]
+        for decision, errors, notes in (
+            ("incorrect", "", ""),
+            ("correct", "article", ""),
+            ("uncertain", "", ""),
+        ):
+            with self.subTest(decision=decision):
+                with tempfile.TemporaryDirectory() as directory:
+                    packet = Path(directory) / "packet.csv"
+                    export_packet(packet, cases)
+                    with packet.open(encoding="utf-8-sig", newline="") as source:
+                        records = list(csv.DictReader(source))
+                    records[0].update(decision=decision, error_types=errors,
+                                      notes=notes, reviewer="external_reviewer")
+                    with packet.open("w", encoding="utf-8-sig", newline="") as target:
+                        writer = csv.DictWriter(target, fieldnames=records[0].keys())
+                        writer.writeheader()
+                        writer.writerows(records)
+                    with self.assertRaises(ValueError):
+                        import_reviews(packet, Path(directory) / "out.jsonl", cases)
+
     def test_rejects_modified_model_answer(self):
         with tempfile.TemporaryDirectory() as directory:
             packet = Path(directory) / "packet.csv"
