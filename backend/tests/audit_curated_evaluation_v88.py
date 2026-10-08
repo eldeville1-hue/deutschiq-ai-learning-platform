@@ -127,6 +127,28 @@ def triage(rows=None, evaluator=evaluate_structured_answer):
             "cases": cases, "independently_validated": False, "release_gate": "blocked"}
 
 
+def compare_triage(current, baseline):
+    """Compare two same-case-set reports; do not infer linguistic accuracy."""
+    current_cases = {case["id"]: case for case in current["cases"]}
+    baseline_cases = {case["id"]: case for case in baseline["cases"]}
+    current_total = current.get("total")
+    if current_total != baseline.get("total"):
+        raise ValueError("Benchmark sizes differ; comparison would be misleading")
+    changed = []
+    for identifier in sorted(set(current_cases) | set(baseline_cases)):
+        before = baseline_cases.get(identifier)
+        after = current_cases.get(identifier)
+        if before != after:
+            changed.append({"id": identifier,
+                            "before_issue": before["issue"] if before else None,
+                            "after_issue": after["issue"] if after else None,
+                            "cefr": (after or before)["cefr"],
+                            "category": (after or before)["error_category"]})
+    return {"cases_compared": current_total, "changed": changed,
+            "changed_count": len(changed), "independently_validated": False,
+            "warning": "Differences are against provisional labels, not verified accuracy."}
+
+
 def main():
     report = audit()
     triage_report = triage()
