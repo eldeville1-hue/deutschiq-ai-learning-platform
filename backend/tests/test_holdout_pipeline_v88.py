@@ -40,6 +40,29 @@ class HoldoutPipelineTests(unittest.TestCase):
         row["source"] = "curated_author_written_unreviewed"
         self.assertIn("external-B1-001:unverified_source", check_holdout([row]))
 
+    def test_claimed_approval_without_provenance_is_rejected(self):
+        row = example()
+        row["human_review"] = {"status": "approved", "decision": "correct"}
+        self.assertIn("external-B1-001:approved_review_missing_provenance", check_holdout([row]))
+
+    def test_unverified_independence_is_rejected(self):
+        row = example()
+        row["human_review"] = {
+            "status": "approved", "decision": "correct", "reviewer": "human",
+            "reviewed_at": "2026-10-08", "protocol_version": "v88-1",
+            "blind_to_prediction": True, "independent_of_generation": False,
+        }
+        self.assertIn("external-B1-001:review_independence_not_verified", check_holdout([row]))
+
+    def test_incorrect_review_needs_error_diagnosis(self):
+        row = example()
+        row["human_review"] = {
+            "status": "approved", "decision": "incorrect", "reviewer": "human",
+            "reviewed_at": "2026-10-08", "protocol_version": "v88-1",
+            "blind_to_prediction": True, "independent_of_generation": True,
+        }
+        self.assertIn("external-B1-001:missing_error_diagnosis", check_holdout([row]))
+
     def test_import_and_report_stay_blocked_without_reviews(self):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "holdout.jsonl"
