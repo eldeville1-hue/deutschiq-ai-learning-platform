@@ -42,6 +42,15 @@ class ReviewDisagreementTriageTests(unittest.TestCase):
         self.assertEqual(report["findings"][0]["evaluator_error_types"], ["conjugation"])
         self.assertEqual(report["release_gate"], "blocked")
 
+    def test_missing_evaluator_diagnosis_is_reported(self):
+        item = row("no_diagnosis", "incorrect", "Ich gehen", model="Ich gehe")
+        def evaluator(answer, exercise):
+            return {"evaluation_status": "verified", "correct": False, "errors": []}
+        report = triage([item], evaluator=evaluator)
+        self.assertEqual(report["findings"][0]["kind"], "missing_evaluator_diagnosis")
+        self.assertEqual(report["findings"][0]["evaluator_error_types"], [])
+        self.assertEqual(report["release_gate"], "blocked")
+
     def test_matching_diagnosis_is_not_reported(self):
         item = row("matching", "incorrect", "Ich gehen", model="Ich gehe")
         def evaluator(answer, exercise):
