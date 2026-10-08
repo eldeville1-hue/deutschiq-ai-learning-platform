@@ -87,8 +87,49 @@ def audit(rows=None):
         "disclaimer": "Structural checks and provisional labels are not independent linguistic validation.",
     }
 
+def triage(rows=None, evaluator=evaluate_structured_answer):
+    """Rank provisional disagreements for review; never treat labels as ground truth."""
+    rows = build_diverse_cases() if rows is None else rows
+    priorities = {"potential_false_accept": 0, "potential_false_reject": 1,
+                  "potential_misdiagnosis": 2, "deferred_incorrect": 3, "deferred_correct": 4}
+    cases = []
+    for row in rows:
+        result = evaluator(row["learner_answer"], row["exercise"])
+        predicted = ("uncertain" if result.get("evaluation_status") != "verified"
+                     else "correct" if result.get("correct") else "incorrect")
+        expected = row.get("provisional_expected")
+        kind = None
+        if expected == "incorrect" and predicted == "correct":
+            kind = "potential_false_accept"
+        elif expected == "correct" and predicted == "incorrect":
+            kind = "potential_false_reject"
+        elif expected == "incorrect" and predicted == "uncertain":
+            kind = "deferred_incorrect"
+        elif expected == "correct" and predicted == "uncertain":
+            kind = "deferred_correct"
+        elif expected == "incorrect" and predicted == "incorrect":
+            types = {e.get("type") for e in result.get("errors", []) if isinstance(e, dict)}
+            if row.get("provisional_error_type") and row["provisional_error_type"] not in types:
+                kind = "potential_misdiagnosis"
+        if kind:
+            cases.append({"id": row["id"], "issue": kind, "priority": priorities[kind],
+                          "cefr": row["cefr"], "task_family": row["task_family"],
+                          "error_category": row.get("provisional_error_type") or "unspecified",
+                          "expected_provisional": expected, "predicted": predicted,
+                          "prompt": row["objective"], "learner_answer": row["learner_answer"],
+                          "reference_answer": row["exercise"]["answer"], "review_required": True})
+    cases.sort(key=lambda item: (item["priority"], item["cefr"], item["id"]))
+    return {"total": len(rows), "triaged": len(cases),
+            "by_issue": dict(sorted(Counter(case["issue"] for case in cases).items())),
+            "cases": cases, "independently_validated": False, "release_gate": "blocked"}
+
+
 def main():
     report = audit()
+    triage_report = triage()
+    triage_path = Path(__file__).resolve().parent / "fixtures" / "evaluation_v88_triage.json"
+    triage_path.parent.mkdir(parents=True, exist_ok=True)
+    triage_path.write_text(json.dumps(triage_report, ensure_ascii=False, indent=2) + "\\n", encoding="utf-8")
     path = Path(__file__).resolve().parent / "fixtures" / "evaluation_v88_curated_audit.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
