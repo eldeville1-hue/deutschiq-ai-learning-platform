@@ -35,7 +35,9 @@ def run(rows, evaluator=evaluate_structured_answer):
     groups = defaultdict(list)
     pending = 0
     synthetic = Counter()
-    duplicates = defaultdict(set)\n    near_duplicates = set()\n    split_sentences = defaultdict(list)
+    duplicates = defaultdict(set)
+    near_duplicates = set()
+    split_sentences = defaultdict(list)
     leakage = set()
     split_examples = defaultdict(list)
     suspected = []
@@ -45,7 +47,8 @@ def run(rows, evaluator=evaluate_structured_answer):
         split = _split_key(row)
         if duplicates[key] and split not in duplicates[key]:
             leakage.add(key)
-        duplicates[key].add(split)\n        split_sentences[split].append((_fingerprint(row["exercise"].get("answer", "")), row["id"]))
+        duplicates[key].add(split)
+        split_sentences[split].append((_fingerprint(row["exercise"].get("answer", "")), row["id"]))
         signature = _fingerprint(row["exercise"].get("answer", ""))
         for other_split, examples in split_examples.items():
             if other_split == split:
@@ -62,7 +65,10 @@ def run(rows, evaluator=evaluate_structured_answer):
                           else "correct" if prediction["correct"] else "incorrect")
                 synthetic[(expected, actual)] += 1
         review = row.get("human_review", {})
-        if (review.get("status") != "approved" or review.get("decision") not in {"correct", "incorrect", "uncertain"}\n                or not review.get("reviewer") or not review.get("reviewed_at")\n                or not review.get("protocol_version") or review.get("blind_to_prediction") is not True\n                or review.get("independent_of_generation") is not True):
+        if (review.get("status") != "approved" or review.get("decision") not in {"correct", "incorrect", "uncertain"}
+                or not review.get("reviewer") or not review.get("reviewed_at")
+                or not review.get("protocol_version") or review.get("blind_to_prediction") is not True
+                or review.get("independent_of_generation") is not True):
             pending += 1
             continue
         start = time.perf_counter()
