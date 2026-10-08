@@ -237,6 +237,15 @@ const LessonScreen: React.FC = () => {
     setChecking(true); setCheckError('');
     try {
       const result = await api.checkLessonAnswer({ user_id: getUserId(), lesson_id: Number(id), exercise_index: exerciseIndex, answer, session_id: sessionId, language: lang, confidence, response_ms: Date.now() - startedAt, retry: Boolean(retried[exerciseIndex]) });
+      if (result.evaluation_status === 'uncertain' || result.evaluation_status === 'needs_review') {
+        setChecked(false);
+        setFeedback(null);
+        setCheckError(result.retry_instruction || tr(lang,
+          'Не удалось надёжно оценить ответ. Попробуй переформулировать.',
+          'Die Antwort konnte nicht sicher bewertet werden. Bitte formuliere sie anders.',
+          'We could not assess that answer reliably. Please rephrase it.'));
+        return;
+      }
       setChecked(Boolean(result.correct)); setFeedback(result);
       void api.trackEvent({ user_id: getUserId(), event_name: 'exercise_answered', properties: { lesson_id: Number(id), exercise_index: exerciseIndex, correct: Boolean(result.correct), confidence, misconception: String(result.error_type || ''), learning_mode: String(learningProfile.mode), retry: Boolean(retried[exerciseIndex]) } });
     } catch {
