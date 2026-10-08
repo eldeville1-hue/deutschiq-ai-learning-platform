@@ -53,6 +53,8 @@ def _classify_aligned_errors(answer: str, model: str, target_feature: str = "") 
     actual = normalize_text(answer).split()
     expected = normalize_text(model).split()
     if len(actual) != len(expected):
+        if target_feature == "infinitive" and expected.count("zu") == actual.count("zu") + 1 and Counter(expected) - Counter(actual) == Counter({"zu": 1}) and not (Counter(actual) - Counter(expected)):
+            return [LinguisticError(type="infinitive", span=answer, correction=model, explanation="The infinitive construction requires zu.")]
         return []
     article_forms = {"ein", "eine", "einen", "einem", "einer", "eines", "der", "die", "das", "den", "dem", "des"}
     negations = {"nicht", "kein", "keine", "keinen", "keinem", "keiner", "keines"}
