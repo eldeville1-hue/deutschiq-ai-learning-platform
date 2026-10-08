@@ -116,7 +116,7 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
             legacy["correct"] = False
             legacy["error_type"] = "answer_mismatch"
     open_ended = exercise.get("type") in {"translation", "translate", "free_text", "sentence", "writing"}
-    status = ("needs_review" if not accepted else "verified" if legacy["correct"] or not open_ended else "uncertain")
+    # An unlisted near-match in open writing may change meaning despite high similarity.\n    # Only explicitly accepted text is deterministically verified for open tasks.\n    status = ("needs_review" if not accepted else "verified" if (exact or not open_ended) else "uncertain")
     errors = []
     if legacy["correct"] and not exact:
         errors = [LinguisticError(
@@ -134,7 +134,7 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
     elif status == "uncertain":
         # These are candidate differences, not confirmed linguistic mistakes.
         candidates = _classify_aligned_errors(answer, legacy["model"], exercise.get("target_feature", ""))
-        errors = [item for item in candidates if item.type in {"article", "negation", "auxiliary", "preposition", "conjugation"}]
+        errors = [item for item in candidates if item.type in {"article", "negation", "auxiliary", "preposition", "conjugation", "infinitive"}]
     result = EvaluationResult(
         grammar_correct=True if exact else None,
         meaning_correct=True if exact else None,
