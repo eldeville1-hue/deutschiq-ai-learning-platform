@@ -36,6 +36,31 @@ class StructuredEvaluationV88Tests(unittest.TestCase):
         self.assertEqual(result["evaluation_status"], "uncertain")
         self.assertEqual(result["errors"][0]["type"], "negation")
 
+    def test_b1_perfect_auxiliary_requires_review(self):
+        result = evaluate_structured_answer("Ich bin gestern einen Film gesehen.", {
+            "type": "translation", "answer": "Ich habe gestern einen Film gesehen.",
+        })
+        self.assertEqual(result["evaluation_status"], "uncertain")
+        self.assertFalse(result["correct"])
+
+    def test_b2_subordinate_clause_word_order_requires_review(self):
+        result = evaluate_structured_answer("Obwohl es regnet, ich gehe spazieren.", {
+            "type": "writing", "answer": "Obwohl es regnet, gehe ich spazieren.",
+        })
+        self.assertEqual(result["evaluation_status"], "uncertain")
+        self.assertFalse(result["correct"])
+
+    def test_explicit_b2_alternative_is_accepted(self):
+        result = evaluate_structured_answer("Trotz des Regens gehe ich spazieren.", {
+            "type": "writing", "answer": "Obwohl es regnet, gehe ich spazieren.",
+            "accepted_answers": [
+                "Obwohl es regnet, gehe ich spazieren.",
+                "Trotz des Regens gehe ich spazieren.",
+            ],
+        })
+        self.assertEqual(result["evaluation_status"], "verified")
+        self.assertTrue(result["correct"])
+
     def test_missing_model_requires_review(self):
         result = evaluate_structured_answer("Hallo", {"type": "translation"})
         self.assertEqual(result["evaluation_status"], "needs_review")
