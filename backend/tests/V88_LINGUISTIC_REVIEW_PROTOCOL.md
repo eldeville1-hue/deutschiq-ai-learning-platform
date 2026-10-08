@@ -43,3 +43,13 @@ python -m tests.import_uncertain_review_v88 completed_uncertain.csv reviewed_unc
 ```
 
 The importer checks that the manifest identifies the exact current uncertain cases and that CSV content has not been changed. Imported decisions remain `pending_independence_verification` and **cannot** be counted as an independent holdout or release signoff. Re-export if the evaluator or development set changes. Never auto-apply reviewer corrections to the production evaluator.
+
+## Compare completed reviews with evaluator judgments
+
+After importing the targeted packet, run from `backend/`:
+
+```bash
+python -m tests.triage_review_disagreements_v88 reviewed_uncertain.jsonl review_disagreements_v88.json
+```
+
+The report prioritizes potential false acceptances, then false rejections, then correct answers left unverified. It also tracks incorrect answers left unverified. Every finding remains provisional until reviewer provenance and independence are verified. Do not interpret these development comparisons as independent accuracy, do not auto-update the evaluator, and do not unblock v88 based on this report.
