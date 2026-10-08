@@ -20,7 +20,7 @@ def word_diff(answer: str, model: str) -> dict:
     return {"missing": missing[:5], "extra": extra[:5]}
 
 
-def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
+def _legacy_evaluate_structured_answer(answer: str, exercise: dict) -> dict:
     accepted = [str(item) for item in (exercise.get("accepted_answers") or [exercise.get("answer", "")]) if str(item).strip()]
     normalized = normalize_text(answer)
     comparisons = [(model, SequenceMatcher(None, normalized, normalize_text(model)).ratio()) for model in accepted]
@@ -45,3 +45,60 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
     diff = word_diff(answer, model)
     error_type = None if correct else (exercise.get("misconception") or ("missing_words" if diff["missing"] else "answer_mismatch"))
     return {"correct": correct, "score": 100 if exact else 90 if minor_spelling else round(similarity * 100), "model": model, "similarity": round(similarity * 100), "missing_words": diff["missing"], "extra_words": diff["extra"], "error_type": error_type}
+
+
+def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
+    """Evaluate against authored answers without guessing unseen linguistic alternatives.
+
+    The existing response keys remain intact. Ambiguous open answers are marked
+    uncertain instead of being silently accepted or declared grammatically wrong.
+    """
+    from app.services.evaluation_contract import EvaluationResult, LinguisticError
+
+    legacy = _legacy_evaluate_structured_answer(answer, exercise)
+    accepted = [str(x) for x in (exercise.get("accepted_answers") or [exercise.get("answer", "")]) if str(x).strip()]
+    exact = bool(normalize_text(answer)) and any(normalize_text(answer) == normalize_text(x) for x in accepted)
+    typed = exercise.get("type") not in {
+        "reorder", "error_repair", "analogy_choice", "context_choice",
+        "listening_choice", "choice",
+    }
+    open_ended = exercise.get("type") in {"translation", "translate", "free_text", "sentence", "writing"}
+    if not accepted:
+        status = "needs_review"
+    elif exact or legacy["correct"]:
+        status = "verified"
+    elif open_ended:
+        status = "uncertain"
+    else:
+        status = "verified"
+
+    errors = []
+    if status == "verified" and not legacy["correct"]:
+        errors.append(LinguisticError(
+            type=legacy["error_type"] or "answer_mismatch",
+            span=answer,
+            correction=legacy["model"],
+            explanation="This answer does not match the required response.",
+        ))
+    if legacy["correct"] and not exact and typed:
+        errors.append(LinguisticError(
+            type="spelling",
+            span=answer,
+            correction=legacy["model"],
+            explanation="Minor spelling difference; review the model spelling.",
+        ))
+    result = EvaluationResult(
+        grammar_correct=True if exact else None,
+        meaning_correct=True if exact else None,
+        task_satisfied=bool(legacy["correct"]) if status == "verified" else None,
+        correct=bool(legacy["correct"]) and status == "verified",
+        evaluation_status=status,
+        errors=errors,
+        error_type=errors[0].type if errors else None,
+    )
+    return {
+        **legacy,
+        **result.to_dict(),
+        "score": legacy["score"] if status == "verified" else 0,
+        "legacy_error_type": legacy["error_type"],
+    }
