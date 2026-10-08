@@ -93,9 +93,28 @@ def import_reviews(packet, output, rows=None):
     output.write_text("".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows), encoding="utf-8")
     return output
 
+def review_progress(rows):
+    """Count explicit independently approved reviews, never provisional labels."""
+    from collections import Counter
+    summary = {}
+    for level in ("A1", "A2", "B1", "B2"):
+        subset = [r for r in rows if r.get("cefr") == level]
+        statuses = Counter((r.get("human_review") or {}).get("status", "missing") for r in subset)
+        approved = sum(1 for r in subset if (r.get("human_review") or {}).get("status") == "approved"
+                       and (r.get("human_review") or {}).get("independent_of_generation") is True
+                       and (r.get("human_review") or {}).get("blind_to_prediction") is True)
+        summary[level] = {"total": len(subset), "approved_independent": approved,
+                          "remaining_to_minimum": max(0, 100 - approved),
+                          "statuses": dict(sorted(statuses.items()))}
+    return {"levels": summary, "release_gate": "blocked",
+            "note": "Independent provenance and holdout status require external verification."}
+
+
 def main():
     command = sys.argv[1] if len(sys.argv) > 1 else ""
-    if command == "export":
+    if command == "progress-curated":
+        print(json.dumps(review_progress(build_curated_cases()), ensure_ascii=False, indent=2))
+    elif command == "export":
         print(export_packet(Path(sys.argv[2]) if len(sys.argv) > 2 else ROOT / "evaluation_v88_review_packet.csv"))
     elif command == "export-curated":
         print(export_packet(Path(sys.argv[2]) if len(sys.argv) > 2 else ROOT / "evaluation_v88_curated_review_packet.csv", rows=build_curated_cases()))
