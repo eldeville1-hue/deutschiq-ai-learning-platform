@@ -3,6 +3,7 @@
 This is a consistency checker, not a German-language expert or independent review.
 """
 import json
+import hashlib
 from collections import Counter, defaultdict
 from pathlib import Path
 from app.services.answer_intelligence import normalize_text, evaluate_structured_answer
@@ -87,6 +88,16 @@ def audit(rows=None):
         "disclaimer": "Structural checks and provisional labels are not independent linguistic validation.",
     }
 
+def benchmark_fingerprint(rows):
+    """Stable identity of the evaluated inputs and provisional labels."""
+    fields = ("id", "cefr", "task_family", "objective", "learner_answer",
+              "exercise", "provisional_expected", "provisional_error_type")
+    entries = [{key: row.get(key) for key in fields} for row in rows]
+    entries.sort(key=lambda item: item["id"])
+    payload = json.dumps(entries, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
 def triage(rows=None, evaluator=evaluate_structured_answer):
     """Rank provisional disagreements for review; never treat labels as ground truth."""
     rows = build_diverse_cases() if rows is None else rows
@@ -123,7 +134,7 @@ def triage(rows=None, evaluator=evaluate_structured_answer):
                           "review_required": True})
     cases.sort(key=lambda item: (item["priority"], item["cefr"], item["id"]))
     grouped = Counter((case["cefr"], case["error_category"], case["issue"]) for case in cases)
-    return {"total": len(rows), "triaged": len(cases),
+    return {"total": len(rows), "benchmark_fingerprint": benchmark_fingerprint(rows), "triaged": len(cases),
             "by_level_category": [{"cefr": level, "category": category, "issue": issue, "count": count}
                                   for (level, category, issue), count in sorted(grouped.items())],
             "by_issue": dict(sorted(Counter(case["issue"] for case in cases).items())),
@@ -137,6 +148,9 @@ def compare_triage(current, baseline):
     current_total = current.get("total")
     if current_total != baseline.get("total"):
         raise ValueError("Benchmark sizes differ; comparison would be misleading")
+    fingerprint = current.get("benchmark_fingerprint")
+    if not fingerprint or fingerprint != baseline.get("benchmark_fingerprint"):
+        raise ValueError("Benchmark inputs differ or fingerprint missing; comparison is unsafe")
     changed = []
     for identifier in sorted(set(current_cases) | set(baseline_cases)):
         before = baseline_cases.get(identifier)
