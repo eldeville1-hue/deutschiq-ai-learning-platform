@@ -57,12 +57,23 @@ def _classify_aligned_errors(answer: str, model: str) -> list:
     article_forms = {"ein", "eine", "einen", "einem", "einer", "eines", "der", "die", "das", "den", "dem", "des"}
     negations = {"nicht", "kein", "keine", "keinen", "keinem", "keiner", "keines"}
     errors = []
+    if actual != expected and Counter(actual) == Counter(expected):
+        return [LinguisticError(type="word_order", span=answer, correction=model,
+                                explanation="Check the required word order.")]
+    prepositions = {"auf", "an", "in", "mit", "für", "um", "über", "von", "zu", "nach", "bei", "aus", "durch", "gegen", "ohne"}
+    auxiliaries = {"bin", "bist", "ist", "sind", "seid", "habe", "hast", "hat", "haben", "habt"}
     for got, want in zip(actual, expected):
         if got == want:
             continue
         if got in negations or want in negations:
             kind = "negation"
             explanation = "The negation changes the meaning or required form."
+        elif got in auxiliaries and want in auxiliaries:
+            kind = "auxiliary"
+            explanation = "Check the auxiliary verb."
+        elif got in prepositions and want in prepositions:
+            kind = "preposition"
+            explanation = "Check the required preposition."
         elif got in article_forms and want in article_forms:
             kind = "article"
             explanation = "Check the article and its case or gender ending."
@@ -117,7 +128,8 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
             )]
     elif status == "uncertain":
         # These are candidate differences, not confirmed linguistic mistakes.
-        errors = _classify_aligned_errors(answer, legacy["model"])
+        candidates = _classify_aligned_errors(answer, legacy["model"])
+        errors = [item for item in candidates if item.type in {"article", "negation", "auxiliary", "preposition", "conjugation"}]
     result = EvaluationResult(
         grammar_correct=True if exact else None,
         meaning_correct=True if exact else None,
