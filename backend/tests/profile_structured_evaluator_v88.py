@@ -19,7 +19,7 @@ STATUSES = ("verified", "uncertain", "needs_review")
 
 def profile(rows=None, evaluator=evaluate_structured_answer):
     rows = build_diverse_cases() if rows is None else rows
-    grouped = defaultdict(lambda: {"latencies": [], "statuses": Counter(), "errors": Counter()})
+    grouped = defaultdict(lambda: {"latencies": [], "statuses": Counter(), "errors": Counter(), "families": defaultdict(Counter), "uncertain_examples": []})
     for row in rows:
         level = row.get("cefr")
         if level not in LEVELS:
@@ -33,6 +33,11 @@ def profile(rows=None, evaluator=evaluate_structured_answer):
                 item["errors"]["invalid_evaluation_status"] += 1
             else:
                 item["statuses"][status] += 1
+                family = row.get("task_family", row.get("exercise", {}).get("type", "unknown"))
+                item["families"][family][status] += 1
+                if status != "verified" and len(item["uncertain_examples"]) < 10:
+                    item["uncertain_examples"].append({"id": row.get("id"), "task_family": family,
+                                                       "status": status})
         except Exception as exc:
             item["errors"][type(exc).__name__] += 1
         finally:
@@ -47,6 +52,9 @@ def profile(rows=None, evaluator=evaluate_structured_answer):
             "p50_ms": _percentile(item["latencies"], 0.5),
             "p95_ms": _percentile(item["latencies"], 0.95),
             "status_counts": {status: item["statuses"][status] for status in STATUSES},
+            "task_family_status_counts": {family: dict(counts) for family, counts in sorted(item["families"].items())},
+            "uncertain_examples": item["uncertain_examples"],
+            "definitive_coverage": round(item["statuses"]["verified"] / count, 4) if count else None,
             "failure_count": failures,
             "failure_rate": round(failures / count, 4) if count else None,
             "deterministic_latency_gate": bool(count >= 100 and failures == 0
