@@ -16,7 +16,7 @@ def ci_evidence_check(evidence, expected_sha):
 
 
 
-def build_report(holdout_path=None, benchmark=None, linguistic=None, ci_evidence=None, expected_sha=None, job_evidence=None, ai_benchmark=None):
+def build_report(holdout_path=None, benchmark=None, linguistic=None, ci_evidence=None, expected_sha=None, job_evidence=None, ai_benchmark=None, structured_profile=None):
     benchmark = measure() if benchmark is None else benchmark
     linguistic = (evaluate_file(holdout_path) if holdout_path else validation_report([])) if linguistic is None else linguistic
     from tests.collect_ci_evidence_v88 import REQUIRED_JOBS
@@ -38,6 +38,18 @@ def build_report(holdout_path=None, benchmark=None, linguistic=None, ci_evidence
              and ai_benchmark["p95_ms"] < 2500
              and isinstance(ai_benchmark.get("failure_rate"), (int, float))
              and 0 <= ai_benchmark["failure_rate"] < 0.01)
+    profile_levels = structured_profile.get("levels", {}) if isinstance(structured_profile, dict) else {}
+    coverage = {}
+    for level in ("A1", "A2", "B1", "B2"):
+        data = profile_levels.get(level, {})
+        n = data.get("sample_count", 0)
+        statuses = data.get("status_counts", {})
+        verified = statuses.get("verified", 0)
+        valid = (isinstance(n, int) and n >= 100 and isinstance(verified, int)
+                 and 0 <= verified <= n and data.get("failure_count") == 0)
+        coverage[level] = {"sample_count": n, "verified": verified,
+                           "definitive_coverage": verified / n if valid else None,
+                           "development_coverage_target_met": bool(valid and verified / n >= 0.95)}
     checks = {
         "deterministic_performance": benchmark.get("deterministic_latency_gate") is True
             and benchmark.get("failure_rate") is not None and benchmark["failure_rate"] < 0.01,
@@ -64,6 +76,9 @@ def build_report(holdout_path=None, benchmark=None, linguistic=None, ci_evidence
         "ai_benchmark": ai_benchmark,
         "job_evidence": job_evidence,
         "linguistic_validation": linguistic,
+        "structured_development_coverage": coverage,
+        "structured_development_coverage_all_levels": all(x["development_coverage_target_met"] for x in coverage.values()),
+        "structured_profile_provenance": structured_profile.get("workload_source") if isinstance(structured_profile, dict) else None,
         "evidence_scope": "local benchmark and optional external holdout; no CI or signoff attestation",
     }
 
