@@ -34,6 +34,19 @@ class UncertainReviewImportTests(unittest.TestCase):
             self.assertEqual(result["release_gate"], "blocked")
             self.assertIn("pending_independence_verification", output.read_text())
 
+    def test_missing_manifest_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, "manifest is required"):
+            import_uncertain("unused.csv", "unused.jsonl", rows=self.rows)
+
+    def test_changed_case_content_is_rejected_even_with_same_ids(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            csv_path = Path(tmp) / "review.csv"
+            manifest = Path(tmp) / "manifest.json"
+            write_packet(csv_path, manifest, self.rows)
+            changed = [{**self.rows[0], "exercise": {"type": "translation", "answer": "Guten Morgen"}}]
+            with self.assertRaisesRegex(ValueError, "manifest does not match"):
+                import_uncertain(csv_path, Path(tmp) / "reviewed.jsonl", manifest, changed)
+
     def test_tampered_manifest_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
             csv_path = Path(tmp) / "review.csv"
