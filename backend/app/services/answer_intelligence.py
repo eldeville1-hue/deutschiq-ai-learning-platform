@@ -21,7 +21,7 @@ def word_diff(answer: str, model: str) -> dict:
 
 
 def _legacy_evaluate_structured_answer(answer: str, exercise: dict) -> dict:
-    accepted = [str(item) for item in (exercise.get("accepted_answers") or [exercise.get("answer", "")]) if str(item).strip()]
+    accepted = [str(item) for item in [exercise.get("answer", ""), *(exercise.get("accepted_answers") or [])] if item is not None and str(item).strip()]
     normalized = normalize_text(answer)
     comparisons = [(model, SequenceMatcher(None, normalized, normalize_text(model)).ratio()) for model in accepted]
     model, similarity = max(comparisons, key=lambda item: item[1], default=("", 0.0))
