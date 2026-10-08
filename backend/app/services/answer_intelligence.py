@@ -91,6 +91,11 @@ def _classify_aligned_errors(answer: str, model: str, target_feature: str = "") 
             kind = "participle"
             explanation = "Check the past participle form."
         elif (target_feature == "conjugation" and got != want
+              and ((want.endswith("st") and got == want[:-2])
+                   or (want.endswith("t") and got == want[:-1]))):
+            kind = "conjugation"
+            explanation = "The verb ending does not match the required subject."
+        elif (target_feature == "conjugation" and got != want
               and any(got.endswith(a) and want.endswith(b)
                       and got[:-len(a)] == want[:-len(b)]
                       for a in ("en", "e", "st", "t") for b in ("en", "e", "st", "t")
