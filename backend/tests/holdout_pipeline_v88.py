@@ -71,6 +71,19 @@ def check_holdout(holdout, development=None):
         review = row.get("human_review")
         if not isinstance(review, dict):
             errors.append(f"{identifier}:invalid_review")
+        elif review.get("status") == "approved":
+            required_review = ("reviewer", "reviewed_at", "protocol_version",
+                               "decision", "blind_to_prediction", "independent_of_generation")
+            if any(not review.get(field) for field in required_review):
+                errors.append(f"{identifier}:approved_review_missing_provenance")
+            if review.get("blind_to_prediction") is not True or review.get("independent_of_generation") is not True:
+                errors.append(f"{identifier}:review_independence_not_verified")
+            if review.get("decision") not in ("correct", "incorrect", "uncertain"):
+                errors.append(f"{identifier}:invalid_review_decision")
+            if review.get("decision") == "incorrect" and not review.get("error_types"):
+                errors.append(f"{identifier}:missing_error_diagnosis")
+            if review.get("decision") == "uncertain" and not str(review.get("notes", "")).strip():
+                errors.append(f"{identifier}:uncertain_review_without_notes")
     return sorted(set(errors))
 
 
