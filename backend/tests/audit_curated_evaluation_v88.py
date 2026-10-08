@@ -119,7 +119,10 @@ def triage(rows=None, evaluator=evaluate_structured_answer):
                           "prompt": row["objective"], "learner_answer": row["learner_answer"],
                           "reference_answer": row["exercise"]["answer"], "review_required": True})
     cases.sort(key=lambda item: (item["priority"], item["cefr"], item["id"]))
+    grouped = Counter((case["cefr"], case["error_category"], case["issue"]) for case in cases)
     return {"total": len(rows), "triaged": len(cases),
+            "by_level_category": [{"cefr": level, "category": category, "issue": issue, "count": count}
+                                  for (level, category, issue), count in sorted(grouped.items())],
             "by_issue": dict(sorted(Counter(case["issue"] for case in cases).items())),
             "cases": cases, "independently_validated": False, "release_gate": "blocked"}
 
@@ -129,7 +132,7 @@ def main():
     triage_report = triage()
     triage_path = Path(__file__).resolve().parent / "fixtures" / "evaluation_v88_triage.json"
     triage_path.parent.mkdir(parents=True, exist_ok=True)
-    triage_path.write_text(json.dumps(triage_report, ensure_ascii=False, indent=2) + "\\n", encoding="utf-8")
+    triage_path.write_text(json.dumps(triage_report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     path = Path(__file__).resolve().parent / "fixtures" / "evaluation_v88_curated_audit.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
