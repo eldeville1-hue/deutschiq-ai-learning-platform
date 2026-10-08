@@ -89,6 +89,35 @@ class StructuredEvaluationV88Tests(unittest.TestCase):
         self.assertEqual(result["evaluation_status"], "verified")
         self.assertEqual(result["errors"][0]["type"], "word_order")
 
+    def test_explicit_case_target_classifies_case(self):
+        result = evaluate_structured_answer("Ich warte auf dem Bus.", {
+            "type": "choice", "answer": "Ich warte auf den Bus.",
+            "target_feature": "case",
+        })
+        self.assertEqual(result["errors"][0]["type"], "case")
+
+    def test_explicit_relative_pronoun_target(self):
+        result = evaluate_structured_answer("Das Fahrrad, den ich gekauft habe, ist neu.", {
+            "type": "error_repair",
+            "answer": "Das Fahrrad, das ich gekauft habe, ist neu.",
+            "target_feature": "relative_pronoun",
+        })
+        self.assertEqual(result["errors"][0]["type"], "relative_pronoun")
+
+    def test_explicit_participle_target(self):
+        result = evaluate_structured_answer("Ich habe meine Freundin besuchen.", {
+            "type": "error_repair",
+            "answer": "Ich habe meine Freundin besucht.",
+            "target_feature": "participle",
+        })
+        self.assertEqual(result["errors"][0]["type"], "participle")
+
+    def test_unannotated_case_remains_conservative(self):
+        result = evaluate_structured_answer("Ich warte auf dem Bus.", {
+            "type": "choice", "answer": "Ich warte auf den Bus.",
+        })
+        self.assertEqual(result["errors"][0]["type"], "article")
+
     def test_missing_model_requires_review(self):
         result = evaluate_structured_answer("Hallo", {"type": "translation"})
         self.assertEqual(result["evaluation_status"], "needs_review")
