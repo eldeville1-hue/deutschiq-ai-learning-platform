@@ -10,6 +10,7 @@ import sys
 
 from app.services.production_feedback import _ai_feedback
 from tests.benchmark_ai_evaluation_v88 import measure_ai
+from tests.prepare_ai_workload_v88 import prepare, LEVELS, MIN_PER_LEVEL
 
 CASES = [
     {"learner_answer": "Ich denke, dass Deutsch lernen wichtig ist, weil es mir bei der Arbeit hilft.",
@@ -23,7 +24,7 @@ CASES = [
 
 async def production_adapter(answer, exercise):
     result = await asyncio.to_thread(_ai_feedback, answer, exercise,
-                                     {"cefr": "B1", "objective": "German communication"}, "en")
+                                     {"cefr": exercise.get("benchmark_cefr", "B1"), "objective": "German communication"}, "en")
     if result.get("source") != "ai":
         raise RuntimeError("AI evaluator did not return AI-sourced evidence")
     return result
@@ -34,7 +35,19 @@ async def main():
         report = {"measured": False, "release_gate": "blocked",
                   "reason": "OPENAI_API_KEY missing; no real AI measurements"}
     else:
-        report = await measure_ai(CASES, production_adapter)
+        manifest = prepare()
+        if manifest["validation_errors"]:
+            report = {"measured": False, "release_gate": "blocked", "validation_errors": manifest["validation_errors"]}
+            print(json.dumps(report, indent=2))
+            return 2
+        rows = []
+        for case in manifest["cases"]:
+            exercise = dict(case["exercise"], benchmark_cefr=case["cefr"])
+            rows.append({"learner_answer": case["learner_answer"], "exercise": exercise})
+        report = await measure_ai(rows, production_adapter)
+        report["counts_by_level"] = manifest["counts_by_level"]
+        report["real_ai_adapter"] = True
+        report["workload_source"] = manifest["source"]
         report["representative_release_sample"] = False
         report["release_gate"] = "blocked"
     print(json.dumps(report, indent=2))
