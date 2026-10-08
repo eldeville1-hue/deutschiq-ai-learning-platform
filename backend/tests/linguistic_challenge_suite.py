@@ -59,6 +59,10 @@ GRAMMAR_TARGETS = {
 }
 
 KNOWN_ALTERNATIVES = {
+    ("B1", "Er hat gesagt, dass er krank ist."): ["Er sagte, er sei krank."],
+    ("B2", "Obwohl erhebliche Zweifel bestanden, wurde die Entscheidung getroffen."): ["Die Entscheidung wurde getroffen, obwohl erhebliche Zweifel bestanden."],
+    ("B2", "Anstatt die Ursachen zu untersuchen, wurden nur Symptome behandelt."): ["Es wurden nur Symptome behandelt, statt die Ursachen zu untersuchen."],
+    ("B2", "Die Ergebnisse sind vielversprechend, aber Langzeitdaten fehlen."): ["Obgleich die Ergebnisse vielversprechend sind, fehlen Langzeitdaten."],
     ("A2", "Ich bin gestern nach Hause gegangen."): ["Gestern bin ich nach Hause gegangen."],
     ("A2", "Ich muss morgen arbeiten."): ["Morgen muss ich arbeiten."],
     ("A1", "Sie wohnt in Berlin."): ["Sie lebt in Berlin."],
