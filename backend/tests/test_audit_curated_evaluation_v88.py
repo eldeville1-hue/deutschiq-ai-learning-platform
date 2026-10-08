@@ -1,5 +1,5 @@
 import unittest
-from tests.audit_curated_evaluation_v88 import audit
+from tests.audit_curated_evaluation_v88 import audit, triage
 from tests.generate_curated_evaluation_v88 import build_diverse_cases
 
 class CuratedAuditTests(unittest.TestCase):
@@ -11,6 +11,26 @@ class CuratedAuditTests(unittest.TestCase):
         self.assertEqual(report["families"], {"translation": 400, "error_repair": 80})
         self.assertFalse(report["independently_validated"])
         self.assertEqual(report["release_gate"], "blocked")
+
+    def test_triage_prioritizes_potential_false_acceptance(self):
+        rows = build_diverse_cases()[:3]
+        def accept_everything(answer, exercise):
+            return {"evaluation_status": "verified", "correct": True, "errors": []}
+        report = triage(rows, evaluator=accept_everything)
+        self.assertEqual(report["total"], 3)
+        self.assertEqual(report["cases"][0]["issue"], "potential_false_accept")
+        self.assertEqual(report["cases"][0]["priority"], 0)
+        self.assertTrue(report["cases"][0]["review_required"])
+        self.assertEqual(report["release_gate"], "blocked")
+        self.assertFalse(report["independently_validated"])
+
+    def test_triage_deferral_is_not_false_acceptance(self):
+        rows = build_diverse_cases()[:3]
+        def defer(answer, exercise):
+            return {"evaluation_status": "uncertain", "correct": False, "errors": []}
+        report = triage(rows, evaluator=defer)
+        self.assertNotIn("potential_false_accept", report["by_issue"])
+        self.assertIn("deferred_incorrect", report["by_issue"])
 
     def test_duplicate_ids_are_detected(self):
         rows = build_diverse_cases()
