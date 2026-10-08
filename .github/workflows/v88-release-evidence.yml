@@ -38,11 +38,22 @@ jobs:
             "${{ github.event.workflow_run.id }}" \
             "${{ github.event.workflow_run.head_sha }}" \
             release_evidence_v88.json
+      - name: Profile structured evaluator A1-B2
+        working-directory: backend
+        env:
+          BOT_TOKEN: "123456:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghi"
+          DATABASE_URL: "sqlite:///:memory:"
+          WEBAPP_URL: "http://localhost:8000"
+          BOT_MODE: "polling"
+          SECRET_KEY: "ci-only-secret"
+        run: python -m tests.profile_structured_evaluator_v88 structured_profile_v88.json
       - name: Upload v88 release evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: v88-release-evidence
-          path: backend/release_evidence_v88.json
+          path: |
+            backend/release_evidence_v88.json
+            backend/structured_profile_v88.json
           if-no-files-found: warn
           retention-days: 30
