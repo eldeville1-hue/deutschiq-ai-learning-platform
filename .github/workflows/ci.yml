@@ -28,6 +28,17 @@ jobs:
       - run: python -m unittest discover -s tests -v
       - name: A1-B2 provisional linguistic challenge audit
         run: python -m tests.linguistic_challenge_suite
+      - name: Run provisional v88 evaluation audit
+        run: python -m tests.audit_curated_evaluation_v88
+      - name: Upload provisional v88 evaluation reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v88-evaluation-audit
+          path: |
+            backend/tests/fixtures/evaluation_v88_curated_audit.json
+            backend/tests/fixtures/evaluation_v88_triage.json
+          retention-days: 30
       - run: python scripts/audit_launch_readiness.py
       - run: alembic heads
       - run: python -m compileall -q app migrations scripts
