@@ -47,7 +47,7 @@ def main():
     path = Path(__file__).resolve().parent / "fixtures" / "evaluation_v88_curated_development.jsonl"
     path.parent.mkdir(parents=True, exist_ok=True)
     rows = build_cases()
-    path.write_text("".join(json.dumps(row, ensure_ascii=False) + "\\n" for row in rows), encoding="utf-8")
+    path.write_text("".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows), encoding="utf-8")
     print(f"Wrote {len(rows)} unreviewed curated development cases to {path}")
 
 if __name__ == "__main__":
