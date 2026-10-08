@@ -16,6 +16,17 @@ class LinguisticChallengeSuiteTests(unittest.TestCase):
             row = rows[index]
             self.assertIn(row["learner_answer"], row["exercise"]["accepted_answers"])
 
+    def test_task_families_have_distinct_instructions(self):
+        rows = build_challenges()
+        by_family = {}
+        for row in rows:
+            by_family.setdefault(row["task_family"], row["exercise"]["question"])
+        for family, question in by_family.items():
+            self.assertTrue(question)
+            self.assertNotIn("Express the target meaning in German:", question)
+        self.assertNotEqual(by_family["translation"].split(". Reference:")[0],
+                            by_family["error_repair"].split(". Reference:")[0])
+
     def test_audit_reports_disagreements_without_claiming_release_quality(self):
         report = audit()
         self.assertEqual(report["cases"], 40)
