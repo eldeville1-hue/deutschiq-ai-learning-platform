@@ -24,10 +24,10 @@ async def measure_ai(rows, evaluator, timeout_seconds=10):
     failures = sum(errors.values())
     p95 = _percentile(durations, 0.95)
     return {
-        "measured": bool(n), "sample_count": n,
+        "measured": bool(n), "sample_count": n, "successful_count": n - failures,
         "p50_ms": _percentile(durations, 0.5), "p95_ms": p95,
         "failure_count": failures, "failure_rate": round(failures / n, 4) if n else None,
-        "error_types": errors, "latency_gate": bool(n and p95 < 2500 and failures / n < 0.01),
+        "error_types": errors, "latency_gate": bool(n >= 100 and p95 < 2500 and failures / n < 0.01),
         "release_gate": "blocked",
         "note": "An injected real AI adapter and representative workload are required for release evidence.",
     }
