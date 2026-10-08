@@ -32,6 +32,23 @@ class ReviewDisagreementTriageTests(unittest.TestCase):
         report = triage([item])
         self.assertEqual(report["reviewed_count_by_level"]["A1"], 0)
 
+    def test_verified_incorrect_diagnosis_disagreement_is_reported(self):
+        item = row("diagnosis", "incorrect", "Ich gehen", model="Ich gehe")
+        def evaluator(answer, exercise):
+            return {"evaluation_status": "verified", "correct": False,
+                    "errors": [{"type": "conjugation", "span": "gehen"}]}
+        report = triage([item], evaluator=evaluator)
+        self.assertEqual(report["findings"][0]["kind"], "potential_diagnosis_mismatch")
+        self.assertEqual(report["findings"][0]["evaluator_error_types"], ["conjugation"])
+        self.assertEqual(report["release_gate"], "blocked")
+
+    def test_matching_diagnosis_is_not_reported(self):
+        item = row("matching", "incorrect", "Ich gehen", model="Ich gehe")
+        def evaluator(answer, exercise):
+            return {"evaluation_status": "verified", "correct": False,
+                    "errors": [{"type": "meaning"}]}
+        self.assertEqual(triage([item], evaluator=evaluator)["findings"], [])
+
     def test_duplicate_ids_fail_closed(self):
         item = row("same", "correct", "Hallo")
         with self.assertRaisesRegex(ValueError, "Duplicate"):
