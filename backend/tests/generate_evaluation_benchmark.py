@@ -65,7 +65,7 @@ def build_cases():
                 elif variant == "omit_last":
                     response = " ".join(words[:-1])
                 elif variant == "swap_first":
-                    response = " ".join([words[1], words[0], *words[2:])
+                    response = " ".join([words[1], words[0], *words[2:]])
                 elif variant == "repeat_first":
                     response = " ".join([words[0], *words])
                 elif variant == "reverse":
