@@ -204,16 +204,6 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
     if legacy["correct"] and not exact:
         legacy["correct"] = False
         legacy["error_type"] = "answer_mismatch"
-    if legacy["correct"] and not exact:
-        model_words = normalize_text(legacy["model"]).split()
-        answer_words = normalize_text(answer).split()
-        semantic_tokens = {"nicht", "kein", "keine", "keinen", "keinem", "keiner", "keines",
-                           "ein", "eine", "einen", "einem", "einer", "eines",
-                           "der", "die", "das", "den", "dem", "des"}
-        changes = [(a, b) for a, b in zip(answer_words, model_words) if a != b]
-        if any(a in semantic_tokens or b in semantic_tokens for a, b in changes):
-            legacy["correct"] = False
-            legacy["error_type"] = "answer_mismatch"
     open_ended = exercise.get("type") in {"translation", "translate", "free_text", "sentence", "writing"}
     empty_submission = not normalize_text(answer)
     # An empty response cannot satisfy a non-empty reference, even for open tasks.
