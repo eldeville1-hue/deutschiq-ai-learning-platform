@@ -209,14 +209,23 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
             legacy["correct"] = False
             legacy["error_type"] = "answer_mismatch"
     open_ended = exercise.get("type") in {"translation", "translate", "free_text", "sentence", "writing"}
+    empty_submission = not normalize_text(answer)
+    # An empty response cannot satisfy a non-empty reference, even for open tasks.
+    # This is a task-completion judgment, not a grammatical diagnosis.
     # An unlisted near-match in open writing may change meaning despite high similarity.
     # Only explicitly accepted text is deterministically verified for open tasks.
-    status = ("needs_review" if not accepted else "verified" if (exact or not open_ended) else "uncertain")
+    status = ("needs_review" if not accepted else
+              "verified" if (empty_submission or exact or not open_ended) else "uncertain")
     errors = []
     if legacy["correct"] and not exact and status == "verified":
         errors = [LinguisticError(
             type="spelling", span=answer, correction=legacy["model"],
             explanation="Check the spelling against the model answer.",
+        )]
+    elif status == "verified" and empty_submission:
+        errors = [LinguisticError(
+            type="empty_answer", span="", correction=legacy["model"],
+            explanation="Enter an answer to complete this exercise.",
         )]
     elif status == "verified" and not legacy["correct"]:
         errors = _classify_aligned_errors(answer, legacy["model"], exercise.get("target_feature", ""))
@@ -233,7 +242,8 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
     result = EvaluationResult(
         grammar_correct=True if exact else None,
         meaning_correct=True if exact else None,
-        task_satisfied=bool(legacy["correct"]) if status == "verified" else None,
+        task_satisfied=(False if empty_submission and accepted else
+                        bool(legacy["correct"]) if status == "verified" else None),
         correct=bool(legacy["correct"]) and status == "verified",
         evaluation_status=status,
         errors=errors,
