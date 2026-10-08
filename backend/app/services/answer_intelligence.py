@@ -59,6 +59,14 @@ def _classify_aligned_errors(answer: str, model: str, target_feature: str = "") 
     article_forms = {"ein", "eine", "einen", "einem", "einer", "eines", "der", "die", "das", "den", "dem", "des"}
     negations = {"nicht", "kein", "keine", "keinen", "keinem", "keiner", "keines"}
     errors = []
+    # A changed ending on kein is not necessarily a change in polarity.
+    if target_feature in {"case", "article", "adjective"}:
+        negation_forms = {"kein", "keine", "keinen", "keinem", "keiner", "keines"}
+        differences = [(a, b) for a, b in zip(actual, expected) if a != b]
+        if len(differences) == 1 and all(token in negation_forms for token in differences[0]):
+            got, want = differences[0]
+            return [LinguisticError(type=target_feature, span=got, correction=want,
+                                    explanation="Check the grammatical ending of the negating determiner.")]
     if actual != expected and Counter(actual) == Counter(expected):
         return [LinguisticError(type="word_order", span=answer, correction=model,
                                 explanation="Check the required word order.")]
