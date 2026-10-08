@@ -28,7 +28,7 @@ class EvidenceIntegrationTests(unittest.TestCase):
 
     def test_report_remains_blocked_even_with_verified_ci(self):
         sha = "a" * 40
-        jobs = {name: {"conclusion": "success"} for name in ("backend", "frontend", "e2e-mobile")}
+        jobs = {name: {"status": "completed", "conclusion": "success"} for name in ("backend", "frontend", "e2e-mobile")}
         report = build_report(
             benchmark={"deterministic_latency_gate": True, "failure_rate": 0},
             linguistic={"release_checks": {}, "failed_gates": []},
