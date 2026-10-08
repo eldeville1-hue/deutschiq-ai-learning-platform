@@ -213,11 +213,6 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
             type="empty_answer", span="", correction=legacy["model"],
             explanation="Enter an answer to complete this exercise.",
         )]
-status == "verified" and empty_submission:
-        errors = [LinguisticError(
-            type="empty_answer", span="", correction=legacy["model"],
-            explanation="Enter an answer to complete this exercise.",
-        )]
     elif status == "verified" and not legacy["correct"]:
         errors = _classify_aligned_errors(answer, legacy["model"], exercise.get("target_feature", ""))
         if not errors:
