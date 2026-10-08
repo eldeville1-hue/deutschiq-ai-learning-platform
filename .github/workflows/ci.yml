@@ -26,6 +26,8 @@ jobs:
           cache-dependency-path: backend/requirements.txt
       - run: pip install -r requirements.txt
       - run: python -m unittest discover -s tests -v
+      - name: A1-B2 provisional linguistic challenge audit
+        run: python -m tests.linguistic_challenge_suite
       - run: python scripts/audit_launch_readiness.py
       - run: alembic heads
       - run: python -m compileall -q app migrations scripts
