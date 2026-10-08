@@ -58,6 +58,24 @@ class ReviewDisagreementTriageTests(unittest.TestCase):
                     "errors": [{"type": "meaning"}]}
         self.assertEqual(triage([item], evaluator=evaluator)["findings"], [])
 
+    def test_forged_approval_is_rejected(self):
+        item = row("forged", "correct", "Hallo")
+        item["human_review"]["status"] = "approved"
+        with self.assertRaisesRegex(ValueError, "Unexpected reviewer approval"):
+            triage([item])
+
+    def test_incorrect_review_without_diagnosis_is_rejected(self):
+        item = row("no-diagnosis", "incorrect", "Hallo")
+        item["human_review"]["error_types"] = []
+        with self.assertRaisesRegex(ValueError, "lacks diagnosis"):
+            triage([item])
+
+    def test_correct_review_with_diagnosis_is_rejected(self):
+        item = row("contradiction", "correct", "Hallo")
+        item["human_review"]["error_types"] = ["meaning"]
+        with self.assertRaisesRegex(ValueError, "includes error diagnoses"):
+            triage([item])
+
     def test_duplicate_ids_fail_closed(self):
         item = row("same", "correct", "Hallo")
         with self.assertRaisesRegex(ValueError, "Duplicate"):
