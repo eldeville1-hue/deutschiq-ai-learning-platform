@@ -6,7 +6,17 @@ from tests.holdout_pipeline_v88 import evaluate_file
 from tests.run_evaluation_benchmark import validation_report
 
 
-def build_report(holdout_path=None, benchmark=None, linguistic=None):
+def ci_evidence_check(evidence, expected_sha):
+    if not isinstance(evidence, dict) or not expected_sha:
+        return False
+    return (evidence.get("head_sha") == expected_sha
+            and evidence.get("status") == "completed"
+            and evidence.get("conclusion") == "success"
+            and bool(evidence.get("run_id")))
+
+
+
+def build_report(holdout_path=None, benchmark=None, linguistic=None, ci_evidence=None, expected_sha=None):
     benchmark = measure() if benchmark is None else benchmark
     linguistic = (evaluate_file(holdout_path) if holdout_path else validation_report([])) if linguistic is None else linguistic
     checks = {
@@ -24,6 +34,9 @@ def build_report(holdout_path=None, benchmark=None, linguistic=None):
     }
     return {
         "version": "v88",
+        "ci_evidence": {"matched_successful_run": ci_evidence_check(ci_evidence, expected_sha),
+                        "expected_sha": expected_sha,
+                        "note": "Run metadata does not establish job-level or mobile E2E signoff."},
         "release_gate": "blocked",
         "checks": checks,
         "failed_gates": sorted(key for key, passed in checks.items() if not passed),
