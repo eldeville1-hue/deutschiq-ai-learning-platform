@@ -198,6 +198,12 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
     exact = bool(normalize_text(answer)) and normalize_text(answer) in accepted_normalized
     # A swapped article/negation can look like a minor typo in a long sentence.
     # Require every spelling tolerance to be non-semantic.
+    # Spelling tolerance is only a legacy hint, never sufficient evidence
+    # for a verified linguistic success: one deleted letter can create a
+    # different valid German word (schreiben -> schreien).
+    if legacy["correct"] and not exact:
+        legacy["correct"] = False
+        legacy["error_type"] = "answer_mismatch"
     if legacy["correct"] and not exact:
         model_words = normalize_text(legacy["model"]).split()
         answer_words = normalize_text(answer).split()
