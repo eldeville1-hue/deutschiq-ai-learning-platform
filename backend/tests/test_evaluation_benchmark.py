@@ -19,7 +19,7 @@ class EvaluationBenchmarkTests(unittest.TestCase):
 
     def test_reviewed_metrics_are_separate(self):
         rows = build_cases()
-        rows[0]["human_review"] = {"status": "approved", "reviewer": "test", "decision": "correct"}
+        rows[0]["human_review"] = {"reviewed_at": "2026-10-08T12:00:00Z", "protocol_version": "v88-1", "blind_to_prediction": True, "independent_of_generation": True, "status": "approved", "reviewer": "test", "decision": "correct"}
         report = run(rows)
         self.assertEqual(report["reviewed"], 1)
         self.assertEqual(report["pending"], 479)
@@ -27,7 +27,7 @@ class EvaluationBenchmarkTests(unittest.TestCase):
     def test_deferral_cannot_pass_accuracy_or_coverage(self):
         rows = build_cases()
         for row in rows:
-            row["human_review"] = {"status": "approved", "reviewer": "independent", "decision": "correct", "error_types": []}
+            row["human_review"] = {"reviewed_at": "2026-10-08T12:00:00Z", "protocol_version": "v88-1", "blind_to_prediction": True, "independent_of_generation": True, "status": "approved", "reviewer": "independent", "decision": "correct", "error_types": []}
         def defer(answer, exercise):
             return {"evaluation_status": "uncertain", "correct": False, "errors": []}
         report = run(rows, evaluator=defer)
@@ -38,7 +38,7 @@ class EvaluationBenchmarkTests(unittest.TestCase):
     def test_perfect_decisions_do_not_hide_missing_diagnoses(self):
         rows = build_cases()
         for row in rows:
-            row["human_review"] = {"status": "approved", "reviewer": "independent", "decision": "incorrect", "error_types": ["article"]}
+            row["human_review"] = {"reviewed_at": "2026-10-08T12:00:00Z", "protocol_version": "v88-1", "blind_to_prediction": True, "independent_of_generation": True, "status": "approved", "reviewer": "independent", "decision": "incorrect", "error_types": ["article"]}
         def omit_errors(answer, exercise):
             return {"evaluation_status": "verified", "correct": False, "errors": []}
         report = run(rows, evaluator=omit_errors)
