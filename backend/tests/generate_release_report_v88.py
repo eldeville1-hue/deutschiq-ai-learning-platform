@@ -8,11 +8,12 @@ import sys
 from pathlib import Path
 from tests.collect_ci_evidence_v88 import collect
 from tests.release_readiness_v88 import build_report
+from tests.profile_structured_evaluator_v88 import profile
 
 
 def generate(repo, run_id, sha, output):
     evidence = collect(repo, run_id, sha)
-    report = build_report(job_evidence=evidence, expected_sha=sha)
+    report = build_report(job_evidence=evidence, expected_sha=sha, structured_profile=profile())
     report["ci_run_id"] = int(run_id)
     report["ci_repository"] = repo
     Path(output).parent.mkdir(parents=True, exist_ok=True)
