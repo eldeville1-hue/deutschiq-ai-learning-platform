@@ -56,7 +56,9 @@ def triage(rows, evaluator=evaluate_structured_answer):
                                if isinstance(error, dict) and error.get("type")}
             if not evaluator_types and result.get("error_type"):
                 evaluator_types = {result["error_type"]}
-            if reviewer_types and evaluator_types and reviewer_types.isdisjoint(evaluator_types):
+            if reviewer_types and not evaluator_types:
+                kind = "missing_evaluator_diagnosis"
+            elif reviewer_types and evaluator_types and reviewer_types.isdisjoint(evaluator_types):
                 kind = "potential_diagnosis_mismatch"
         if kind:
             counts[(level, kind)] += 1
@@ -71,7 +73,7 @@ def triage(rows, evaluator=evaluate_structured_answer):
             })
     priority = {"potential_false_acceptance": 0, "potential_false_rejection": 1,
                 "correct_answer_unverified": 3, "incorrect_answer_unverified": 4,
-                "potential_diagnosis_mismatch": 2, "reviewer_uncertain": 5}
+                "potential_diagnosis_mismatch": 2, "missing_evaluator_diagnosis": 2, "reviewer_uncertain": 5}
     findings.sort(key=lambda item: (priority[item["kind"]], item["cefr"], item["id"]))
     return {
         "version": "v88", "source": "reviewed_development_cases",
