@@ -55,6 +55,8 @@ CASES = [
 KNOWN_ALTERNATIVES = {
     ("A2", "Ich bin gestern nach Hause gegangen."): ["Gestern bin ich nach Hause gegangen."],
     ("A2", "Ich muss morgen arbeiten."): ["Morgen muss ich arbeiten."],
+    ("A1", "Sie wohnt in Berlin."): ["Sie lebt in Berlin."],
+    ("A2", "Kannst du mir helfen?"): ["Kannst du mir bitte helfen?"],
     ("B1", "Der Brief wurde gestern geschrieben."): ["Gestern wurde der Brief geschrieben."],
 }
 
