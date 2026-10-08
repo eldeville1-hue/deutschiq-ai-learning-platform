@@ -12,9 +12,8 @@ class SpellingFalseAcceptanceV88Tests(unittest.TestCase):
 
     def test_internal_letter_omission_does_not_earn_verified_success(self):
         result = evaluate_structured_answer(
-            "Wir schrieben heute", {"type": "fill_blank", "answer": "Wir schreiben heute"})
+            "Ich will schreien", {"type": "fill_blank", "answer": "Ich will schreiben"})
         self.assertFalse(result["correct"])
-        self.assertEqual(result["score"], 100 if result["correct"] else result["score"])
         self.assertEqual(result["evaluation_status"], "verified")
 
     def test_open_ended_unlisted_spelling_is_uncertain(self):
