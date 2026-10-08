@@ -44,8 +44,19 @@ class CuratedAuditTests(unittest.TestCase):
             compare_triage({"total": 1, "cases": []}, {"total": 2, "cases": []})
 
     def test_comparison_same_cases(self):
-        report = {"total": 1, "cases": []}
+        report = triage(build_diverse_cases()[:3])
         self.assertEqual(compare_triage(report, report)["changed_count"], 0)
+
+    def test_comparison_rejects_same_size_different_inputs(self):
+        original = build_diverse_cases()[:3]
+        modified = build_diverse_cases()[:3]
+        modified[0]["learner_answer"] = "Different answer"
+        with self.assertRaisesRegex(ValueError, "fingerprint"):
+            compare_triage(triage(original), triage(modified))
+
+    def test_comparison_rejects_legacy_report_without_fingerprint(self):
+        with self.assertRaisesRegex(ValueError, "fingerprint"):
+            compare_triage({"total": 1, "cases": []}, {"total": 1, "cases": []})
 
     def test_duplicate_ids_are_detected(self):
         rows = build_diverse_cases()
