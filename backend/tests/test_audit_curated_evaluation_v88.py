@@ -24,6 +24,13 @@ class CuratedAuditTests(unittest.TestCase):
         self.assertEqual(report["release_gate"], "blocked")
         self.assertFalse(report["independently_validated"])
 
+    def test_triage_exposes_predicted_error_types(self):
+        report = triage()
+        suspected = [case for case in report["cases"] if case["issue"] == "potential_misdiagnosis"]
+        self.assertTrue(suspected)
+        self.assertTrue(all(isinstance(case["predicted_error_types"], list) for case in suspected))
+        self.assertTrue(all(case["evaluation_status"] == "verified" for case in suspected))
+
     def test_triage_deferral_is_not_false_acceptance(self):
         rows = build_diverse_cases()[:3]
         def defer(answer, exercise):
