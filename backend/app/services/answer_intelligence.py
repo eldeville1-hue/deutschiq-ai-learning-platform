@@ -148,4 +148,7 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
         **legacy, **result.to_dict(),
         "score": legacy["score"] if status == "verified" else 0,
         "legacy_error_type": legacy["error_type"],
+        "review_reason": ("open_answer_not_proven_equivalent_or_incorrect" if status == "uncertain" else
+                          "missing_reference_answer" if status == "needs_review" else None),
+        "candidate_error_types": ([item.type for item in errors] if status == "uncertain" else []),
     }
