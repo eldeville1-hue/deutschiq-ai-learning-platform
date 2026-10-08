@@ -61,13 +61,25 @@ KNOWN_ALTERNATIVES = {
     ("B1", "Wenn ich Zeit hätte, würde ich mitkommen."): ["Hätte ich Zeit, würde ich mitkommen."],
 }
 
+def challenge_instruction(family, target):
+    instructions = {
+        "translation": "Translate the intended meaning into German",
+        "sentence": "Write a German sentence expressing the specified meaning",
+        "choice": "Choose the answer matching the target",
+        "reorder": "Arrange the given words in the requested order",
+        "error_repair": "Correct the grammatical mistakes",
+        "free_text": "Write a natural German response",
+    }
+    return f'{instructions.get(family, "Answer the task")}. Reference: {target}'
+
+
 def build_challenges():
     result = []
     for i, (level, family, target, answer, verdict, error) in enumerate(CASES):
         result.append({
             "id": f"challenge-{level}-{i:03d}", "cefr": level,
-            "objective": f"Express the target meaning in German: {target}",
-            "exercise": {"type": family, "question": f"Express the target meaning in German: {target}",
+            "objective": challenge_instruction(family, target),
+            "exercise": {"type": family, "question": challenge_instruction(family, target),
                          "answer": target,
                          "accepted_answers": [target, *KNOWN_ALTERNATIVES.get((level, target), [])]},
             "learner_answer": answer, "task_family": family,
