@@ -25,6 +25,9 @@ class EvaluationBenchmarkTests(unittest.TestCase):
         report = run(build_cases())
         self.assertEqual(report["reviewed"], 0)
         self.assertEqual(report["pending"], 480)
+        self.assertEqual(report["source_distribution"]["synthetic_level_specific"], 480)
+        self.assertEqual(report["review_status_distribution"]["pending"], 480)
+        self.assertGreaterEqual(len(report["task_family_distribution"]), 6)
         self.assertEqual(report["release_gate"], "blocked")
         self.assertIsNone(report["levels"]["A1"]["accuracy"])
 
