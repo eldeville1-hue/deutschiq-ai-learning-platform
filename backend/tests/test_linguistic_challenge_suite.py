@@ -12,9 +12,14 @@ class LinguisticChallengeSuiteTests(unittest.TestCase):
 
     def test_known_alternatives_are_explicitly_listed(self):
         rows = build_challenges()
-        for index in (6, 17, 23):
+        for index in (6, 17, 20, 23, 27, 30, 32, 35, 37):
             row = rows[index]
             self.assertIn(row["learner_answer"], row["exercise"]["accepted_answers"])
+
+    def test_all_provisional_correct_paraphrases_are_authored(self):
+        for row in build_challenges():
+            if row["provisional_expected"] == "correct":
+                self.assertIn(row["learner_answer"], row["exercise"]["accepted_answers"])
 
     def test_task_families_have_distinct_instructions(self):
         rows = build_challenges()
