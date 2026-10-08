@@ -190,14 +190,9 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
     from app.services.evaluation_contract import EvaluationResult, LinguisticError
     legacy = _legacy_evaluate_structured_answer(answer, exercise)
     accepted = [str(x) for x in (exercise.get("accepted_answers") or [exercise.get("answer", "")]) if str(x).strip()]
-    exact = bool(normalize_text(answer)) and any(normalize_text(answer) == normalize_text(x) for x in accepted)
-    # Authored alternatives are the only safe deterministic equivalences.
-    # Do not infer semantic equivalence from string similarity.
-    closed_types = {"reorder", "error_repair", "analogy_choice", "context_choice", "listening_choice", "choice"}
+    # Only explicitly authored alternatives are verified as equivalent.
     accepted_normalized = {normalize_text(item) for item in accepted}
     exact = bool(normalize_text(answer)) and normalize_text(answer) in accepted_normalized
-    # A swapped article/negation can look like a minor typo in a long sentence.
-    # Require every spelling tolerance to be non-semantic.
     # Spelling tolerance is only a legacy hint, never sufficient evidence
     # for a verified linguistic success: one deleted letter can create a
     # different valid German word (schreiben -> schreien).
@@ -213,12 +208,12 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
     status = ("needs_review" if not accepted else
               "verified" if (empty_submission or exact or not open_ended) else "uncertain")
     errors = []
-    if legacy["correct"] and not exact and status == "verified":
+    if status == "verified" and empty_submission:
         errors = [LinguisticError(
-            type="spelling", span=answer, correction=legacy["model"],
-            explanation="Check the spelling against the model answer.",
+            type="empty_answer", span="", correction=legacy["model"],
+            explanation="Enter an answer to complete this exercise.",
         )]
-    elif status == "verified" and empty_submission:
+status == "verified" and empty_submission:
         errors = [LinguisticError(
             type="empty_answer", span="", correction=legacy["model"],
             explanation="Enter an answer to complete this exercise.",
