@@ -3,6 +3,22 @@ from app.services.answer_intelligence import evaluate_structured_answer
 
 
 class StructuredEvaluationV88Tests(unittest.TestCase):
+    def test_empty_open_answer_is_verified_incomplete_not_grammar_error(self):
+        for answer in ("", "  ", "..."):
+            with self.subTest(answer=answer):
+                result = evaluate_structured_answer(answer, {
+                    "type": "translation", "answer": "Ich lerne Deutsch."})
+                self.assertEqual(result["evaluation_status"], "verified")
+                self.assertFalse(result["correct"])
+                self.assertFalse(result["task_satisfied"])
+                self.assertIsNone(result["grammar_correct"])
+                self.assertEqual(result["errors"][0]["type"], "empty_answer")
+
+    def test_empty_without_reference_still_needs_review(self):
+        result = evaluate_structured_answer("", {"type": "translation"})
+        self.assertEqual(result["evaluation_status"], "needs_review")
+        self.assertFalse(result["correct"])
+
     def test_unlisted_near_match_in_open_answer_needs_review(self):
         exercise = {"type": "translation", "answer": "Ich besuche meine Freundin morgen."}
         result = evaluate_structured_answer("Ich besuche meine Freundin morgn.", exercise)
