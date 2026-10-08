@@ -1,5 +1,5 @@
 import unittest
-from tests.audit_curated_evaluation_v88 import audit, triage
+from tests.audit_curated_evaluation_v88 import audit, triage, compare_triage
 from tests.generate_curated_evaluation_v88 import build_diverse_cases
 
 class CuratedAuditTests(unittest.TestCase):
@@ -31,6 +31,14 @@ class CuratedAuditTests(unittest.TestCase):
         report = triage(rows, evaluator=defer)
         self.assertNotIn("potential_false_accept", report["by_issue"])
         self.assertIn("deferred_incorrect", report["by_issue"])
+
+    def test_comparison_rejects_different_sizes(self):
+        with self.assertRaises(ValueError):
+            compare_triage({"total": 1, "cases": []}, {"total": 2, "cases": []})
+
+    def test_comparison_same_cases(self):
+        report = {"total": 1, "cases": []}
+        self.assertEqual(compare_triage(report, report)["changed_count"], 0)
 
     def test_duplicate_ids_are_detected(self):
         rows = build_diverse_cases()
