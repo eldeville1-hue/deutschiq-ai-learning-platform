@@ -6,10 +6,10 @@ from app.services.answer_intelligence import evaluate_structured_answer, normali
 
 
 class ProductionFeedbackTests(unittest.TestCase):
-    def test_structured_answers_ignore_punctuation_and_accept_minor_spelling(self):
+    def test_structured_answers_ignore_punctuation_but_do_not_auto_accept_spelling(self):
         exercise = {"answer": "Ich habe gestern gearbeitet.", "accepted_answers": ["Ich habe gestern gearbeitet."]}
         self.assertTrue(evaluate_structured_answer("ich habe gestern gearbeitet!", exercise)["correct"])
-        self.assertTrue(evaluate_structured_answer("Ich habe gestern gearbeitt.", exercise)["correct"])
+        self.assertFalse(evaluate_structured_answer("Ich habe gestern gearbeitt.", exercise)["correct"])
         self.assertFalse(evaluate_structured_answer("Gestern ich habe gearbeitet.", exercise)["correct"])
         self.assertEqual("strasse", normalize_text("Straße"))
 
