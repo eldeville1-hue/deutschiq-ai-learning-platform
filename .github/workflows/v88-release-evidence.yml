@@ -1,0 +1,48 @@
+name: v88 Release Evidence
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  release-evidence:
+    if: ${{ github.event.workflow_run.head_branch == 'main' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install backend dependencies
+        run: pip install -r backend/requirements.txt
+      - name: Generate fail-closed release evidence
+        working-directory: backend
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BOT_TOKEN: "123456:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghi"
+          DATABASE_URL: "sqlite:///:memory:"
+          WEBAPP_URL: "http://localhost:8000"
+          BOT_MODE: "polling"
+          SECRET_KEY: "ci-only-secret"
+        run: |
+          python -m tests.generate_release_report_v88 \
+            "${{ github.repository }}" \
+            "${{ github.event.workflow_run.id }}" \
+            "${{ github.event.workflow_run.head_sha }}" \
+            release_evidence_v88.json
+      - name: Upload v88 release evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v88-release-evidence
+          path: backend/release_evidence_v88.json
+          if-no-files-found: warn
+          retention-days: 30
