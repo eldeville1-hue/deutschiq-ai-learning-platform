@@ -4,6 +4,7 @@ import unittest
 from pathlib import Path
 
 from tests.generate_evaluation_benchmark import build_cases
+from tests.linguistic_challenge_suite import build_challenges
 from tests.review_evaluation_benchmark import export_packet, import_reviews
 from tests.run_evaluation_benchmark import run
 
@@ -31,6 +32,19 @@ class ReviewWorkflowTests(unittest.TestCase):
             rows = [json.loads(line) for line in reviewed.read_text(encoding="utf-8").splitlines()]
             self.assertEqual(rows[0]["human_review"]["status"], "pending_independence_verification")
             self.assertEqual(run(rows)["reviewed"], 0)
+
+    def test_challenge_packet_is_blind_and_contains_all_levels(self):
+        with tempfile.TemporaryDirectory() as directory:
+            packet = Path(directory) / "challenge.csv"
+            export_packet(packet, build_challenges())
+            with packet.open(encoding="utf-8-sig", newline="") as source:
+                reader = csv.DictReader(source)
+                self.assertNotIn("provisional_expected", reader.fieldnames)
+                self.assertNotIn("prediction", reader.fieldnames)
+                records = list(reader)
+            self.assertEqual(len(records), 40)
+            self.assertEqual({r["cefr"] for r in records}, {"A1", "A2", "B1", "B2"})
+            self.assertTrue(all(not r["decision"] and not r["reviewer"] for r in records))
 
     def test_rejects_unsupported_review_decisions(self):
         cases = build_cases()[:1]
