@@ -16,12 +16,18 @@ class ReleaseArtifactTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             path = str(Path(tmp) / "release.json")
             with patch("tests.generate_release_report_v88.collect", return_value=evidence), patch(
+                "tests.generate_release_report_v88.profile",
+                return_value={"workload_source": "curated_development_unreviewed", "levels": {}},
+            ), patch(
                 "tests.generate_release_report_v88.build_report",
                 return_value={"release_gate": "blocked", "failed_gates": ["external_human_signoff"],
                               "job_evidence": evidence},
             ) as builder:
                 report = generate("owner/repo", 42, sha, path)
-            builder.assert_called_once_with(job_evidence=evidence, expected_sha=sha)
+            builder.assert_called_once_with(
+                job_evidence=evidence, expected_sha=sha,
+                structured_profile={"workload_source": "curated_development_unreviewed", "levels": {}},
+            )
             self.assertEqual(report["release_gate"], "blocked")
             saved = json.loads(Path(path).read_text(encoding="utf-8"))
             self.assertEqual(saved["ci_run_id"], 42)
