@@ -10,6 +10,12 @@ class LinguisticChallengeSuiteTests(unittest.TestCase):
             self.assertEqual(sum(row["cefr"] == level for row in rows), 10)
         self.assertTrue(all(row["human_review"]["status"] == "pending" for row in rows))
 
+    def test_known_alternatives_are_explicitly_listed(self):
+        rows = build_challenges()
+        for index in (6, 17, 23):
+            row = rows[index]
+            self.assertIn(row["learner_answer"], row["exercise"]["accepted_answers"])
+
     def test_audit_reports_disagreements_without_claiming_release_quality(self):
         report = audit()
         self.assertEqual(report["cases"], 40)
