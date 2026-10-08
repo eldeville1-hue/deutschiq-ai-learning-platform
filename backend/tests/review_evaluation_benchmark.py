@@ -13,6 +13,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from tests.generate_evaluation_benchmark import build_cases
+from tests.linguistic_challenge_suite import build_challenges
 
 ROOT = Path(__file__).resolve().parent / "fixtures"
 FIELDS = ("id", "cefr", "objective", "exercise_type", "model_answer",
@@ -95,10 +96,14 @@ def main():
     command = sys.argv[1] if len(sys.argv) > 1 else ""
     if command == "export":
         print(export_packet(Path(sys.argv[2]) if len(sys.argv) > 2 else ROOT / "evaluation_v88_review_packet.csv"))
+    elif command == "export-challenges":
+        print(export_packet(Path(sys.argv[2]) if len(sys.argv) > 2 else ROOT / "evaluation_v88_challenge_review_packet.csv", rows=build_challenges()))
+    elif command == "import-challenges" and len(sys.argv) >= 3:
+        print(import_reviews(sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else ROOT / "evaluation_v88_challenge_reviewed.jsonl", rows=build_challenges()))
     elif command == "import" and len(sys.argv) >= 3:
         print(import_reviews(sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else ROOT / "evaluation_v88_reviewed.jsonl"))
     else:
-        raise SystemExit("Usage: python -m tests.review_evaluation_benchmark export [csv] | import <csv> [jsonl]")
+        raise SystemExit("Usage: python -m tests.review_evaluation_benchmark export [csv] | import <csv> [jsonl] | export-challenges [csv] | import-challenges <csv> [jsonl]")
 
 if __name__ == "__main__":
     main()
