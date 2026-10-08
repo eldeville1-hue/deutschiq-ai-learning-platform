@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from tests.generate_evaluation_benchmark import build_cases
 from tests.linguistic_challenge_suite import build_challenges
+from tests.generate_curated_evaluation_v88 import build_cases as build_curated_cases
 
 ROOT = Path(__file__).resolve().parent / "fixtures"
 FIELDS = ("id", "cefr", "objective", "exercise_type", "model_answer",
@@ -96,6 +97,10 @@ def main():
     command = sys.argv[1] if len(sys.argv) > 1 else ""
     if command == "export":
         print(export_packet(Path(sys.argv[2]) if len(sys.argv) > 2 else ROOT / "evaluation_v88_review_packet.csv"))
+    elif command == "export-curated":
+        print(export_packet(Path(sys.argv[2]) if len(sys.argv) > 2 else ROOT / "evaluation_v88_curated_review_packet.csv", rows=build_curated_cases()))
+    elif command == "import-curated" and len(sys.argv) >= 3:
+        print(import_reviews(sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else ROOT / "evaluation_v88_curated_reviewed.jsonl", rows=build_curated_cases()))
     elif command == "export-challenges":
         print(export_packet(Path(sys.argv[2]) if len(sys.argv) > 2 else ROOT / "evaluation_v88_challenge_review_packet.csv", rows=build_challenges()))
     elif command == "import-challenges" and len(sys.argv) >= 3:
