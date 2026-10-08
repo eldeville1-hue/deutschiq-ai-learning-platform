@@ -28,7 +28,16 @@ def build_report(holdout_path=None, benchmark=None, linguistic=None, ci_evidence
                     and all(jobs.get(name, {}).get("status") == "completed"
                             and jobs.get(name, {}).get("conclusion") == "success"
                             for name in REQUIRED_JOBS))
-    ai_ok = isinstance(ai_benchmark, dict) and ai_benchmark.get("measured") is True and ai_benchmark.get("p95_ms") is not None and ai_benchmark["p95_ms"] < 2500 and ai_benchmark.get("failure_rate") is not None and ai_benchmark["failure_rate"] < 0.01
+    ai_ok = (isinstance(ai_benchmark, dict)
+             and ai_benchmark.get("measured") is True
+             and ai_benchmark.get("representative_release_sample") is True
+             and ai_benchmark.get("real_ai_adapter") is True
+             and isinstance(ai_benchmark.get("sample_count"), int)
+             and ai_benchmark["sample_count"] >= 100
+             and isinstance(ai_benchmark.get("p95_ms"), (int, float))
+             and ai_benchmark["p95_ms"] < 2500
+             and isinstance(ai_benchmark.get("failure_rate"), (int, float))
+             and 0 <= ai_benchmark["failure_rate"] < 0.01)
     checks = {
         "deterministic_performance": benchmark.get("deterministic_latency_gate") is True
             and benchmark.get("failure_rate") is not None and benchmark["failure_rate"] < 0.01,
