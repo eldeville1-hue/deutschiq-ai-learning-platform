@@ -99,6 +99,27 @@ def _classify_aligned_errors(answer: str, model: str, target_feature: str = "") 
         elif got in prepositions and want in prepositions:
             kind = "preposition"
             explanation = "Check the required preposition."
+        elif target_feature == "possessive" and got in {
+                "mein", "meine", "meinen", "meinem", "meiner", "meines",
+                "dein", "deine", "deinen", "deinem", "deiner", "deines"} and want in {
+                "mein", "meine", "meinen", "meinem", "meiner", "meines",
+                "dein", "deine", "deinen", "deinem", "deiner", "deines"}:
+            kind = "possessive"
+            explanation = "Check the possessive determiner ending."
+        elif target_feature == "case" and got in article_forms and want in article_forms:
+            kind = "case"
+            explanation = "Check the required case ending."
+        elif target_feature == "preposition" and got in article_forms and want in article_forms:
+            kind = "preposition"
+            explanation = "Check the case required by the preposition."
+        elif target_feature == "comparison" and (
+                (got, want) in {("wie", "als"), ("als", "wie")} or
+                (want == got + "er" and len(got) > 3)):
+            kind = "comparison"
+            explanation = "Check the comparative form or comparison particle."
+        elif target_feature == "tense" and got != want:
+            kind = "tense"
+            explanation = "Check the tense required by the sentence."
         elif got in article_forms and want in article_forms:
             kind = target_feature if target_feature in {"case", "relative_pronoun"} else "article"
             explanation = "Check the article and its case or gender ending."
