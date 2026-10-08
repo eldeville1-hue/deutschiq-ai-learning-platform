@@ -47,7 +47,7 @@ def _legacy_evaluate_structured_answer(answer: str, exercise: dict) -> dict:
     return {"correct": correct, "score": 100 if exact else 90 if minor_spelling else round(similarity * 100), "model": model, "similarity": round(similarity * 100), "missing_words": diff["missing"], "extra_words": diff["extra"], "error_type": error_type}
 
 
-def _classify_aligned_errors(answer: str, model: str) -> list:
+def _classify_aligned_errors(answer: str, model: str, target_feature: str = "") -> list:
     """High-precision token differences; do not infer grammar from similarity alone."""
     from app.services.evaluation_contract import LinguisticError
     actual = normalize_text(answer).split()
@@ -75,8 +75,11 @@ def _classify_aligned_errors(answer: str, model: str) -> list:
             kind = "preposition"
             explanation = "Check the required preposition."
         elif got in article_forms and want in article_forms:
-            kind = "article"
+            kind = target_feature if target_feature in {"case", "relative_pronoun"} else "article"
             explanation = "Check the article and its case or gender ending."
+        elif target_feature == "participle" and got.endswith("en") and want.endswith("t"):
+            kind = "participle"
+            explanation = "Check the past participle form."
         elif got.endswith("en") and want.endswith("e") and got[:-2] == want[:-1]:
             kind = "conjugation"
             explanation = "The verb ending does not match the required subject."
@@ -119,7 +122,7 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
             explanation="Check the spelling against the model answer.",
         )]
     elif status == "verified" and not legacy["correct"]:
-        errors = _classify_aligned_errors(answer, legacy["model"])
+        errors = _classify_aligned_errors(answer, legacy["model"], exercise.get("target_feature", ""))
         if not errors:
             errors = [LinguisticError(
                 type=legacy["error_type"] or "answer_mismatch", span=answer,
@@ -128,7 +131,7 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
             )]
     elif status == "uncertain":
         # These are candidate differences, not confirmed linguistic mistakes.
-        candidates = _classify_aligned_errors(answer, legacy["model"])
+        candidates = _classify_aligned_errors(answer, legacy["model"], exercise.get("target_feature", ""))
         errors = [item for item in candidates if item.type in {"article", "negation", "auxiliary", "preposition", "conjugation"}]
     result = EvaluationResult(
         grammar_correct=True if exact else None,
