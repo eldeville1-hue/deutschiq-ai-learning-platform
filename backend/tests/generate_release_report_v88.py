@@ -28,5 +28,10 @@ if __name__ == "__main__":
         print(json.dumps({"output": sys.argv[4], "release_gate": result["release_gate"],
                           "failed_gates": result["failed_gates"]}, indent=2))
     except (OSError, ValueError, KeyError, TypeError) as exc:
-        print(json.dumps({"release_gate": "blocked", "error": str(exc)}))
+        output = sys.argv[4] if len(sys.argv) == 5 else "release_evidence_v88.json"
+        failure = {"version": "v88", "release_gate": "blocked",
+                   "failed_gates": ["report_generation"], "error": str(exc)}
+        Path(output).parent.mkdir(parents=True, exist_ok=True)
+        Path(output).write_text(json.dumps(failure, indent=2), encoding="utf-8")
+        print(json.dumps(failure))
         raise SystemExit(2)
