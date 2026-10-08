@@ -13,9 +13,12 @@ from tests.review_evaluation_benchmark import import_reviews, review_progress
 
 def import_uncertain(packet_path, output_path, manifest_path=None, rows=None):
     selected, expected = select_uncertain(rows)
+    if manifest_path is None:
+        raise ValueError("Review manifest is required for provenance verification")
     if manifest_path is not None:
         manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
-        if (manifest.get("case_ids") != expected["case_ids"]
+        if (manifest.get("case_content_sha256") != expected["case_content_sha256"]
+                or manifest.get("case_ids") != expected["case_ids"]
                 or manifest.get("source") != expected["source"]
                 or manifest.get("independent_holdout") is not False
                 or manifest.get("release_gate") != "blocked"):
@@ -34,8 +37,8 @@ def import_uncertain(packet_path, output_path, manifest_path=None, rows=None):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) not in (3, 4):
+    if len(sys.argv) != 4:
         raise SystemExit("Usage: python -m tests.import_uncertain_review_v88 COMPLETED.csv OUTPUT.jsonl [MANIFEST.json]")
     print(json.dumps(import_uncertain(sys.argv[1], sys.argv[2],
-                                       sys.argv[3] if len(sys.argv) == 4 else None),
+                                       sys.argv[3]),
                      ensure_ascii=False, indent=2))
