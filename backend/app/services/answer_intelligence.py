@@ -106,6 +106,13 @@ def _classify_aligned_errors(answer: str, model: str, target_feature: str = "") 
                 "dein", "deine", "deinen", "deinem", "deiner", "deines"}:
             kind = "possessive"
             explanation = "Check the possessive determiner ending."
+        elif target_feature == "case" and got in {
+                "dieser", "diese", "dieses", "diesen", "diesem",
+                "jener", "jene", "jenes", "jenen", "jenem"} and want in {
+                "dieser", "diese", "dieses", "diesen", "diesem",
+                "jener", "jene", "jenes", "jenen", "jenem"} and got[:3] == want[:3]:
+            kind = "case"
+            explanation = "Check the case and gender ending of the demonstrative determiner."
         elif target_feature == "case" and got in article_forms and want in article_forms:
             kind = "case"
             explanation = "Check the required case ending."
