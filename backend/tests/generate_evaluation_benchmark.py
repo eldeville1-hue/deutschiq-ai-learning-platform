@@ -97,7 +97,9 @@ def build_cases():
                     "objective": objective,
                     "exercise": {"type": family, "question": objective, "answer": model},
                     "learner_answer": response,
-                    "provisional_expected": ("correct" if variant in {"exact", "punctuation", "lowercase"}\n                                             else "uncertain" if family in {"translation", "sentence", "writing", "free_text"}\n                                             else "incorrect"),
+                    "provisional_expected": ("correct" if variant in {"exact", "punctuation", "lowercase"}
+                                             else "uncertain" if family in {"translation", "sentence", "writing", "free_text"}
+                                             else "incorrect"),
                     "human_review": {"status": "pending", "reviewer": None, "decision": None, "notes": ""},
                     "source": "synthetic_level_specific",
                     "task_family": family,
