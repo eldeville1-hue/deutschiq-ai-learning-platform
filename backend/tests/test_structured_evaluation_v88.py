@@ -61,6 +61,34 @@ class StructuredEvaluationV88Tests(unittest.TestCase):
         self.assertEqual(result["evaluation_status"], "verified")
         self.assertTrue(result["correct"])
 
+    def test_auxiliary_candidate_is_identified_without_forcing_rejection(self):
+        result = evaluate_structured_answer("Wir haben nach Hamburg gefahren.", {
+            "type": "translation", "answer": "Wir sind nach Hamburg gefahren.",
+        })
+        self.assertEqual(result["evaluation_status"], "uncertain")
+        self.assertIn("auxiliary", [item["type"] for item in result["errors"]])
+
+    def test_preposition_candidate_is_identified_without_forcing_rejection(self):
+        result = evaluate_structured_answer("Ich interessiere mich an Musik.", {
+            "type": "translation", "answer": "Ich interessiere mich für Musik.",
+        })
+        self.assertEqual(result["evaluation_status"], "uncertain")
+        self.assertIn("preposition", [item["type"] for item in result["errors"]])
+
+    def test_unlisted_paraphrase_has_no_speculative_vocabulary_error(self):
+        result = evaluate_structured_answer("Sie lebt in Berlin.", {
+            "type": "sentence", "answer": "Sie wohnt in Berlin.",
+        })
+        self.assertEqual(result["evaluation_status"], "uncertain")
+        self.assertEqual(result["errors"], [])
+
+    def test_closed_reorder_detects_word_order_difference(self):
+        result = evaluate_structured_answer("Heute lernen wir Deutsch.", {
+            "type": "reorder", "answer": "Wir lernen heute Deutsch.",
+        })
+        self.assertEqual(result["evaluation_status"], "verified")
+        self.assertEqual(result["errors"][0]["type"], "word_order")
+
     def test_missing_model_requires_review(self):
         result = evaluate_structured_answer("Hallo", {"type": "translation"})
         self.assertEqual(result["evaluation_status"], "needs_review")
