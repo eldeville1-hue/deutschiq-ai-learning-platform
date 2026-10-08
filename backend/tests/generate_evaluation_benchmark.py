@@ -80,11 +80,12 @@ def build_cases():
                     "id": f"{level}-{index:02d}-{variant}",
                     "cefr": level,
                     "objective": objective,
-                    "exercise": {"type": "translation", "question": objective, "answer": model},
+                    "exercise": {"type": "reorder", "question": objective, "answer": model},
                     "learner_answer": response,
-                    "provisional_expected": "correct" if variant in {"exact", "punctuation", "lowercase"} else "unverified",
+                    "provisional_expected": "correct" if variant in {"exact", "punctuation", "lowercase"} else "incorrect",
                     "human_review": {"status": "pending", "reviewer": None, "decision": None, "notes": ""},
                     "source": "synthetic_level_specific",
+                    "task_family": "exact_sentence_reproduction",
                     "split": "development" if index < 8 else "holdout",
                 })
     return rows
