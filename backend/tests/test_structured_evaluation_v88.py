@@ -138,6 +138,22 @@ class StructuredEvaluationV88Tests(unittest.TestCase):
         })
         self.assertEqual(result["errors"][0]["type"], "participle")
 
+    def test_negating_determiner_case_is_not_polarity_error(self):
+        result = evaluate_structured_answer("Ich habe keine Auto.", {
+            "type": "error_repair", "answer": "Ich habe kein Auto.",
+            "target_feature": "case",
+        })
+        self.assertEqual(result["evaluation_status"], "verified")
+        self.assertFalse(result["correct"])
+        self.assertEqual(result["errors"][0]["type"], "case")
+
+    def test_untagged_negating_determiner_remains_conservative(self):
+        result = evaluate_structured_answer("Ich habe keine Auto.", {
+            "type": "translation", "answer": "Ich habe kein Auto.",
+        })
+        self.assertEqual(result["evaluation_status"], "uncertain")
+        self.assertFalse(result["correct"])
+
     def test_unannotated_case_remains_conservative(self):
         result = evaluate_structured_answer("Ich warte auf dem Bus.", {
             "type": "choice", "answer": "Ich warte auf den Bus.",
