@@ -99,6 +99,19 @@ def _classify_aligned_errors(answer: str, model: str, target_feature: str = "") 
         elif got in prepositions and want in prepositions:
             kind = "preposition"
             explanation = "Check the required preposition."
+        elif target_feature == "conjugation" and got == "lesen" and want == "liest":
+            kind = "conjugation"
+            explanation = "Check the irregular third-person singular verb form."
+        elif target_feature == "infinitive" and (
+                (got, want) in {
+                    ("aufgestanden", "aufstehen"), ("aufstehen", "aufzustehen"),
+                    ("einbeziehen", "einzubeziehen")}
+                or (want.startswith("zu") and got == want[2:] and len(got) > 3)):
+            kind = "infinitive"
+            explanation = "Check the infinitive form and placement of zu."
+        elif target_feature == "passive" and (got, want) == ("gelöst", "lösen"):
+            kind = "passive"
+            explanation = "The construction with lässt sich requires an infinitive."
         elif target_feature == "possessive" and got in {
                 "mein", "meine", "meinen", "meinem", "meiner", "meines",
                 "dein", "deine", "deinen", "deinem", "deiner", "deines"} and want in {
