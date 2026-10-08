@@ -127,6 +127,29 @@ class StructuredEvaluationV88Tests(unittest.TestCase):
         self.assertEqual(result["evaluation_status"], "verified")
         self.assertEqual(result["errors"][0]["type"], "infinitive")
 
+    def test_uncertain_answer_exposes_review_reason_without_awarding_credit(self):
+        result = evaluate_structured_answer("Sie lebt in Berlin.", {
+            "type": "sentence", "answer": "Sie wohnt in Berlin.",
+        })
+        self.assertEqual(result["evaluation_status"], "uncertain")
+        self.assertEqual(result["review_reason"], "open_answer_not_proven_equivalent_or_incorrect")
+        self.assertEqual(result["candidate_error_types"], [])
+        self.assertEqual(result["score"], 0)
+        self.assertFalse(result["correct"])
+
+    def test_candidate_errors_remain_tentative(self):
+        result = evaluate_structured_answer("Ich habe gestern nach Hause gegangen.", {
+            "type": "translation", "answer": "Ich bin gestern nach Hause gegangen.",
+        })
+        self.assertEqual(result["evaluation_status"], "uncertain")
+        self.assertIn("auxiliary", result["candidate_error_types"])
+        self.assertFalse(result["correct"])
+
+    def test_missing_reference_has_review_reason(self):
+        result = evaluate_structured_answer("Hallo", {"type": "free_text"})
+        self.assertEqual(result["evaluation_status"], "needs_review")
+        self.assertEqual(result["review_reason"], "missing_reference_answer")
+
     def test_missing_model_requires_review(self):
         result = evaluate_structured_answer("Hallo", {"type": "translation"})
         self.assertEqual(result["evaluation_status"], "needs_review")
