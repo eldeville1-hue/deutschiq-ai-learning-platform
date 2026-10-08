@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from tests.generate_evaluation_benchmark import build_cases
 from tests.linguistic_challenge_suite import build_challenges
-from tests.generate_curated_evaluation_v88 import build_cases as build_curated_cases
+from tests.generate_curated_evaluation_v88 import build_diverse_cases as build_curated_cases
 
 ROOT = Path(__file__).resolve().parent / "fixtures"
 FIELDS = ("id", "cefr", "objective", "exercise_type", "model_answer",
