@@ -32,6 +32,13 @@ def triage(rows, evaluator=evaluate_structured_answer):
             continue
         if decision not in {"correct", "incorrect", "uncertain"} or not review.get("reviewer"):
             raise ValueError("Invalid pending reviewer decision: " + identifier)
+        error_types = review.get("error_types") or []
+        if not isinstance(error_types, list) or any(not isinstance(value, str) or not value.strip() for value in error_types):
+            raise ValueError("Invalid reviewer error types: " + identifier)
+        if decision == "incorrect" and not error_types:
+            raise ValueError("Incorrect review lacks diagnosis: " + identifier)
+        if decision == "correct" and error_types:
+            raise ValueError("Correct review includes error diagnoses: " + identifier)
         reviewed[level] += 1
         result = evaluator(row["learner_answer"], row["exercise"])
         status = result.get("evaluation_status")
