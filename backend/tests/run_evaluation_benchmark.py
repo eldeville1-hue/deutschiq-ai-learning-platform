@@ -35,7 +35,7 @@ def run(rows, evaluator=evaluate_structured_answer):
     groups = defaultdict(list)
     pending = 0
     synthetic = Counter()
-    duplicates = defaultdict(set)
+    duplicates = defaultdict(set)\n    near_duplicates = set()\n    split_sentences = defaultdict(list)
     leakage = set()
     split_examples = defaultdict(list)
     suspected = []
@@ -45,7 +45,7 @@ def run(rows, evaluator=evaluate_structured_answer):
         split = _split_key(row)
         if duplicates[key] and split not in duplicates[key]:
             leakage.add(key)
-        duplicates[key].add(split)
+        duplicates[key].add(split)\n        split_sentences[split].append((_fingerprint(row["exercise"].get("answer", "")), row["id"]))
         signature = _fingerprint(row["exercise"].get("answer", ""))
         for other_split, examples in split_examples.items():
             if other_split == split:
@@ -62,7 +62,7 @@ def run(rows, evaluator=evaluate_structured_answer):
                           else "correct" if prediction["correct"] else "incorrect")
                 synthetic[(expected, actual)] += 1
         review = row.get("human_review", {})
-        if review.get("status") != "approved" or review.get("decision") not in {"correct", "incorrect", "uncertain"} or not review.get("reviewer"):
+        if (review.get("status") != "approved" or review.get("decision") not in {"correct", "incorrect", "uncertain"}\n                or not review.get("reviewer") or not review.get("reviewed_at")\n                or not review.get("protocol_version") or review.get("blind_to_prediction") is not True\n                or review.get("independent_of_generation") is not True):
             pending += 1
             continue
         start = time.perf_counter()
@@ -73,8 +73,16 @@ def run(rows, evaluator=evaluate_structured_answer):
         expected_errors = set(review.get("error_types") or [])
         predicted_errors = {x["type"] for x in result.get("errors", [])} if predicted == "incorrect" else set()
         groups[row["cefr"]].append((review["decision"], predicted, expected_errors, predicted_errors, elapsed))
+    from difflib import SequenceMatcher
+    split_names = sorted(split_sentences)
+    for i, left_split in enumerate(split_names):
+        for right_split in split_names[i + 1:]:
+            for left_text, left_id in split_sentences[left_split]:
+                for right_text, right_id in split_sentences[right_split]:
+                    if left_text and right_text and SequenceMatcher(None, left_text, right_text).ratio() >= 0.90:
+                        near_duplicates.add((left_id, right_id))
     report = {"total": len(rows), "reviewed": sum(map(len, groups.values())),
-              "pending": pending, "synthetic_provisional_agreement": _ratio(sum(n for (expected, actual), n in synthetic.items() if expected == actual), sum(synthetic.values())), "synthetic_confusion": {f"{a}->{b}": n for (a, b), n in sorted(synthetic.items())}, "cross_split_leakage": len(leakage), "suspected_near_duplicates": suspected[:100], "levels": {}, "release_gate": "blocked"}
+              "pending": pending, "synthetic_provisional_agreement": _ratio(sum(n for (expected, actual), n in synthetic.items() if expected == actual), sum(synthetic.values())), "synthetic_confusion": {f"{a}->{b}": n for (a, b), n in sorted(synthetic.items())}, "cross_split_leakage": len(leakage), "cross_split_near_duplicates": len(near_duplicates), "suspected_near_duplicates": suspected[:100], "levels": {}, "release_gate": "blocked"}
     failures = []
     if pending:
         failures.append("unreviewed_cases")
