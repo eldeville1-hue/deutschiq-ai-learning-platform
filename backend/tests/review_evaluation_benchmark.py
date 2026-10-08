@@ -17,7 +17,7 @@ from tests.linguistic_challenge_suite import build_challenges
 from tests.generate_curated_evaluation_v88 import build_diverse_cases as build_curated_cases
 
 ROOT = Path(__file__).resolve().parent / "fixtures"
-FIELDS = ("id", "cefr", "objective", "exercise_type", "model_answer",
+FIELDS = ("id", "cefr", "objective", "exercise_type", "question", "model_answer",
           "learner_answer", "decision", "error_types", "reviewer", "notes")
 DECISIONS = {"correct", "incorrect", "uncertain"}
 
@@ -33,6 +33,7 @@ def export_packet(path, rows=None):
                 "id": row["id"], "cefr": row["cefr"],
                 "objective": row["objective"],
                 "exercise_type": row["exercise"].get("type", ""),
+                "question": row["exercise"].get("question", ""),
                 "model_answer": row["exercise"].get("answer", ""),
                 "learner_answer": row["learner_answer"],
                 "decision": "", "error_types": "", "reviewer": "", "notes": "",
@@ -58,10 +59,11 @@ def import_reviews(packet, output, rows=None):
             # Prevent a modified review packet from silently changing the case.
             expected = (original["cefr"], original["objective"],
                         original["exercise"].get("type", ""),
+                        original["exercise"].get("question", ""),
                         original["exercise"].get("answer", ""),
                         original["learner_answer"])
             actual = tuple(record[field] for field in
-                           ("cefr", "objective", "exercise_type", "model_answer", "learner_answer"))
+                           ("cefr", "objective", "exercise_type", "question", "model_answer", "learner_answer"))
             if actual != expected:
                 raise ValueError("Benchmark content changed for " + identifier)
             decision = record["decision"].strip().lower()
