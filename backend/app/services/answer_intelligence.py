@@ -53,8 +53,16 @@ def _classify_aligned_errors(answer: str, model: str, target_feature: str = "") 
     actual = normalize_text(answer).split()
     expected = normalize_text(model).split()
     if len(actual) != len(expected):
-        if target_feature == "infinitive" and expected.count("zu") == actual.count("zu") + 1 and Counter(expected) - Counter(actual) == Counter({"zu": 1}) and not (Counter(actual) - Counter(expected)):
-            return [LinguisticError(type="infinitive", span=answer, correction=model, explanation="The infinitive construction requires zu.")]
+        # Only diagnose a missing infinitive marker when its placement is
+        # unambiguous; equal word bags alone would lose word-order evidence.
+        if target_feature == "infinitive" and len(expected) == len(actual) + 1:
+            missing_positions = [
+                i for i in range(len(expected))
+                if expected[i] == "zu" and expected[:i] + expected[i + 1:] == actual
+            ]
+            if len(missing_positions) == 1:
+                return [LinguisticError(type="infinitive", span=answer, correction=model,
+                                        explanation="The infinitive construction requires zu.")]
         return []
     article_forms = {"ein", "eine", "einen", "einem", "einer", "eines", "der", "die", "das", "den", "dem", "des"}
     negations = {"nicht", "kein", "keine", "keinen", "keinem", "keiner", "keines"}
@@ -94,6 +102,23 @@ def _classify_aligned_errors(answer: str, model: str, target_feature: str = "") 
         elif got in article_forms and want in article_forms:
             kind = target_feature if target_feature in {"case", "relative_pronoun"} else "article"
             explanation = "Check the article and its case or gender ending."
+        elif target_feature == "subjunctive" and got != want:
+            # A tagged correction is a targeted exercise, not a claim that
+            # these verb forms are interchangeable in open-ended writing.
+            kind = "subjunctive"
+            explanation = "Check the required Konjunktiv verb form."
+        elif target_feature == "passive" and got != want and (
+                got in auxiliaries or want in auxiliaries or
+                got in {"werden", "wird", "wurde", "wurden", "worden", "geworden"} or
+                want in {"werden", "wird", "wurde", "wurden", "worden", "geworden"}):
+            kind = "passive"
+            explanation = "Check the auxiliary or participle in the passive construction."
+        elif target_feature == "adjective" and got != want and (
+                any(got.endswith(x) and want.endswith(y) and got[:-len(x)] == want[:-len(y)]
+                    for x in ("e", "en", "em", "er", "es")
+                    for y in ("e", "en", "em", "er", "es") if x != y)):
+            kind = "adjective"
+            explanation = "Check the adjective ending required by case, gender and article."
         elif target_feature == "participle" and got.endswith("en") and want.endswith("t"):
             kind = "participle"
             explanation = "Check the past participle form."
