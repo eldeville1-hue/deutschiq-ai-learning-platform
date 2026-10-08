@@ -28,8 +28,11 @@ def triage(rows, evaluator=evaluate_structured_answer):
             raise ValueError("Invalid CEFR level: " + str(level))
         review = row.get("human_review") or {}
         decision = review.get("decision")
-        if review.get("status") != "pending_independence_verification":
+        review_status = review.get("status")
+        if review_status in (None, "pending", "missing"):
             continue
+        if review_status != "pending_independence_verification":
+            raise ValueError("Unexpected reviewer approval/status without verified provenance: " + identifier)
         if decision not in {"correct", "incorrect", "uncertain"} or not review.get("reviewer"):
             raise ValueError("Invalid pending reviewer decision: " + identifier)
         error_types = review.get("error_types") or []
