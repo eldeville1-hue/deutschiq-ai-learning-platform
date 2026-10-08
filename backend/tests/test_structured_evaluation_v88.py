@@ -154,6 +154,28 @@ class StructuredEvaluationV88Tests(unittest.TestCase):
         self.assertEqual(result["evaluation_status"], "uncertain")
         self.assertFalse(result["correct"])
 
+    def test_tagged_case_pronoun_feedback(self):
+        result = evaluate_structured_answer("Kannst du mich helfen?", {
+            "type": "error_repair", "answer": "Kannst du mir helfen?",
+            "target_feature": "case",
+        })
+        self.assertEqual(result["evaluation_status"], "verified")
+        self.assertEqual(result["errors"][0]["type"], "case")
+
+    def test_tagged_preposition_feedback(self):
+        result = evaluate_structured_answer("Ich wohne für zwei Jahre hier.", {
+            "type": "error_repair", "answer": "Ich wohne seit zwei Jahre hier.",
+            "target_feature": "preposition",
+        })
+        self.assertEqual(result["errors"][0]["type"], "preposition")
+
+    def test_tagged_auxiliary_conjugation_feedback(self):
+        result = evaluate_structured_answer("Sie haben einen Hund.", {
+            "type": "error_repair", "answer": "Sie hat einen Hund.",
+            "target_feature": "conjugation",
+        })
+        self.assertEqual(result["errors"][0]["type"], "conjugation")
+
     def test_tagged_second_person_conjugation(self):
         result = evaluate_structured_answer("Du lern Deutsch.", {
             "type": "error_repair", "answer": "Du lernst Deutsch.",
