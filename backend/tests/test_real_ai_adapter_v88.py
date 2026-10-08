@@ -23,7 +23,7 @@ class RealAiAdapterTests(unittest.TestCase):
         report = build_report(
             benchmark={"deterministic_latency_gate": True, "failure_rate": 0},
             linguistic={"release_checks": {}, "failed_gates": []},
-            ai_benchmark={"measured": True, "p95_ms": 800, "failure_rate": 0},
+            ai_benchmark={"measured": True, "p95_ms": 800, "failure_rate": 0, "sample_count": 100, "representative_release_sample": True, "real_ai_adapter": True},
         )
         self.assertTrue(report["checks"]["ai_assisted_performance"])
         self.assertEqual(report["release_gate"], "blocked")
