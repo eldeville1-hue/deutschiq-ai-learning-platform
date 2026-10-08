@@ -20,6 +20,22 @@ class StructuredEvaluationV88Tests(unittest.TestCase):
         self.assertIsNone(result["grammar_correct"])
         self.assertEqual(result["evaluation_status"], "uncertain")
 
+    def test_multiple_errors_are_recorded_without_false_positive(self):
+        result = evaluate_structured_answer("Ich kaufen ein Kaffee", {
+            "type": "translation", "answer": "Ich kaufe einen Kaffee",
+        })
+        self.assertEqual(result["evaluation_status"], "uncertain")
+        self.assertFalse(result["correct"])
+        self.assertEqual([error["type"] for error in result["errors"]], ["conjugation", "article"])
+
+    def test_negation_does_not_satisfy_translation(self):
+        result = evaluate_structured_answer("Ich kaufe keinen Kaffee", {
+            "type": "translation", "answer": "Ich kaufe einen Kaffee",
+        })
+        self.assertFalse(result["correct"])
+        self.assertEqual(result["evaluation_status"], "uncertain")
+        self.assertEqual(result["errors"][0]["type"], "negation")
+
     def test_missing_model_requires_review(self):
         result = evaluate_structured_answer("Hallo", {"type": "translation"})
         self.assertEqual(result["evaluation_status"], "needs_review")
