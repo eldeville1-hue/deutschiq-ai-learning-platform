@@ -10,6 +10,17 @@ class EvaluationBenchmarkTests(unittest.TestCase):
         for level in ("A1", "A2", "B1", "B2"):
             self.assertEqual(sum(r["cefr"] == level for r in rows), 120)
 
+    def test_task_family_diversity_and_unverified_open_answers(self):
+        rows = build_cases()
+        for level in ("A1", "A2", "B1", "B2"):
+            families = {r["task_family"] for r in rows if r["cefr"] == level}
+            self.assertGreaterEqual(len(families), 6)
+            self.assertTrue(any(
+                r["provisional_expected"] == "uncertain"
+                for r in rows if r["cefr"] == level
+            ))
+        self.assertTrue(all(r["human_review"]["status"] == "pending" for r in rows))
+
     def test_synthetic_labels_do_not_count_as_review(self):
         report = run(build_cases())
         self.assertEqual(report["reviewed"], 0)
