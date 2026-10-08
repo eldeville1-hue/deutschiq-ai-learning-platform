@@ -82,7 +82,23 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
     legacy = _legacy_evaluate_structured_answer(answer, exercise)
     accepted = [str(x) for x in (exercise.get("accepted_answers") or [exercise.get("answer", "")]) if str(x).strip()]
     exact = bool(normalize_text(answer)) and any(normalize_text(answer) == normalize_text(x) for x in accepted)
+    # Authored alternatives are the only safe deterministic equivalences.
+    # Do not infer semantic equivalence from string similarity.
     closed_types = {"reorder", "error_repair", "analogy_choice", "context_choice", "listening_choice", "choice"}
+    accepted_normalized = {normalize_text(item) for item in accepted}
+    exact = bool(normalize_text(answer)) and normalize_text(answer) in accepted_normalized
+    # A swapped article/negation can look like a minor typo in a long sentence.
+    # Require every spelling tolerance to be non-semantic.
+    if legacy["correct"] and not exact:
+        model_words = normalize_text(legacy["model"]).split()
+        answer_words = normalize_text(answer).split()
+        semantic_tokens = {"nicht", "kein", "keine", "keinen", "keinem", "keiner", "keines",
+                           "ein", "eine", "einen", "einem", "einer", "eines",
+                           "der", "die", "das", "den", "dem", "des"}
+        changes = [(a, b) for a, b in zip(answer_words, model_words) if a != b]
+        if any(a in semantic_tokens or b in semantic_tokens for a, b in changes):
+            legacy["correct"] = False
+            legacy["error_type"] = "answer_mismatch"
     open_ended = exercise.get("type") in {"translation", "translate", "free_text", "sentence", "writing"}
     status = ("needs_review" if not accepted else "verified" if legacy["correct"] or not open_ended else "uncertain")
     errors = []
