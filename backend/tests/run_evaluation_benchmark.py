@@ -34,6 +34,7 @@ def _fingerprint(text):
 def run(rows, evaluator=evaluate_structured_answer):
     groups = defaultdict(list)
     pending = 0
+    synthetic = Counter()
     duplicates = defaultdict(set)
     leakage = set()
     split_examples = defaultdict(list)
@@ -53,6 +54,13 @@ def run(rows, evaluator=evaluate_structured_answer):
                 if signature and SequenceMatcher(None, signature, prior_signature).ratio() >= 0.90:
                     suspected.append((prior_id, row.get("id", "")))
         split_examples[split].append((row.get("id", ""), signature))
+        if row.get("source", "").startswith("synthetic"):
+            expected = row.get("provisional_expected")
+            if expected in {"correct", "incorrect"}:
+                prediction = evaluator(row["learner_answer"], row["exercise"])
+                actual = ("uncertain" if prediction["evaluation_status"] != "verified"
+                          else "correct" if prediction["correct"] else "incorrect")
+                synthetic[(expected, actual)] += 1
         review = row.get("human_review", {})
         if review.get("status") != "approved" or review.get("decision") not in {"correct", "incorrect", "uncertain"} or not review.get("reviewer"):
             pending += 1
@@ -66,7 +74,7 @@ def run(rows, evaluator=evaluate_structured_answer):
         predicted_errors = {x["type"] for x in result.get("errors", [])} if predicted == "incorrect" else set()
         groups[row["cefr"]].append((review["decision"], predicted, expected_errors, predicted_errors, elapsed))
     report = {"total": len(rows), "reviewed": sum(map(len, groups.values())),
-              "pending": pending, "cross_split_leakage": len(leakage), "suspected_near_duplicates": suspected[:100], "levels": {}, "release_gate": "blocked"}
+              "pending": pending, "synthetic_provisional_agreement": _ratio(sum(n for (expected, actual), n in synthetic.items() if expected == actual), sum(synthetic.values())), "synthetic_confusion": {f"{a}->{b}": n for (a, b), n in sorted(synthetic.items())}, "cross_split_leakage": len(leakage), "suspected_near_duplicates": suspected[:100], "levels": {}, "release_gate": "blocked"}
     failures = []
     if pending:
         failures.append("unreviewed_cases")
@@ -110,6 +118,8 @@ def run(rows, evaluator=evaluate_structured_answer):
         if latency is None or latency >= MAX_DETERMINISTIC_P95_MS:
             failures.append(f"{level}:deterministic_latency")
     report["failed_gates"] = failures
+    report["validation_type"] = "synthetic_provisional_not_independently_validated"
+    report["independent_accuracy_demonstrated"] = False
     # Passing metrics is not a substitute for independent human sign-off,
     # frontend/mobile E2E, AI-assisted latency or a production smoke test.
     report["release_gate"] = "blocked" if failures else "requires_manual_signoff"
