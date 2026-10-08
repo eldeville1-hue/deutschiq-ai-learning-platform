@@ -20,8 +20,14 @@ def build_report(holdout_path=None, benchmark=None, linguistic=None, ci_evidence
     benchmark = measure() if benchmark is None else benchmark
     linguistic = (evaluate_file(holdout_path) if holdout_path else validation_report([])) if linguistic is None else linguistic
     from tests.collect_ci_evidence_v88 import REQUIRED_JOBS
-    job_verified = isinstance(job_evidence, dict) and job_evidence.get("verified") is True and job_evidence.get("head_sha") == expected_sha and bool(expected_sha)
-    jobs = job_evidence.get("jobs", {}) if job_verified else {}
+    jobs = job_evidence.get("jobs", {}) if isinstance(job_evidence, dict) else {}
+    job_verified = (isinstance(job_evidence, dict)
+                    and job_evidence.get("verified") is True
+                    and job_evidence.get("head_sha") == expected_sha
+                    and isinstance(expected_sha, str) and len(expected_sha) == 40
+                    and all(jobs.get(name, {}).get("status") == "completed"
+                            and jobs.get(name, {}).get("conclusion") == "success"
+                            for name in REQUIRED_JOBS))
     ai_ok = isinstance(ai_benchmark, dict) and ai_benchmark.get("measured") is True and ai_benchmark.get("p95_ms") is not None and ai_benchmark["p95_ms"] < 2500 and ai_benchmark.get("failure_rate") is not None and ai_benchmark["failure_rate"] < 0.01
     checks = {
         "deterministic_performance": benchmark.get("deterministic_latency_gate") is True
