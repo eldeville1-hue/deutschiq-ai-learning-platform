@@ -1,5 +1,5 @@
 import unittest
-from tests.release_readiness_v88 import build_report
+from tests.release_readiness_v88 import build_report, ci_evidence_check
 
 
 class ReleaseReadinessTests(unittest.TestCase):
@@ -13,6 +13,15 @@ class ReleaseReadinessTests(unittest.TestCase):
         self.assertFalse(report["checks"]["independent_linguistic_review"])
         self.assertFalse(report["checks"]["xp_safety_ci_signoff"])
         self.assertIn("external_human_signoff", report["failed_gates"])
+
+    def test_ci_evidence_must_match_sha_and_complete_successfully(self):
+        expected = "a" * 40
+        evidence = {"head_sha": expected, "status": "completed",
+                    "conclusion": "success", "run_id": 123}
+        self.assertTrue(ci_evidence_check(evidence, expected))
+        self.assertFalse(ci_evidence_check(evidence, "b" * 40))
+        self.assertFalse(ci_evidence_check(dict(evidence, conclusion="failure"), expected))
+        self.assertFalse(ci_evidence_check(None, expected))
 
     def test_failed_benchmark_is_not_approved(self):
         report = build_report(
