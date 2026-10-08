@@ -52,6 +52,12 @@ CASES = [
  ("B2","sentence","Die Digitalisierung stellt Unternehmen vor neue Herausforderungen.","Die Digitalisierung stellt Unternehmen keine neuen Herausforderungen.","incorrect","negation"),
 ]
 
+KNOWN_ALTERNATIVES = {
+    ("A2", "Ich bin gestern nach Hause gegangen."): ["Gestern bin ich nach Hause gegangen."],
+    ("A2", "Ich muss morgen arbeiten."): ["Morgen muss ich arbeiten."],
+    ("B1", "Der Brief wurde gestern geschrieben."): ["Gestern wurde der Brief geschrieben."],
+}
+
 def build_challenges():
     result = []
     for i, (level, family, target, answer, verdict, error) in enumerate(CASES):
@@ -59,7 +65,7 @@ def build_challenges():
             "id": f"challenge-{level}-{i:03d}", "cefr": level,
             "objective": f"Express the target meaning in German: {target}",
             "exercise": {"type": family, "question": f"Express the target meaning in German: {target}",
-                         "answer": target},
+                         "answer": target,\n                         "accepted_answers": [target, *KNOWN_ALTERNATIVES.get((level, target), [])]},
             "learner_answer": answer, "task_family": family,
             "provisional_expected": verdict, "provisional_error_type": error,
             "source": "hand_authored_unreviewed",
