@@ -33,6 +33,7 @@ class UncertainReviewPacketTests(unittest.TestCase):
                 records = list(csv.DictReader(handle))
             self.assertEqual(len(records), 1)
             self.assertEqual(records[0]["decision"], "")
+            self.assertIn("question", records[0])
             self.assertNotIn("evaluation_status", records[0])
             self.assertNotIn("provisional_expected", records[0])
             self.assertEqual(json.loads(manifest_path.read_text())["case_ids"], ["b"])
