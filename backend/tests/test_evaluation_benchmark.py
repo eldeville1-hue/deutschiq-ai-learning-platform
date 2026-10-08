@@ -2,14 +2,13 @@ import unittest
 from tests.generate_evaluation_benchmark import build_cases
 from tests.run_evaluation_benchmark import run
 
-
 class EvaluationBenchmarkTests(unittest.TestCase):
     def test_fixture_size_and_level_balance(self):
         rows = build_cases()
         self.assertEqual(len(rows), 480)
-        self.assertEqual(len({row["id"] for row in rows}), 480)
+        self.assertEqual(len({r["id"] for r in rows}), 480)
         for level in ("A1", "A2", "B1", "B2"):
-            self.assertEqual(sum(row["cefr"] == level for row in rows), 120)
+            self.assertEqual(sum(r["cefr"] == level for r in rows), 120)
 
     def test_synthetic_labels_do_not_count_as_review(self):
         report = run(build_cases())
@@ -24,8 +23,29 @@ class EvaluationBenchmarkTests(unittest.TestCase):
         report = run(rows)
         self.assertEqual(report["reviewed"], 1)
         self.assertEqual(report["pending"], 479)
+
+    def test_deferral_cannot_pass_accuracy_or_coverage(self):
+        rows = build_cases()
+        for row in rows:
+            row["human_review"] = {"status": "approved", "reviewer": "independent", "decision": "correct", "error_types": []}
+        def defer(answer, exercise):
+            return {"evaluation_status": "uncertain", "correct": False, "errors": []}
+        report = run(rows, evaluator=defer)
+        self.assertEqual(report["levels"]["A1"]["coverage"], 0)
+        self.assertIn("A1:coverage", report["failed_gates"])
         self.assertEqual(report["release_gate"], "blocked")
 
+    def test_perfect_decisions_do_not_hide_missing_diagnoses(self):
+        rows = build_cases()
+        for row in rows:
+            row["human_review"] = {"status": "approved", "reviewer": "independent", "decision": "incorrect", "error_types": ["article"]}
+        def omit_errors(answer, exercise):
+            return {"evaluation_status": "verified", "correct": False, "errors": []}
+        report = run(rows, evaluator=omit_errors)
+        self.assertEqual(report["levels"]["A1"]["accuracy"], 1.0)
+        self.assertEqual(report["levels"]["A1"]["coverage"], 1.0)
+        self.assertIn("A1:diagnosis_recall", report["failed_gates"])
+        self.assertEqual(report["release_gate"], "blocked")
 
 if __name__ == "__main__":
     unittest.main()
