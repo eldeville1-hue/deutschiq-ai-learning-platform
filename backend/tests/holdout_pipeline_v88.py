@@ -6,6 +6,7 @@ Run from backend/: python -m tests.holdout_pipeline_v88 validate HOLDOUT.jsonl
 import json
 import sys
 from pathlib import Path
+from difflib import SequenceMatcher
 
 from tests.generate_curated_evaluation_v88 import build_diverse_cases
 from tests.run_evaluation_benchmark import validation_report, _fingerprint
@@ -36,6 +37,8 @@ def check_holdout(holdout, development=None):
     seen_content = {(_fingerprint(r["exercise"].get("answer", "")),
                      _fingerprint(r["objective"]), _fingerprint(r["learner_answer"]))
                     for r in development}
+    development_answers = [(_fingerprint(r["exercise"].get("answer", "")), r["id"]) for r in development]
+    holdout_answers = []
     for index, row in enumerate(holdout):
         identifier = row.get("id", f"row-{index}")
         if not all(k in row for k in REQUIRED):
@@ -56,6 +59,12 @@ def check_holdout(holdout, development=None):
         if key in seen_content:
             errors.append(f"{identifier}:duplicate_content")
         seen_content.add(key)
+        answer = key[0]
+        for other_answer, other_id in development_answers + holdout_answers:
+            if answer and other_answer and answer != other_answer and (
+                    SequenceMatcher(None, answer, other_answer).ratio() >= 0.90):
+                errors.append(f"{identifier}:near_duplicate_answer:{other_id}")
+        holdout_answers.append((answer, identifier))
         source = str(row.get("source", ""))
         if not source or source.startswith(("synthetic", "curated_author_written")):
             errors.append(f"{identifier}:unverified_source")
