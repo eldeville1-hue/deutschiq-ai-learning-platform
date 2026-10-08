@@ -1,8 +1,31 @@
 import unittest
-from tests.audit_curated_evaluation_v88 import audit, triage, compare_triage
+from tests.audit_curated_evaluation_v88 import audit, triage, compare_triage, safety_gate
 from tests.generate_curated_evaluation_v88 import build_diverse_cases
 
 class CuratedAuditTests(unittest.TestCase):
+    def test_safety_gate_on_curated_development_cases(self):
+        report = safety_gate()
+        self.assertEqual(report["checked"], 480)
+        self.assertTrue(report["passed"])
+        self.assertEqual(report["violations"], [])
+        self.assertFalse(report["independently_validated"])
+
+    def test_safety_gate_rejects_uncertain_correct(self):
+        rows = build_diverse_cases()[:1]
+        def bad_evaluator(answer, exercise):
+            return {"evaluation_status": "uncertain", "correct": True}
+        report = safety_gate(rows, evaluator=bad_evaluator)
+        self.assertFalse(report["passed"])
+        self.assertEqual(report["violations"][0]["issue"], "uncertain_marked_correct")
+
+    def test_safety_gate_rejects_provisional_false_accept(self):
+        rows = [r for r in build_diverse_cases() if r["provisional_expected"] == "incorrect"][:1]
+        def bad_evaluator(answer, exercise):
+            return {"evaluation_status": "verified", "correct": True}
+        report = safety_gate(rows, evaluator=bad_evaluator)
+        self.assertFalse(report["passed"])
+        self.assertEqual(report["violations"][0]["issue"], "provisional_negative_accepted")
+
     def test_curated_dataset_is_structurally_consistent(self):
         report = audit()
         self.assertEqual(report["total"], 480)
