@@ -118,6 +118,15 @@ class StructuredEvaluationV88Tests(unittest.TestCase):
         })
         self.assertEqual(result["errors"][0]["type"], "article")
 
+    def test_tagged_missing_zu_is_infinitive_error(self):
+        result = evaluate_structured_answer("Die Massnahme trägt dazu bei, Energie sparen.", {
+            "type": "error_repair",
+            "answer": "Die Massnahme trägt dazu bei, Energie zu sparen.",
+            "target_feature": "infinitive",
+        })
+        self.assertEqual(result["evaluation_status"], "verified")
+        self.assertEqual(result["errors"][0]["type"], "infinitive")
+
     def test_missing_model_requires_review(self):
         result = evaluate_structured_answer("Hallo", {"type": "translation"})
         self.assertEqual(result["evaluation_status"], "needs_review")
