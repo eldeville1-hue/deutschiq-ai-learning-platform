@@ -154,6 +154,42 @@ class StructuredEvaluationV88Tests(unittest.TestCase):
         self.assertEqual(result["evaluation_status"], "uncertain")
         self.assertFalse(result["correct"])
 
+    def test_triaged_possessive_ending(self):
+        result = evaluate_structured_answer("Meine Bruder ist zwanzig Jahre alt.", {
+            "type": "error_repair", "answer": "Mein Bruder ist zwanzig Jahre alt.",
+            "target_feature": "possessive",
+        })
+        self.assertEqual(result["errors"][0]["type"], "possessive")
+
+    def test_triaged_comparative_particle(self):
+        result = evaluate_structured_answer("Er spricht besser Deutsch wie ich.", {
+            "type": "error_repair", "answer": "Er spricht besser Deutsch als ich.",
+            "target_feature": "comparison",
+        })
+        self.assertEqual(result["errors"][0]["type"], "comparison")
+
+    def test_triaged_comparative_ending(self):
+        result = evaluate_structured_answer("Je komplex das Thema ist, desto wichtiger wird klare Kommunikation.", {
+            "type": "error_repair",
+            "answer": "Je komplexer das Thema ist, desto wichtiger wird klare Kommunikation.",
+            "target_feature": "comparison",
+        })
+        self.assertEqual(result["errors"][0]["type"], "comparison")
+
+    def test_triaged_article_case(self):
+        result = evaluate_structured_answer("Ich möchte diesen Hemd anprobieren.", {
+            "type": "error_repair", "answer": "Ich möchte dieses Hemd anprobieren.",
+            "target_feature": "case",
+        })
+        self.assertEqual(result["errors"][0]["type"], "case")
+
+    def test_triaged_past_perfect_tense(self):
+        result = evaluate_structured_answer("Nachdem wir gegessen haben, gingen wir ins Kino.", {
+            "type": "error_repair", "answer": "Nachdem wir gegessen hatten, gingen wir ins Kino.",
+            "target_feature": "tense",
+        })
+        self.assertEqual(result["errors"][0]["type"], "tense")
+
     def test_tagged_subjunctive_feedback(self):
         result = evaluate_structured_answer("Ich wurde lieber bleiben.", {
             "type": "error_repair", "answer": "Ich würde lieber bleiben.",
