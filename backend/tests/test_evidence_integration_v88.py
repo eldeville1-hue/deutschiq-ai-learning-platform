@@ -34,7 +34,7 @@ class EvidenceIntegrationTests(unittest.TestCase):
             linguistic={"release_checks": {}, "failed_gates": []},
             expected_sha=sha,
             job_evidence={"verified": True, "head_sha": sha, "jobs": jobs},
-            ai_benchmark={"measured": True, "p95_ms": 1000, "failure_rate": 0},
+            ai_benchmark={"measured": True, "p95_ms": 1000, "failure_rate": 0, "sample_count": 100, "representative_release_sample": True, "real_ai_adapter": True},
         )
         self.assertTrue(report["checks"]["mobile_e2e_signoff"])
         self.assertTrue(report["checks"]["ai_assisted_performance"])
