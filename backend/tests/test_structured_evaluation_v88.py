@@ -154,6 +154,22 @@ class StructuredEvaluationV88Tests(unittest.TestCase):
         self.assertEqual(result["evaluation_status"], "uncertain")
         self.assertFalse(result["correct"])
 
+    def test_tagged_second_person_conjugation(self):
+        result = evaluate_structured_answer("Du lern Deutsch.", {
+            "type": "error_repair", "answer": "Du lernst Deutsch.",
+            "target_feature": "conjugation",
+        })
+        self.assertEqual(result["evaluation_status"], "verified")
+        self.assertEqual(result["errors"][0]["type"], "conjugation")
+
+    def test_open_conjugation_remains_uncertain(self):
+        result = evaluate_structured_answer("Du lern Deutsch.", {
+            "type": "translation", "answer": "Du lernst Deutsch.",
+            "target_feature": "conjugation",
+        })
+        self.assertEqual(result["evaluation_status"], "uncertain")
+        self.assertFalse(result["correct"])
+
     def test_unannotated_case_remains_conservative(self):
         result = evaluate_structured_answer("Ich warte auf dem Bus.", {
             "type": "choice", "answer": "Ich warte auf den Bus.",
