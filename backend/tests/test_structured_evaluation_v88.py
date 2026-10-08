@@ -154,6 +154,34 @@ class StructuredEvaluationV88Tests(unittest.TestCase):
         self.assertEqual(result["evaluation_status"], "uncertain")
         self.assertFalse(result["correct"])
 
+    def test_tagged_subjunctive_feedback(self):
+        result = evaluate_structured_answer("Ich wurde lieber bleiben.", {
+            "type": "error_repair", "answer": "Ich würde lieber bleiben.",
+            "target_feature": "subjunctive",
+        })
+        self.assertEqual(result["errors"][0]["type"], "subjunctive")
+
+    def test_tagged_passive_feedback(self):
+        result = evaluate_structured_answer("Die Wohnung werden renoviert.", {
+            "type": "error_repair", "answer": "Die Wohnung wird renoviert.",
+            "target_feature": "passive",
+        })
+        self.assertEqual(result["errors"][0]["type"], "passive")
+
+    def test_tagged_adjective_feedback(self):
+        result = evaluate_structured_answer("Ich kaufe einen rote Apfel.", {
+            "type": "error_repair", "answer": "Ich kaufe einen roten Apfel.",
+            "target_feature": "adjective",
+        })
+        self.assertEqual(result["errors"][0]["type"], "adjective")
+
+    def test_missing_zu_in_infinitive_feedback(self):
+        result = evaluate_structured_answer("Ich habe vergessen, die Tür schließen.", {
+            "type": "error_repair", "answer": "Ich habe vergessen, die Tür zu schließen.",
+            "target_feature": "infinitive",
+        })
+        self.assertEqual(result["errors"][0]["type"], "infinitive")
+
     def test_tagged_case_pronoun_feedback(self):
         result = evaluate_structured_answer("Kannst du mich helfen?", {
             "type": "error_repair", "answer": "Kannst du mir helfen?",
