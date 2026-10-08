@@ -90,7 +90,7 @@ def build_challenges():
             "exercise": {"type": family, "question": challenge_instruction(family, target),
                          "answer": target,
                          "accepted_answers": [target, *KNOWN_ALTERNATIVES.get((level, target), [])],
-                         "target_feature": GRAMMAR_TARGETS.get((level, target))},
+                         "target_feature": ("infinitive" if error == "infinitive" else GRAMMAR_TARGETS.get((level, target)))},
             "learner_answer": answer, "task_family": family,
             "provisional_expected": verdict, "provisional_error_type": error,
             "source": "hand_authored_unreviewed",
