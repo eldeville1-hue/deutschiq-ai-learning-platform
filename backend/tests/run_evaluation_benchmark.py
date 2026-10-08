@@ -35,6 +35,9 @@ def run(rows, evaluator=evaluate_structured_answer):
     groups = defaultdict(list)
     pending = 0
     synthetic = Counter()
+    source_counts = Counter()
+    family_counts = Counter()
+    review_status_counts = Counter()
     duplicates = defaultdict(set)
     near_duplicates = set()
     split_sentences = defaultdict(list)
@@ -42,6 +45,9 @@ def run(rows, evaluator=evaluate_structured_answer):
     split_examples = defaultdict(list)
     suspected = []
     for row in rows:
+        source_counts[row.get("source", "unknown")] += 1
+        family_counts[row.get("task_family", row.get("exercise", {}).get("type", "unknown"))] += 1
+        review_status_counts[row.get("human_review", {}).get("status", "missing")] += 1
         # No identical model-answer + prompt pair may cross evaluation splits.
         key = (_fingerprint(row["exercise"].get("answer", "")), _fingerprint(row.get("objective", "")))
         split = _split_key(row)
@@ -87,7 +93,10 @@ def run(rows, evaluator=evaluate_structured_answer):
                     if left_text and right_text and SequenceMatcher(None, left_text, right_text).ratio() >= 0.90:
                         near_duplicates.add((left_id, right_id))
     report = {"total": len(rows), "reviewed": sum(map(len, groups.values())),
-              "pending": pending, "synthetic_provisional_agreement": _ratio(sum(n for (expected, actual), n in synthetic.items() if expected == actual), sum(synthetic.values())), "synthetic_confusion": {f"{a}->{b}": n for (a, b), n in sorted(synthetic.items())}, "cross_split_leakage": len(leakage), "cross_split_near_duplicates": len(near_duplicates), "suspected_near_duplicates": suspected[:100], "levels": {}, "release_gate": "blocked"}
+              "pending": pending, "source_distribution": dict(sorted(source_counts.items())),
+              "task_family_distribution": dict(sorted(family_counts.items())),
+              "review_status_distribution": dict(sorted(review_status_counts.items())),
+              "synthetic_provisional_agreement": _ratio(sum(n for (expected, actual), n in synthetic.items() if expected == actual), sum(synthetic.values())), "synthetic_confusion": {f"{a}->{b}": n for (a, b), n in sorted(synthetic.items())}, "cross_split_leakage": len(leakage), "cross_split_near_duplicates": len(near_duplicates), "suspected_near_duplicates": suspected[:100], "levels": {}, "release_gate": "blocked"}
     failures = []
     if pending:
         failures.append("unreviewed_cases")
