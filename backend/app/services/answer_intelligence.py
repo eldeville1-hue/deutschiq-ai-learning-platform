@@ -94,8 +94,17 @@ def _classify_aligned_errors(answer: str, model: str, target_feature: str = "") 
         if got == want:
             continue
         if got in negations or want in negations:
-            kind = "negation"
-            explanation = "The negation changes the meaning or required form."
+            # Different kein-endings retain negative polarity. Without a
+            # targeted case/article objective, avoid claiming polarity changed.
+            kein_forms = {"kein", "keine", "keinen", "keinem", "keiner", "keines"}
+            if got in kein_forms and want in kein_forms:
+                kind = target_feature if target_feature in {"case", "article", "adjective"} else "answer_mismatch"
+                explanation = ("Check the grammatical ending of the negating determiner."
+                               if kind != "answer_mismatch" else
+                               "The negating determiner has a different form; polarity is unchanged.")
+            else:
+                kind = "negation"
+                explanation = "Check the negation and its effect on the intended meaning."
         elif got in auxiliaries and want in auxiliaries:
             kind = "conjugation" if target_feature == "conjugation" else "auxiliary"
             explanation = "Check the verb form for the required subject." if kind == "conjugation" else "Check the auxiliary verb."
