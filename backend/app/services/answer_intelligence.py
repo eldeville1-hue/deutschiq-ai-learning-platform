@@ -85,8 +85,12 @@ def _classify_aligned_errors(answer: str, model: str, target_feature: str = "") 
             return [LinguisticError(type=target_feature, span=got, correction=want,
                                     explanation="Check the grammatical ending of the negating determiner.")]
     if actual != expected and Counter(actual) == Counter(expected):
+        # A permutation is not automatically a grammatical mistake in German.
+        # Free word order can be valid, especially in translations and writing.
+        if target_feature != "word_order":
+            return []
         return [LinguisticError(type="word_order", span=answer, correction=model,
-                                explanation="Check the required word order.")]
+                                explanation="Check the word order required by this exercise.")]
     prepositions = {"auf", "an", "in", "mit", "für", "um", "über", "von", "zu", "nach", "bei", "aus", "durch", "gegen", "ohne"}
     auxiliaries = {"bin", "bist", "ist", "sind", "seid", "habe", "hast", "hat", "haben", "habt"}
     case_pronouns = {"ich", "mich", "mir", "du", "dich", "dir", "er", "ihn", "ihm", "sie", "ihr", "wir", "uns", "euch"}
