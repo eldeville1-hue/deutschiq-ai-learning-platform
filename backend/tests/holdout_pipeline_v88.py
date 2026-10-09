@@ -82,8 +82,17 @@ def check_holdout(holdout, development=None):
                 errors.append(f"{identifier}:review_independence_not_verified")
             if not isinstance(review.get("reviewer"), str) or not review["reviewer"].strip():
                 errors.append(f"{identifier}:invalid_reviewer_identity")
-            if not isinstance(review.get("reviewed_at"), str) or not review["reviewed_at"].strip():
+            timestamp = review.get("reviewed_at")
+            if not isinstance(timestamp, str) or not timestamp.strip():
                 errors.append(f"{identifier}:invalid_review_timestamp")
+            else:
+                from datetime import datetime, timezone
+                try:
+                    parsed = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+                    if parsed.tzinfo is None or parsed.utcoffset() is None or parsed > datetime.now(timezone.utc):
+                        errors.append(f"{identifier}:invalid_review_timestamp")
+                except ValueError:
+                    errors.append(f"{identifier}:invalid_review_timestamp")
             if not isinstance(review.get("protocol_version"), str) or not review["protocol_version"].strip():
                 errors.append(f"{identifier}:invalid_review_protocol")
             if review.get("decision") not in ("correct", "incorrect", "uncertain"):
