@@ -31,6 +31,12 @@ class HoldoutReviewerProvenanceV88Tests(unittest.TestCase):
         errors = check_holdout([self.row(reviewed_at=True)], development=[])
         self.assertIn("external-provenance-001:invalid_review_timestamp", errors)
 
+    def test_review_timestamp_rejects_invalid_and_future_dates(self):
+        for value in ("not-a-date", "2026-10-09T12:00:00", "2999-01-01T00:00:00Z"):
+            with self.subTest(value=value):
+                errors = check_holdout([self.row(reviewed_at=value)], development=[])
+                self.assertIn("external-provenance-001:invalid_review_timestamp", errors)
+
     def test_review_protocol_must_be_nonempty_text(self):
         errors = check_holdout([self.row(protocol_version=7)], development=[])
         self.assertIn("external-provenance-001:invalid_review_protocol", errors)
