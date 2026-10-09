@@ -5,7 +5,7 @@ from tests.release_readiness_v88 import build_report
 class DevelopmentCoverageTests(unittest.TestCase):
     def report(self, verified=95, count=100):
         profile = {"workload_source": "curated_development_unreviewed", "levels": {
-            level: {"sample_count": count, "status_counts": {"verified": verified},
+            level: {"sample_count": count, "status_counts": {"verified": verified, "uncertain": count - verified, "needs_review": 0},
                     "failure_count": 0} for level in ("A1", "A2", "B1", "B2")
         }}
         return build_report(
