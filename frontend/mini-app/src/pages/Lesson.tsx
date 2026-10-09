@@ -86,17 +86,31 @@ const LessonScreen: React.FC = () => {
     ])
       .then(([lessonData, session]) => {
         if (cancelled) return;
-        if ((initialDraft.current || resumeSessionRef.current) && !session.resumed) {
+        const maxExercises = Math.min(5, lessonData.content?.exercises?.length || 0);
+        const serverIndex = Number(session.next_exercise_index);
+        const hasServerCursor = Number.isInteger(serverIndex) && serverIndex >= 0;
+        if (!session.resumed) {
+          // A new server session must never inherit feedback or position from a stale draft.
           setStep(0); setAnswer(''); setChecked(null); setFeedback(null);
           setRetried({}); setRetryExercises({});
+        } else if (hasServerCursor) {
+          // Server attempts are authoritative; local drafts may be stale after a reload.
+          const restoredStep = 2 + Math.min(serverIndex, maxExercises);
+          setStep(restoredStep);
+          const draftMatchesStep = Number(initialDraft.current?.step) === restoredStep;
+          if (!draftMatchesStep) {
+            setAnswer(''); setChecked(null); setFeedback(null);
+            setRetried({}); setRetryExercises({});
+          }
         } else {
-          const maxStep = 2 + Math.min(5, lessonData.content?.exercises?.length || 0);
-          setStep(value => Math.max(0, Math.min(Number.isFinite(value) ? value : 0, maxStep)));
+          // Compatibility with older API deployments that do not return a cursor.
+          setStep(value => Math.max(0, Math.min(Number.isFinite(value) ? value : 0, 2 + maxExercises)));
         }
         resumeSessionRef.current = session.session_id;
         setLesson(lessonData);
         setSessionId(session.session_id);
-        if (initialDraft.current && session.resumed && Number(initialDraft.current.step) >= 2 + Math.min(5, lessonData.content?.exercises?.length || 0)) {
+        if (session.resumed && hasServerCursor && serverIndex >= maxExercises) {
+          // All practice answers are saved, but completion may have been interrupted.
           setCompletionState('error');
         }
         void api.trackEvent({ user_id: getUserId(), event_name: 'lesson_started', properties: { lesson_id: Number(id), topic: lessonData.topic } });
