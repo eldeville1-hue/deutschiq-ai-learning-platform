@@ -114,8 +114,15 @@ def check_holdout(holdout, development=None):
                 errors.append(f"{identifier}:invalid_review_protocol")
             if review.get("decision") not in ("correct", "incorrect", "uncertain"):
                 errors.append(f"{identifier}:invalid_review_decision")
-            if review.get("decision") == "incorrect" and not review.get("error_types"):
+            diagnoses = review.get("error_types")
+            if review.get("decision") == "incorrect" and not diagnoses:
                 errors.append(f"{identifier}:missing_error_diagnosis")
+            if diagnoses is not None and (
+                    not isinstance(diagnoses, list) or
+                    any(not isinstance(item, str) or not item.strip() for item in diagnoses)):
+                errors.append(f"{identifier}:invalid_error_diagnoses")
+            if review.get("decision") == "correct" and diagnoses:
+                errors.append(f"{identifier}:contradictory_error_diagnoses")
             if review.get("decision") == "uncertain" and not str(review.get("notes", "")).strip():
                 errors.append(f"{identifier}:uncertain_review_without_notes")
     return sorted(set(errors))
