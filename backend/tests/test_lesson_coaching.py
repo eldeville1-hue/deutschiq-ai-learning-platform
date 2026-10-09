@@ -30,6 +30,17 @@ class LessonCoachingTests(unittest.TestCase):
         self.assertEqual("Obwohl ich müde bin, gehe ich zum Kurs", retry["answer"])
         self.assertNotEqual(retry["tokens"], retry["answer"].split())
         self.assertIn("neuen Beispiel", retry["question"])
+    def test_retry_prefers_authored_example_with_matching_pattern(self):
+        retry = supported_retry_exercise(
+            {"answer": "Ich muss heute Deutsch lernen."},
+            {"examples": [
+                "Obwohl es regnet, gehe ich spazieren.",
+                "Ich muss morgen Deutsch lernen.",
+                "Ich muss heute Deutsch lernen.",
+            ]}, "en")
+        self.assertEqual("Ich muss morgen Deutsch lernen", retry["answer"])
+        self.assertNotIn("Ich muss heute Deutsch lernen", retry["accepted_answers"])
+
     def test_struggling_learner_gets_supported_mode(self):
         profile = learning_profile(60, [True, False, False], 0)
         self.assertEqual("supported", profile["mode"])
