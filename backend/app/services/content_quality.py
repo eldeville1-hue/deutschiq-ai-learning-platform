@@ -125,6 +125,25 @@ def validate_lesson_content(content: dict) -> list[str]:
             errors.append(f"exercise:{index}:missing_answer")
         if not exercise.get("explanation"):
             errors.append(f"exercise:{index}:missing_explanation")
+    # Skill-tagged retries must have a real, different authored answer.
+    skill_ids = {item.get("skill_id") for item in content.get("exercises") or []
+                 if isinstance(item, dict) and isinstance(item.get("skill_id"), str)
+                 and item.get("skill_id").strip()}
+    original_answers = {
+        (item.get("skill_id"), " ".join(str(answer).split()).rstrip(".?!").casefold())
+        for item in content.get("exercises") or [] if isinstance(item, dict)
+        for answer in (item.get("accepted_answers") or [item.get("answer", "")])
+        if item.get("skill_id") in skill_ids
+    }
+    for index, item in enumerate(content.get("retry_examples") or []):
+        if not isinstance(item, dict) or item.get("skill_id") not in skill_ids:
+            errors.append(f"retry:{index}:unknown_skill")
+            continue
+        sentence = item.get("sentence")
+        if not isinstance(sentence, str) or not sentence.strip():
+            errors.append(f"retry:{index}:missing_sentence")
+        elif (item["skill_id"], " ".join(sentence.split()).rstrip(".?!").casefold()) in original_answers:
+            errors.append(f"retry:{index}:duplicate_answer")
     return errors
 
 
