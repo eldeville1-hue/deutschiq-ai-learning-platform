@@ -1048,6 +1048,10 @@ def build_foundation_content(row: tuple, level: str) -> dict:
     ]
     track_curriculum = A1_CURRICULUM if level == "A1" else A2_CURRICULUM
     prerequisites = [] if day == 1 else [track_curriculum[day - 2][2]]
+    # Every authored exercise inherits its lesson's stable curriculum skill.
+    # Distinct skill-matched retry examples can be added after editorial review.
+    for exercise in exercises:
+        exercise.setdefault("skill_id", topic)
     return {
         "day":day,"week":module,"track":level,"module":module,"quality_version":5,
         "learning_method":"notice_build_use_reflect","title":title_ru,"objective":goals["ru"],
