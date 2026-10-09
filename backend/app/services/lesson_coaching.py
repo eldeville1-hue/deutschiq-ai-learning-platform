@@ -11,8 +11,16 @@ def supported_retry_exercise(exercise: dict, lesson_content: dict, language: str
         return " ".join(str(value).split()).rstrip(".?!").casefold()
 
     original_answers = {sentence_key(item) for item in exercise.get("accepted_answers") or [exercise.get("answer", "")]}
-    model = next((item for item in examples if sentence_key(item) not in original_answers), examples[0] if examples else str(exercise.get("answer", "")))
-    fresh = sentence_key(model) not in original_answers
+    # Select a different authored example with similar vocabulary and length.
+    # This keeps retries closer to the original pattern without inventing keys.
+    reference = str((exercise.get("accepted_answers") or [exercise.get("answer", "")])[0])
+    reference_tokens = sentence_key(reference).split()
+    candidates = [item for item in examples if sentence_key(item) not in original_answers]
+    def similarity(item):
+        words = sentence_key(item).split()
+        return (len(set(reference_tokens) & set(words)), -abs(len(words) - len(reference_tokens)))
+    model = max(candidates, key=similarity) if candidates else (examples[0] if examples else reference)
+    fresh = bool(candidates)
     model = model.rstrip(".?!")
     tokens = model.split()
     tokens = tokens[2:] + tokens[:2] if len(tokens) > 3 else list(reversed(tokens))
