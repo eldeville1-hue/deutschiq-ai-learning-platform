@@ -45,8 +45,13 @@ def build_report(holdout_path=None, benchmark=None, linguistic=None, ci_evidence
         n = data.get("sample_count", 0)
         statuses = data.get("status_counts", {})
         verified = statuses.get("verified", 0)
-        valid = (isinstance(n, int) and n >= 100 and isinstance(verified, int)
-                 and 0 <= verified <= n and data.get("failure_count") == 0)
+        valid = (type(n) is int and n >= 100
+                 and isinstance(statuses, dict)
+                 and all(type(statuses.get(status, 0)) is int and statuses.get(status, 0) >= 0
+                         for status in ("verified", "uncertain", "needs_review"))
+                 and sum(statuses.get(status, 0) for status in ("verified", "uncertain", "needs_review")) == n
+                 and type(data.get("failure_count")) is int and data["failure_count"] == 0
+                 and type(verified) is int and 0 <= verified <= n)
         coverage[level] = {"sample_count": n, "verified": verified,
                            "definitive_coverage": verified / n if valid else None,
                            "development_coverage_target_met": bool(valid and verified / n >= 0.95)}
