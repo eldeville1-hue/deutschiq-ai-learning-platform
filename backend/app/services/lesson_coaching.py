@@ -16,6 +16,15 @@ def supported_retry_exercise(exercise: dict, lesson_content: dict, language: str
     reference = str((exercise.get("accepted_answers") or [exercise.get("answer", "")])[0])
     reference_tokens = sentence_key(reference).split()
     candidates = [item for item in examples if sentence_key(item) not in original_answers]
+    # Explicit skill labels take precedence over surface word overlap.
+    # Untagged examples remain usable for older curriculum content.
+    target_skill = exercise.get("skill_id") or exercise.get("grammar_skill")
+    tagged = [item for item in lesson_content.get("retry_examples", [])
+              if isinstance(item, dict) and item.get("skill_id") == target_skill
+              and isinstance(item.get("sentence"), str) and item["sentence"].strip()
+              and sentence_key(item["sentence"]) not in original_answers] if target_skill else []
+    if tagged:
+        candidates = [item["sentence"].strip() for item in tagged]
     def similarity(item):
         words = sentence_key(item).split()
         return (len(set(reference_tokens) & set(words)), -abs(len(words) - len(reference_tokens)))
