@@ -48,7 +48,7 @@ async def start_lesson(data: StartLessonRequest, db: Session = Depends(get_db), 
             ExerciseAttempt.lesson_id == lesson.id,
         ).order_by(ExerciseAttempt.created_at.asc(), ExerciseAttempt.id.asc()).all()
         # Only verified successful answers advance the saved exercise cursor.
-        completed_indices = sorted({attempt.exercise_index for attempt in attempts if attempt.correct})
+        completed_indices = {attempt.exercise_index for attempt in attempts if attempt.correct and attempt.exercise_index >= 0}
         next_index = 0
         while next_index in completed_indices:
             next_index += 1
