@@ -31,7 +31,7 @@ def _semantic_punctuation_conflict(answer: str, reference: str) -> bool:
     if len(tokens) < 3 or tokens[-1] not in vocatives:
         return False
     def comma_before_vocative(value: str) -> bool:
-        return bool(re.search(r",\\s*" + re.escape(tokens[-1]) + r"\\s*[.!?]*$", value, re.IGNORECASE))
+        return bool(re.search(r",\s*" + re.escape(tokens[-1]) + r"\s*[.!?]*$", value, re.IGNORECASE))
     return normalize_text(answer) == normalize_text(reference) and comma_before_vocative(answer) != comma_before_vocative(reference)
 
 
