@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.api.endpoints.lesson import StartLessonRequest, start_lesson
 from app.models.user import User
 from app.models.lesson import Lesson
-from app.models.learning import LearningSession
+from app.models.learning import LearningSession, ExerciseAttempt
 
 
 @compiles(ARRAY, 'sqlite')
@@ -20,7 +20,7 @@ def sqlite_array(_type, _compiler, **_kwargs):
 class LessonResumeTests(unittest.TestCase):
     def setUp(self):
         self.engine = create_engine('sqlite:///:memory:')
-        for model in (User, Lesson, LearningSession):
+        for model in (User, Lesson, LearningSession, ExerciseAttempt):
             model.__table__.create(self.engine)
         self.db = Session(self.engine)
         self.db.add_all([User(id=1, telegram_id=9001), User(id=2, telegram_id=9002),
