@@ -28,6 +28,30 @@ class HoldoutPipelineTests(unittest.TestCase):
                     "learner_answer": dev["learner_answer"]})
         self.assertIn("external-B1-001:duplicate_content", check_holdout([row]))
 
+    def test_same_substantial_reference_answer_is_not_independent_coverage(self):
+        first = example()
+        second = example()
+        second["id"] = "external-B1-002"
+        second["objective"] = "Different learning objective"
+        second["learner_answer"] = "Obwohl es regnet, gehe ich nicht spazieren."
+        errors = check_holdout([first, second], development=[])
+        self.assertIn(
+            "external-B1-002:duplicate_reference_answer:external-B1-001", errors
+        )
+
+    def test_short_generic_reference_is_not_automatically_duplicate(self):
+        first = example()
+        first["exercise"]["answer"] = "Ja."
+        second = example()
+        second["id"] = "external-B1-002"
+        second["objective"] = "Another objective"
+        second["learner_answer"] = "Nein."
+        second["exercise"]["answer"] = "Ja."
+        errors = check_holdout([first, second], development=[])
+        self.assertNotIn(
+            "external-B1-002:duplicate_reference_answer:external-B1-001", errors
+        )
+
     def test_duplicate_ids_and_invalid_split_blocked(self):
         first, second = example(), example()
         second["split"] = "development"
