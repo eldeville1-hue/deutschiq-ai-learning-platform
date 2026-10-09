@@ -10,6 +10,25 @@ from app.services.content_i18n import localize_lesson_content
 
 
 class ContentQualityTests(unittest.TestCase):
+    def test_retry_examples_require_matching_skill_and_new_answer(self):
+        base = {"objective": "x", "rule": "x", "examples": ["x"],
+                "audio_text": "x", "common_mistakes": ["x"],
+                "exercises": [{"type": "fill", "question": "x",
+                               "answer": "Ich muss lernen.", "explanation": "x",
+                               "skill_id": "modal"}]}
+        good = dict(base, retry_examples=[{"skill_id": "modal",
+                                           "sentence": "Du kannst kommen."}])
+        self.assertEqual([], validate_lesson_content(good))
+        bad = dict(base, retry_examples=[
+            {"skill_id": "other", "sentence": "Du kannst kommen."},
+            {"skill_id": "modal", "sentence": "Ich muss lernen!"},
+            {"skill_id": "modal", "sentence": ""},
+        ])
+        issues = validate_lesson_content(bad)
+        self.assertIn("retry:0:unknown_skill", issues)
+        self.assertIn("retry:1:duplicate_answer", issues)
+        self.assertIn("retry:2:missing_sentence", issues)
+
     def test_normalizer_supplies_learning_sequence(self):
         content = normalize_lesson_content({"rule":"x", "examples":["Ich lerne."]}, "word_order", "A2")
         self.assertEqual(content["audio_text"], "Ich lerne.")
