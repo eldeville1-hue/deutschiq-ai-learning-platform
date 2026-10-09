@@ -80,6 +80,12 @@ def check_holdout(holdout, development=None):
                 errors.append(f"{identifier}:approved_review_missing_provenance")
             if review.get("blind_to_prediction") is not True or review.get("independent_of_generation") is not True:
                 errors.append(f"{identifier}:review_independence_not_verified")
+            if not isinstance(review.get("reviewer"), str) or not review["reviewer"].strip():
+                errors.append(f"{identifier}:invalid_reviewer_identity")
+            if not isinstance(review.get("reviewed_at"), str) or not review["reviewed_at"].strip():
+                errors.append(f"{identifier}:invalid_review_timestamp")
+            if not isinstance(review.get("protocol_version"), str) or not review["protocol_version"].strip():
+                errors.append(f"{identifier}:invalid_review_protocol")
             if review.get("decision") not in ("correct", "incorrect", "uncertain"):
                 errors.append(f"{identifier}:invalid_review_decision")
             if review.get("decision") == "incorrect" and not review.get("error_types"):
