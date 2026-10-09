@@ -18,11 +18,26 @@ def summarize(rows, validator=check_holdout):
         for row in rows
     )
     errors = validator(rows)
-    per_level = {
-        level: {"received": levels[level], "target": TARGET,
-                "remaining": max(0, TARGET - levels[level])}
-        for level in LEVELS
-    }
+    per_level = {}
+    for level in LEVELS:
+        subset = [row for row in rows if row.get("cefr") == level]
+        status_counts = Counter(
+            row.get("human_review", {}).get("status", "missing")
+            if isinstance(row.get("human_review"), dict) else "invalid"
+            for row in subset
+        )
+        per_level[level] = {
+            "received": levels[level],
+            "target": TARGET,
+            "remaining": max(0, TARGET - levels[level]),
+            "awaiting_linguistic_review": status_counts["pending"],
+            "awaiting_independence_verification": status_counts["pending_independence_verification"],
+            "claimed_approved": status_counts["approved"],
+            "invalid_or_missing_review": sum(
+                count for status, count in status_counts.items()
+                if status not in ("pending", "pending_independence_verification", "approved")
+            ),
+        }
     return {
         "purpose": "external_holdout_intake_only",
         "total": len(rows),
