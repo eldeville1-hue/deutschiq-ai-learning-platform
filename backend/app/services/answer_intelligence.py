@@ -246,7 +246,9 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
     # This is a task-completion judgment, not a grammatical diagnosis.
     # An unlisted near-match in open writing may change meaning despite high similarity.
     # Only explicitly accepted text is deterministically verified for open tasks.
+    punctuation_conflict = any(_semantic_punctuation_conflict(answer, model) for model in accepted)
     status = ("needs_review" if not accepted else
+              "uncertain" if punctuation_conflict and not exact else
               "verified" if (empty_submission or exact or not open_ended) else "uncertain")
     errors = []
     if status == "verified" and empty_submission:
