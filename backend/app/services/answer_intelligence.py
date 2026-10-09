@@ -224,7 +224,16 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
             explanation="Enter an answer to complete this exercise.",
         )]
     elif status == "verified" and not legacy["correct"]:
-        errors = _classify_aligned_errors(answer, legacy["model"], exercise.get("target_feature", ""))
+        # A mismatch against one reference does not establish a linguistic
+        # error when several authored correct forms exist. Keep the decision
+        # but avoid attributing grammar faults to an arbitrary alternative.
+        if len(accepted_normalized) > 1:
+            errors = [LinguisticError(
+                type="answer_mismatch", span=answer, correction=legacy["model"],
+                explanation="This answer is not among the authored accepted responses.",
+            )]
+        else:
+            errors = _classify_aligned_errors(answer, legacy["model"], exercise.get("target_feature", ""))
         if not errors:
             errors = [LinguisticError(
                 type=legacy["error_type"] or "answer_mismatch", span=answer,
