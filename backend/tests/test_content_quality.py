@@ -10,6 +10,19 @@ from app.services.content_i18n import localize_lesson_content
 
 
 class ContentQualityTests(unittest.TestCase):
+    def test_curriculum_builders_assign_stable_skill_ids(self):
+        for rows, builder in (
+            (A1_CURRICULUM, lambda row: build_foundation_content(row, "A1")),
+            (A2_CURRICULUM, lambda row: build_foundation_content(row, "A2")),
+            (B1_CURRICULUM, build_b1_content),
+            (B2_CURRICULUM, build_b2_content),
+        ):
+            for row in rows:
+                content = builder(row)
+                self.assertTrue(content["exercises"])
+                self.assertTrue(all(item.get("skill_id") == row[2]
+                                    for item in content["exercises"]))
+
     def test_retry_examples_require_matching_skill_and_new_answer(self):
         base = {"objective": "x", "rule": "x", "examples": ["x"],
                 "audio_text": "x", "common_mistakes": ["x"],
