@@ -195,6 +195,10 @@ def build_b2_content(row: tuple) -> dict:
         "de": {"title": title_de, "rule": rule["de"], "objective": objective["de"], "scenario": scenario_de, "assessment_rubric": rubric["de"], "module_title": module_title_de, "can_do": objective["de"], "mission": scenario_de, "success_evidence": success["de"]},
         "en": {"title": title_en, "rule": rule["en"], "objective": objective["en"], "scenario": scenario_en, "assessment_rubric": rubric["en"], "module_title": module_title_en, "can_do": objective["en"], "mission": scenario_en, "success_evidence": success["en"]},
     }
+    # Every authored exercise inherits its lesson's stable curriculum skill.
+    # Distinct skill-matched retry examples can be added after editorial review.
+    for exercise in exercises:
+        exercise.setdefault("skill_id", topic)
     return {
         "day": day, "week": module, "track": "B2", "module": module,
         "module_step": module_step, "module_size": 4, "module_title": module_title_ru, "checkpoint": checkpoint,
