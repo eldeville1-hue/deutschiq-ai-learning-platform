@@ -70,7 +70,9 @@ class HoldoutPipelineTests(unittest.TestCase):
             self.assertEqual(len(load_holdout(path)), 1)
             report = evaluate_file(path)
             self.assertEqual(report["release_gate"], "blocked")
-            self.assertIn("B1:independent_holdout_insufficient", report["failed_gates"])
+            self.assertIn("holdout_reviews_incomplete", report["failed_gates"])
+            self.assertEqual(report["pending_review_total"], 1)
+            self.assertNotIn("levels", report)
 
 
 if __name__ == "__main__":
