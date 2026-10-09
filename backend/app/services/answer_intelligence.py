@@ -56,7 +56,7 @@ def _legacy_evaluate_structured_answer(answer: str, exercise: dict) -> dict:
     return {"correct": correct, "score": 100 if exact else 90 if minor_spelling else round(similarity * 100), "model": model, "similarity": round(similarity * 100), "missing_words": diff["missing"], "extra_words": diff["extra"], "error_type": error_type}
 
 
-def _classify_aligned_errors(answer: str, model: str, target_feature: str = "") -> list:
+def _classify_aligned_errors(answer: str, model: str, target_feature: str = "", exercise_type: str = "") -> list:
     """High-precision token differences; do not infer grammar from similarity alone."""
     from app.services.evaluation_contract import LinguisticError
     actual = normalize_text(answer).split()
@@ -87,7 +87,7 @@ def _classify_aligned_errors(answer: str, model: str, target_feature: str = "") 
     if actual != expected and Counter(actual) == Counter(expected):
         # A permutation is not automatically a grammatical mistake in German.
         # Free word order can be valid, especially in translations and writing.
-        if target_feature != "word_order":
+        if target_feature != "word_order" and exercise_type != "reorder":
             return []
         return [LinguisticError(type="word_order", span=answer, correction=model,
                                 explanation="Check the word order required by this exercise.")]
@@ -246,7 +246,7 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
                 explanation="This answer is not among the authored accepted responses.",
             )]
         else:
-            errors = _classify_aligned_errors(answer, legacy["model"], exercise.get("target_feature", ""))
+            errors = _classify_aligned_errors(answer, legacy["model"], exercise.get("target_feature", ""), exercise.get("type", ""))
         if not errors:
             errors = [LinguisticError(
                 type=legacy["error_type"] or "answer_mismatch", span=answer,
@@ -256,7 +256,7 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
     elif status == "uncertain":
         # Candidate diagnoses require a unique authored reference; selecting
         # the closest of several valid phrasings is not grammatical evidence.
-        candidates = (_classify_aligned_errors(answer, legacy["model"], exercise.get("target_feature", ""))
+        candidates = (_classify_aligned_errors(answer, legacy["model"], exercise.get("target_feature", ""), exercise.get("type", ""))
                       if len(accepted_normalized) == 1 else [])
         errors = [item for item in candidates if item.type in {"article", "negation", "auxiliary", "preposition", "conjugation", "infinitive"}]
     result = EvaluationResult(
