@@ -44,6 +44,15 @@ def check_holdout(holdout, development=None):
         if not all(k in row for k in REQUIRED):
             errors.append(f"{identifier}:missing_fields")
             continue
+        if not isinstance(identifier, str) or not identifier.strip():
+            errors.append(f"row-{index}:invalid_id")
+            continue
+        if not isinstance(row.get("objective"), str) or not row["objective"].strip():
+            errors.append(f"{identifier}:invalid_objective")
+            continue
+        if not isinstance(row.get("learner_answer"), str):
+            errors.append(f"{identifier}:invalid_learner_answer")
+            continue
         if identifier in seen_ids:
             errors.append(f"{identifier}:duplicate_id")
         seen_ids.add(identifier)
@@ -51,7 +60,9 @@ def check_holdout(holdout, development=None):
             errors.append(f"{identifier}:invalid_level")
         if row["split"] != "holdout":
             errors.append(f"{identifier}:not_holdout")
-        if not isinstance(row["exercise"], dict) or not row["exercise"].get("answer"):
+        if (not isinstance(row["exercise"], dict) or
+                not isinstance(row["exercise"].get("answer"), str) or
+                not row["exercise"]["answer"].strip()):
             errors.append(f"{identifier}:invalid_exercise")
             continue
         key = (_fingerprint(row["exercise"]["answer"]),
