@@ -252,7 +252,9 @@ const LessonScreen: React.FC = () => {
     try {
       const result = await api.checkLessonAnswer({ user_id: getUserId(), lesson_id: Number(id), exercise_index: exerciseIndex, answer, session_id: sessionId, language: lang, confidence, response_ms: Date.now() - startedAt, retry: Boolean(retried[exerciseIndex]) });
       if (result.evaluation_status === 'uncertain' || result.evaluation_status === 'needs_review') {
-        setChecked(false);
+        // An unverified evaluation is not a wrong answer: keep the learner on
+        // the same task without activating the guided-retry/penalty flow.
+        setChecked(null);
         setFeedback(null);
         setCheckError(result.retry_instruction || tr(lang,
           'Не удалось надёжно оценить ответ. Попробуй переформулировать.',
