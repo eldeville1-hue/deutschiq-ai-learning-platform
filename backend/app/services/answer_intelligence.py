@@ -241,8 +241,10 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
                 explanation="This response does not match the exercise requirement.",
             )]
     elif status == "uncertain":
-        # These are candidate differences, not confirmed linguistic mistakes.
-        candidates = _classify_aligned_errors(answer, legacy["model"], exercise.get("target_feature", ""))
+        # Candidate diagnoses require a unique authored reference; selecting
+        # the closest of several valid phrasings is not grammatical evidence.
+        candidates = (_classify_aligned_errors(answer, legacy["model"], exercise.get("target_feature", ""))
+                      if len(accepted_normalized) == 1 else [])
         errors = [item for item in candidates if item.type in {"article", "negation", "auxiliary", "preposition", "conjugation", "infinitive"}]
     result = EvaluationResult(
         grammar_correct=True if exact else None,
