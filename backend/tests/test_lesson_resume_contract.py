@@ -33,3 +33,26 @@ def test_resume_queries_are_scoped_to_authenticated_user_and_lesson():
     assert 'LearningSession.user_id == user.id' in start
     assert 'LearningSession.lesson_id == lesson.id' in start
     assert 'LearningSession.status == "active"' in start
+
+
+def test_cursor_calculation_for_reopened_lesson():
+    """Execute the production helper without importing API/database dependencies."""
+    import ast
+    from types import SimpleNamespace
+
+    source = LESSON_API.read_text(encoding="utf-8")
+    function = next(
+        node for node in ast.parse(source).body
+        if isinstance(node, ast.FunctionDef) and node.name == "next_unanswered_exercise_index"
+    )
+    namespace = {}
+    exec(compile(ast.Module(body=[function], type_ignores=[]), str(LESSON_API), "exec"), namespace)
+    cursor = namespace["next_unanswered_exercise_index"]
+    attempt = lambda index, correct: SimpleNamespace(exercise_index=index, correct=correct)
+
+    assert cursor([]) == 0
+    assert cursor([attempt(0, True), attempt(1, True)]) == 2
+    assert cursor([attempt(0, True), attempt(1, False)]) == 1
+    assert cursor([attempt(0, True), attempt(1, False), attempt(1, True)]) == 2
+    assert cursor([attempt(2, True)]) == 0
+    assert cursor([attempt(-1, True)]) == 0
