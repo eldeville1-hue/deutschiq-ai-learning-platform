@@ -20,8 +20,17 @@ def word_diff(answer: str, model: str) -> dict:
     return {"missing": missing[:5], "extra": extra[:5]}
 
 
+def _accepted_models(exercise: dict) -> list[str]:
+    """Return only authored text answers; malformed alternatives cannot grant credit."""
+    alternatives = exercise.get("accepted_answers")
+    if not isinstance(alternatives, (list, tuple)):
+        alternatives = []
+    candidates = [exercise.get("answer"), *alternatives]
+    return [value for value in candidates if isinstance(value, str) and normalize_text(value)]
+
+
 def _legacy_evaluate_structured_answer(answer: str, exercise: dict) -> dict:
-    accepted = [str(item) for item in [exercise.get("answer", ""), *(exercise.get("accepted_answers") or [])] if item is not None and str(item).strip()]
+    accepted = _accepted_models(exercise)
     normalized = normalize_text(answer)
     comparisons = [(model, SequenceMatcher(None, normalized, normalize_text(model)).ratio()) for model in accepted]
     model, similarity = max(comparisons, key=lambda item: item[1], default=("", 0.0))
@@ -190,7 +199,7 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
     from app.services.evaluation_contract import EvaluationResult, LinguisticError
     legacy = _legacy_evaluate_structured_answer(answer, exercise)
     # The canonical model answer remains valid alongside authored alternatives.
-    accepted = [str(x) for x in [exercise.get("answer", ""), *(exercise.get("accepted_answers") or [])] if x is not None and str(x).strip()]
+    accepted = _accepted_models(exercise)
     # Only explicitly authored alternatives are verified as equivalent.
     accepted_normalized = {normalize_text(item) for item in accepted}
     exact = bool(normalize_text(answer)) and normalize_text(answer) in accepted_normalized
