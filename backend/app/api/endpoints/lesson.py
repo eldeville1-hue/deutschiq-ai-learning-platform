@@ -50,6 +50,15 @@ async def start_lesson(data: StartLessonRequest, db: Session = Depends(get_db), 
         ).first()
         if previous:
             return {"session_id": previous.id, "resumed": True}
+    # Reuse the latest active session after a Telegram reload or network retry.
+    # Never create duplicate active sessions for the same learner and lesson.
+    active = db.query(LearningSession).filter(
+        LearningSession.user_id == user.id,
+        LearningSession.lesson_id == lesson.id,
+        LearningSession.status == "active",
+    ).order_by(LearningSession.created_at.desc()).first()
+    if active:
+        return {"session_id": active.id, "resumed": True}
     session = LearningSession(id=str(uuid.uuid4()), user_id=user.id, lesson_id=lesson.id, status="active")
     db.add(session)
     db.commit()
