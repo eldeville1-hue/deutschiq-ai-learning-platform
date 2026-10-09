@@ -60,6 +60,12 @@ def check_holdout(holdout, development=None):
             errors.append(f"{identifier}:duplicate_content")
         seen_content.add(key)
         answer = key[0]
+        # Reusing the same substantial reference sentence is not independent
+        # coverage, even when the prompt or learner response differs.
+        if len(answer) >= 30:
+            for other_answer, other_id in development_answers + holdout_answers:
+                if answer == other_answer:
+                    errors.append(f"{identifier}:duplicate_reference_answer:{other_id}")
         for other_answer, other_id in development_answers + holdout_answers:
             if answer and other_answer and answer != other_answer and (
                     SequenceMatcher(None, answer, other_answer).ratio() >= 0.90):
