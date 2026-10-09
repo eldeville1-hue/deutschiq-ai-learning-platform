@@ -41,6 +41,15 @@ class LessonCoachingTests(unittest.TestCase):
         self.assertEqual("Ich muss morgen Deutsch lernen", retry["answer"])
         self.assertNotIn("Ich muss heute Deutsch lernen", retry["accepted_answers"])
 
+    def test_explicit_skill_tag_outweighs_surface_similarity(self):
+        retry = supported_retry_exercise(
+            {"answer": "Ich muss heute Deutsch lernen.", "skill_id": "modal-infinitive"},
+            {"examples": ["Ich muss morgen Deutsch lernen."], "retry_examples": [
+                {"skill_id": "modal-infinitive", "sentence": "Du kannst heute schwimmen."},
+                {"skill_id": "past-tense", "sentence": "Ich habe gestern Deutsch gelernt."},
+            ]}, "en")
+        self.assertEqual("Du kannst heute schwimmen", retry["answer"])
+
     def test_struggling_learner_gets_supported_mode(self):
         profile = learning_profile(60, [True, False, False], 0)
         self.assertEqual("supported", profile["mode"])
