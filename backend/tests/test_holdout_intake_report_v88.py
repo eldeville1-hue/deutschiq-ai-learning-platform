@@ -21,6 +21,20 @@ class HoldoutIntakeReportV88Tests(unittest.TestCase):
         self.assertFalse(report["independence_externally_verified"])
         self.assertEqual(report["release_gate"], "blocked")
 
+    def test_review_workload_by_level_and_stage(self):
+        rows = [
+            {"cefr": "B1", "human_review": {"status": "pending"}},
+            {"cefr": "B1", "human_review": {"status": "pending_independence_verification"}},
+            {"cefr": "B1", "human_review": {"status": "approved"}},
+            {"cefr": "A2", "human_review": {"status": "unknown"}},
+        ]
+        report = summarize(rows, validator=lambda rows: [])
+        self.assertEqual(report["levels"]["B1"]["awaiting_linguistic_review"], 1)
+        self.assertEqual(report["levels"]["B1"]["awaiting_independence_verification"], 1)
+        self.assertEqual(report["levels"]["B1"]["claimed_approved"], 1)
+        self.assertEqual(report["levels"]["A2"]["invalid_or_missing_review"], 1)
+        self.assertEqual(report["release_gate"], "blocked")
+
     def test_ingestion_errors_are_visible(self):
         report = summarize([{"cefr": "A1", "human_review": {"status": "pending"}}],
                            validator=lambda rows: ["case-1:duplicate_content"])
