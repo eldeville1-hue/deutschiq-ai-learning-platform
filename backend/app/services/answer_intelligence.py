@@ -189,7 +189,8 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
     """Conservative objective-aware comparison; unsupported open responses need review."""
     from app.services.evaluation_contract import EvaluationResult, LinguisticError
     legacy = _legacy_evaluate_structured_answer(answer, exercise)
-    # The canonical model answer must remain valid even when authored\n    # alternatives are supplied separately. Preserve explicit alternatives.\n    accepted = [str(x) for x in [exercise.get("answer", ""), *(exercise.get("accepted_answers") or [])] if x is not None and str(x).strip()]
+    # The canonical model answer remains valid alongside authored alternatives.
+    accepted = [str(x) for x in [exercise.get("answer", ""), *(exercise.get("accepted_answers") or [])] if x is not None and str(x).strip()]
     # Only explicitly authored alternatives are verified as equivalent.
     accepted_normalized = {normalize_text(item) for item in accepted}
     exact = bool(normalize_text(answer)) and normalize_text(answer) in accepted_normalized
