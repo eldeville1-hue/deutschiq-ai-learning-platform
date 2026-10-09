@@ -29,6 +29,18 @@ from app.services.assessment_insights import evidence_gate
 
 router = APIRouter(prefix="/api/lesson", tags=["lesson"])
 
+def next_unanswered_exercise_index(attempts) -> int:
+    """First contiguous exercise index without a correct attempt."""
+    completed = {
+        attempt.exercise_index for attempt in attempts
+        if attempt.correct and attempt.exercise_index >= 0
+    }
+    index = 0
+    while index in completed:
+        index += 1
+    return index
+
+
 class StartLessonRequest(BaseModel):
     user_id: int
     lesson_id: int
@@ -48,10 +60,7 @@ async def start_lesson(data: StartLessonRequest, db: Session = Depends(get_db), 
             ExerciseAttempt.lesson_id == lesson.id,
         ).order_by(ExerciseAttempt.created_at.asc(), ExerciseAttempt.id.asc()).all()
         # Only verified successful answers advance the saved exercise cursor.
-        completed_indices = {attempt.exercise_index for attempt in attempts if attempt.correct and attempt.exercise_index >= 0}
-        next_index = 0
-        while next_index in completed_indices:
-            next_index += 1
+        next_index = next_unanswered_exercise_index(attempts)
         return {"session_id": existing.id, "resumed": True, "next_exercise_index": next_index}
 
     if data.resume_session_id:
