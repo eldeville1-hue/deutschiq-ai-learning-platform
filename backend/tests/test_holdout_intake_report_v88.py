@@ -35,6 +35,21 @@ class HoldoutIntakeReportV88Tests(unittest.TestCase):
         self.assertEqual(report["levels"]["A2"]["invalid_or_missing_review"], 1)
         self.assertEqual(report["release_gate"], "blocked")
 
+    def test_coordinator_queue_does_not_treat_claimed_approvals_as_verified(self):
+        rows = [
+            {"cefr": "A1", "human_review": {"status": "pending"}},
+            {"cefr": "A1", "human_review": {"status": "pending_independence_verification"}},
+            {"cefr": "A1", "human_review": {"status": "approved"}},
+        ]
+        report = summarize(rows, validator=lambda rows: [])
+        actions = {(item["cefr"], item["action"]): item["count"]
+                   for item in report["coordinator_actions"]}
+        self.assertEqual(actions[("A1", "collect_external_cases")], 97)
+        self.assertEqual(actions[("A1", "request_blind_linguistic_review")], 1)
+        self.assertEqual(actions[("A1", "verify_reviewer_independence_externally")], 1)
+        self.assertFalse(report["independence_externally_verified"])
+        self.assertEqual(report["release_gate"], "blocked")
+
     def test_ingestion_errors_are_visible(self):
         report = summarize([{"cefr": "A1", "human_review": {"status": "pending"}}],
                            validator=lambda rows: ["case-1:duplicate_content"])
