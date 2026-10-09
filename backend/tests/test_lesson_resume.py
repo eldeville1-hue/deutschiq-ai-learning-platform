@@ -51,8 +51,11 @@ class LessonResumeTests(unittest.TestCase):
         for session_id in ('foreign', 'other-lesson', 'finished', 'missing'):
             with self.subTest(session_id=session_id):
                 result = self.start(session_id)
-                self.assertFalse(result['resumed'])
+                # An invalid requested ID may still recover another valid active
+                # session for this same learner and lesson.
                 self.assertNotEqual(session_id, result['session_id'])
+                recovered = self.db.get(LearningSession, result['session_id'])
+                self.assertEqual((1, 77, 'active'), (recovered.user_id, recovered.lesson_id, recovered.status))
 
     def test_resume_still_requires_authenticated_owner(self):
         with self.assertRaises(HTTPException) as error:
