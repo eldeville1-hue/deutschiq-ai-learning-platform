@@ -38,7 +38,23 @@ def summarize(rows, validator=check_holdout):
                 if status not in ("pending", "pending_independence_verification", "approved")
             ),
         }
+    coordinator_actions = []
+    for level in LEVELS:
+        item = per_level[level]
+        if item["remaining"]:
+            coordinator_actions.append({"cefr": level, "action": "collect_external_cases",
+                                        "count": item["remaining"]})
+        if item["awaiting_linguistic_review"]:
+            coordinator_actions.append({"cefr": level, "action": "request_blind_linguistic_review",
+                                        "count": item["awaiting_linguistic_review"]})
+        if item["awaiting_independence_verification"]:
+            coordinator_actions.append({"cefr": level, "action": "verify_reviewer_independence_externally",
+                                        "count": item["awaiting_independence_verification"]})
+        if item["invalid_or_missing_review"]:
+            coordinator_actions.append({"cefr": level, "action": "repair_review_metadata",
+                                        "count": item["invalid_or_missing_review"]})
     return {
+        "coordinator_actions": coordinator_actions,
         "purpose": "external_holdout_intake_only",
         "total": len(rows),
         "levels": per_level,
