@@ -71,6 +71,8 @@ def check_holdout(holdout, development=None):
         review = row.get("human_review")
         if not isinstance(review, dict):
             errors.append(f"{identifier}:invalid_review")
+        elif review.get("status") not in ("pending", "pending_independence_verification", "approved"):
+            errors.append(f"{identifier}:invalid_review_status")
         elif review.get("status") == "approved":
             required_review = ("reviewer", "reviewed_at", "protocol_version",
                                "decision", "blind_to_prediction", "independent_of_generation")
