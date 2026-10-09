@@ -111,6 +111,12 @@ def evaluate_file(path):
     if errors:
         return {"release_gate": "blocked", "holdout_total": len(holdout),
                 "ingestion_errors": errors, "failed_gates": ["holdout_ingestion"]}
+    pending = [row["id"] for row in holdout if row["human_review"]["status"] != "approved"]
+    if pending:
+        return {"release_gate": "blocked", "holdout_total": len(holdout),
+                "approved_total": len(holdout) - len(pending),
+                "pending_review_total": len(pending), "pending_review_examples": pending[:20],
+                "ingestion_errors": [], "failed_gates": ["holdout_reviews_incomplete"]}
     report = validation_report(holdout)
     report["ingestion_errors"] = []
     return report
