@@ -20,6 +20,21 @@ def word_diff(answer: str, model: str) -> dict:
     return {"missing": missing[:5], "extra": extra[:5]}
 
 
+def _semantic_punctuation_conflict(answer: str, reference: str) -> bool:
+    """Avoid auto-accepting a missing vocative comma that changes who is eaten."""
+    if not isinstance(answer, str) or not isinstance(reference, str):
+        return False
+    # Only flag the unambiguous high-risk pattern: direct address of a person
+    # following a verb with a comma in one version but not the other.
+    vocatives = {"opa", "oma", "mama", "papa", "mutter", "vater"}
+    tokens = normalize_text(reference).split()
+    if len(tokens) < 3 or tokens[-1] not in vocatives:
+        return False
+    def comma_before_vocative(value: str) -> bool:
+        return bool(re.search(r",\\s*" + re.escape(tokens[-1]) + r"\\s*[.!?]*$", value, re.IGNORECASE))
+    return normalize_text(answer) == normalize_text(reference) and comma_before_vocative(answer) != comma_before_vocative(reference)
+
+
 def _accepted_models(exercise: dict) -> list[str]:
     """Return only authored text answers; malformed alternatives cannot grant credit."""
     alternatives = exercise.get("accepted_answers")
@@ -215,7 +230,10 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
     accepted = _accepted_models(exercise)
     # Only explicitly authored alternatives are verified as equivalent.
     accepted_normalized = {normalize_text(item) for item in accepted}
-    exact = bool(normalize_text(answer)) and normalize_text(answer) in accepted_normalized
+    exact = bool(normalize_text(answer)) and any(
+        normalize_text(answer) == normalize_text(model) and not _semantic_punctuation_conflict(answer, model)
+        for model in accepted
+    )
     # Spelling tolerance is only a legacy hint, never sufficient evidence
     # for a verified linguistic success: one deleted letter can create a
     # different valid German word (schreiben -> schreien).
