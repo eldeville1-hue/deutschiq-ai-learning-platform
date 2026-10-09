@@ -41,6 +41,19 @@ async def start_lesson(data: StartLessonRequest, db: Session = Depends(get_db), 
     lesson = db.query(Lesson).filter(Lesson.id == data.lesson_id).first()
     if not user or not lesson:
         raise HTTPException(status_code=404, detail="User or lesson not found")
+    def resume_payload(existing):
+        attempts = db.query(ExerciseAttempt).filter(
+            ExerciseAttempt.session_id == existing.id,
+            ExerciseAttempt.user_id == user.id,
+            ExerciseAttempt.lesson_id == lesson.id,
+        ).order_by(ExerciseAttempt.created_at.asc(), ExerciseAttempt.id.asc()).all()
+        # Only verified successful answers advance the saved exercise cursor.
+        completed_indices = sorted({attempt.exercise_index for attempt in attempts if attempt.correct})
+        next_index = 0
+        while next_index in completed_indices:
+            next_index += 1
+        return {"session_id": existing.id, "resumed": True, "next_exercise_index": next_index}
+
     if data.resume_session_id:
         previous = db.query(LearningSession).filter(
             LearningSession.id == data.resume_session_id,
@@ -49,20 +62,20 @@ async def start_lesson(data: StartLessonRequest, db: Session = Depends(get_db), 
             LearningSession.status == "active",
         ).first()
         if previous:
-            return {"session_id": previous.id, "resumed": True}
+            return resume_payload(previous)
     # Reuse the latest active session after a Telegram reload or network retry.
     # Never create duplicate active sessions for the same learner and lesson.
     active = db.query(LearningSession).filter(
         LearningSession.user_id == user.id,
         LearningSession.lesson_id == lesson.id,
         LearningSession.status == "active",
-    ).order_by(LearningSession.created_at.desc()).first()
+    ).order_by(LearningSession.started_at.desc()).first()
     if active:
-        return {"session_id": active.id, "resumed": True}
+        return resume_payload(active)
     session = LearningSession(id=str(uuid.uuid4()), user_id=user.id, lesson_id=lesson.id, status="active")
     db.add(session)
     db.commit()
-    return {"session_id": session.id, "resumed": False}
+    return {"session_id": session.id, "resumed": False, "next_exercise_index": 0}
 
 # Получить урок
 @router.get("/{lesson_id}")
