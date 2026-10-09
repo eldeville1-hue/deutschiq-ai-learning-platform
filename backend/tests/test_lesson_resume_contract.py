@@ -56,3 +56,13 @@ def test_cursor_calculation_for_reopened_lesson():
     assert cursor([attempt(0, True), attempt(1, False), attempt(1, True)]) == 2
     assert cursor([attempt(2, True)]) == 0
     assert cursor([attempt(-1, True)]) == 0
+
+
+def test_frontend_consumes_server_cursor_and_discards_stale_draft():
+    frontend = ROOT.parent / "frontend" / "mini-app" / "src" / "pages" / "Lesson.tsx"
+    source = frontend.read_text(encoding="utf-8")
+    assert "session.next_exercise_index" in source
+    assert "const restoredStep = 2 + Math.min(serverIndex, maxExercises)" in source
+    assert "if (!session.resumed)" in source
+    assert "if (!draftMatchesStep)" in source
+    assert "setAnswer(''); setChecked(null); setFeedback(null);" in source
