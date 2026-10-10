@@ -118,7 +118,7 @@ class AuthoredRetryTargetSafetyTests(unittest.TestCase):
     def test_repeated_authored_target_is_ambiguous(self):
         exercise = {"id": "e2", "answer": "Ich lerne Deutsch.", "skill_id": "articles"}
         lesson = {"retry_examples": [
-            {"skill_id": "articles", "sentence": "Die Frau sieht die Katze.", "target": "die"}
+            {"skill_id": "articles", "sentence": "Die Frau sieht die die Katze.", "target": "die"}
         ]}
         self.assertIsNone(supported_retry_exercise(exercise, lesson, "en"))
 
