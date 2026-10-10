@@ -1,6 +1,35 @@
 import unittest
 
-from app.services.lesson_coaching import feedback_focus, learning_profile, repair_plan, success_feedback, supported_retry_exercise
+from app.services.lesson_coaching import feedback_focus, learning_profile, repair_plan, success_feedback, supported_retry_exercise, repeated_error_focus
+
+
+class RepeatedErrorFocusTests(unittest.TestCase):
+    def test_recent_unresolved_mistake_wins_over_older_error(self):
+        attempts = [
+            {"skill_id": "articles", "correct": False},
+            {"skill_id": "articles", "correct": False},
+            {"skill_id": "word_order", "correct": False},
+            {"skill_id": "word_order", "correct": False},
+        ]
+        self.assertEqual("word_order", repeated_error_focus(attempts))
+
+    def test_recent_correction_reduces_urgency(self):
+        attempts = [
+            {"skill_id": "articles", "correct": False},
+            {"skill_id": "articles", "correct": False},
+            {"skill_id": "articles", "correct": True},
+            {"skill_id": "word_order", "correct": False},
+            {"skill_id": "word_order", "correct": False},
+        ]
+        self.assertEqual("word_order", repeated_error_focus(attempts))
+
+    def test_never_focuses_on_single_error_or_unavailable_skill(self):
+        attempts = [
+            {"skill_id": "articles", "correct": False},
+            {"skill_id": "word_order", "correct": False},
+            {"skill_id": "word_order", "correct": False},
+        ]
+        self.assertIsNone(repeated_error_focus(attempts, {"articles"}))
 
 
 class LessonCoachingTests(unittest.TestCase):
