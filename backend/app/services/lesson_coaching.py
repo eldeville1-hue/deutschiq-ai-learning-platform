@@ -4,7 +4,7 @@ from app.services.content_i18n import normalize_language
 from app.services.misconception_feedback import misconception_feedback
 
 
-def supported_retry_exercise(exercise: dict, lesson_content: dict, language: str) -> dict:
+def supported_retry_exercise(exercise: dict, lesson_content: dict, language: str) -> dict | None:
     """Build a fresh, easier phone task without exposing the answer key."""
     examples = [str(item).strip() for item in lesson_content.get("examples", []) if str(item).strip()]
     def sentence_key(value):
@@ -29,7 +29,10 @@ def supported_retry_exercise(exercise: dict, lesson_content: dict, language: str
         words = sentence_key(item).split()
         return (len(set(reference_tokens) & set(words)), -abs(len(words) - len(reference_tokens)))
     model = max(candidates, key=similarity) if candidates else (examples[0] if examples else reference)
-    fresh = bool(candidates)
+    # Do not present the same answer as a new retry. The caller can still
+    # show its focused feedback and the original model for review.
+    if sentence_key(model) in original_answers:
+        return None
     model = model.rstrip(".?!")
     tokens = model.split()
     tokens = tokens[2:] + tokens[:2] if len(tokens) > 3 else list(reversed(tokens))
