@@ -273,7 +273,9 @@ def feedback_focus(error_type: str | None, missing_words: list[str], extra_words
             "order": "All required words are present—now check their order.",
         },
     }[lang]
-    if error_type in {"verb_not_final", "word_order"}:
+    if error_type == "verb_not_final":
+        return misconception_feedback(error_type, lang)
+    if error_type == "word_order":
         return copy["order"]
     if missing_words:
         return copy["missing"].format(words=", ".join(missing_words[:4]))
