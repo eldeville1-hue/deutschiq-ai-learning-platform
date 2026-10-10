@@ -254,6 +254,19 @@ def build_b1_content(row):
     languages["ru"].update({"scenario": scenario_ru, "assessment_rubric": rubric["ru"], "module_title": module_title_ru, "can_do": goal_ru, "mission": scenario_ru, "success_evidence": success["ru"]})
     languages["de"].update({"scenario": scenario_de, "assessment_rubric": rubric["de"], "module_title": module_title_de, "can_do": goal_de, "mission": scenario_de, "success_evidence": success["de"]})
     languages["en"].update({"scenario": scenario_en, "assessment_rubric": rubric["en"], "module_title": module_title_en, "can_do": goal_en, "mission": scenario_en, "success_evidence": success["en"]})
+    # Reuse authored transfer examples for guided recovery only when they
+    # are not already answer keys in this lesson.
+    used_answers = {
+        " ".join(str(value).split()).rstrip(".?!").casefold()
+        for item in exercises
+        for value in (item.get("accepted_answers") or [item.get("answer", "")])
+    }
+    retry_examples = [
+        {"skill_id": topic, "sentence": sentence}
+        for sentence in alternatives
+        if isinstance(sentence, str) and sentence.strip()
+        and " ".join(sentence.split()).rstrip(".?!").casefold() not in used_answers
+    ]
     # Every authored exercise inherits its lesson's stable curriculum skill.
     # Distinct skill-matched retry examples can be added after editorial review.
     for exercise in exercises:
@@ -273,5 +286,5 @@ def build_b1_content(row):
         "repair_flow": {"mode": "targeted_retry", "contrast_before_retry": True, "misconception": misconception},
         "delayed_review": delayed_review,
         "content_review": {"status": "approved", "version": "b1-production-path-v14", "languages": {"ru": "reviewed", "de": "reviewed", "en": "reviewed"}},
-        "i18n": languages, "exercises": exercises,
+        "i18n": languages, "retry_examples": retry_examples, "exercises": exercises,
     }
