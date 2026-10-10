@@ -25,6 +25,10 @@ def supported_retry_exercise(exercise: dict, lesson_content: dict, language: str
               and sentence_key(item["sentence"]) not in original_answers] if target_skill else []
     if tagged:
         candidates = [item["sentence"].strip() for item in tagged]
+    elif target_skill and any(isinstance(item, dict) and item.get("skill_id") for item in lesson_content.get("retry_examples", [])):
+        # A tagged retry bank is skill-specific. Never substitute an unrelated
+        # untagged example when this skill has no unused authored candidate.
+        return None
     def similarity(item):
         words = sentence_key(item).split()
         return (len(set(reference_tokens) & set(words)), -abs(len(words) - len(reference_tokens)))
