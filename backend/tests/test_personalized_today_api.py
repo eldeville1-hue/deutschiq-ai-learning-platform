@@ -25,6 +25,12 @@ class PersonalizedTodayApiTests(unittest.TestCase):
             SimpleNamespace(id=3, topic="articles", correct=False),
         ]
         db = MagicMock()
+        mastered = [
+            SimpleNamespace(topic="word_order", mastery=85, stability_days=3,
+                            next_review_at=None, attempts=5, lapse_count=0),
+            SimpleNamespace(topic="articles", mastery=75, stability_days=2,
+                            next_review_at=None, attempts=4, lapse_count=1),
+        ]
         # Each ORM query starts with a different model. Configure the result
         # at the query boundary, not by accidentally sharing filter chains.
         from app.models.user import User
@@ -36,7 +42,7 @@ class PersonalizedTodayApiTests(unittest.TestCase):
             if model is User:
                 chain.filter.return_value.first.return_value = user
             elif model is TopicMastery:
-                chain.filter.return_value.order_by.return_value.all.return_value = []
+                chain.filter.return_value.order_by.return_value.all.return_value = mastered
                 chain.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
             elif model is UserProgress.lesson_id:
                 chain.filter.return_value.all.return_value = []
