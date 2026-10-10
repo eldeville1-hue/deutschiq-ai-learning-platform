@@ -82,7 +82,7 @@ class ContentQualityTests(unittest.TestCase):
         source = Path(__file__).resolve().parents[1] / "seed_30_day_plan.py"
         tree = ast.parse(source.read_text(encoding="utf-8"))
         namespace = {}
-        wanted = {"CURRICULUM", "LESSON_DETAILS", "GOLD_LESSON_EXAMPLES", "GOLD_RETRY_SENTENCES"}
+        wanted = {"CURRICULUM", "LESSON_DETAILS", "GOLD_LESSON_EXAMPLES", "GOLD_RETRY_SENTENCES", "GOLD_RETRY_TARGETS"}
         for node in tree.body:
             if isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id in wanted for target in node.targets):
                 exec(compile(ast.Module(body=[node], type_ignores=[]), str(source), "exec"), namespace)
