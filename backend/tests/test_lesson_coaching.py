@@ -36,7 +36,10 @@ class FeedbackLanguageQualityTests(unittest.TestCase):
                 import re
                 tokens = re.findall(r"\b\w+\b", hint.casefold())
                 self.assertNotIn("dem", tokens)
-                self.assertNotIn("den", tokens)
+                # "den" is also a normal article in German instructions.
+                # Its occurrence alone does not reveal the correct case form.
+                if lang != "de":
+                    self.assertNotIn("den", tokens)
 
 
 class RepeatedErrorFocusTests(unittest.TestCase):
