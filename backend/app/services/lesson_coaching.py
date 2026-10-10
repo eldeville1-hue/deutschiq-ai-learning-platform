@@ -260,17 +260,17 @@ def feedback_focus(error_type: str | None, missing_words: list[str], extra_words
         "ru": {
             "missing": "Добавь: {words}.",
             "extra": "Убери или замени: {words}.",
-            "order": "Все нужные слова есть — теперь проверь их порядок.",
+            "order": "Проверь место глагола и порядок частей предложения.",
         },
         "de": {
             "missing": "Ergänze: {words}.",
             "extra": "Entferne oder ersetze: {words}.",
-            "order": "Alle nötigen Wörter sind da – prüfe jetzt ihre Reihenfolge.",
+            "order": "Prüfe die Verbposition und die Reihenfolge der Satzteile.",
         },
         "en": {
             "missing": "Add: {words}.",
             "extra": "Remove or replace: {words}.",
-            "order": "All required words are present—now check their order.",
+            "order": "Check the verb position and the order of sentence parts.",
         },
     }[lang]
     if error_type == "verb_not_final":
