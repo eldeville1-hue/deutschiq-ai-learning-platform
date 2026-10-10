@@ -111,6 +111,11 @@ def select_recommended_lesson(lessons, completed_ids: set[int], mastery: dict[st
         # Unlocking still uses demonstrated mastery, while recommendation
         # priority uses decayed retention when available.
         known_strength = float((priority_strength or mastery).get(lesson.topic, 50))
-        # A repeatedly missed skill can take priority, but only among unlocked\n        # lessons. Never bypass the prerequisite or sequential-route guards.\n        focus = lesson.topic == focus_skill or focus_skill in (lesson.weak_point_tags or [])\n        return (-int(focus), -weakness, known_strength, roadmap_order(lesson))
+        # A repeatedly missed skill can take priority, but only among unlocked
+        # lessons. Never bypass the prerequisite or sequential-route guards.
+        focus = bool(focus_skill) and (
+            lesson.topic == focus_skill or focus_skill in (lesson.weak_point_tags or [])
+        )
+        return (-int(focus), -weakness, known_strength, roadmap_order(lesson))
 
     return min(candidates, key=priority)
