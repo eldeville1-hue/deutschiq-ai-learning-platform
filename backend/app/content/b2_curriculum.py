@@ -195,6 +195,19 @@ def build_b2_content(row: tuple) -> dict:
         "de": {"title": title_de, "rule": rule["de"], "objective": objective["de"], "scenario": scenario_de, "assessment_rubric": rubric["de"], "module_title": module_title_de, "can_do": objective["de"], "mission": scenario_de, "success_evidence": success["de"]},
         "en": {"title": title_en, "rule": rule["en"], "objective": objective["en"], "scenario": scenario_en, "assessment_rubric": rubric["en"], "module_title": module_title_en, "can_do": objective["en"], "mission": scenario_en, "success_evidence": success["en"]},
     }
+    # Reuse authored transfer examples for guided recovery only when they
+    # are not already answer keys in this lesson.
+    used_answers = {
+        " ".join(str(value).split()).rstrip(".?!").casefold()
+        for item in exercises
+        for value in (item.get("accepted_answers") or [item.get("answer", "")])
+    }
+    retry_examples = [
+        {"skill_id": topic, "sentence": sentence}
+        for sentence in alternatives
+        if isinstance(sentence, str) and sentence.strip()
+        and " ".join(sentence.split()).rstrip(".?!").casefold() not in used_answers
+    ]
     # Every authored exercise inherits its lesson's stable curriculum skill.
     # Distinct skill-matched retry examples can be added after editorial review.
     for exercise in exercises:
@@ -213,5 +226,5 @@ def build_b2_content(row: tuple) -> dict:
         "delayed_review": delayed_review,
         "content_review": {"status": "approved", "version": "b2-production-path-v15", "languages": {"ru": "reviewed", "de": "reviewed", "en": "reviewed"}},
         "i18n": localized,
-        "exercises": exercises,
+        "retry_examples": retry_examples, "exercises": exercises,
     }
