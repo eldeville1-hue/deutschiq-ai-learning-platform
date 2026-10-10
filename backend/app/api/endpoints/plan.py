@@ -7,7 +7,8 @@ from app.services.learning_route import CEFR_TRACKS, lesson_blockers, select_rec
 from app.models.user import User
 from app.models.diagnostic import DiagnosticResult
 from app.models.progress import UserProgress
-from app.models.learning import TopicMastery
+from app.models.learning import TopicMastery, ExerciseAttempt
+from app.services.lesson_coaching import repeated_error_focus
 from app.models.lesson import Lesson
 import traceback
 from sqlalchemy.exc import SQLAlchemyError
@@ -116,7 +117,17 @@ async def get_plan(user_id: int, lang: str | None = None, track: str | None = No
         attempts = {row.topic: int(row.attempts or 0) for row in mastery_rows}
         diagnostic = db.query(DiagnosticResult).filter(DiagnosticResult.user_id == user.id).order_by(DiagnosticResult.created_at.desc()).first()
         weak_points = diagnostic.weak_points if diagnostic and diagnostic.weak_points else {}
-        recommended = select_recommended_lesson(lessons, completed_ids, mastery, weak_points)
+        recent_skill_rows = db.query(ExerciseAttempt).filter(
+            ExerciseAttempt.user_id == user.id,
+        ).order_by(ExerciseAttempt.created_at.desc(), ExerciseAttempt.id.desc()).limit(12).all()
+        focus_skill = repeated_error_focus(
+            [{"skill_id": item.topic, "correct": bool(item.correct)}
+             for item in reversed(recent_skill_rows)],
+            {lesson.topic for lesson in lessons},
+        )
+        recommended = select_recommended_lesson(
+            lessons, completed_ids, mastery, weak_points, focus_skill=focus_skill,
+        )
         language = normalize_language(lang or user.language_code)
         return [serialize_plan_lesson(
             lesson,
