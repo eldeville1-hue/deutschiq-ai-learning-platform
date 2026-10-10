@@ -107,6 +107,32 @@ class WordOrderFeedbackTests(unittest.TestCase):
         self.assertIn("Add: bitte", feedback_focus("missing_word", ["bitte"], [], "en"))
 
 
+class AuthoredRetryTargetSafetyTests(unittest.TestCase):
+    def test_missing_authored_target_never_falls_back_to_unrelated_article(self):
+        exercise = {"id": "e1", "answer": "Ich lerne Deutsch.", "skill_id": "articles"}
+        lesson = {"retry_examples": [
+            {"skill_id": "articles", "sentence": "Die Frau liest ein Buch.", "target": "dem"}
+        ]}
+        self.assertIsNone(supported_retry_exercise(exercise, lesson, "de"))
+
+    def test_repeated_authored_target_is_ambiguous(self):
+        exercise = {"id": "e2", "answer": "Ich lerne Deutsch.", "skill_id": "articles"}
+        lesson = {"retry_examples": [
+            {"skill_id": "articles", "sentence": "Sie sieht die Frau, die lacht.", "target": "die"}
+        ]}
+        self.assertIsNone(supported_retry_exercise(exercise, lesson, "en"))
+
+    def test_unique_authored_target_produces_correct_blank(self):
+        exercise = {"id": "e3", "answer": "Ich lerne Deutsch.", "skill_id": "articles"}
+        lesson = {"retry_examples": [
+            {"skill_id": "articles", "sentence": "Die Frau sieht den Hund.", "target": "den"}
+        ]}
+        retry = supported_retry_exercise(exercise, lesson, "en")
+        self.assertIsNotNone(retry)
+        self.assertEqual("den", retry["answer"])
+        self.assertIn("___ Hund", retry["question"])
+
+
 class LessonCoachingTests(unittest.TestCase):
     def test_retry_uses_first_example_when_second_is_original_answer(self):
         retry = supported_retry_exercise({"answer": "Ich wohne in Berlin."},
