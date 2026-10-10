@@ -10,11 +10,39 @@ TOPIC_NAMES = {
     "haben_conjugation": {"ru": "спряжение haben", "de": "Konjugation von haben", "en": "conjugating haben"},
 }
 
+# Reviewed, deterministic examples. Never label a generic word-order drill as
+# practice for an unrelated grammar topic.
+TOPIC_LESSONS = {
+    "articles": ("Der Hund schläft.", "der / Hund / schläft", "Nouns have grammatical gender; learn each noun with its article.", "Nomen haben ein grammatisches Geschlecht; lerne sie mit Artikel.", "У существительных есть грамматический род; учи их вместе с артиклем."),
+    "word_order": ("Heute lerne ich Deutsch.", "heute / ich / Deutsch / lerne", "The conjugated verb usually takes second position in a main clause.", "Im Hauptsatz steht das konjugierte Verb normalerweise an zweiter Position.", "В главном предложении спрягаемый глагол обычно стоит на втором месте."),
+    "dative_case": ("Ich helfe dem Mann.", "ich / helfe / dem Mann", "The verb helfen takes the dative case: dem Mann.", "Das Verb helfen verlangt den Dativ: dem Mann.", "Глагол helfen требует Dativ: dem Mann."),
+    "genitive_prepositions": ("Wegen des Regens bleiben wir zu Hause.", "wegen / des Regens / bleiben wir zu Hause", "In formal German, wegen is commonly followed by the genitive.", "In der Standardsprache steht nach wegen häufig der Genitiv.", "В нормативном немецком после wegen часто используется Genitiv."),
+    "perfekt_auxiliary": ("Ich bin nach Berlin gefahren.", "ich / bin / nach Berlin / gefahren", "Many verbs of movement use sein in the Perfekt.", "Viele Bewegungsverben bilden das Perfekt mit sein.", "Многие глаголы движения образуют Perfekt с sein."),
+    "haben_conjugation": ("Du hast heute Zeit.", "du / hast / heute Zeit", "Haben changes to hast with du.", "Haben wird bei du zu hast.", "С местоимением du глагол haben принимает форму hast."),
+}
+
+
+def _detect_topic(question: str, topics: Sequence[str]) -> str:
+    lowered = question.casefold()
+    keywords = {
+        "articles": ("artikel", "article", "артикл"),
+        "word_order": ("wortstellung", "word order", "порядок слов"),
+        "dative_case": ("dativ", "dative", "дательн"),
+        "genitive_prepositions": ("genitiv", "genitive", "родительн"),
+        "perfekt_auxiliary": ("perfekt", "perfect tense", "прошедш"),
+        "haben_conjugation": ("haben", "спряжени"),
+    }
+    for topic, terms in keywords.items():
+        if any(term in lowered for term in terms):
+            return topic
+    return next((topic for topic in topics if topic in TOPIC_LESSONS), "word_order")
+
 
 def fallback_answer(question: str, lang: str, level: str, topics: Sequence[str]) -> str:
     """Return a small, actionable lesson when the external AI is unavailable."""
     lowered = question.casefold()
-    topic_key = topics[0] if topics else "word_order"
+    topic_key = _detect_topic(question, topics)
+    example, words, rule_en, rule_de, rule_ru = TOPIC_LESSONS[topic_key]
     language = lang if lang in ("ru", "de", "en") else "en"
     names = TOPIC_NAMES.get(topic_key, {"ru": topic_key.replace("_", " "), "de": topic_key.replace("_", " "), "en": topic_key.replace("_", " ")})
     topic = names[language]
@@ -23,20 +51,20 @@ def fallback_answer(question: str, lang: str, level: str, topics: Sequence[str])
 
     if lang.startswith("de"):
         if wants_exercise:
-            return f"Übung auf Niveau {level} – {topic}: Ordne „heute / ich / Deutsch / lerne“. Antworte mit dem vollständigen Satz."
+            return f"Übung auf Niveau {level} – {topic}: Ordne „{words}“. Antworte mit dem vollständigen Satz."
         if wants_error:
             return "Schick mir bitte den deutschen Satz und – wenn möglich – deine ursprüngliche Antwort. Ich markiere genau eine Fehlerstelle, zeige die richtige Form und gebe dir einen kurzen neuen Versuch."
-        return f"Kurzregel – {topic}: Im Hauptsatz steht das konjugierte Verb meist an Position 2. Beispiel: „Heute lerne ich Deutsch.“ Bilde jetzt einen eigenen Satz."
+        return f"Kurzregel – {topic}: {rule_de} Beispiel: „{example}“ Bilde jetzt einen eigenen Satz."
 
     if language == "en":
         if wants_exercise:
-            return f"{level} practice — {topic}: Put these words in order: “heute / ich / Deutsch / lerne”. Reply with the complete sentence."
+            return f"{level} practice — {topic}: Put these words in order: “{words}”. Reply with the complete sentence."
         if wants_error:
             return "Send your German sentence and your original answer. I’ll mark one error, show the correction and give you one short retry."
-        return f"Quick rule — {topic}: In a German main clause, the conjugated verb usually takes position 2. Example: “Heute lerne ich Deutsch.” Now write one sentence of your own."
+        return f"Quick rule — {topic}: {rule_en} Example: “{example}” Now write one sentence of your own."
 
     if wants_exercise:
-        return f"Упражнение уровня {level} — {topic}: собери предложение «heute / ich / Deutsch / lerne». Напиши готовую фразу."
+        return f"Упражнение уровня {level} — {topic}: собери предложение «{words}». Напиши готовую фразу."
     if wants_error:
         return "Пришли немецкое предложение и, если можешь, свой первоначальный ответ. Я отмечу одну конкретную ошибку, покажу правильный вариант и дам короткую попытку на закрепление."
-    return f"Короткое правило — {topic}: в немецком главном предложении спрягаемый глагол обычно стоит на втором месте. Пример: „Heute lerne ich Deutsch.“ Теперь составь свою фразу."
+    return f"Короткое правило — {topic}: {rule_ru} Пример: „{example}“ Теперь составь свою фразу."
