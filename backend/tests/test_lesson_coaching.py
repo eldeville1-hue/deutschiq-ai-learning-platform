@@ -115,6 +115,20 @@ class LessonCoachingTests(unittest.TestCase):
         self.assertEqual("sind", retry["answer"])
         self.assertIn("Wir ___ früh angekommen", retry["question"])
 
+    def test_form_retry_without_safe_target_does_not_become_reorder(self):
+        retry = supported_retry_exercise(
+            {"answer": "Ich helfe dem Mann.", "skill_id": "dative_case"},
+            {"retry_examples": [{"skill_id": "dative_case",
+                                 "sentence": "Wir helfen unseren Freunden."}]}, "de")
+        self.assertIsNone(retry)
+
+    def test_form_retry_with_invalid_authored_target_does_not_guess(self):
+        retry = supported_retry_exercise(
+            {"answer": "Ich habe gegessen.", "skill_id": "perfekt_auxiliary"},
+            {"retry_examples": [{"skill_id": "perfekt_auxiliary",
+                                 "sentence": "Wir sind angekommen.", "target": "habe"}]}, "en")
+        self.assertIsNone(retry)
+
     def test_struggling_learner_gets_supported_mode(self):
         profile = learning_profile(60, [True, False, False], 0)
         self.assertEqual("supported", profile["mode"])
