@@ -23,6 +23,16 @@ class ContentQualityTests(unittest.TestCase):
                 self.assertTrue(all(item.get("skill_id") == row[2]
                                     for item in content["exercises"]))
 
+    def test_advanced_curricula_only_offer_valid_authored_retries(self):
+        for rows, builder in ((B1_CURRICULUM, build_b1_content),
+                              (B2_CURRICULUM, build_b2_content)):
+            for row in rows:
+                content = builder(row)
+                self.assertFalse(any(issue.startswith("retry:")
+                                     for issue in validate_lesson_content(content)), row[2])
+                self.assertTrue(all(item["skill_id"] == row[2]
+                                    for item in content["retry_examples"]))
+
     def test_retry_examples_require_matching_skill_and_new_answer(self):
         base = {"objective": "x", "rule": "x", "examples": ["x"],
                 "audio_text": "x", "common_mistakes": ["x"],
