@@ -33,8 +33,10 @@ class FeedbackLanguageQualityTests(unittest.TestCase):
         for lang in ("ru", "de", "en"):
             with self.subTest(language=lang):
                 hint = feedback_focus("case", ["dem"], ["den"], lang)
-                self.assertNotIn("dem", hint)
-                self.assertNotIn("den", hint)
+                import re
+                tokens = re.findall(r"\b\w+\b", hint.casefold())
+                self.assertNotIn("dem", tokens)
+                self.assertNotIn("den", tokens)
 
 
 class RepeatedErrorFocusTests(unittest.TestCase):
