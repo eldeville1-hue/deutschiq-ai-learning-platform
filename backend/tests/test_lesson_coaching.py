@@ -61,6 +61,27 @@ class RecoveryAwareSkillFocusTests(unittest.TestCase):
         ]
         self.assertEqual("articles", repeated_error_focus(attempts))
 
+    def test_other_skill_does_not_interrupt_two_successes(self):
+        attempts = [
+            {"skill_id": "articles", "correct": False},
+            {"skill_id": "articles", "correct": False},
+            {"skill_id": "articles", "correct": False},
+            {"skill_id": "articles", "correct": True},
+            {"skill_id": "word_order", "correct": True},
+            {"skill_id": "articles", "correct": True},
+        ]
+        self.assertIsNone(repeated_error_focus(attempts))
+
+    def test_malformed_attempt_does_not_count_as_recovery(self):
+        attempts = [
+            {"skill_id": "articles", "correct": False},
+            {"skill_id": "articles", "correct": False},
+            {"skill_id": "articles", "correct": False},
+            {"skill_id": "articles", "correct": True},
+            {"skill_id": "articles", "correct": "true"},
+        ]
+        self.assertEqual("articles", repeated_error_focus(attempts))
+
     def test_new_error_after_recovery_reopens_focus(self):
         attempts = [
             {"skill_id": "articles", "correct": False} for _ in range(5)
