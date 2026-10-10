@@ -3,6 +3,7 @@ import unittest
 from types import SimpleNamespace
 
 from app.services.assessment_insights import assessment_insights, evidence_gate
+from app.services.lesson_coaching import repeated_error_focus
 from app.services.learning_engine import adaptive_mastery_update, adaptive_priority_score, next_stability, retrieval_review_interval
 from app.services.learning_route import curriculum_track_for_level, lesson_blockers, select_recommended_lesson
 
@@ -77,6 +78,48 @@ class AdaptiveLearnerJourneyTests(unittest.TestCase):
     def test_diagnostic_routes_stay_stable_from_a1_through_b2(self):
         expected = {"A1": "A1", "A1+": "A1", "A2": "A2", "B1": "B1", "B1+": "B1", "B2": "B2"}
         self.assertEqual(expected, {level: curriculum_track_for_level(level) for level in expected})
+
+    def test_realistic_mistake_history_changes_recommendation_and_recovers(self):
+        first = lesson(1, "word_order", 1, "A2")
+        articles = lesson(2, "articles", 2, "A2")
+        route = [first, articles]
+        mastery = {"word_order": 82, "articles": 72}
+        history = [
+            {"skill_id": "articles", "correct": False},
+            {"skill_id": "word_order", "correct": True},
+            {"skill_id": "articles", "correct": False},
+        ]
+        focus = repeated_error_focus(history, {item.topic for item in route})
+        self.assertEqual("articles", focus)
+        self.assertIs(
+            select_recommended_lesson(route, set(), mastery, {}, focus_skill=focus),
+            articles,
+        )
+        recovered = history + [
+            {"skill_id": "articles", "correct": True},
+            {"skill_id": "articles", "correct": True},
+        ]
+        self.assertIsNone(repeated_error_focus(recovered, {item.topic for item in route}))
+        self.assertIs(
+            select_recommended_lesson(route, set(), mastery, {},
+                                      focus_skill=repeated_error_focus(recovered, {item.topic for item in route})),
+            articles,  # Without focus, lower mastery wins the normal priority.
+        )
+
+    def test_repeated_errors_do_not_unlock_prerequisite_or_cross_track(self):
+        first = lesson(1, "word_order", 1, "A2")
+        articles = lesson(2, "articles", 2, "A2", prerequisites=["word_order"])
+        route = [first, articles]
+        history = [
+            {"skill_id": "articles", "correct": False},
+            {"skill_id": "articles", "correct": False},
+            {"skill_id": "b2_argumentation", "correct": False},
+            {"skill_id": "b2_argumentation", "correct": False},
+        ]
+        focus = repeated_error_focus(history, {item.topic for item in route})
+        self.assertEqual("articles", focus)
+        self.assertIs(select_recommended_lesson(route, set(), {}, {}, focus_skill=focus), first)
+        self.assertEqual([1, 2], [item.id for item in route])
 
     def test_weak_ready_skill_can_be_prioritized_without_reordering_route(self):
         personal = lesson(10, "personal_details", 3, "A2", ["personal_details"])
