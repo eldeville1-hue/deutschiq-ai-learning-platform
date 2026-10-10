@@ -43,8 +43,8 @@ class PersistedPersonalizationTests(unittest.TestCase):
                             answer="wrong", correct=False),
             ExerciseAttempt(user_id=1, lesson_id=2, exercise_index=1, topic="articles",
                             answer="wrong", correct=False),
-            TopicMastery(user_id=2, topic="word_order", mastery=85, attempts=5),
-            TopicMastery(user_id=2, topic="articles", mastery=75, attempts=4),
+            TopicMastery(user_id=2, topic="word_order", mastery=65, attempts=5),
+            TopicMastery(user_id=2, topic="articles", mastery=85, attempts=4),
         ])
         self.db.commit()
 
