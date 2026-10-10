@@ -18,9 +18,11 @@ class LessonCoachingTests(unittest.TestCase):
     def test_retry_does_not_claim_new_context_when_only_original_model_exists(self):
         for lang in ('ru', 'de', 'en'):
             retry = supported_retry_exercise({"answer": "Ich lerne Deutsch."}, {"examples": ["Ich lerne Deutsch."]}, lang)
-            self.assertNotIn("new example", retry["question"])
-            self.assertNotIn("neuen Beispiel", retry["question"])
-            self.assertNotIn("новом примере", retry["question"])
+            self.assertIsNone(retry)
+
+    def test_retry_without_any_authored_examples_is_not_duplicated(self):
+        retry = supported_retry_exercise({"answer": "Du hast Zeit."}, {}, "de")
+        self.assertIsNone(retry)
 
     def test_supported_retry_uses_a_fresh_sentence_and_localized_phone_prompt(self):
         exercise = {"id": "obwohl-guided", "answer": "Obwohl es regnet, gehen wir spazieren.", "accepted_answers": ["Obwohl es regnet, gehen wir spazieren."], "misconception": "verb_not_final"}
