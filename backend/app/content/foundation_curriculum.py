@@ -972,6 +972,8 @@ def build_foundation_content(row: tuple, level: str) -> dict:
                         {**turn, "audio_url": f"{audio_base}/turn-{index}.mp3?v={audio_version}"}
                         for index, turn in enumerate(localized.get("conversation_turns") or [], start=1)
                     ]
+        for exercise in exercises:
+            exercise.setdefault("skill_id", topic)
         return {
             "day":day,"week":module,"track":level,"module":module,"quality_version":10 if level == "A1" else 13,
             "learning_method":"mission_loop_v1","module_title":module_title_ru,
