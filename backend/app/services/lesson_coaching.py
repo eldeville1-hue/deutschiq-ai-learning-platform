@@ -163,6 +163,31 @@ def repair_plan(error_type: str | None, missing_words: list[str], extra_words: l
             "extra": "Check the extra elements: {words}.",
         },
     }[language]
+    # Repair steps must address the detected grammar error rather than always
+    # directing learners to check word order.
+    targeted = {
+        "ru": {
+            "case": ("Проверь падеж после глагола или предлога.", "Подставь правильную форму артикля или местоимения."),
+            "article": ("Определи род и падеж существительного.", "Выбери правильный артикль для этого контекста."),
+            "conjugation": ("Найди подлежащее и его лицо.", "Согласуй окончание глагола с подлежащим."),
+            "auxiliary": ("Определи, нужен ли в Perfekt haben или sein.", "Поставь вспомогательный глагол в правильную форму."),
+        },
+        "de": {
+            "case": ("Prüfe den Kasus nach Verb oder Präposition.", "Setze Artikel oder Pronomen in die passende Form."),
+            "article": ("Bestimme Genus und Kasus des Nomens.", "Wähle den passenden Artikel im Satz."),
+            "conjugation": ("Bestimme Person und Numerus des Subjekts.", "Passe die Verbendung an das Subjekt an."),
+            "auxiliary": ("Prüfe, ob das Perfekt haben oder sein braucht.", "Konjugiere das Hilfsverb passend zum Subjekt."),
+        },
+        "en": {
+            "case": ("Check the case required by the verb or preposition.", "Choose the matching article or pronoun form."),
+            "article": ("Identify the noun's gender and case.", "Choose the article that fits this sentence."),
+            "conjugation": ("Identify the subject's person and number.", "Match the verb ending to the subject."),
+            "auxiliary": ("Check whether Perfekt needs haben or sein.", "Conjugate the auxiliary for the subject."),
+        },
+    }
+    if error_type in targeted[language]:
+        first, practice = targeted[language][error_type]
+        return [first, practice]
     steps = [copy["rule"]]
     if missing_words:
         steps.append(copy["missing"].format(words=", ".join(missing_words[:4])))
