@@ -96,6 +96,25 @@ class LessonCoachingTests(unittest.TestCase):
         self.assertIsNotNone(retry)
         self.assertNotEqual(retry["tokens"], retry["answer"].split())
 
+    def test_case_retry_asks_for_missing_article_not_word_order(self):
+        retry = supported_retry_exercise(
+            {"answer": "Ich helfe dem Mann.", "skill_id": "dative_case"},
+            {"retry_examples": [{"skill_id": "dative_case",
+                                 "sentence": "Sie hilft der Frau."}]}, "de")
+        self.assertEqual("fill", retry["type"])
+        self.assertEqual("der", retry["answer"])
+        self.assertIn("Sie hilft ___ Frau", retry["question"])
+        self.assertNotIn("tokens", retry)
+
+    def test_perfect_retry_asks_for_auxiliary(self):
+        retry = supported_retry_exercise(
+            {"answer": "Ich habe gegessen.", "skill_id": "perfekt_auxiliary"},
+            {"retry_examples": [{"skill_id": "perfekt_auxiliary",
+                                 "sentence": "Wir sind früh angekommen."}]}, "en")
+        self.assertEqual("fill", retry["type"])
+        self.assertEqual("sind", retry["answer"])
+        self.assertIn("Wir ___ früh angekommen", retry["question"])
+
     def test_struggling_learner_gets_supported_mode(self):
         profile = learning_profile(60, [True, False, False], 0)
         self.assertEqual("supported", profile["mode"])

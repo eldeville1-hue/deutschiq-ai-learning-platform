@@ -17,9 +17,15 @@ class AuthoredRoadmapRetryTests(unittest.TestCase):
                 self.assertEqual(skill, guided["skill_id"])
                 retry = supported_retry_exercise(guided, content, "de")
                 self.assertIsNotNone(retry)
-                self.assertIn(retry["answer"], [item["sentence"].rstrip(".?!") for item in content["retry_examples"]])
-                self.assertNotEqual(retry["answer"].casefold(), str(answer).rstrip(".?!").casefold())
-                self.assertNotEqual(retry["tokens"], retry["answer"].split())
+                authored = [item["sentence"].rstrip(".?!") for item in content["retry_examples"]]
+                if retry["type"] == "reorder":
+                    self.assertIn(retry["answer"], authored)
+                    self.assertNotEqual(retry["tokens"], retry["answer"].split())
+                    self.assertNotEqual(retry["answer"].casefold(), str(answer).rstrip(".?!").casefold())
+                else:
+                    self.assertEqual("fill", retry["type"])
+                    self.assertIn("___", retry["question"])
+                    self.assertTrue(any(retry["answer"] in sentence.split() for sentence in authored))
 
 
 if __name__ == "__main__":

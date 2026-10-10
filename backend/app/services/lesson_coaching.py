@@ -42,6 +42,47 @@ def supported_retry_exercise(exercise: dict, lesson_content: dict, language: str
     # A reorder exercise is not meaningful if the correct sequence is unchanged.
     if len(answer_tokens) < 2 or len({token.casefold() for token in answer_tokens}) < 2:
         return None
+    # For case, article, and verb-form skills, ask the learner to retrieve
+    # the actual form instead of merely rearranging a fully visible sentence.
+    # The blank is selected from a complete, authored answer.
+    form_skills = {"dative_case", "prepositions", "dative_pronouns", "articles",
+                   "perfekt_auxiliary", "participles", "verbs_of_movement"}
+    if target_skill in form_skills:
+        import re
+        words = list(re.finditer(r"\b[\wÄÖÜäöüß]+\b", model))
+        forms = {
+            "dative_case": {"dem", "der", "den", "einem", "einer", "einen"},
+            "prepositions": {"für", "ohne", "durch", "gegen", "mit", "aus", "bei", "nach", "seit", "von", "zu"},
+            "dative_pronouns": {"mir", "dir", "ihm", "ihr", "uns", "euch", "ihnen"},
+            "articles": {"der", "die", "das", "ein", "eine", "einen", "kein", "keine", "keinen"},
+            "perfekt_auxiliary": {"habe", "hast", "hat", "haben", "habt", "bin", "bist", "ist", "sind", "seid"},
+            "participles": set(),
+            "verbs_of_movement": {"bin", "bist", "ist", "sind", "seid"},
+        }
+        eligible = [word for word in words if word.group().casefold() in forms[target_skill]]
+        if target_skill == "participles":
+            eligible = [word for word in words if word.group().casefold().startswith(("ge", "be", "ver", "er", "auf", "an", "ein"))
+                        and len(word.group()) > 5]
+        if eligible:
+            chosen = eligible[-1] if target_skill == "participles" else eligible[0]
+            blanked = model[:chosen.start()] + "___" + model[chosen.end():]
+            prompts = {
+                "ru": "Вставь правильную форму в новом предложении:",
+                "de": "Ergänze die richtige Form im neuen Satz:",
+                "en": "Fill in the correct form in this new sentence:",
+            }
+            return {
+                "id": f"{exercise.get('id', 'exercise')}-retry",
+                "type": "fill",
+                "stage": "guided",
+                "question": f"{prompts[normalize_language(language)]} {blanked}",
+                "answer": chosen.group(),
+                "accepted_answers": [chosen.group()],
+                "hint": str(lesson_content.get("rule") or exercise.get("hint") or ""),
+                "explanation": str(lesson_content.get("rule") or exercise.get("explanation", "")),
+                "misconception": exercise.get("misconception"),
+                "mission_role": exercise.get("mission_role"),
+            }
     tokens = answer_tokens[2:] + answer_tokens[:2] if len(answer_tokens) > 3 else list(reversed(answer_tokens))
     if tokens == answer_tokens:
         tokens = answer_tokens[1:] + answer_tokens[:1]
