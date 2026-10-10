@@ -52,6 +52,7 @@ class TutorRequest(BaseModel):
 
 @router.post("/ask")
 async def ask_tutor(data: TutorRequest, db: Session = Depends(get_db), authenticated_id: int = Depends(telegram_user_id)):
+    global _provider_quota_exhausted
     assert_owner(authenticated_id, data.user_id)
     # 1. Найти пользователя
     user = db.query(User).filter(User.telegram_id == data.user_id).first()
@@ -142,7 +143,6 @@ Rules:
     messages.append({"role": "user", "content": data.question})
     
     # 6. Запрос к OpenAI
-    global _provider_quota_exhausted
     try:
         response = client.chat.completions.create(
             model=settings.OPENAI_MODEL or "gpt-4o-mini",
