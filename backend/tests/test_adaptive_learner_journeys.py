@@ -103,7 +103,7 @@ class AdaptiveLearnerJourneyTests(unittest.TestCase):
         self.assertIs(
             select_recommended_lesson(route, set(), mastery, {},
                                       focus_skill=repeated_error_focus(recovered, {item.topic for item in route})),
-            first,
+            articles,  # Without focus, lower mastery wins the normal priority.
         )
 
     def test_repeated_errors_do_not_unlock_prerequisite_or_cross_track(self):
