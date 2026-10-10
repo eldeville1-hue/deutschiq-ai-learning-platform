@@ -143,6 +143,12 @@ def normalize_answer(value: str) -> str:
 async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), authenticated_id: int = Depends(telegram_user_id)):
     assert_owner(authenticated_id, data.user_id)
     lesson = db.query(Lesson).filter(Lesson.id == data.lesson_id).first()
+    user = db.query(User).filter(User.telegram_id == data.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    session = db.query(LearningSession).filter(LearningSession.id == data.session_id, LearningSession.user_id == user.id, LearningSession.lesson_id == lesson.id, LearningSession.status == "active").first()
+    if not session:
+        raise HTTPException(status_code=409, detail="Learning session is missing or closed")
     lesson_content = localize_lesson_content(normalize_lesson_content(lesson.content or {}, lesson.topic, lesson.level), data.language) if lesson else {}
     exercises = lesson_content.get("exercises", [])
     if data.exercise_index < 0 or data.exercise_index >= len(exercises):
@@ -176,12 +182,6 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
                 "en": "We couldn't assess that answer reliably. Please rephrase it.",
             }[normalize_language(data.language)],
         }
-    user = db.query(User).filter(User.telegram_id == data.user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    session = db.query(LearningSession).filter(LearningSession.id == data.session_id, LearningSession.user_id == user.id, LearningSession.lesson_id == lesson.id, LearningSession.status == "active").first()
-    if not session:
-        raise HTTPException(status_code=409, detail="Learning session is missing or closed")
     topic = lesson.topic
     prior_attempts = db.query(ExerciseAttempt).filter(
         ExerciseAttempt.session_id == session.id,

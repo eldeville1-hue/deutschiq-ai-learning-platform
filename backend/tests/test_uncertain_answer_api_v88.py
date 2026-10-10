@@ -29,7 +29,7 @@ class UncertainAnswerApiTests(unittest.TestCase):
                 db.add.assert_not_called()
                 db.commit.assert_not_called()
                 db.flush.assert_not_called()
-                self.assertEqual(1, db.query.call_count)
+                self.assertEqual(3, db.query.call_count)
 
 
 if __name__ == "__main__":
