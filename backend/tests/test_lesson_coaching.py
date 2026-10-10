@@ -129,6 +129,34 @@ class LessonCoachingTests(unittest.TestCase):
                                  "sentence": "Wir sind angekommen.", "target": "habe"}]}, "en")
         self.assertIsNone(retry)
 
+    def test_repeated_mistakes_select_a_skill_for_followup(self):
+        attempts = [
+            {"skill_id": "articles", "correct": False},
+            {"skill_id": "word_order", "correct": False},
+            {"skill_id": "articles", "correct": False},
+        ]
+        profile = learning_profile(55, [False, True, False], recent_skill_attempts=attempts,
+                                   available_skills={"articles", "word_order"})
+        self.assertEqual("articles", profile["focus_skill"])
+
+    def test_corrected_skill_does_not_remain_a_priority(self):
+        attempts = [
+            {"skill_id": "articles", "correct": False},
+            {"skill_id": "articles", "correct": False},
+            {"skill_id": "articles", "correct": True},
+            {"skill_id": "articles", "correct": True},
+        ]
+        self.assertIsNone(learning_profile(60, [], recent_skill_attempts=attempts)["focus_skill"])
+
+    def test_unavailable_skills_are_not_selected(self):
+        attempts = [{"skill_id": "articles", "correct": False}] * 3
+        profile = learning_profile(50, [], recent_skill_attempts=attempts,
+                                   available_skills={"word_order"})
+        self.assertIsNone(profile["focus_skill"])
+
+    def test_legacy_profile_without_history_remains_compatible(self):
+        self.assertIsNone(learning_profile(60, [True])["focus_skill"])
+
     def test_struggling_learner_gets_supported_mode(self):
         profile = learning_profile(60, [True, False, False], 0)
         self.assertEqual("supported", profile["mode"])
