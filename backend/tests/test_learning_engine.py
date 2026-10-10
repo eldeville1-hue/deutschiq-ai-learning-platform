@@ -134,7 +134,7 @@ class LearningEngineTests(unittest.TestCase):
         first = SimpleNamespace(id=1, topic="word_order", content={"day": 1}, weak_point_tags=["word_order"])
         second = SimpleNamespace(id=2, topic="articles", content={"day": 2}, weak_point_tags=["articles"])
         lessons = [first, second]
-        picked = select_recommended_lesson(lessons, set(), {}, {}, focus_skill="articles")
+        picked = select_recommended_lesson(lessons, set(), {"word_order": 80}, {}, focus_skill="articles")
         self.assertIs(picked, second)
         self.assertEqual([1, 2], [lesson.id for lesson in lessons])
 
