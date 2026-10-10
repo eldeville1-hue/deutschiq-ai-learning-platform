@@ -130,6 +130,28 @@ class LearningEngineTests(unittest.TestCase):
         picked = select_recommended_lesson(lessons, set(), mastery, {}, retained_strength)
         self.assertIs(picked, fading)
 
+    def test_repeated_error_focus_prioritizes_available_skill(self):
+        first = SimpleNamespace(id=1, topic="word_order", content={"day": 1}, weak_point_tags=["word_order"])
+        second = SimpleNamespace(id=2, topic="articles", content={"day": 2}, weak_point_tags=["articles"])
+        lessons = [first, second]
+        picked = select_recommended_lesson(lessons, set(), {}, {}, focus_skill="articles")
+        self.assertIs(picked, second)
+        self.assertEqual([1, 2], [lesson.id for lesson in lessons])
+
+    def test_repeated_error_focus_never_bypasses_blockers(self):
+        first = SimpleNamespace(id=1, topic="word_order", content={"day": 1}, weak_point_tags=["word_order"])
+        second = SimpleNamespace(id=2, topic="word_order", content={"day": 2}, weak_point_tags=["word_order"])
+        lessons = [first, second]
+        self.assertIs(select_recommended_lesson(lessons, set(), {}, {},
+                                                focus_skill="word_order"), first)
+
+    def test_unknown_focus_keeps_existing_priority(self):
+        first = SimpleNamespace(id=1, topic="word_order", content={"day": 1}, weak_point_tags=["word_order"])
+        second = SimpleNamespace(id=2, topic="articles", content={"day": 2}, weak_point_tags=["articles"])
+        lessons = [first, second]
+        self.assertIs(select_recommended_lesson(lessons, set(), {}, {},
+                                                focus_skill="not_in_route"), first)
+
     def test_recommendation_adapts_without_reordering_route(self):
         first = SimpleNamespace(id=1, topic="word_order", content={"day": 1}, weak_point_tags=["word_order"])
         articles = SimpleNamespace(id=2, topic="articles", content={"day": 15}, weak_point_tags=["articles"])
