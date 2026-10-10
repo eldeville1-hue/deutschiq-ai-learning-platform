@@ -215,20 +215,40 @@ def build_content(day, topic, rule, example, question, answer):
     }
 
 
-def validate_all_curriculum_before_seed():
-    """Fail before opening a write session if any authored lesson is invalid."""
+def curriculum_audit_report():
+    """Return every authored content issue, grouped by track and lesson day."""
     tracks = [
-        ("30-day roadmap", [(row[0], build_content(row[0], row[1], row[2], row[4], row[5], row[6])) for row in CURRICULUM]),
-        ("B1", [(row[0], build_b1_content(row)) for row in B1_CURRICULUM]),
-        ("A1", [(row[0], build_foundation_content(row, "A1")) for row in A1_CURRICULUM]),
-        ("A2", [(row[0], build_foundation_content(row, "A2")) for row in A2_CURRICULUM]),
-        ("B2", [(row[0], build_b2_content(row)) for row in B2_CURRICULUM]),
+        ("30-day roadmap", CURRICULUM, lambda row: build_content(row[0], row[1], row[2], row[4], row[5], row[6])),
+        ("B1", B1_CURRICULUM, build_b1_content),
+        ("A1", A1_CURRICULUM, lambda row: build_foundation_content(row, "A1")),
+        ("A2", A2_CURRICULUM, lambda row: build_foundation_content(row, "A2")),
+        ("B2", B2_CURRICULUM, build_b2_content),
     ]
-    for track, lessons in tracks:
-        for day, content in lessons:
-            issues = validate_roadmap_content(content)
+    report = {}
+    for track, rows, builder in tracks:
+        problems = []
+        for row in rows:
+            day = row[0]
+            try:
+                issues = validate_roadmap_content(builder(row))
+            except Exception as exc:
+                issues = [f"build_error:{type(exc).__name__}:{exc}"]
             if issues:
-                raise ValueError(f"Refusing to publish {track} day {day}: {', '.join(issues)}")
+                problems.append({"day": day, "issues": issues})
+        report[track] = problems
+    return report
+
+
+def validate_all_curriculum_before_seed():
+    """Report all invalid lessons before opening a write session."""
+    report = curriculum_audit_report()
+    failures = [
+        f"{track} day {item['day']}: {', '.join(item['issues'])}"
+        for track, lessons in report.items()
+        for item in lessons
+    ]
+    if failures:
+        raise ValueError("Refusing to publish curriculum:\n" + "\n".join(failures))
 
 
 def seed():

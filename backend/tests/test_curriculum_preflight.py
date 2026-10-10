@@ -20,7 +20,7 @@ class CurriculumPreflightTests(unittest.TestCase):
 
         with patch.object(seed_30_day_plan, "build_b2_content", side_effect=invalid_b2):
             with patch.object(seed_30_day_plan, "SessionLocal") as session:
-                with self.assertRaisesRegex(ValueError, "Refusing to publish B2"):
+                with self.assertRaisesRegex(ValueError, "Refusing to publish curriculum"):
                     seed_30_day_plan.seed()
                 session.assert_not_called()
 
