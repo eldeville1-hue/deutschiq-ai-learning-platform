@@ -11,6 +11,7 @@ from app.models.progress import UserProgress
 from app.models.diagnostic import DiagnosticResult
 from app.models.user import User
 from app.services.learning_engine import adaptive_priority_score, retention_score
+from app.services.lesson_coaching import repeated_error_focus
 from app.services.plan import generate_plan
 from app.services.learning_route import lesson_blockers, select_recommended_lesson
 from app.services.skill_graph import skill_for
@@ -60,7 +61,17 @@ async def today(user_id: int, lang: str | None = None, db: Session = Depends(get
     }
     diagnostic = db.query(DiagnosticResult).filter(DiagnosticResult.user_id == user.id).order_by(DiagnosticResult.created_at.desc()).first()
     weak_points = diagnostic.weak_points if diagnostic and diagnostic.weak_points else {}
-    next_lesson = select_recommended_lesson(plan, completed_ids, mastery_map, weak_points, retention_map)
+    recent_skill_rows = db.query(ExerciseAttempt).filter(
+        ExerciseAttempt.user_id == user.id,
+    ).order_by(ExerciseAttempt.created_at.desc(), ExerciseAttempt.id.desc()).limit(12).all()
+    focus_skill = repeated_error_focus(
+        [{"skill_id": item.topic, "correct": bool(item.correct)}
+         for item in reversed(recent_skill_rows)],
+        {lesson.topic for lesson in plan},
+    )
+    next_lesson = select_recommended_lesson(
+        plan, completed_ids, mastery_map, weak_points, retention_map, focus_skill=focus_skill,
+    )
     production_attempts = db.query(ExerciseAttempt).filter(
         ExerciseAttempt.user_id == user.id, ExerciseAttempt.assessment.isnot(None)
     ).order_by(ExerciseAttempt.created_at.desc()).limit(100).all()
