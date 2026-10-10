@@ -38,6 +38,11 @@ def supported_retry_exercise(exercise: dict, lesson_content: dict, language: str
     if sentence_key(model) in original_answers:
         return None
     model = model.rstrip(".?!")
+    # Use a curriculum-authored target when available. Avoid hiding an
+    # unrelated article just because it appears earlier in the sentence.
+    authored_target = next((item.get("target") for item in tagged
+                            if item["sentence"].strip().rstrip(".?!") == model
+                            and isinstance(item.get("target"), str)), None)
     answer_tokens = model.split()
     # A reorder exercise is not meaningful if the correct sequence is unchanged.
     if len(answer_tokens) < 2 or len({token.casefold() for token in answer_tokens}) < 2:
@@ -60,7 +65,9 @@ def supported_retry_exercise(exercise: dict, lesson_content: dict, language: str
             "verbs_of_movement": {"bin", "bist", "ist", "sind", "seid"},
         }
         eligible = [word for word in words if word.group().casefold() in forms[target_skill]]
-        if target_skill == "participles":
+        if authored_target:
+            eligible = [word for word in words if word.group() == authored_target]
+        if target_skill == "participles" and not authored_target:
             eligible = [word for word in words if word.group().casefold().startswith(("ge", "be", "ver", "er", "auf", "an", "ein"))
                         and len(word.group()) > 5]
         if eligible:
