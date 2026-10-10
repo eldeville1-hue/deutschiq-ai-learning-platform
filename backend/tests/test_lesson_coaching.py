@@ -93,6 +93,13 @@ class WordOrderFeedbackTests(unittest.TestCase):
     def test_word_order_error_prioritizes_structure_over_token_diff(self):
         self.assertIn("order", feedback_focus("word_order", ["hat"], ["haben"], "en"))
 
+    def test_word_order_hint_does_not_claim_all_words_are_present(self):
+        for lang in ("ru", "de", "en"):
+            hint = feedback_focus("word_order", ["hat"], ["haben"], lang)
+            self.assertNotIn("All required words are present", hint)
+            self.assertNotIn("Alle nötigen Wörter sind da", hint)
+            self.assertNotIn("Все нужные слова есть", hint)
+
     def test_verb_final_error_prioritizes_sentence_structure(self):
         self.assertIn("Ende des Nebensatzes", feedback_focus("verb_not_final", ["geht"], [], "de"))
 
