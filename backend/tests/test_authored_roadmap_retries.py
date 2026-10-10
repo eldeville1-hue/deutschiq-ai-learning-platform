@@ -7,7 +7,7 @@ from app.services.lesson_coaching import supported_retry_exercise
 class AuthoredRoadmapRetryTests(unittest.TestCase):
     def test_first_ten_lessons_have_distinct_skill_aligned_retries(self):
         self.assertEqual(set(range(1, 11)), set(GOLD_RETRY_SENTENCES))
-        for day, topic, rule, example, question, answer in CURRICULUM[:10]:
+        for day, topic, rule, _tag, example, question, answer in CURRICULUM[:10]:
             with self.subTest(day=day):
                 content = build_content(day, topic, rule, example, question, answer)
                 skill = CURRICULUM[day - 1][3]
