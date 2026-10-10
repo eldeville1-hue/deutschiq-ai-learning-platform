@@ -277,6 +277,12 @@ def feedback_focus(error_type: str | None, missing_words: list[str], extra_words
         return misconception_feedback(error_type, lang)
     if error_type == "word_order":
         return copy["order"]
+    # When the evaluator identified a specific grammar misconception,
+    # teach that rule instead of showing a noisy word-level diff.
+    if error_type in {"case", "case_ending", "relative_case", "article", "adjective",
+                      "preposition", "conjugation", "auxiliary", "modal_form",
+                      "passive_auxiliary", "infinitive", "negation"}:
+        return misconception_feedback(error_type, lang)
     if missing_words:
         return copy["missing"].format(words=", ".join(missing_words[:4]))
     if extra_words:

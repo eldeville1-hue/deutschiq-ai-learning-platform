@@ -32,6 +32,24 @@ class RepeatedErrorFocusTests(unittest.TestCase):
         self.assertIsNone(repeated_error_focus(attempts, {"articles"}))
 
 
+class GrammarRuleFirstFeedbackTests(unittest.TestCase):
+    def test_case_feedback_prioritizes_rule(self):
+        result = feedback_focus("case", ["dem"], ["den"], "en")
+        self.assertIn("required case", result)
+        self.assertNotIn("Add:", result)
+
+    def test_article_feedback_prioritizes_gender_number_case(self):
+        result = feedback_focus("article", ["die"], ["der"], "de")
+        self.assertIn("Genus, Numerus und Kasus", result)
+
+    def test_conjugation_feedback_prioritizes_subject_agreement(self):
+        result = feedback_focus("conjugation", ["geht"], ["gehen"], "en")
+        self.assertIn("subject", result)
+
+    def test_unknown_error_preserves_word_level_guidance(self):
+        self.assertIn("Add: bitte", feedback_focus("unknown_error", ["bitte"], [], "en"))
+
+
 class WordOrderFeedbackTests(unittest.TestCase):
     def test_word_order_error_prioritizes_structure_over_token_diff(self):
         self.assertIn("order", feedback_focus("word_order", ["hat"], ["haben"], "en"))
