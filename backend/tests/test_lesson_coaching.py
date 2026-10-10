@@ -3,6 +3,40 @@ import unittest
 from app.services.lesson_coaching import feedback_focus, learning_profile, repair_plan, success_feedback, supported_retry_exercise, repeated_error_focus
 
 
+class FeedbackLanguageQualityTests(unittest.TestCase):
+    """Check meaningful guidance in each supported interface language."""
+
+    def test_verb_final_hint_identifies_subordinate_clause_in_every_language(self):
+        expected = {
+            "ru": ("глагол", "придаточного"),
+            "de": ("Verb", "Nebensatzes"),
+            "en": ("verb", "subordinate clause"),
+        }
+        for lang, terms in expected.items():
+            with self.subTest(language=lang):
+                hint = feedback_focus("verb_not_final", ["geht"], ["gehen"], lang)
+                self.assertTrue(all(term in hint for term in terms))
+                self.assertNotIn("Add:", hint)
+
+    def test_article_hint_mentions_gender_number_and_case(self):
+        expected = {
+            "ru": ("род", "число", "падеж"),
+            "de": ("Genus", "Numerus", "Kasus"),
+            "en": ("gender", "number", "case"),
+        }
+        for lang, terms in expected.items():
+            with self.subTest(language=lang):
+                hint = feedback_focus("article", ["der"], ["die"], lang).lower()
+                self.assertTrue(all(term.lower() in hint for term in terms))
+
+    def test_case_hint_does_not_expose_model_answer(self):
+        for lang in ("ru", "de", "en"):
+            with self.subTest(language=lang):
+                hint = feedback_focus("case", ["dem"], ["den"], lang)
+                self.assertNotIn("dem", hint)
+                self.assertNotIn("den", hint)
+
+
 class RepeatedErrorFocusTests(unittest.TestCase):
     def test_recent_unresolved_mistake_wins_over_older_error(self):
         attempts = [
