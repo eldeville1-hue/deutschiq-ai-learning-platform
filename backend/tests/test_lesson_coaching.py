@@ -42,6 +42,36 @@ class FeedbackLanguageQualityTests(unittest.TestCase):
                     self.assertNotIn("den", tokens)
 
 
+class RecoveryAwareSkillFocusTests(unittest.TestCase):
+    def test_two_consecutive_correct_attempts_clear_old_focus(self):
+        attempts = [
+            {"skill_id": "articles", "correct": False} for _ in range(5)
+        ] + [
+            {"skill_id": "articles", "correct": True},
+            {"skill_id": "articles", "correct": True},
+        ]
+        self.assertIsNone(repeated_error_focus(attempts))
+
+    def test_one_correct_attempt_is_not_mastery(self):
+        attempts = [
+            {"skill_id": "articles", "correct": False},
+            {"skill_id": "articles", "correct": False},
+            {"skill_id": "articles", "correct": False},
+            {"skill_id": "articles", "correct": True},
+        ]
+        self.assertEqual("articles", repeated_error_focus(attempts))
+
+    def test_new_error_after_recovery_reopens_focus(self):
+        attempts = [
+            {"skill_id": "articles", "correct": False} for _ in range(5)
+        ] + [
+            {"skill_id": "articles", "correct": True},
+            {"skill_id": "articles", "correct": True},
+            {"skill_id": "articles", "correct": False},
+        ]
+        self.assertEqual("articles", repeated_error_focus(attempts))
+
+
 class RepeatedErrorFocusTests(unittest.TestCase):
     def test_recent_unresolved_mistake_wins_over_older_error(self):
         attempts = [

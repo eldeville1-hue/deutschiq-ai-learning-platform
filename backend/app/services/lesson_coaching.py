@@ -164,6 +164,16 @@ def repeated_error_focus(attempts: list[dict], available_skills: set[str] | None
     # Prioritize recent unresolved errors without losing the two-error gate.
     # A later correct answer reduces urgency, while a later error increases it.
     recent = attempts[-12:]
+    # Two consecutive correct attempts demonstrate short-term recovery;
+    # stop repeatedly surfacing that skill as an unresolved mistake.
+    eligible = [skill for skill in eligible if not (
+        len([item for item in recent if isinstance(item, dict)
+             and item.get("skill_id") == skill and isinstance(item.get("correct"), bool)]) >= 2
+        and all(item.get("correct") is True for item in [
+            item for item in recent if isinstance(item, dict)
+            and item.get("skill_id") == skill and isinstance(item.get("correct"), bool)
+        ][-2:])
+    )]
     def urgency(skill: str) -> tuple[float, int, int]:
         recent_evidence = sum(
             (index + 1) * (1 if item.get("correct") is False else -1)
