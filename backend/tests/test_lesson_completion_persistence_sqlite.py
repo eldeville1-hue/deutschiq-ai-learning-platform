@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import patch
 
 from fastapi import HTTPException
-from sqlalchemy import ARRAY, create_engine
+from sqlalchemy import ARRAY, JSON, create_engine
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import Session
 
@@ -23,6 +23,7 @@ def sqlite_array(_type, _compiler, **kwargs):
 class LessonCompletionPersistenceTests(unittest.TestCase):
     def setUp(self):
         self.engine = create_engine("sqlite:///:memory:")
+        UserProgress.__table__.c.review_dates.type = JSON()
         for model in (User, Lesson, LearningSession, ExerciseAttempt, TopicMastery, UserProgress):
             model.__table__.create(self.engine, checkfirst=True)
         self.db = Session(self.engine)
