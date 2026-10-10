@@ -126,7 +126,9 @@ def _classify_aligned_errors(answer: str, model: str, target_feature: str = "", 
                 explanation = "Check the negation and its effect on the intended meaning."
         elif got in auxiliaries and want in auxiliaries:
             kind = "conjugation" if target_feature == "conjugation" else "auxiliary"
-            explanation = "Check the verb form for the required subject." if kind == "conjugation" else "Check the auxiliary verb."
+            explanation = (f"Use '{want}' instead of '{got}'. Match the verb ending to the subject."
+                           if kind == "conjugation" else
+                           f"Use '{want}' instead of '{got}'. In Perfekt, check whether the verb takes haben or sein.")
         elif target_feature == "case" and got in case_pronouns and want in case_pronouns:
             kind = "case"
             explanation = "Check the pronoun case required by the verb or construction."
@@ -138,7 +140,7 @@ def _classify_aligned_errors(answer: str, model: str, target_feature: str = "", 
             explanation = "Check the required preposition."
         elif target_feature == "conjugation" and got == "lesen" and want == "liest":
             kind = "conjugation"
-            explanation = "Check the irregular third-person singular verb form."
+            explanation = f"Use '{want}' instead of '{got}'. This verb has an irregular third-person singular form."
         elif target_feature == "infinitive" and (
                 (got, want) in {
                     ("aufgestanden", "aufstehen"), ("aufstehen", "aufzustehen"),
@@ -204,7 +206,7 @@ def _classify_aligned_errors(answer: str, model: str, target_feature: str = "", 
               and ((want.endswith("st") and got == want[:-2])
                    or (want.endswith("t") and got == want[:-1]))):
             kind = "conjugation"
-            explanation = "The verb ending does not match the required subject."
+            explanation = f"Use '{want}' instead of '{got}'. Match the verb ending to the subject."
         elif (target_feature == "conjugation" and got != want
               and any(got.endswith(a) and want.endswith(b)
                       and got[:-len(a)] == want[:-len(b)]
