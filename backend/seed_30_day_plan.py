@@ -221,6 +221,9 @@ def seed():
         existing_lessons = db.query(Lesson).all()
         for day, topic, rule, tag, example, question, answer in CURRICULUM:
             content = build_content(day, topic, rule, example, question, answer)
+            validation_errors = validate_roadmap_content(content)
+            if validation_errors:
+                raise ValueError(f"Refusing to publish 30-day roadmap: {', '.join(validation_errors)}")
             existing = next((item for item in existing_lessons if isinstance(item.content, dict) and item.content.get("day") == day), None)
             if not existing:
                 existing = next((item for item in existing_lessons if item.topic == topic), None)
@@ -247,6 +250,9 @@ def seed():
         for row in B1_CURRICULUM:
             day, _module, topic, pillar, *_copy = row
             content = build_b1_content(row)
+            validation_errors = validate_roadmap_content(content)
+            if validation_errors:
+                raise ValueError(f"Refusing to publish B1: {', '.join(validation_errors)}")
             existing = next((
                 item for item in existing_lessons
                 if isinstance(item.content, dict)
@@ -299,6 +305,9 @@ def seed():
         for row in B2_CURRICULUM:
             day, _module, topic, pillar, *_copy = row
             content = build_b2_content(row)
+            validation_errors = validate_roadmap_content(content)
+            if validation_errors:
+                raise ValueError(f"Refusing to publish B2: {', '.join(validation_errors)}")
             existing = next((
                 item for item in existing_lessons
                 if isinstance(item.content, dict)
