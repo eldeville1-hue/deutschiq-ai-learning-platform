@@ -213,10 +213,10 @@ def _classify_aligned_errors(answer: str, model: str, target_feature: str = "", 
                       for a in ("en", "e", "st", "t") for b in ("en", "e", "st", "t")
                       if a != b and len(got) > len(a) + 1 and len(want) > len(b) + 1)):
             kind = "conjugation"
-            explanation = "The verb ending does not match the required subject."
+            explanation = f"Use '{want}' instead of '{got}'. Match the verb ending to the subject."
         elif got.endswith("en") and want.endswith("e") and got[:-2] == want[:-1]:
             kind = "conjugation"
-            explanation = "The verb ending does not match the required subject."
+            explanation = f"Use '{want}' instead of '{got}'. Match the verb ending to the subject."
         else:
             kind = "vocabulary"
             explanation = "This word differs from the expected wording; verify its meaning."
