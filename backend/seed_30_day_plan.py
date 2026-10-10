@@ -98,6 +98,22 @@ GOLD_LESSON_EXAMPLES = {
 }
 
 
+
+# Authored, grammar-aligned alternatives for the first ten roadmap lessons.
+# These are complete German sentences, not auto-filled answer fragments.
+GOLD_RETRY_SENTENCES = {
+    1: ("Ich lese abends ein Buch.", "Heute besucht meine Schwester uns."),
+    2: ("Am Dienstag gehe ich zum Arzt.", "Nach dem Kurs kaufe ich Brot."),
+    3: ("Wann beginnt der Unterricht?", "Wie kommst du zur Schule?"),
+    4: ("Arbeitest du morgen?", "Trinkt ihr gern Tee?"),
+    5: ("Sie möchte heute früher gehen.", "Wir können zusammen Deutsch üben."),
+    6: ("Ich rufe meine Mutter am Abend an.", "Morgen steht er um sechs Uhr auf."),
+    7: ("Ich nehme den Bus, weil es regnet.", "Sie bleibt zu Hause, weil sie müde ist."),
+    8: ("Wir besuchen unseren Onkel.", "Er kauft einen neuen Rucksack."),
+    9: ("Ich danke meinem Lehrer.", "Sie antwortet ihrer Freundin."),
+    10: ("Die Ärztin erklärt dem Patienten den Befund.", "Ich zeige meinem Bruder das Foto."),
+}
+
 def build_content(day, topic, rule, example, question, answer):
     week = min((day - 1) // 7 + 1, 4)
     wrong, correction, communication_goal, target_patterns = LESSON_DETAILS[day]
@@ -121,6 +137,7 @@ def build_content(day, topic, rule, example, question, answer):
         "hint": rule,
         "explanation": f"Правило: {rule}",
     }
+    guided_exercise["skill_id"] = CURRICULUM[day - 1][3]
     if guided_exercise["type"] == "reorder":
         guided_exercise["tokens"] = tokens
     exercises = [
@@ -138,6 +155,7 @@ def build_content(day, topic, rule, example, question, answer):
         "communication_goal": communication_goal,
         "rule": rule,
         "examples": examples,
+        "retry_examples": [{"skill_id": CURRICULUM[day - 1][3], "sentence": sentence} for sentence in GOLD_RETRY_SENTENCES.get(day, ())],
         "audio_text": GOLD_LESSON_EXAMPLES.get(day, (example,))[0],
         "cefr": "A2" if day <= 21 else "B1",
         "prerequisites": [] if day == 1 else [CURRICULUM[day - 2][3]],
