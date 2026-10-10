@@ -50,6 +50,17 @@ class LessonCoachingTests(unittest.TestCase):
             ]}, "en")
         self.assertEqual("Du kannst heute schwimmen", retry["answer"])
 
+    def test_retry_keeps_answer_key_and_does_not_mutate_source(self):
+        exercise = {"id": "guided", "answer": "Ich muss heute lernen.", "skill_id": "modal"}
+        lesson = {"examples": ["Ich muss heute lernen."], "retry_examples": [
+            {"skill_id": "modal", "sentence": "Du kannst morgen kommen."}
+        ]}
+        retry = supported_retry_exercise(exercise, lesson, "de")
+        self.assertEqual("Du kannst morgen kommen", retry["answer"])
+        self.assertEqual(["Du kannst morgen kommen", "Du kannst morgen kommen."], retry["accepted_answers"])
+        self.assertNotIn("tokens", exercise)
+        self.assertEqual("Du kannst morgen kommen.", lesson["retry_examples"][0]["sentence"])
+
     def test_struggling_learner_gets_supported_mode(self):
         profile = learning_profile(60, [True, False, False], 0)
         self.assertEqual("supported", profile["mode"])
