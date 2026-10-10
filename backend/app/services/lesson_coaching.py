@@ -131,7 +131,37 @@ def supported_retry_exercise(exercise: dict, lesson_content: dict, language: str
     }
 
 
-def learning_profile(mastery: float, recent_correct: list[bool], correct_streak: int = 0) -> dict:
+def repeated_error_focus(attempts: list[dict], available_skills: set[str] | None = None) -> str | None:
+    """Choose a repeatedly missed skill from recent attempts, never an unseen skill.
+
+    Attempts are chronological dictionaries with skill_id and correct. Require
+    at least two wrong attempts and more errors than successes for the skill.
+    """
+    counts: dict[str, list[int]] = {}
+    last_wrong: dict[str, int] = {}
+    for index, attempt in enumerate(attempts[-12:]):
+        if not isinstance(attempt, dict) or not isinstance(attempt.get("correct"), bool):
+            continue
+        skill = attempt.get("skill_id")
+        if not isinstance(skill, str) or not skill.strip():
+            continue
+        if available_skills is not None and skill not in available_skills:
+            continue
+        totals = counts.setdefault(skill, [0, 0])
+        if attempt["correct"]:
+            totals[1] += 1
+        else:
+            totals[0] += 1
+            last_wrong[skill] = index
+    eligible = [skill for skill, (wrong, right) in counts.items()
+                if wrong >= 2 and wrong > right]
+    return max(eligible, key=lambda skill: (counts[skill][0] - counts[skill][1],
+                                             last_wrong[skill])) if eligible else None
+
+
+def learning_profile(mastery: float, recent_correct: list[bool], correct_streak: int = 0,
+                     recent_skill_attempts: list[dict] | None = None,
+                     available_skills: set[str] | None = None) -> dict:
     recent = recent_correct[-4:]
     recent_accuracy = round(sum(recent) / len(recent) * 100) if recent else None
     struggling = len(recent) >= 2 and sum(recent[-2:]) == 0
@@ -146,6 +176,7 @@ def learning_profile(mastery: float, recent_correct: list[bool], correct_streak:
         "mastery": round(max(0, min(100, mastery))),
         "recent_accuracy": recent_accuracy,
         "show_guided_hint": mode == "supported",
+        "focus_skill": repeated_error_focus(recent_skill_attempts or [], available_skills),
     }
 
 
