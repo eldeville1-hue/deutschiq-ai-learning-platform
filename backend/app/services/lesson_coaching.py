@@ -90,7 +90,11 @@ def supported_retry_exercise(exercise: dict, lesson_content: dict, language: str
                 "misconception": exercise.get("misconception"),
                 "mission_role": exercise.get("mission_role"),
             }
-    # Never turn a form-retrieval retry into a word-order puzzle. If the\n    # authored sentence lacks a safe target, show the original feedback instead.\n    if target_skill in form_skills:\n        return None\n    tokens = answer_tokens[2:] + answer_tokens[:2] if len(answer_tokens) > 3 else list(reversed(answer_tokens))
+    # Never turn a form-retrieval retry into a word-order puzzle. If the 
+    # authored sentence lacks a safe target, show the original feedback instead. 
+    if target_skill in form_skills: 
+        return None
+    tokens = answer_tokens[2:] + answer_tokens[:2] if len(answer_tokens) > 3 else list(reversed(answer_tokens))
     if tokens == answer_tokens:
         tokens = answer_tokens[1:] + answer_tokens[:1]
     if tokens == answer_tokens:
