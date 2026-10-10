@@ -49,22 +49,22 @@ def fallback_answer(question: str, lang: str, level: str, topics: Sequence[str])
     wants_exercise = any(word in lowered for word in ("упраж", "задани", "übung", "aufgabe", "exercise", "practice", "quiz"))
     wants_error = any(word in lowered for word in ("ошиб", "fehler", "korrig", "error", "mistake", "correct"))
 
-    if lang.startswith("de"):
+    if language == "de":
         if wants_exercise:
             return f"Übung auf Niveau {level} – {topic}: Ordne „{words}“. Antworte mit dem vollständigen Satz."
         if wants_error:
-            return "Schick mir bitte den deutschen Satz und – wenn möglich – deine ursprüngliche Antwort. Ich markiere genau eine Fehlerstelle, zeige die richtige Form und gebe dir einen kurzen neuen Versuch."
+            return "Schick mir bitte den deutschen Satz und – wenn möglich – deine ursprüngliche Antwort. Ohne KI kann ich deinen Satz nicht zuverlässig individuell korrigieren. Ich kann dir aber eine Regel und eine passende Übung zeigen."
         return f"Kurzregel – {topic}: {rule_de} Beispiel: „{example}“ Bilde jetzt einen eigenen Satz."
 
     if language == "en":
         if wants_exercise:
             return f"{level} practice — {topic}: Put these words in order: “{words}”. Reply with the complete sentence."
         if wants_error:
-            return "Send your German sentence and your original answer. I’ll mark one error, show the correction and give you one short retry."
+            return "Send your German sentence and your original answer. Without AI, I cannot reliably correct your individual sentence. I can still show you a grammar rule and a matching exercise."
         return f"Quick rule — {topic}: {rule_en} Example: “{example}” Now write one sentence of your own."
 
     if wants_exercise:
         return f"Упражнение уровня {level} — {topic}: собери предложение «{words}». Напиши готовую фразу."
     if wants_error:
-        return "Пришли немецкое предложение и, если можешь, свой первоначальный ответ. Я отмечу одну конкретную ошибку, покажу правильный вариант и дам короткую попытку на закрепление."
+        return "Пришли немецкое предложение и, если можешь, свой первоначальный ответ. Без ИИ я не могу надёжно исправить именно твоё предложение. Но могу объяснить правило и дать упражнение по теме."
     return f"Короткое правило — {topic}: {rule_ru} Пример: „{example}“ Теперь составь свою фразу."
