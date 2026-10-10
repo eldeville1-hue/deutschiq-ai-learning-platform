@@ -215,7 +215,24 @@ def build_content(day, topic, rule, example, question, answer):
     }
 
 
+def validate_all_curriculum_before_seed():
+    """Fail before opening a write session if any authored lesson is invalid."""
+    tracks = [
+        ("30-day roadmap", [(row[0], build_content(row[0], row[1], row[2], row[4], row[5], row[6])) for row in CURRICULUM]),
+        ("B1", [(row[0], build_b1_content(row)) for row in B1_CURRICULUM]),
+        ("A1", [(row[0], build_foundation_content(row, "A1")) for row in A1_CURRICULUM]),
+        ("A2", [(row[0], build_foundation_content(row, "A2")) for row in A2_CURRICULUM]),
+        ("B2", [(row[0], build_b2_content(row)) for row in B2_CURRICULUM]),
+    ]
+    for track, lessons in tracks:
+        for day, content in lessons:
+            issues = validate_roadmap_content(content)
+            if issues:
+                raise ValueError(f"Refusing to publish {track} day {day}: {', '.join(issues)}")
+
+
 def seed():
+    validate_all_curriculum_before_seed()
     db = SessionLocal()
     try:
         existing_lessons = db.query(Lesson).all()
