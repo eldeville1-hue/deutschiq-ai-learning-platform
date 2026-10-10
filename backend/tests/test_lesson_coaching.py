@@ -32,6 +32,17 @@ class RepeatedErrorFocusTests(unittest.TestCase):
         self.assertIsNone(repeated_error_focus(attempts, {"articles"}))
 
 
+class WordOrderFeedbackTests(unittest.TestCase):
+    def test_word_order_error_prioritizes_structure_over_token_diff(self):
+        self.assertIn("order", feedback_focus("word_order", ["hat"], ["haben"], "en"))
+
+    def test_verb_final_error_prioritizes_sentence_structure(self):
+        self.assertIn("Reihenfolge", feedback_focus("verb_not_final", ["geht"], [], "de"))
+
+    def test_missing_word_still_gets_specific_guidance(self):
+        self.assertIn("Add: bitte", feedback_focus("missing_word", ["bitte"], [], "en"))
+
+
 class LessonCoachingTests(unittest.TestCase):
     def test_retry_uses_first_example_when_second_is_original_answer(self):
         retry = supported_retry_exercise({"answer": "Ich wohne in Berlin."},
