@@ -68,7 +68,11 @@ def supported_retry_exercise(exercise: dict, lesson_content: dict, language: str
         }
         eligible = [word for word in words if word.group().casefold() in forms[target_skill]]
         if authored_target:
+            # An explicit curriculum target must be present exactly once.
+            # Never silently substitute a different answer or blank.
             eligible = [word for word in words if word.group() == authored_target]
+            if len(eligible) != 1:
+                return None
         if target_skill == "participles" and not authored_target:
             eligible = [word for word in words if word.group().casefold().startswith(("ge", "be", "ver", "er", "auf", "an", "ein"))
                         and len(word.group()) > 5]
