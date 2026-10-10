@@ -80,6 +80,22 @@ class LessonCoachingTests(unittest.TestCase):
         self.assertNotIn("tokens", exercise)
         self.assertEqual("Du kannst morgen kommen.", lesson["retry_examples"][0]["sentence"])
 
+    def test_retry_does_not_offer_one_word_reordering(self):
+        retry = supported_retry_exercise(
+            {"answer": "Hallo."}, {"examples": ["Danke."]}, "de")
+        self.assertIsNone(retry)
+
+    def test_retry_does_not_offer_identical_repeated_word_order(self):
+        retry = supported_retry_exercise(
+            {"answer": "Hallo."}, {"examples": ["Ja ja."]}, "de")
+        self.assertIsNone(retry)
+
+    def test_retry_with_repeated_tokens_is_shuffled(self):
+        retry = supported_retry_exercise(
+            {"answer": "Hallo."}, {"examples": ["Ja ja nein nein."]}, "de")
+        self.assertIsNotNone(retry)
+        self.assertNotEqual(retry["tokens"], retry["answer"].split())
+
     def test_struggling_learner_gets_supported_mode(self):
         profile = learning_profile(60, [True, False, False], 0)
         self.assertEqual("supported", profile["mode"])
