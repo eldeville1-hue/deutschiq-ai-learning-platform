@@ -153,7 +153,7 @@ GOLD_RETRY_TARGETS = {
     20: ("keine", "keinen"),
     21: ("Die", "Die"),
     22: ("haben", "ist"),
-    23: ("gekocht", "gewartet"),
+    23: ("gemacht", "gewartet"),
     24: ("geschrieben", "gesehen"),
     25: ("hat", "haben"),
     25: ("gebacken", "geplant"),
