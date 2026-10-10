@@ -52,6 +52,23 @@ class LessonCoachingTests(unittest.TestCase):
             ]}, "en")
         self.assertEqual("Du kannst heute schwimmen", retry["answer"])
 
+    def test_tagged_retry_bank_does_not_use_unrelated_skill(self):
+        retry = supported_retry_exercise(
+            {"answer": "Ich muss lernen.", "skill_id": "modal-infinitive"},
+            {"examples": ["Ich habe gestern gelernt."], "retry_examples": [
+                {"skill_id": "past-tense", "sentence": "Ich bin nach Hause gegangen."},
+            ]}, "en")
+        self.assertIsNone(retry)
+
+    def test_exhausted_tagged_retry_does_not_repeat_or_switch_skill(self):
+        retry = supported_retry_exercise(
+            {"answer": "Du kannst heute kommen.", "skill_id": "modal-infinitive"},
+            {"examples": ["Ich habe gestern gelernt."], "retry_examples": [
+                {"skill_id": "modal-infinitive", "sentence": "Du kannst heute kommen."},
+                {"skill_id": "past-tense", "sentence": "Ich bin nach Hause gegangen."},
+            ]}, "de")
+        self.assertIsNone(retry)
+
     def test_retry_keeps_answer_key_and_does_not_mutate_source(self):
         exercise = {"id": "guided", "answer": "Ich muss heute lernen.", "skill_id": "modal"}
         lesson = {"examples": ["Ich muss heute lernen."], "retry_examples": [
