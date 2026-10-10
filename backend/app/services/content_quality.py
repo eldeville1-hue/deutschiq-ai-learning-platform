@@ -144,6 +144,18 @@ def validate_lesson_content(content: dict) -> list[str]:
             errors.append(f"retry:{index}:missing_sentence")
         elif (item["skill_id"], " ".join(sentence.split()).rstrip(".?!").casefold()) in original_answers:
             errors.append(f"retry:{index}:duplicate_answer")
+        target = item.get("target")
+        if target is not None:
+            import re
+            if not isinstance(target, str) or not target.strip():
+                errors.append(f"retry:{index}:invalid_target")
+            elif isinstance(sentence, str) and sentence.strip():
+                tokens = re.findall(r"\b[\wÄÖÜäöüß]+\b", sentence)
+                if target not in tokens:
+                    errors.append(f"retry:{index}:target_not_in_sentence")
+                elif tokens.count(target) != 1:
+                    errors.append(f"retry:{index}:ambiguous_target")
+
     return errors
 
 
