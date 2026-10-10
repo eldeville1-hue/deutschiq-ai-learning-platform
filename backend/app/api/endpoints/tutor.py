@@ -6,7 +6,8 @@ from typing import List, Optional
 from app.core.database import get_db
 from app.models.user import User
 from app.models.diagnostic import DiagnosticResult
-from openai import OpenAI
+from openai import OpenAI, RateLimitError
+import logging
 from app.core.config import settings
 from app.core.telegram_auth import telegram_user_id, assert_owner
 from app.models.tutor import TutorMessage, TutorUsage
@@ -22,6 +23,9 @@ from app.services.subscription import has_active_pro
 from app.services.content_i18n import normalize_language
 
 router = APIRouter(prefix="/api/tutor", tags=["tutor"])
+logger = logging.getLogger(__name__)
+# Avoid repeating requests when the provider explicitly reports exhausted credits.
+_provider_quota_exhausted = False
 
 def save_exchange(db: Session, user_id: int, question: str, answer: str, usage: "TutorUsage", daily_limit: int, mode: str, language: str):
     db.add(TutorMessage(user_id=user_id, role="user", content=question, language=language))
@@ -98,7 +102,7 @@ async def ask_tutor(data: TutorRequest, db: Session = Depends(get_db), authentic
     )
 
     # A provider outage or exhausted credit must not turn the tutor into a dead button.
-    if not client:
+    if not client or _provider_quota_exhausted:
         answer = fallback_answer(data.question, lang, level, fallback_topics)
         return save_exchange(db, user.id, data.question, answer, usage, daily_limit, "local", lang)
     
@@ -138,6 +142,7 @@ Rules:
     messages.append({"role": "user", "content": data.question})
     
     # 6. Запрос к OpenAI
+    global _provider_quota_exhausted
     try:
         response = client.chat.completions.create(
             model=settings.OPENAI_MODEL or "gpt-4o-mini",
@@ -148,8 +153,16 @@ Rules:
         answer = response.choices[0].message.content
         return save_exchange(db, user.id, data.question, answer, usage, daily_limit, "ai", lang)
         
-    except Exception as e:
-        print(f"❌ OpenAI error, using local tutor: {e}")
+    except RateLimitError as exc:
+        if "insufficient_quota" in str(exc) or "credit_balance_exhausted" in str(exc):
+            _provider_quota_exhausted = True
+            logger.warning("Tutor provider credits exhausted; switching to local tutor")
+        else:
+            logger.warning("Tutor provider rate limited; switching to local tutor")
+        answer = fallback_answer(data.question, lang, level, fallback_topics)
+        return save_exchange(db, user.id, data.question, answer, usage, daily_limit, "local", lang)
+    except Exception:
+        logger.exception("Tutor provider unavailable; switching to local tutor")
         answer = fallback_answer(data.question, lang, level, fallback_topics)
         return save_exchange(db, user.id, data.question, answer, usage, daily_limit, "local", lang)
 
