@@ -6,7 +6,7 @@ import unicodedata
 
 
 def normalize_text(value: str) -> str:
-    value = unicodedata.normalize("NFKC", value or "").casefold().replace("ß", "ss")
+    value = unicodedata.normalize("NFKC", value or "").lower()
     # Listening options are localized. Preserve Unicode letters, including
     # Cyrillic, so distinct Russian answers cannot collapse to empty strings.
     value = re.sub(r"[\W_]+", " ", value, flags=re.UNICODE)

@@ -11,7 +11,7 @@ class ProductionFeedbackTests(unittest.TestCase):
         self.assertTrue(evaluate_structured_answer("ich habe gestern gearbeitet!", exercise)["correct"])
         self.assertFalse(evaluate_structured_answer("Ich habe gestern gearbeitt.", exercise)["correct"])
         self.assertFalse(evaluate_structured_answer("Gestern ich habe gearbeitet.", exercise)["correct"])
-        self.assertEqual("strasse", normalize_text("Straße"))
+        self.assertEqual("straße", normalize_text("Straße"))
 
     def test_structured_feedback_reports_missing_words(self):
         result = evaluate_structured_answer("Ich gestern gearbeitet", {"answer": "Ich habe gestern gearbeitet"})

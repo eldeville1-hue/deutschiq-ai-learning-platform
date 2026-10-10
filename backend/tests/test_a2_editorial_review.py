@@ -19,7 +19,7 @@ class A2EditorialReviewTests(unittest.TestCase):
 
     def test_unicode_answers_are_preserved_and_empty_answers_never_pass(self):
         self.assertEqual("приветствие и имя", normalize_text("Приветствие и имя!"))
-        self.assertEqual("grosse strasse", normalize_text("Große Straße!"))
+        self.assertEqual("große straße", normalize_text("Große Straße!"))
         for answer in ("", "!!!"):
             self.assertFalse(evaluate_structured_answer(answer, {"answer": ""})["correct"])
 
