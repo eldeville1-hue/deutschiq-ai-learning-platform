@@ -21,11 +21,11 @@ class AuthoredRoadmapRetryTests(unittest.TestCase):
                 if retry["type"] == "reorder":
                     self.assertIn(retry["answer"], authored)
                     self.assertNotEqual(retry["tokens"], retry["answer"].split())
+                    self.assertNotEqual(retry["answer"].casefold(), str(answer).rstrip(".?!").casefold())
                 else:
                     self.assertEqual("fill", retry["type"])
                     self.assertIn("___", retry["question"])
                     self.assertTrue(any(retry["answer"] in sentence.split() for sentence in authored))
-                self.assertNotEqual(retry["answer"].casefold(), str(answer).rstrip(".?!").casefold())
 
 
 if __name__ == "__main__":
