@@ -165,7 +165,7 @@ def _classify_aligned_errors(answer: str, model: str, target_feature: str = "", 
             explanation = "Check the case and gender ending of the demonstrative determiner."
         elif target_feature == "case" and got in article_forms and want in article_forms:
             kind = "case"
-            explanation = "Check the required case ending."
+            explanation = f"Use '{want}' instead of '{got}'. Check which case the verb or preposition requires."
         elif target_feature == "preposition" and got in article_forms and want in article_forms:
             kind = "preposition"
             explanation = "Check the case required by the preposition."
@@ -179,7 +179,7 @@ def _classify_aligned_errors(answer: str, model: str, target_feature: str = "", 
             explanation = "Check the tense required by the sentence."
         elif got in article_forms and want in article_forms:
             kind = target_feature if target_feature in {"case", "relative_pronoun"} else "article"
-            explanation = "Check the article and its case or gender ending."
+            explanation = f"Use '{want}' instead of '{got}'. Check the noun’s gender, number and grammatical case."
         elif target_feature == "subjunctive" and got != want:
             # A tagged correction is a targeted exercise, not a claim that
             # these verb forms are interchangeable in open-ended writing.
