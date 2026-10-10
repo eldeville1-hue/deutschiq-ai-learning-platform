@@ -27,7 +27,7 @@ class LessonSessionResumeDatabaseTests(unittest.TestCase):
         self.db.add_all([
             User(id=1, telegram_id=9001),
             User(id=2, telegram_id=9002),
-            Lesson(id=10, level="A2", pillar="grammar", topic="articles", content={}),
+            Lesson(id=10, level="A2", pillar="grammar", topic="articles", weak_point_tags="", content={}),
         ])
         self.db.commit()
 
