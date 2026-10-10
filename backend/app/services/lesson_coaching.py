@@ -157,8 +157,18 @@ def repeated_error_focus(attempts: list[dict], available_skills: set[str] | None
             last_wrong[skill] = index
     eligible = [skill for skill, (wrong, right) in counts.items()
                 if wrong >= 2 and wrong > right]
-    return max(eligible, key=lambda skill: (counts[skill][0] - counts[skill][1],
-                                             last_wrong[skill])) if eligible else None
+    # Prioritize recent unresolved errors without losing the two-error gate.
+    # A later correct answer reduces urgency, while a later error increases it.
+    recent = attempts[-12:]
+    def urgency(skill: str) -> tuple[float, int, int]:
+        recent_evidence = sum(
+            (index + 1) * (1 if item.get("correct") is False else -1)
+            for index, item in enumerate(recent)
+            if isinstance(item, dict) and item.get("skill_id") == skill
+            and isinstance(item.get("correct"), bool)
+        )
+        return (recent_evidence, counts[skill][0] - counts[skill][1], last_wrong[skill])
+    return max(eligible, key=urgency) if eligible else None
 
 
 def learning_profile(mastery: float, recent_correct: list[bool], correct_streak: int = 0,
