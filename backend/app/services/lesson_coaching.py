@@ -42,7 +42,7 @@ def supported_retry_exercise(exercise: dict, lesson_content: dict, language: str
         "de": "Versuche es mit einem neuen Beispiel. Baue den Satz.",
         "en": "Try a new example. Build the sentence.",
     }
-    if not fresh:
+    if not candidates:
         questions = {
             "ru": "Закрепи структуру. Собери фразу с подсказкой.",
             "de": "Festige das Muster. Baue den Satz mit Hilfe.",
