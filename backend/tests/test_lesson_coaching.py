@@ -37,7 +37,7 @@ class WordOrderFeedbackTests(unittest.TestCase):
         self.assertIn("order", feedback_focus("word_order", ["hat"], ["haben"], "en"))
 
     def test_verb_final_error_prioritizes_sentence_structure(self):
-        self.assertIn("Reihenfolge", feedback_focus("verb_not_final", ["geht"], [], "de"))
+        self.assertIn("Ende des Nebensatzes", feedback_focus("verb_not_final", ["geht"], [], "de"))
 
     def test_missing_word_still_gets_specific_guidance(self):
         self.assertIn("Add: bitte", feedback_focus("missing_word", ["bitte"], [], "en"))
