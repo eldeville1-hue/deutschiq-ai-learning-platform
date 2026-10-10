@@ -134,6 +134,36 @@ GOLD_RETRY_SENTENCES = {
     30: ("Zuerst habe ich gefrühstückt, dann bin ich zur Arbeit gefahren.", "Am Abend habe ich gekocht und danach ein Buch gelesen."),
 }
 
+
+# Curated answer tokens for form-focused retries. These are authored, not guessed
+# from the first article/preposition appearing in a sentence.
+GOLD_RETRY_TARGETS = {
+    8: ("unseren", "einen"),
+    9: ("meinem", "ihrer"),
+    10: ("dem", "meinem"),
+    11: ("für", "Ohne"),
+    12: ("mit", "aus"),
+    13: ("mir", "ihr"),
+    14: ("dem", "den"),
+    15: ("Der", "Die"),
+    16: ("Der", "Der"),
+    17: ("Die", "Die"),
+    18: ("Das", "Das"),
+    19: ("eine", "ein"),
+    20: ("keine", "keinen"),
+    21: ("Die", "Die"),
+    22: ("haben", "ist"),
+    23: ("gemacht", "gewartet"),
+    24: ("geschrieben", "gesehen"),
+    25: ("hat", "haben"),
+    25: ("gebacken", "geplant"),
+    26: ("bin", "ist"),
+    27: ("angerufen", "aufgestanden"),
+    28: ("verkauft", "bezahlt"),
+    29: ("haben", "ist"),
+    30: ("habe", "habe"),
+}
+
 def build_content(day, topic, rule, example, question, answer):
     week = min((day - 1) // 7 + 1, 4)
     wrong, correction, communication_goal, target_patterns = LESSON_DETAILS[day]
@@ -175,7 +205,7 @@ def build_content(day, topic, rule, example, question, answer):
         "communication_goal": communication_goal,
         "rule": rule,
         "examples": examples,
-        "retry_examples": [{"skill_id": CURRICULUM[day - 1][3], "sentence": sentence} for sentence in GOLD_RETRY_SENTENCES.get(day, ())],
+        "retry_examples": [{"skill_id": CURRICULUM[day - 1][3], "sentence": sentence, **({"target": GOLD_RETRY_TARGETS[day][index]} if day in GOLD_RETRY_TARGETS else {})} for index, sentence in enumerate(GOLD_RETRY_SENTENCES.get(day, ()))],
         "audio_text": GOLD_LESSON_EXAMPLES.get(day, (example,))[0],
         "cefr": "A2" if day <= 21 else "B1",
         "prerequisites": [] if day == 1 else [CURRICULUM[day - 2][3]],
