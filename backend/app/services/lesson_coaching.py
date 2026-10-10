@@ -40,7 +40,7 @@ def supported_retry_exercise(exercise: dict, lesson_content: dict, language: str
     model = model.rstrip(".?!")
     answer_tokens = model.split()
     # A reorder exercise is not meaningful if the correct sequence is unchanged.
-    if len(answer_tokens) < 2 or len(set(answer_tokens)) < 2:
+    if len(answer_tokens) < 2 or len({token.casefold() for token in answer_tokens}) < 2:
         return None
     tokens = answer_tokens[2:] + answer_tokens[:2] if len(answer_tokens) > 3 else list(reversed(answer_tokens))
     if tokens == answer_tokens:
