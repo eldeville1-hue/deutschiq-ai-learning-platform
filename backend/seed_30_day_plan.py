@@ -248,7 +248,7 @@ def validate_all_curriculum_before_seed():
         for item in lessons
     ]
     if failures:
-        raise ValueError("Refusing to publish curriculum:\\n" + "\\n".join(failures))
+        raise ValueError("Refusing to publish curriculum:\n" + "\n".join(failures))
 
 
 def seed():
