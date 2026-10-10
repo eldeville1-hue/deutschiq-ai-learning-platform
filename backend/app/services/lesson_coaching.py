@@ -157,6 +157,9 @@ def repeated_error_focus(attempts: list[dict], available_skills: set[str] | None
             last_wrong[skill] = index
     eligible = [skill for skill, (wrong, right) in counts.items()
                 if wrong >= 2 and wrong > right]
+    # Prefer unresolved recent mistakes over older mistakes with equal net errors.
+    # A skill with a more recent correct answer is still eligible only when
+    # its total errors exceed successes, preserving the existing evidence gate.
     return max(eligible, key=lambda skill: (counts[skill][0] - counts[skill][1],
                                              last_wrong[skill])) if eligible else None
 
