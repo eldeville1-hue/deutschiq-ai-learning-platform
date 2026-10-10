@@ -32,7 +32,9 @@ def supported_retry_exercise(exercise: dict, lesson_content: dict, language: str
     def similarity(item):
         words = sentence_key(item).split()
         return (len(set(reference_tokens) & set(words)), -abs(len(words) - len(reference_tokens)))
-    model = max(candidates, key=similarity) if candidates else (examples[0] if examples else reference)
+    model = max(candidates, key=similarity) if candidates else None
+    if model is None:
+        return None
     # Do not present the same answer as a new retry. The caller can still
     # show its focused feedback and the original model for review.
     if sentence_key(model) in original_answers:
