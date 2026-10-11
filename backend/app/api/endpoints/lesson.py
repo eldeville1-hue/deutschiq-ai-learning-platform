@@ -229,8 +229,9 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
     # Re-check after evaluation: production feedback may await an external model,
     # while another request completes this exercise in the meantime.
     if db.get_bind().dialect.name == 'postgresql':
-        db.execute(text('SELECT pg_advisory_xact_lock(hashtext(:session_id), :exercise_index)'),
-                   {'session_id': session.id, 'exercise_index': data.exercise_index})
+        # Serialize all answer writes for this learner, including separate sessions
+        # that update the same TopicMastery row. Acquire only after AI evaluation.
+        db.query(User.id).filter(User.id == user.id).with_for_update().one()
     db.expire(session)
     if session.status != 'active':
         raise HTTPException(status_code=409, detail='Learning session is missing or closed')
