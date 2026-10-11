@@ -58,6 +58,13 @@ export const Review: React.FC = () => {
     try {
       const activeSession = await ensureSession();
       const result = await api.checkLessonAnswer({ user_id: userId, lesson_id: item.lesson_id, exercise_index: item.exercise_index, answer, session_id: activeSession, language: lang, confidence: 'okay', response_ms: Date.now() - startedAt, mode: 'review' });
+      if (result.evaluation_status && result.evaluation_status !== 'verified') {
+        setError(result.retry_instruction || tr(lang,
+          'Не удалось проверить ответ. Попробуй ещё раз.',
+          'Die Antwort konnte nicht geprüft werden. Versuche es erneut.',
+          'We could not verify your answer. Please try again.'));
+        return;
+      }
       setFeedback(result);
       void api.trackEvent({
         user_id: userId,
