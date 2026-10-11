@@ -269,8 +269,23 @@ const LessonScreen: React.FC = () => {
       }
       setChecked(Boolean(result.correct)); setFeedback(result);
       void api.trackEvent({ user_id: getUserId(), event_name: 'exercise_answered', properties: { lesson_id: Number(id), exercise_index: exerciseIndex, correct: Boolean(result.correct), confidence, misconception: String(result.error_type || ''), learning_mode: String(learningProfile.mode), retry: Boolean(retried[exerciseIndex]) } });
-    } catch {
-      setCheckError(tr(lang, 'Не удалось проверить. Попробуй ещё раз.', 'Prüfung fehlgeschlagen. Versuche es erneut.', 'Could not check your answer. Try again.'));
+    } catch (error: any) {
+      if (retried[exerciseIndex] && error?.response?.status === 409 &&
+          error?.response?.data?.detail === 'No supported retry exercise is available') {
+        setRetried((value) => ({ ...value, [exerciseIndex]: false }));
+        setRetryExercises((value) => {
+          const updated = { ...value };
+          delete updated[exerciseIndex];
+          return updated;
+        });
+        resetAnswer();
+        setCheckError(tr(lang,
+          'Дополнительное задание недоступно. Повтори исходное упражнение.',
+          'Die Zusatzaufgabe ist nicht verfügbar. Wiederhole die ursprüngliche Aufgabe.',
+          'The extra task is unavailable. Try the original exercise again.'));
+      } else {
+        setCheckError(tr(lang, 'Не удалось проверить. Попробуй ещё раз.', 'Prüfung fehlgeschlagen. Versuche es erneut.', 'Could not check your answer. Try again.'));
+      }
     } finally { setChecking(false); }
   };
   const finish = () => {
