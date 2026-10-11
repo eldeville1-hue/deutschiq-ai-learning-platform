@@ -175,6 +175,17 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
     session = db.query(LearningSession).filter(LearningSession.id == data.session_id, LearningSession.user_id == user.id, LearningSession.lesson_id == lesson.id, LearningSession.status == "active").first()
     if not session:
         raise HTTPException(status_code=409, detail="Learning session is missing or closed")
+    # Reject repeated submissions for an already completed exercise before evaluating
+    # or mutating mastery. Wrong answers remain eligible for a guided retry.
+    already_correct = db.query(ExerciseAttempt.id).filter(
+        ExerciseAttempt.session_id == session.id,
+        ExerciseAttempt.user_id == user.id,
+        ExerciseAttempt.lesson_id == lesson.id,
+        ExerciseAttempt.exercise_index == data.exercise_index,
+        ExerciseAttempt.correct.is_(True),
+    ).first()
+    if already_correct:
+        raise HTTPException(status_code=409, detail="Exercise already completed")
     lesson_content = localize_lesson_content(normalize_lesson_content(lesson.content or {}, lesson.topic, lesson.level), data.language) if lesson else {}
     exercises = lesson_content.get("exercises", [])
     if data.exercise_index < 0 or data.exercise_index >= len(exercises):
