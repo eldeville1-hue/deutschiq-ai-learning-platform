@@ -88,6 +88,12 @@ async def start_lesson(data: StartLessonRequest, db: Session = Depends(get_db), 
         next_index = next_unanswered_exercise_index(attempts)
         return {"session_id": existing.id, "resumed": True, "next_exercise_index": next_index}
 
+    # Serialize lesson starts for the same learner and lesson on PostgreSQL.
+    # Without this lock, simultaneous Telegram reloads can create two active sessions.
+    if db.get_bind().dialect.name == 'postgresql':
+        db.execute(text('SELECT pg_advisory_xact_lock(:user_id, :lesson_id)'),
+                   {'user_id': user.id, 'lesson_id': lesson.id})
+
     if data.resume_session_id:
         previous = db.query(LearningSession).filter(
             LearningSession.id == data.resume_session_id,
