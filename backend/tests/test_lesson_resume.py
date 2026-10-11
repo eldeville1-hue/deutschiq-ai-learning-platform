@@ -1,12 +1,13 @@
 import asyncio
 import unittest
+from types import SimpleNamespace
 
 from fastapi import HTTPException
 from sqlalchemy import ARRAY, create_engine
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import Session
 
-from app.api.endpoints.lesson import StartLessonRequest, start_lesson
+from app.api.endpoints.lesson import (StartLessonRequest, CheckAnswerRequest, start_lesson, check_answer, next_unanswered_exercise_index)
 from app.models.user import User
 from app.models.lesson import Lesson
 from app.models.learning import LearningSession, ExerciseAttempt
@@ -61,3 +62,33 @@ class LessonResumeTests(unittest.TestCase):
         with self.assertRaises(HTTPException) as error:
             asyncio.run(start_lesson(StartLessonRequest(user_id=9001, lesson_id=77), self.db, authenticated_id=9002))
         self.assertEqual(403, error.exception.status_code)
+
+
+class LessonCursorTests(unittest.TestCase):
+    def test_only_contiguous_correct_answers_advance_cursor(self):
+        attempts = [SimpleNamespace(exercise_index=0, correct=True),
+                    SimpleNamespace(exercise_index=1, correct=False),
+                    SimpleNamespace(exercise_index=2, correct=True)]
+        self.assertEqual(1, next_unanswered_exercise_index(attempts))
+        attempts.append(SimpleNamespace(exercise_index=1, correct=True))
+        self.assertEqual(3, next_unanswered_exercise_index(attempts))
+
+    def test_empty_and_negative_attempts_do_not_advance_cursor(self):
+        self.assertEqual(0, next_unanswered_exercise_index([]))
+        self.assertEqual(0, next_unanswered_exercise_index([
+            SimpleNamespace(exercise_index=-1, correct=True),
+            SimpleNamespace(exercise_index=0, correct=False)]))
+
+    def test_repeated_correct_attempt_does_not_skip_exercises(self):
+        attempts = [SimpleNamespace(exercise_index=0, correct=True) for _ in range(3)]
+        self.assertEqual(1, next_unanswered_exercise_index(attempts))
+
+
+class MissingLessonAnswerTests(LessonResumeTests):
+    def test_deleted_lesson_returns_404_instead_of_crashing(self):
+        request = CheckAnswerRequest(user_id=9001, lesson_id=999999,
+            exercise_index=0, answer='test', session_id='not-a-session')
+        with self.assertRaises(HTTPException) as error:
+            asyncio.run(check_answer(request, self.db, authenticated_id=9001))
+        self.assertEqual(404, error.exception.status_code)
+        self.assertEqual('Lesson not found', error.exception.detail)
