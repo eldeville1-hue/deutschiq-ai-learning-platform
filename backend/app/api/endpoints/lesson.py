@@ -182,11 +182,6 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
     session = db.query(LearningSession).filter(LearningSession.id == data.session_id, LearningSession.user_id == user.id, LearningSession.lesson_id == lesson.id, LearningSession.status == "active").first()
     if not session:
         raise HTTPException(status_code=409, detail="Learning session is missing or closed")
-    # Serialize concurrent submissions for this session/exercise on PostgreSQL.
-    # The transaction-scoped lock is released automatically at commit/rollback.
-    if db.get_bind().dialect.name == 'postgresql':
-        db.execute(text('SELECT pg_advisory_xact_lock(hashtext(:session_id), :exercise_index)'),
-                   {'session_id': session.id, 'exercise_index': data.exercise_index})
     # Reject repeated submissions for an already completed exercise before evaluating
     # or mutating mastery. Wrong answers remain eligible for a guided retry.
     already_correct = db.query(ExerciseAttempt.id).filter(
@@ -231,6 +226,22 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
                 "en": "We couldn't assess that answer reliably. Please rephrase it.",
             }[normalize_language(data.language)],
         }
+    # Re-check after evaluation: production feedback may await an external model,
+    # while another request completes this exercise in the meantime.
+    if db.get_bind().dialect.name == 'postgresql':
+        db.execute(text('SELECT pg_advisory_xact_lock(hashtext(:session_id), :exercise_index)'),
+                   {'session_id': session.id, 'exercise_index': data.exercise_index})
+    db.expire(session)
+    if session.status != 'active':
+        raise HTTPException(status_code=409, detail='Learning session is missing or closed')
+    if db.query(ExerciseAttempt.id).filter(
+        ExerciseAttempt.session_id == session.id,
+        ExerciseAttempt.user_id == user.id,
+        ExerciseAttempt.lesson_id == lesson.id,
+        ExerciseAttempt.exercise_index == data.exercise_index,
+        ExerciseAttempt.correct.is_(True),
+    ).first():
+        raise HTTPException(status_code=409, detail='Exercise already completed')
     topic = lesson.topic
     prior_attempts = db.query(ExerciseAttempt).filter(
         ExerciseAttempt.session_id == session.id,
