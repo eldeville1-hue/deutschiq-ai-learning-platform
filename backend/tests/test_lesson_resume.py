@@ -132,6 +132,27 @@ class LessonResumeTests(unittest.TestCase):
             self.assertEqual(409, error.exception.status_code)
         self.assertEqual(1, self.db.query(ExerciseAttempt).count())
 
+    def test_closed_session_rejects_answer_before_evaluation(self):
+        first = self.start()
+        session = self.db.get(LearningSession, first['session_id'])
+        session.status = 'passed'
+        self.db.commit()
+        request = CheckAnswerRequest(user_id=9001, lesson_id=77,
+            exercise_index=0, answer='anything', session_id=first['session_id'])
+        with self.assertRaises(HTTPException) as error:
+            asyncio.run(check_answer(request, self.db, authenticated_id=9001))
+        self.assertEqual(409, error.exception.status_code)
+        self.assertEqual(0, self.db.query(ExerciseAttempt).count())
+
+    def test_wrong_user_cannot_submit_answer_to_foreign_session(self):
+        first = self.start()
+        request = CheckAnswerRequest(user_id=9002, lesson_id=77,
+            exercise_index=0, answer='anything', session_id=first['session_id'])
+        with self.assertRaises(HTTPException) as error:
+            asyncio.run(check_answer(request, self.db, authenticated_id=9002))
+        self.assertEqual(409, error.exception.status_code)
+        self.assertEqual(0, self.db.query(ExerciseAttempt).count())
+
     def test_resume_still_requires_authenticated_owner(self):
         with self.assertRaises(HTTPException) as error:
             asyncio.run(start_lesson(StartLessonRequest(user_id=9001, lesson_id=77), self.db, authenticated_id=9002))
