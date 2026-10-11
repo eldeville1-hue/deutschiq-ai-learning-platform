@@ -33,3 +33,23 @@ def review_is_due(state: dict, now: datetime) -> bool:
     except ValueError:
         return False
     return due_at <= now
+
+
+
+def due_review_skills(states: dict, now: datetime, available_skills: set[str] | None = None,
+                      limit: int = 5) -> list[str]:
+    """Select overdue skills from caller-supplied per-user review states."""
+    if now.tzinfo is None or now.utcoffset() is None:
+        raise ValueError("now must have a timezone")
+    if not isinstance(states, dict) or not isinstance(limit, int) or isinstance(limit, bool) or limit < 1:
+        return []
+    due = []
+    for skill, state in states.items():
+        if not isinstance(skill, str) or not skill.strip():
+            continue
+        if available_skills is not None and skill not in available_skills:
+            continue
+        if review_is_due(state, now):
+            timestamp = datetime.fromisoformat(state["due_at"].replace("Z", "+00:00"))
+            due.append((timestamp, skill))
+    return [skill for _, skill in sorted(due)[:limit]]
