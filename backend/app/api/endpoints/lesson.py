@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from app.core.database import get_db
 from app.models.lesson import Lesson
 from app.models.user import User
@@ -157,10 +157,10 @@ async def get_lesson(lesson_id: int, lang: str = "en", db: Session = Depends(get
 class CheckAnswerRequest(BaseModel):
     user_id: int
     lesson_id: int
-    exercise_index: int
-    answer: str
+    exercise_index: int = Field(ge=0)
+    answer: str = Field(min_length=1, max_length=5000)
     confidence: str | None = None
-    response_ms: int | None = None
+    response_ms: int | None = Field(default=None, ge=0)
     session_id: str
     language: str = "en"
     retry: bool = False
