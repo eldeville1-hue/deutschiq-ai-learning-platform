@@ -199,6 +199,8 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
         raise HTTPException(status_code=404, detail="Exercise not found")
     original_exercise = exercises[data.exercise_index]
     exercise = supported_retry_exercise(original_exercise, lesson_content, data.language) if data.retry else original_exercise
+    if exercise is None:
+        raise HTTPException(status_code=409, detail='No supported retry exercise is available')
     accepted = exercise.get("accepted_answers") or [exercise.get("answer", "")]
     production_feedback = None
     structured_feedback = None
