@@ -224,8 +224,13 @@ const LessonScreen: React.FC = () => {
   const next = async () => {
     if (exercise && checked === false && !retried[exerciseIndex]) {
       void api.trackEvent({ user_id: getUserId(), event_name: 'exercise_retried', properties: { lesson_id: Number(id), exercise_index: exerciseIndex } });
-      setRetried((value) => ({ ...value, [exerciseIndex]: true }));
-      if (feedback?.retry_exercise) setRetryExercises((value) => ({ ...value, [exerciseIndex]: feedback.retry_exercise }));
+      // Only request a guided retry when the server supplied a real task.
+      // Otherwise retry the original exercise rather than sending retry=true
+      // for a missing task (which the backend correctly rejects with 409).
+      if (feedback?.retry_exercise) {
+        setRetried((value) => ({ ...value, [exerciseIndex]: true }));
+        setRetryExercises((value) => ({ ...value, [exerciseIndex]: feedback.retry_exercise }));
+      }
       resetAnswer();
       return;
     }
