@@ -76,6 +76,29 @@ class LessonCompletionPersistenceTests(unittest.TestCase):
         self.assertEqual(0, self.db.get(User, 1).xp)
         self.assertFalse(self.db.query(UserProgress).filter_by(user_id=1, lesson_id=10).one().completed)
 
+    def test_passed_lesson_schedules_first_review(self):
+        from datetime import datetime, timedelta
+        self.db.add(TopicMastery(user_id=1, topic="articles", mastery=65, attempts=1))
+        self.db.add(ExerciseAttempt(
+            user_id=1, lesson_id=10, session_id="learner-one",
+            exercise_index=0, topic="articles", answer="der", correct=True,
+        ))
+        self.db.commit()
+        before = datetime.utcnow()
+        self.assertTrue(self.complete()["passed"])
+        self.db.expire_all()
+        due = self.db.query(TopicMastery).filter_by(user_id=1, topic="articles").one().next_review_at
+        self.assertIsNotNone(due)
+        self.assertGreaterEqual(due, before + timedelta(days=1))
+        self.assertLessEqual(due, datetime.utcnow() + timedelta(days=1))
+
+    def test_failed_lesson_does_not_schedule_review(self):
+        self.db.add(TopicMastery(user_id=1, topic="articles", mastery=20, attempts=1))
+        self.db.commit()
+        self.assertFalse(self.complete()["passed"])
+        self.db.expire_all()
+        self.assertIsNone(self.db.query(TopicMastery).filter_by(user_id=1, topic="articles").one().next_review_at)
+
     def test_foreign_session_cannot_complete_or_grant_xp(self):
         with self.assertRaises(HTTPException) as error:
             self.complete(session_id="learner-two")
