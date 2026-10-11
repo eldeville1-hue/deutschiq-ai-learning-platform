@@ -489,7 +489,8 @@ const LessonScreen: React.FC = () => {
                     <strong>{feedback.correct_answer}</strong>
                   </details>
                 ))}
-                {!checked && feedback?.error_type && <details className="error-diagnosis"><summary>{tr(lang, 'Почему?', 'Warum?', 'Why?')}</summary>
+                {!checked && (feedback?.error_type || feedback?.explanation || feedback?.retry_instruction || (Array.isArray(feedback?.repair_steps) && feedback.repair_steps.length > 0)) && <details className="error-diagnosis"><summary>{tr(lang, 'Почему?', 'Warum?', 'Why?')}</summary>
+                  {feedback?.explanation && <p>{feedback.explanation}</p>}
                   {Array.isArray(feedback.contrast) && feedback.contrast.map((line: string, index: number) => <p key={index}>{line}</p>)}
                   <em>{feedback.retry_instruction || tr(lang, 'Сначала назови правило, затем составь ответ заново.', 'Nenne zuerst die Regel und bilde die Antwort dann neu.', 'State the rule first, then build the answer again.')}</em>
                   {Array.isArray(feedback.repair_steps) && feedback.repair_steps.length > 0 && <ol className="repair-steps">
