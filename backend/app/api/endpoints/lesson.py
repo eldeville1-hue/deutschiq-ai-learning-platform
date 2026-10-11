@@ -1,6 +1,7 @@
 # backend/app/api/endpoints/lesson.py
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from pydantic import BaseModel
 from app.core.database import get_db
 from app.models.lesson import Lesson
@@ -175,6 +176,11 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
     session = db.query(LearningSession).filter(LearningSession.id == data.session_id, LearningSession.user_id == user.id, LearningSession.lesson_id == lesson.id, LearningSession.status == "active").first()
     if not session:
         raise HTTPException(status_code=409, detail="Learning session is missing or closed")
+    # Serialize concurrent submissions for this session/exercise on PostgreSQL.
+    # The transaction-scoped lock is released automatically at commit/rollback.
+    if db.get_bind().dialect.name == 'postgresql':
+        db.execute(text('SELECT pg_advisory_xact_lock(hashtext(:session_id), :exercise_index)'),
+                   {'session_id': session.id, 'exercise_index': data.exercise_index})
     # Reject repeated submissions for an already completed exercise before evaluating
     # or mutating mastery. Wrong answers remain eligible for a guided retry.
     already_correct = db.query(ExerciseAttempt.id).filter(
