@@ -167,6 +167,8 @@ def normalize_answer(value: str) -> str:
 async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), authenticated_id: int = Depends(telegram_user_id)):
     assert_owner(authenticated_id, data.user_id)
     lesson = db.query(Lesson).filter(Lesson.id == data.lesson_id).first()
+    if not lesson:
+        raise HTTPException(status_code=404, detail="Lesson not found")
     user = db.query(User).filter(User.telegram_id == data.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
