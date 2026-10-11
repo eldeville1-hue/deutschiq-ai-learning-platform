@@ -153,6 +153,18 @@ class LessonResumeTests(unittest.TestCase):
         self.assertEqual(409, error.exception.status_code)
         self.assertEqual(0, self.db.query(ExerciseAttempt).count())
 
+    def test_unavailable_guided_retry_returns_conflict(self):
+        first = self.start()
+        lesson = self.db.get(Lesson, 77)
+        lesson.content = {"exercises": [{"type": "fill", "question": "Complete", "answer": "ist"}]}
+        self.db.commit()
+        request = CheckAnswerRequest(user_id=9001, lesson_id=77,
+            exercise_index=0, answer="ist", session_id=first["session_id"], retry=True)
+        with self.assertRaises(HTTPException) as error:
+            asyncio.run(check_answer(request, self.db, authenticated_id=9001))
+        self.assertEqual(409, error.exception.status_code)
+        self.assertEqual(0, self.db.query(ExerciseAttempt).count())
+
     def test_resume_still_requires_authenticated_owner(self):
         with self.assertRaises(HTTPException) as error:
             asyncio.run(start_lesson(StartLessonRequest(user_id=9001, lesson_id=77), self.db, authenticated_id=9002))
