@@ -203,6 +203,7 @@ export const api = {
   // Learning engine
   getLearningToday: (userId: number, lang: AppLanguage) => cachedGet(userCacheKey('today', userId, `-${lang}`), () => apiClient.get(`/api/learning/today/${userId}?lang=${lang}`).then(r => r.data), 30_000, true),
   getReviews: (userId: number, lang: AppLanguage) => apiClient.get(`/api/learning/reviews/${userId}?lang=${lang}`).then(r => r.data),
+  getPersistedDueReviews: () => apiClient.get('/api/lesson/reviews/due?limit=20').then(r => r.data as { count: number; reviews: Array<{ topic: string; mastery: number; next_review_at: string; lapses: number }> }),
 
   // AI-тьютор
   askTutor: (payload: { user_id: number; question: string; language: AppLanguage; history?: any[] }) => {
