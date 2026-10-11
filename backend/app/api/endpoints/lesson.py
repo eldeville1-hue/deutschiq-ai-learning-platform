@@ -41,6 +41,30 @@ def next_unanswered_exercise_index(attempts) -> int:
     return index
 
 
+@router.get("/reviews/due")
+async def get_due_reviews(limit: int = 5, db: Session = Depends(get_db),
+                          authenticated_id: int = Depends(telegram_user_id)):
+    """Return the authenticated learner's scheduled, overdue topic reviews."""
+    if limit < 1 or limit > 20:
+        raise HTTPException(status_code=422, detail="limit must be between 1 and 20")
+    user = db.query(User).filter(User.telegram_id == authenticated_id).first()
+    if not user:
+        return {"reviews": [], "count": 0}
+    now = datetime.utcnow()
+    rows = db.query(TopicMastery).filter(
+        TopicMastery.user_id == user.id,
+        TopicMastery.next_review_at.isnot(None),
+        TopicMastery.next_review_at <= now,
+    ).order_by(TopicMastery.next_review_at.asc(), TopicMastery.id.asc()).limit(limit).all()
+    reviews = [
+        {"topic": row.topic, "mastery": round(row.mastery or 0),
+         "next_review_at": row.next_review_at.isoformat(),
+         "lapses": row.lapse_count or 0}
+        for row in rows
+    ]
+    return {"reviews": reviews, "count": len(reviews)}
+
+
 class StartLessonRequest(BaseModel):
     user_id: int
     lesson_id: int
