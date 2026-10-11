@@ -109,6 +109,15 @@ class LessonResumeTests(unittest.TestCase):
         self.assertEqual('Exercise already completed', error.exception.detail)
         self.assertEqual(1, self.db.query(ExerciseAttempt).count())
 
+    def test_wrong_answer_does_not_block_corrected_submission(self):
+        first = self.start()
+        self.db.add(ExerciseAttempt(user_id=1, lesson_id=77,
+            session_id=first['session_id'], exercise_index=0,
+            topic='advice', answer='wrong', correct=False))
+        self.db.commit()
+        self.assertEqual(0, self.start(first['session_id'])['next_exercise_index'])
+        self.assertEqual(1, self.db.query(ExerciseAttempt).count())
+
     def test_resume_still_requires_authenticated_owner(self):
         with self.assertRaises(HTTPException) as error:
             asyncio.run(start_lesson(StartLessonRequest(user_id=9001, lesson_id=77), self.db, authenticated_id=9002))
