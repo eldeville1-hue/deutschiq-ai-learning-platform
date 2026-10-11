@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime, timedelta, timezone
 
-from app.services.spaced_review import next_review, review_is_due
+from app.services.spaced_review import next_review, review_is_due, due_review_skills
 
 
 class SpacedReviewTests(unittest.TestCase):
@@ -27,6 +27,23 @@ class SpacedReviewTests(unittest.TestCase):
     def test_invalid_dates_do_not_become_due(self):
         self.assertFalse(review_is_due({"due_at": "not-a-date"}, self.now))
         self.assertFalse(review_is_due({"due_at": "2026-10-11T00:00:00"}, self.now))
+
+    def test_due_reviews_are_sorted_and_filtered(self):
+        states = {
+            "articles": {"due_at": "2026-10-09T12:00:00+00:00"},
+            "case": {"due_at": "2026-10-10T12:00:00+00:00"},
+            "future": {"due_at": "2026-10-20T12:00:00+00:00"},
+            "broken": {"due_at": "not-a-date"},
+        }
+        self.assertEqual(["articles", "case"], due_review_skills(states, self.now))
+        self.assertEqual(["case"], due_review_skills(states, self.now, {"case"}, limit=1))
+
+    def test_due_reviews_reject_bad_limits_and_naive_now(self):
+        states = {"articles": {"due_at": "2026-10-09T12:00:00+00:00"}}
+        self.assertEqual([], due_review_skills(states, self.now, limit=0))
+        self.assertEqual([], due_review_skills(states, self.now, limit=True))
+        with self.assertRaises(ValueError):
+            due_review_skills(states, datetime(2026, 10, 11))
 
     def test_naive_timestamps_and_nonboolean_results_rejected(self):
         with self.assertRaises(ValueError):
