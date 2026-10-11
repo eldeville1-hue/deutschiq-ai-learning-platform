@@ -166,14 +166,16 @@ def repeated_error_focus(attempts: list[dict], available_skills: set[str] | None
     recent = attempts[-12:]
     # Two consecutive correct attempts demonstrate short-term recovery;
     # stop repeatedly surfacing that skill as an unresolved mistake.
-    eligible = [skill for skill in eligible if not (
-        len([item for item in recent if isinstance(item, dict)
-             and item.get("skill_id") == skill and isinstance(item.get("correct"), bool)]) >= 2
-        and all(item.get("correct") is True for item in [
-            item for item in recent if isinstance(item, dict)
-            and item.get("skill_id") == skill and isinstance(item.get("correct"), bool)
-        ][-2:])
-    )]
+    # This is not long-term mastery; later review can still revisit the skill.
+    def has_recent_recovery(skill: str) -> bool:
+        skill_history = [
+            item["correct"] for item in recent
+            if isinstance(item, dict) and item.get("skill_id") == skill
+            and isinstance(item.get("correct"), bool)
+        ]
+        return len(skill_history) >= 2 and skill_history[-2:] == [True, True]
+
+    eligible = [skill for skill in eligible if not has_recent_recovery(skill)]
     def urgency(skill: str) -> tuple[float, int, int]:
         recent_evidence = sum(
             (index + 1) * (1 if item.get("correct") is False else -1)
