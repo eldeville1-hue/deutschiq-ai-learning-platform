@@ -19,22 +19,25 @@ export const Dashboard: React.FC = () => {
   const [data, setData] = useState<any>(null);
   const [lesson, setLesson] = useState<JourneyLesson | null>(null);
   const [learning, setLearning] = useState<any>(null);
+  const [persistedDueCount, setPersistedDueCount] = useState(0);
   const [status, setStatus] = useState<'loading' | 'ready' | 'partial' | 'error'>('loading');
   const [resume, setResume] = useState(() => readDailySession(userId));
 
   const load = useCallback(async () => {
     setStatus(current => current === 'ready' || current === 'partial' ? current : 'loading');
     void api.trackEvent({ user_id: userId, event_name: 'dashboard_viewed' });
-    const [dashboard, plan, today] = await Promise.allSettled([
+    const [dashboard, plan, today, due] = await Promise.allSettled([
       api.getDashboard(userId),
       api.getPlan(userId, lang),
       api.getLearningToday(userId, lang),
+      api.getPersistedDueReviews(),
     ]);
     setData(dashboard.status === 'fulfilled' ? dashboard.value : null);
     if (plan.status === 'fulfilled') {
       setLesson(selectCurrentLesson(normalizeJourneyLessons(plan.value)));
     }
     setLearning(today.status === 'fulfilled' ? today.value : null);
+    setPersistedDueCount(due.status === 'fulfilled' ? Number(due.value.count || 0) : 0);
     if (today.status === 'fulfilled') {
       void api.trackEvent({ user_id: userId, event_name: 'today_viewed', properties: { due_count: Number(today.value?.due_count || 0), topic: String(today.value?.next_lesson?.topic || '') } });
     }
@@ -47,6 +50,7 @@ export const Dashboard: React.FC = () => {
 
   useEffect(() => { void load(); }, [load]);
 
+  const dueCount = Math.max(Number(learning?.due_count || 0), persistedDueCount);
   const selectedLesson = useMemo(() => normalizeJourneyLesson(learning?.next_lesson) || lesson, [learning, lesson]);
   const phases = useMemo(() => normalizeLearningPhases(learning?.session?.phases), [learning]);
   const phaseCopy = (kind: string) => ({
@@ -70,7 +74,7 @@ export const Dashboard: React.FC = () => {
   const startLesson = () => {
     if (!selectedLesson?.id) return navigate(withUser('/plan'));
     const nextLessonId = resume?.nextLessonId || selectedLesson.id;
-    const stage = resume?.stage || (learning?.due_count ? 'review' : 'lesson');
+    const stage = resume?.stage || (dueCount ? 'review' : 'lesson');
     saveDailySession(userId, { nextLessonId, stage });
     setResume(readDailySession(userId));
     const target = stage === 'review'
@@ -111,12 +115,12 @@ export const Dashboard: React.FC = () => {
           </div>
           <div className="dq-daily-outcome"><FaCheck /><span><small>{tr(lang, 'ПОСЛЕ УРОКА', 'NACH DER LEKTION', 'AFTER THIS LESSON')}</small><strong>{selectedLesson.canDo || tr(lang, 'Ты применишь навык в коротком разговоре.', 'Du nutzt die Fähigkeit in einem kurzen Gespräch.', 'You will use the skill in a short conversation.')}</strong></span></div>
           <div className="dq-daily-meta"><span>{Math.max(1, visiblePhases.length)} {tr(lang, 'шага', 'Schritte', 'steps')}</span><span>≈ {Math.min(10, Number(learning?.session?.minutes || selectedLesson.minutes))} {tr(lang, 'мин', 'Min.', 'min')}</span></div>
-          <button type="button" className="dq-main-action" onClick={startLesson}><span><FaPlay /> {selectedLesson?.id ? (resume ? tr(lang, 'Продолжить занятие', 'Einheit fortsetzen', 'Continue session') : learning?.due_count ? tr(lang, 'Начать с повторения', 'Mit Wiederholung starten', 'Start with review') : tr(lang, 'Начать урок', 'Lektion starten', 'Start lesson')) : tr(lang, 'Открыть план', 'Plan öffnen', 'Open plan')}</span><FaArrowRight /></button>
+          <button type="button" className="dq-main-action" onClick={startLesson}><span><FaPlay /> {selectedLesson?.id ? (resume ? tr(lang, 'Продолжить занятие', 'Einheit fortsetzen', 'Continue session') : dueCount ? tr(lang, 'Начать с повторения', 'Mit Wiederholung starten', 'Start with review') : tr(lang, 'Начать урок', 'Lektion starten', 'Start lesson')) : tr(lang, 'Открыть план', 'Plan öffnen', 'Open plan')}</span><FaArrowRight /></button>
         </div>
       </section>
 
       <footer className="dq-home-after" aria-label={tr(lang, 'После урока', 'Nach der Lektion', 'After the lesson')}>
-        <div>{learning?.due_count ? <FaRedoAlt /> : <FaCheck />}<span><strong>{learning?.due_count ? `${learning.due_count} ${tr(lang, 'на повтор', 'zu wiederholen', 'to review')}` : tr(lang, 'Маршрут готов', 'Dein Weg ist bereit', 'Your path is ready')}</strong><small>{learning?.due_count ? tr(lang, 'Сначала вернём важное в память', 'Zuerst holen wir Wichtiges zurück', 'We will recall the important parts first') : tr(lang, 'Продолжай в своём темпе', 'Weiter in deinem Tempo', 'Continue at your pace')}</small></span></div>
+        <div>{dueCount ? <FaRedoAlt /> : <FaCheck />}<span><strong>{dueCount ? `${dueCount} ${tr(lang, 'на повтор', 'zu wiederholen', 'to review')}` : tr(lang, 'Маршрут готов', 'Dein Weg ist bereit', 'Your path is ready')}</strong><small>{dueCount ? tr(lang, 'Сначала вернём важное в память', 'Zuerst holen wir Wichtiges zurück', 'We will recall the important parts first') : tr(lang, 'Продолжай в своём темпе', 'Weiter in deinem Tempo', 'Continue at your pace')}</small></span></div>
         <button type="button" onClick={() => navigate(withUser('/analytics'))}>{tr(lang, 'Прогресс', 'Fortschritt', 'Progress')} <FaArrowRight /></button>
       </footer>
     </main>
