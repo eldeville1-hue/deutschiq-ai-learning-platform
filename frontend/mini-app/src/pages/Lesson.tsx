@@ -232,6 +232,7 @@ const LessonScreen: React.FC = () => {
         setRetryExercises((value) => ({ ...value, [exerciseIndex]: feedback.retry_exercise }));
       }
       resetAnswer();
+      if (!feedback?.retry_exercise) setShowHint(true);
       return;
     }
     if (exercise?.mission_role === 'final' && retried[exerciseIndex]) {
@@ -279,6 +280,7 @@ const LessonScreen: React.FC = () => {
           return updated;
         });
         resetAnswer();
+        setShowHint(true);
         setCheckError(tr(lang,
           'Дополнительное задание недоступно. Повтори исходное упражнение.',
           'Die Zusatzaufgabe ist nicht verfügbar. Wiederhole die ursprüngliche Aufgabe.',
