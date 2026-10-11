@@ -154,14 +154,14 @@ async def reviews(user_id: int, lang: str | None = None, db: Session = Depends(g
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     now = datetime.now(timezone.utc)
-    rows = db.query(TopicMastery).filter(TopicMastery.user_id == user.id, TopicMastery.next_review_at <= now).order_by(TopicMastery.mastery.asc()).limit(2).all()
+    rows = db.query(TopicMastery).filter(TopicMastery.user_id == user.id, TopicMastery.next_review_at.isnot(None), TopicMastery.next_review_at <= now).order_by(TopicMastery.next_review_at.asc(), TopicMastery.mastery.asc()).all()
     production_attempts = db.query(ExerciseAttempt).filter(ExerciseAttempt.user_id == user.id, ExerciseAttempt.assessment.isnot(None)).order_by(ExerciseAttempt.created_at.desc()).limit(100).all()
     assessment = assessment_insights(production_attempts)
     repair_focus = assessment["priority_topics"][0] if assessment["priority_topics"] else None
-    if repair_focus and repair_focus["score"] < 70 and repair_focus["topic"] not in {row.topic for row in rows}:
+    if not rows and repair_focus and repair_focus["score"] < 70:
         repair_mastery = db.query(TopicMastery).filter(TopicMastery.user_id == user.id, TopicMastery.topic == repair_focus["topic"]).first()
         if repair_mastery:
-            rows = [repair_mastery, *rows][:2]
+            rows = [repair_mastery]
     result = []
     for row in rows:
         lesson = db.query(Lesson).filter(Lesson.topic == row.topic, Lesson.is_active == True).first()
@@ -178,4 +178,4 @@ async def reviews(user_id: int, lang: str | None = None, db: Session = Depends(g
             attempts = int(row.attempts or 0)
             evidence_status = "not_enough_evidence" if attempts < 2 else "building" if attempts < 4 else "retained" if row.mastery >= 70 else "needs_review"
             result.append({"topic": row.topic, "mastery": round(row.mastery), "attempts": attempts, "evidence_status": evidence_status, "can_do": content.get("can_do") or content.get("objective"), "review_reason": delayed_review.get("reason"), "lesson_id": lesson.id, "exercise_index": exercise_index, "question": delayed_review.get("prompt") or exercise.get("question", ""), "type": exercise.get("type", "fill"), "options": exercise.get("options", []), "tokens": exercise.get("tokens", []), "conversation_turns": exercise.get("conversation_turns", []), "target_patterns": exercise.get("target_patterns", []), "repair_dimension": repair_dimension, "repair_score": repair_focus["score"] if repair_dimension else None})
-    return {"reviews": result, "assessment": assessment}
+    return {"reviews": result[:2], "assessment": assessment}
