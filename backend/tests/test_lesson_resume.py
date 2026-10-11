@@ -58,6 +58,21 @@ class LessonResumeTests(unittest.TestCase):
                 recovered = self.db.get(LearningSession, result['session_id'])
                 self.assertEqual((1, 77, 'active'), (recovered.user_id, recovered.lesson_id, recovered.status))
 
+    def test_reopening_without_session_id_restores_saved_correct_cursor(self):
+        first = self.start()
+        self.db.add_all([
+            ExerciseAttempt(user_id=1, lesson_id=77, session_id=first['session_id'],
+                            exercise_index=0, topic='advice', answer='ok', correct=True),
+            ExerciseAttempt(user_id=1, lesson_id=77, session_id=first['session_id'],
+                            exercise_index=1, topic='advice', answer='wrong', correct=False),
+        ])
+        self.db.commit()
+        recovered = self.start()
+        self.assertTrue(recovered['resumed'])
+        self.assertEqual(first['session_id'], recovered['session_id'])
+        self.assertEqual(1, recovered['next_exercise_index'])
+        self.assertEqual(1, self.db.query(LearningSession).count())
+
     def test_resume_still_requires_authenticated_owner(self):
         with self.assertRaises(HTTPException) as error:
             asyncio.run(start_lesson(StartLessonRequest(user_id=9001, lesson_id=77), self.db, authenticated_id=9002))
