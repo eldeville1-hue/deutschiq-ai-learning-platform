@@ -84,11 +84,16 @@ class LessonCursorTests(unittest.TestCase):
         self.assertEqual(1, next_unanswered_exercise_index(attempts))
 
 
-class MissingLessonAnswerTests(LessonResumeTests):
+class MissingLessonAnswerTests(unittest.TestCase):
     def test_deleted_lesson_returns_404_instead_of_crashing(self):
+        engine = create_engine('sqlite:///:memory:')
+        Lesson.__table__.create(engine)
+        db = Session(engine)
         request = CheckAnswerRequest(user_id=9001, lesson_id=999999,
             exercise_index=0, answer='test', session_id='not-a-session')
         with self.assertRaises(HTTPException) as error:
-            asyncio.run(check_answer(request, self.db, authenticated_id=9001))
+            asyncio.run(check_answer(request, db, authenticated_id=9001))
         self.assertEqual(404, error.exception.status_code)
         self.assertEqual('Lesson not found', error.exception.detail)
+        db.close()
+        engine.dispose()
