@@ -359,6 +359,11 @@ async def complete_lesson(data: CompleteLessonRequest, db: Session = Depends(get
     passed = accuracy >= 70 and mission["mission_passed"]
     topic_mastery = db.query(TopicMastery).filter(TopicMastery.user_id == user.id, TopicMastery.topic == lesson.topic).first()
     mastery_value = round(topic_mastery.mastery) if topic_mastery else 0
+    # Completing a lesson should create its first retrieval appointment.
+    # Previously only review-mode answers scheduled reviews, leaving new
+    # lessons without a due date and preventing the review queue from filling.
+    if passed and topic_mastery and topic_mastery.next_review_at is None:
+        topic_mastery.next_review_at = datetime.utcnow() + timedelta(days=1)
     session.score = accuracy
     session.status = "passed" if passed else "practice_needed"
     session.completed_at = datetime.now()
