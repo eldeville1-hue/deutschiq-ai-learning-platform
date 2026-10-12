@@ -74,6 +74,37 @@ class LessonResumeTests(unittest.TestCase):
         self.assertEqual(1, recovered['next_exercise_index'])
         self.assertEqual(1, self.db.query(LearningSession).count())
 
+    def test_resume_does_not_count_other_sessions_or_lessons(self):
+        first = self.start()
+        self.db.add_all([
+            ExerciseAttempt(user_id=1, lesson_id=77, session_id=first['session_id'],
+                            exercise_index=0, topic='advice', answer='ok', correct=True),
+            ExerciseAttempt(user_id=1, lesson_id=77, session_id='older-session',
+                            exercise_index=1, topic='advice', answer='ok', correct=True),
+            ExerciseAttempt(user_id=1, lesson_id=78, session_id=first['session_id'],
+                            exercise_index=1, topic='other', answer='ok', correct=True),
+            ExerciseAttempt(user_id=2, lesson_id=77, session_id=first['session_id'],
+                            exercise_index=1, topic='advice', answer='ok', correct=True),
+        ])
+        self.db.commit()
+        resumed = self.start(first['session_id'])
+        self.assertTrue(resumed['resumed'])
+        self.assertEqual(1, resumed['next_exercise_index'])
+        self.assertEqual(first['session_id'], resumed['session_id'])
+
+    def test_out_of_order_correct_attempts_do_not_skip_missing_exercises(self):
+        first = self.start()
+        self.db.add(ExerciseAttempt(user_id=1, lesson_id=77,
+            session_id=first['session_id'], exercise_index=2,
+            topic='advice', answer='ok', correct=True))
+        self.db.commit()
+        self.assertEqual(0, self.start()['next_exercise_index'])
+        self.db.add(ExerciseAttempt(user_id=1, lesson_id=77,
+            session_id=first['session_id'], exercise_index=0,
+            topic='advice', answer='ok', correct=True))
+        self.db.commit()
+        self.assertEqual(1, self.start()['next_exercise_index'])
+
     def test_repeated_resume_requests_preserve_progress(self):
         first = self.start()
         self.db.add(ExerciseAttempt(user_id=1, lesson_id=77,
