@@ -3,9 +3,6 @@ import { expect, test } from '@playwright/test';
 test('mobile lesson recovers server cursor after duplicate answer conflict', async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('deutschiq_lang', 'en');
-    localStorage.setItem('deutschiq-lesson-draft-9001-77', JSON.stringify({
-      sessionId: 'saved-session', step: 2, answer: '', savedAt: Date.now(),
-    }));
   });
 
   const questions = [
@@ -41,6 +38,9 @@ test('mobile lesson recovers server cursor after duplicate answer conflict', asy
   await page.route('**/api/events', route => route.fulfill({ status: 204, body: '' }));
 
   await page.goto('/lesson/77');
+  await expect(page.getByRole('button', { name: 'Understand with an example' })).toBeVisible();
+  await page.getByRole('button', { name: 'Understand with an example' }).click();
+  await page.getByRole('button', { name: 'Start practice' }).click();
   await expect(page.getByRole('heading', { name: 'First question' })).toBeVisible();
   await page.getByRole('radio', { name: 'Correct' }).click();
   await page.getByRole('button', { name: 'Check' }).click();
