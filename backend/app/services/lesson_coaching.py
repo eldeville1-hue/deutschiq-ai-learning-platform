@@ -260,6 +260,11 @@ def repair_plan(error_type: str | None, missing_words: list[str], extra_words: l
         "de": ("Finde das finite Verb.", "Prüfe seine Position im Haupt- oder Nebensatz."),
         "en": ("Find the finite verb.", "Check its position in a main or subordinate clause."),
     }[language]
+    targeted[language]["adjective"] = {
+        "ru": ("Определи род, число и падеж существительного.", "Проверь окончание прилагательного с учётом артикля."),
+        "de": ("Bestimme Genus, Numerus und Kasus des Nomens.", "Prüfe die Adjektivendung anhand des Artikels."),
+        "en": ("Identify the noun's gender, number and case.", "Check the adjective ending using the article."),
+    }[language]
     if error_type in targeted[language]:
         first, practice = targeted[language][error_type]
         return [first, practice]
