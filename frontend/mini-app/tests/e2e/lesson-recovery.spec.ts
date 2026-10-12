@@ -31,7 +31,7 @@ test('mobile lesson recovers server cursor after duplicate answer conflict', asy
       }),
     });
   });
-  await page.route('**/api/lesson/check', async route => {
+  await page.route('**/api/lesson/check-answer', async route => {
     checks += 1;
     await route.fulfill({
       status: 409, contentType: 'application/json',
