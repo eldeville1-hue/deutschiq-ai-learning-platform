@@ -141,6 +141,29 @@ class LessonResumeTests(unittest.TestCase):
         self.assertEqual('Exercise already completed', error.exception.detail)
         self.assertEqual(1, self.db.query(ExerciseAttempt).count())
 
+    def test_lost_answer_acknowledgement_recovers_saved_cursor_without_duplicate(self):
+        # Simulate a correct answer committed on the server whose HTTP response
+        # never reached Telegram. The client retries and then resumes the lesson.
+        first = self.start()
+        self.db.add(ExerciseAttempt(user_id=1, lesson_id=77,
+            session_id=first['session_id'], exercise_index=0,
+            topic='advice', answer='correct', correct=True))
+        self.db.commit()
+        request = CheckAnswerRequest(user_id=9001, lesson_id=77,
+            exercise_index=0, answer='correct', session_id=first['session_id'])
+        with self.assertRaises(HTTPException) as error:
+            asyncio.run(check_answer(request, self.db, authenticated_id=9001))
+        self.assertEqual(409, error.exception.status_code)
+        self.assertEqual('Exercise already completed', error.exception.detail)
+
+        recovered = self.start(first['session_id'])
+        self.assertTrue(recovered['resumed'])
+        self.assertEqual(first['session_id'], recovered['session_id'])
+        self.assertEqual(1, recovered['next_exercise_index'])
+        self.assertEqual(1, self.db.query(ExerciseAttempt).count())
+        self.assertEqual(1, self.db.query(LearningSession).count())
+        self.assertEqual(0, self.db.query(TopicMastery).count())
+
     def test_wrong_answer_does_not_block_corrected_submission(self):
         first = self.start()
         self.db.add(ExerciseAttempt(user_id=1, lesson_id=77,
