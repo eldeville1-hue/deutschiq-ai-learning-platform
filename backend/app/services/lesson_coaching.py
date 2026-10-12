@@ -265,6 +265,11 @@ def repair_plan(error_type: str | None, missing_words: list[str], extra_words: l
         "de": ("Bestimme Genus, Numerus und Kasus des Nomens.", "Prüfe die Adjektivendung anhand des Artikels."),
         "en": ("Identify the noun's gender, number and case.", "Check the adjective ending using the article."),
     }[language]
+    targeted[language]["negation"] = {
+        "ru": ("Найди часть предложения, которую нужно отрицать.", "Проверь выбор и положение nicht или kein."),
+        "de": ("Finde den Satzteil, der verneint werden soll.", "Prüfe die Wahl und Stellung von nicht oder kein."),
+        "en": ("Find the part of the sentence being negated.", "Check the choice and position of nicht or kein."),
+    }[language]
     if error_type in targeted[language]:
         first, practice = targeted[language][error_type]
         return [first, practice]
