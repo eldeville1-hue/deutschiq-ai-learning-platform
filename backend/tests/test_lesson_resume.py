@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.api.endpoints.lesson import (StartLessonRequest, CheckAnswerRequest, start_lesson, check_answer, next_unanswered_exercise_index)
 from app.models.user import User
 from app.models.lesson import Lesson
-from app.models.learning import LearningSession, ExerciseAttempt
+from app.models.learning import LearningSession, ExerciseAttempt, TopicMastery
 
 
 @compiles(ARRAY, 'sqlite')
@@ -21,7 +21,7 @@ def sqlite_array(_type, _compiler, **_kwargs):
 class LessonResumeTests(unittest.TestCase):
     def setUp(self):
         self.engine = create_engine('sqlite:///:memory:')
-        for model in (User, Lesson, LearningSession, ExerciseAttempt):
+        for model in (User, Lesson, LearningSession, ExerciseAttempt, TopicMastery):
             model.__table__.create(self.engine)
         self.db = Session(self.engine)
         self.db.add_all([User(id=1, telegram_id=9001), User(id=2, telegram_id=9002),
