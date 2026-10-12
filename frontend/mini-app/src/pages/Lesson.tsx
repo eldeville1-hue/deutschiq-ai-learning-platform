@@ -310,10 +310,33 @@ const LessonScreen: React.FC = () => {
         const status = error?.response?.status;
         const detail = error?.response?.data?.detail;
         if (status === 409 && detail === 'Exercise already completed') {
-          setCheckError(tr(lang,
-            'Этот ответ уже сохранён. Вернись к плану и открой урок снова, чтобы продолжить.',
-            'Diese Antwort wurde bereits gespeichert. Öffne die Lektion über den Lernplan erneut.',
-            'This answer was already saved. Reopen the lesson from your plan to continue.'));
+          // The server may have saved the answer before the network dropped.
+          // Recover its authoritative cursor instead of asking for another submission.
+          try {
+            const resumed = await api.startLesson({
+              user_id: getUserId(), lesson_id: Number(id),
+              resume_session_id: sessionId,
+            });
+            const cursor = Number(resumed.next_exercise_index);
+            if (!resumed.resumed || !Number.isInteger(cursor) || cursor <= exerciseIndex) {
+              throw new Error('No saved progress beyond this exercise');
+            }
+            const exerciseCount = Math.min(5, lesson?.content?.exercises?.length || 0);
+            resumeSessionRef.current = resumed.session_id;
+            setSessionId(resumed.session_id);
+            setStep(2 + Math.min(cursor, exerciseCount));
+            setAnswer('');
+            setChecked(null);
+            setFeedback(null);
+            setRetried({});
+            setRetryExercises({});
+            setCheckError('');
+          } catch {
+            setCheckError(tr(lang,
+              'Ответ сохранён, но восстановить прогресс не удалось. Открой урок снова.',
+              'Die Antwort wurde gespeichert, aber der Fortschritt konnte nicht geladen werden. Öffne die Lektion erneut.',
+              'Your answer was saved, but progress could not be restored. Reopen the lesson.'));
+          }
         } else if (status === 409 && detail === 'Learning session is missing or closed') {
           setCheckError(tr(lang,
             'Сессия урока завершилась. Вернись к плану и открой урок снова — сохранённый прогресс останется.',
