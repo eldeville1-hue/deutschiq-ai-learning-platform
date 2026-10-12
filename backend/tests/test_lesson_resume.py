@@ -1,6 +1,7 @@
 import asyncio
 import unittest
 from types import SimpleNamespace
+from unittest.mock import patch
 
 from fastapi import HTTPException
 from sqlalchemy import ARRAY, create_engine
@@ -160,8 +161,11 @@ class LessonResumeTests(unittest.TestCase):
         self.db.commit()
         request = CheckAnswerRequest(user_id=9001, lesson_id=77,
             exercise_index=0, answer="ist", session_id=first["session_id"], retry=True)
-        with self.assertRaises(HTTPException) as error:
-            asyncio.run(check_answer(request, self.db, authenticated_id=9001))
+        # Normalization can supply authored examples and create a valid retry.
+        # Force the unavailable-retry branch to test its 409 contract directly.
+        with patch("app.api.endpoints.lesson.supported_retry_exercise", return_value=None):
+            with self.assertRaises(HTTPException) as error:
+                asyncio.run(check_answer(request, self.db, authenticated_id=9001))
         self.assertEqual(409, error.exception.status_code)
         self.assertEqual(0, self.db.query(ExerciseAttempt).count())
 
