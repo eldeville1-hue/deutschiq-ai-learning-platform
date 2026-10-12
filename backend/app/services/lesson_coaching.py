@@ -270,6 +270,11 @@ def repair_plan(error_type: str | None, missing_words: list[str], extra_words: l
         "de": ("Finde den Satzteil, der verneint werden soll.", "Prüfe die Wahl und Stellung von nicht oder kein."),
         "en": ("Find the part of the sentence being negated.", "Check the choice and position of nicht or kein."),
     }[language]
+    targeted[language]["preposition"] = {
+        "ru": ("Проверь смысл предлога.", "Определи падеж после него."),
+        "de": ("Prüfe die Bedeutung der Präposition.", "Bestimme den Kasus danach."),
+        "en": ("Check the meaning of the preposition.", "Determine the case after it."),
+    }[language]
     if error_type in targeted[language]:
         first, practice = targeted[language][error_type]
         return [first, practice]
