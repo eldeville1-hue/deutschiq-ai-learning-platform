@@ -37,7 +37,23 @@ test('mobile lesson recovers server cursor after duplicate answer conflict', asy
   });
   await page.route('**/api/events', route => route.fulfill({ status: 204, body: '' }));
 
-  await page.goto('/lesson/77');
+  const browserErrors: string[] = [];
+  page.on('pageerror', error => browserErrors.push(error.message));
+  page.on('console', message => {
+    if (message.type() === 'error') browserErrors.push(message.text());
+  });
+  const navigation = await page.goto('/lesson/77');
+  await page.waitForTimeout(1500);
+  if (!(await page.getByRole('button', { name: 'Understand with an example' }).count())) {
+    throw new Error(JSON.stringify({
+      status: navigation?.status(),
+      url: page.url(),
+      body: (await page.locator('body').innerText()).slice(0, 1000),
+      html: (await page.locator('body').innerHTML()).slice(0, 1000),
+      browserErrors,
+      starts,
+    }));
+  }
   await expect(page.getByRole('button', { name: 'Understand with an example' }),
     'Lesson screen did not load. Visible page: ' + (await page.locator('body').innerText()).slice(0, 1000)).toBeVisible();
   await page.getByRole('button', { name: 'Understand with an example' }).click();
