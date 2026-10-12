@@ -10,7 +10,7 @@ from app.models.user import User
 router = APIRouter(prefix="/api/events", tags=["events"])
 
 ALLOWED_EVENTS = {
-    "dashboard_viewed", "lesson_started", "exercise_answered",
+    "dashboard_viewed", "lesson_started", "exercise_answered", "lesson_answer_failed",
     "lesson_completed", "review_started", "tutor_opened",
     "review_completed", "exercise_retried", "lesson_stage_viewed", "lesson_abandoned",
     "session_finished", "beta_feedback", "level_unlocked", "app_started",
