@@ -255,6 +255,11 @@ def repair_plan(error_type: str | None, missing_words: list[str], extra_words: l
             "auxiliary": ("Check whether Perfekt needs haben or sein.", "Conjugate the auxiliary for the subject."),
         },
     }
+    targeted[language]["word_order"] = {
+        "ru": ("Найди спрягаемый глагол.", "Проверь его место в главном или придаточном предложении."),
+        "de": ("Finde das finite Verb.", "Prüfe seine Position im Haupt- oder Nebensatz."),
+        "en": ("Find the finite verb.", "Check its position in a main or subordinate clause."),
+    }[language]
     if error_type in targeted[language]:
         first, practice = targeted[language][error_type]
         return [first, practice]
