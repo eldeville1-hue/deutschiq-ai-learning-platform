@@ -23,7 +23,7 @@ test('mobile lesson recovers server cursor after duplicate answer conflict', asy
     await route.fulfill({
       status: 200, contentType: 'application/json',
       body: JSON.stringify({
-        session_id: 'saved-session', resumed: true,
+        session_id: 'saved-session', resumed: starts > 1,
         next_exercise_index: starts === 1 ? 0 : 1,
       }),
     });
