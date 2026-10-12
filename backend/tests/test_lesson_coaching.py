@@ -42,6 +42,14 @@ class FeedbackLanguageQualityTests(unittest.TestCase):
                     self.assertNotIn("den", tokens)
 
 
+class GrammarRepairTests(unittest.TestCase):
+    def test_new_grammar_repairs_have_two_steps(self):
+        for kind in ("word_order", "adjective", "negation", "preposition"):
+            for lang in ("ru", "de", "en"):
+                with self.subTest(kind=kind, lang=lang):
+                    self.assertEqual(2, len(repair_plan(kind, [], [], lang)))
+
+
 class RecoveryAwareSkillFocusTests(unittest.TestCase):
     def test_two_consecutive_correct_attempts_clear_old_focus(self):
         attempts = [
