@@ -271,6 +271,27 @@ const LessonScreen: React.FC = () => {
       setChecked(Boolean(result.correct)); setFeedback(result);
       void api.trackEvent({ user_id: getUserId(), event_name: 'exercise_answered', properties: { lesson_id: Number(id), exercise_index: exerciseIndex, correct: Boolean(result.correct), confidence, misconception: String(result.error_type || ''), learning_mode: String(learningProfile.mode), retry: Boolean(retried[exerciseIndex]) } });
     } catch (error: any) {
+      // Capture the failure category without sending the learner's answer,
+      // Telegram credentials, or other private exercise content.
+      const failureStatus = Number(error?.response?.status || 0);
+      const failureDetail = String(error?.response?.data?.detail || '');
+      const failureReason = failureStatus === 409
+        ? (failureDetail === 'Exercise already completed' ? 'duplicate_answer'
+          : failureDetail === 'Learning session is missing or closed' ? 'closed_session'
+          : failureDetail === 'No supported retry exercise is available' ? 'retry_unavailable'
+          : 'other_conflict')
+        : failureStatus === 401 || failureStatus === 403 ? 'authentication'
+        : failureStatus >= 500 ? 'server_error'
+        : failureStatus === 0 ? 'network_or_timeout' : 'other_http_error';
+      void api.trackEvent({
+        user_id: getUserId(),
+        event_name: 'lesson_answer_failed',
+        properties: {
+          lesson_id: Number(id), exercise_index: exerciseIndex,
+          status: failureStatus, reason: failureReason,
+          retry: Boolean(retried[exerciseIndex]),
+        },
+      });
       if (retried[exerciseIndex] && error?.response?.status === 409 &&
           error?.response?.data?.detail === 'No supported retry exercise is available') {
         setRetried((value) => ({ ...value, [exerciseIndex]: false }));
