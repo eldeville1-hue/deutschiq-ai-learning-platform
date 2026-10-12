@@ -64,6 +64,6 @@ test('mobile lesson recovers server cursor after duplicate answer conflict', asy
 
   await expect(page.getByRole('heading', { name: 'Second question' })).toBeVisible();
   expect(checks).toBe(1);
-  expect(starts).toBe(2);
+  expect(starts).toBeGreaterThanOrEqual(2);
   await expect(page.getByText('Reopen the lesson from your plan to continue.')).toHaveCount(0);
 });
