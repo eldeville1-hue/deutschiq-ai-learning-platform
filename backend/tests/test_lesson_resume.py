@@ -1,6 +1,7 @@
 import asyncio
 import unittest
 from types import SimpleNamespace
+from unittest.mock import patch
 
 from fastapi import HTTPException
 from sqlalchemy import ARRAY, create_engine
@@ -10,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.api.endpoints.lesson import (StartLessonRequest, CheckAnswerRequest, start_lesson, check_answer, next_unanswered_exercise_index)
 from app.models.user import User
 from app.models.lesson import Lesson
-from app.models.learning import LearningSession, ExerciseAttempt
+from app.models.learning import LearningSession, ExerciseAttempt, TopicMastery
 
 
 @compiles(ARRAY, 'sqlite')
@@ -21,7 +22,7 @@ def sqlite_array(_type, _compiler, **_kwargs):
 class LessonResumeTests(unittest.TestCase):
     def setUp(self):
         self.engine = create_engine('sqlite:///:memory:')
-        for model in (User, Lesson, LearningSession, ExerciseAttempt):
+        for model in (User, Lesson, LearningSession, ExerciseAttempt, TopicMastery):
             model.__table__.create(self.engine)
         self.db = Session(self.engine)
         self.db.add_all([User(id=1, telegram_id=9001), User(id=2, telegram_id=9002),
@@ -160,8 +161,11 @@ class LessonResumeTests(unittest.TestCase):
         self.db.commit()
         request = CheckAnswerRequest(user_id=9001, lesson_id=77,
             exercise_index=0, answer="ist", session_id=first["session_id"], retry=True)
-        with self.assertRaises(HTTPException) as error:
-            asyncio.run(check_answer(request, self.db, authenticated_id=9001))
+        # Normalization can supply authored examples and create a valid retry.
+        # Force the unavailable-retry branch to test its 409 contract directly.
+        with patch("app.api.endpoints.lesson.supported_retry_exercise", return_value=None):
+            with self.assertRaises(HTTPException) as error:
+                asyncio.run(check_answer(request, self.db, authenticated_id=9001))
         self.assertEqual(409, error.exception.status_code)
         self.assertEqual(0, self.db.query(ExerciseAttempt).count())
 

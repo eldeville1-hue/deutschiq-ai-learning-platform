@@ -11,9 +11,15 @@ class UncertainAnswerApiTests(unittest.TestCase):
         for mode in ("lesson", "review"):
             with self.subTest(mode=mode):
                 db = MagicMock()
-                db.query.return_value.filter.return_value.first.return_value = SimpleNamespace(
-                    id=77, topic="German", level="B1", content={}
-                )
+                lesson = SimpleNamespace(id=77, topic="German", level="B1", content={})
+                user = SimpleNamespace(id=1, telegram_id=9001)
+                session = SimpleNamespace(id="existing-session", status="active")
+                query_results = []
+                for value in (lesson, user, session, None):
+                    query = MagicMock()
+                    query.filter.return_value.first.return_value = value
+                    query_results.append(query)
+                db.query.side_effect = query_results
                 request = CheckAnswerRequest(
                     user_id=9001, lesson_id=77, exercise_index=0,
                     answer="Ich besuche meine Freundin morgn.",
@@ -29,7 +35,7 @@ class UncertainAnswerApiTests(unittest.TestCase):
                 db.add.assert_not_called()
                 db.commit.assert_not_called()
                 db.flush.assert_not_called()
-                self.assertEqual(3, db.query.call_count)
+                self.assertEqual(4, db.query.call_count)
 
 
 if __name__ == "__main__":
