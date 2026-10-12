@@ -38,7 +38,8 @@ test('mobile lesson recovers server cursor after duplicate answer conflict', asy
   await page.route('**/api/events', route => route.fulfill({ status: 204, body: '' }));
 
   await page.goto('/lesson/77');
-  await expect(page.getByRole('button', { name: 'Understand with an example' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Understand with an example' }),
+    'Lesson screen did not load. Visible page: ' + (await page.locator('body').innerText()).slice(0, 1000)).toBeVisible();
   await page.getByRole('button', { name: 'Understand with an example' }).click();
   await page.getByRole('button', { name: 'Start practice' }).click();
   await expect(page.getByRole('heading', { name: 'First question' })).toBeVisible();
