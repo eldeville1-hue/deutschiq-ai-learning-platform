@@ -176,3 +176,53 @@ test('mobile lesson reload restores the server-authoritative exercise cursor', a
   await expect(page.getByRole('heading', { name: 'Second question' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'First question' })).toHaveCount(0);
 });
+
+test('mobile learner completes a lesson and sees the server-saved result', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
+  let checks = 0;
+  let completions = 0;
+  await page.route('**/api/lesson/77?*', route => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({
+      id: 77, level: 'A1', topic: 'Practice',
+      content: {
+        title: 'Practice', examples: ['Hallo!'],
+        exercises: [{ type: 'choice', question: 'First question', options: ['Correct', 'Wrong'], answer: 'Correct' }],
+      },
+    }),
+  }));
+  await page.route('**/api/lesson/start', route => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({ session_id: 'saved-session', resumed: false, next_exercise_index: 0 }),
+  }));
+  await page.route('**/api/lesson/check-answer', async route => {
+    checks += 1;
+    await route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify({ correct: true, evaluation_status: 'accepted', correct_answer: 'Correct' }),
+    });
+  });
+  await page.route('**/api/lesson/complete', async route => {
+    completions += 1;
+    await route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify({
+        passed: true, score: 100, mastery: 100, xp_gained: 15,
+        exercise_count: 1, first_try_correct: 1,
+      }),
+    });
+  });
+  await page.route('**/api/events', route => route.fulfill({ status: 204, body: '' }));
+
+  await page.goto('/lesson/77');
+  await page.getByRole('button', { name: 'Understand with an example' }).click();
+  await page.getByRole('button', { name: 'Start practice' }).click();
+  await page.getByRole('radio', { name: 'Correct' }).click();
+  await page.getByRole('button', { name: 'Check' }).click();
+  await expect(page.getByText('Correct', { exact: true }).first()).toBeVisible();
+  await page.getByRole('button', { name: 'Next' }).click();
+  await expect(page.getByRole('heading', { name: 'This is your German now' })).toBeVisible();
+  await expect(page.getByText('+15 XP')).toBeVisible();
+  expect(checks).toBe(1);
+  expect(completions).toBe(1);
+});
