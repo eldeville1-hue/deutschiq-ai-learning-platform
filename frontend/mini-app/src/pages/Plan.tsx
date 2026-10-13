@@ -22,9 +22,9 @@ export const Plan: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const userId = getUserId();
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (forceRefresh = false) => {
     setLoading(true);
-    const [plan, profile, path] = await Promise.allSettled([api.getPlan(userId, lang, selectedTrack || undefined), api.getDashboard(userId), api.getJourney(userId)]);
+    const [plan, profile, path] = await Promise.allSettled([api.getPlan(userId, lang, selectedTrack || undefined, forceRefresh), api.getDashboard(userId, forceRefresh), api.getJourney(userId, forceRefresh)]);
     if (plan.status === 'fulfilled') setLessons(normalizeJourneyLessons(plan.value));
     if (profile.status === 'fulfilled') setDashboard(profile.value);
     else setDashboard({ level: 'A1', targetLevel: 'A2' });
@@ -42,7 +42,7 @@ export const Plan: React.FC = () => {
   // elsewhere. Refresh the server-owned plan when the app becomes visible.
   useEffect(() => {
     const refreshWhenVisible = () => {
-      if (document.visibilityState === 'visible') void load();
+      if (document.visibilityState === 'visible') void load(true);
     };
     document.addEventListener('visibilitychange', refreshWhenVisible);
     return () => document.removeEventListener('visibilitychange', refreshWhenVisible);
@@ -95,7 +95,7 @@ export const Plan: React.FC = () => {
         <span>{tr(lang, 'Твой маршрут по навыкам', 'Dein Weg nach Fähigkeiten', 'Your skill-based path')}</span>
       </header>
 
-      {loadError && <div className="rc-notice saved"><span>{tr(lang, 'Показываем сохранённый маршрут', 'Gespeicherter Lernweg wird angezeigt', 'Showing your saved path')}</span><button type="button" onClick={load}>{tr(lang, 'Обновить', 'Aktualisieren', 'Refresh')}</button></div>}
+      {loadError && <div className="rc-notice saved"><span>{tr(lang, 'Показываем сохранённый маршрут', 'Gespeicherter Lernweg wird angezeigt', 'Showing your saved path')}</span><button type="button" onClick={() => void load(true)}>{tr(lang, 'Обновить', 'Aktualisieren', 'Refresh')}</button></div>}
 
       {(journey?.levels || []).some((item: any) => item.total_lessons > 0) && <section className="dq-level-switcher" aria-label={tr(lang, 'Путь по уровням', 'Niveaureise', 'Level journey')}>
         <div className="dq-levels">{(journey?.levels || []).filter((item: any) => item.total_lessons > 0).map((item: any) => {
