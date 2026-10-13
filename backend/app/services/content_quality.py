@@ -229,3 +229,46 @@ def validate_roadmap_content(content: dict) -> list[str]:
     if content.get("quality_version", 0) >= 8:
         errors.extend(f"publish:{blocker}" for blocker in publication_blockers(content))
     return errors
+
+
+def exercise_answer_audit(content: dict) -> list[str]:
+    """Report objective exercise defects without changing existing lesson availability.
+
+    The audit is deliberately separate from the publication gate so legacy A1–B2
+    lessons can be inspected and repaired before stricter validation is enabled.
+    """
+    issues: list[str] = []
+    selection_types = {"choose", "context_choice", "analogy_choice", "listening_choice"}
+    for index, item in enumerate(content.get("exercises") or []):
+        if not isinstance(item, dict):
+            issues.append(f"exercise:{index}:not_object")
+            continue
+        kind = item.get("type")
+        answer = item.get("answer")
+        alternatives = item.get("accepted_answers")
+        if alternatives is not None and (
+            not isinstance(alternatives, list)
+            or any(not isinstance(value, str) or not value.strip() for value in alternatives)
+        ):
+            issues.append(f"exercise:{index}:invalid_accepted_answers")
+        valid_answers = [
+            value.strip().casefold() for value in
+            ([answer] if isinstance(answer, str) and answer.strip() else [])
+            + ([value for value in alternatives if isinstance(value, str) and value.strip()]
+               if isinstance(alternatives, list) else [])
+        ]
+        if not valid_answers:
+            issues.append(f"exercise:{index}:no_usable_answer")
+        if kind in selection_types:
+            options = item.get("options")
+            if not isinstance(options, list) or len(options) < 2 or any(
+                not isinstance(option, str) or not option.strip() for option in options
+            ):
+                issues.append(f"exercise:{index}:invalid_options")
+                continue
+            normalized_options = [option.strip().casefold() for option in options]
+            if len(set(normalized_options)) != len(normalized_options):
+                issues.append(f"exercise:{index}:duplicate_options")
+            if valid_answers and not any(value in normalized_options for value in valid_answers):
+                issues.append(f"exercise:{index}:answer_not_in_options")
+    return issues
