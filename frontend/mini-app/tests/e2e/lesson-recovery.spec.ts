@@ -273,8 +273,8 @@ test('mobile lesson recovers a saved result after a lost completion response', a
   await page.getByRole('button', { name: 'Check' }).click();
   await page.getByRole('button', { name: 'Next' }).click();
   await expect(page.getByRole('heading', { name: 'This is your German now' })).toHaveCount(0);
-  await page.getByRole('button', { name: /retry|try again/i }).click();
+  await page.getByRole('button', { name: 'Save again' }).click();
   await expect(page.getByRole('heading', { name: 'This is your German now' })).toBeVisible();
-  await expect(page.getByText('+0 XP')).toBeVisible();
+  await expect(page.locator('.mission-xp')).toHaveCount(0);
   expect(completions).toBe(2);
 });
