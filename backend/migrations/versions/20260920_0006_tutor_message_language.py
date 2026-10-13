@@ -1,6 +1,7 @@
 """Keep AI tutor conversations separate for each interface language."""
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import inspect
 
 revision = "20260920_0006"
 down_revision = "20260908_0005"
@@ -9,11 +10,13 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column(
-        "tutor_messages",
-        sa.Column("language", sa.String(length=8), server_default="legacy", nullable=False),
-    )
-    op.create_index("ix_tutor_messages_language", "tutor_messages", ["language"], unique=False)
+    connection = op.get_bind()
+    columns = {item["name"] for item in inspect(connection).get_columns("tutor_messages")}
+    if "language" not in columns:
+        op.add_column("tutor_messages", sa.Column("language", sa.String(length=8), server_default="legacy", nullable=False))
+    indexes = {item["name"] for item in inspect(connection).get_indexes("tutor_messages")}
+    if "ix_tutor_messages_language" not in indexes:
+        op.create_index("ix_tutor_messages_language", "tutor_messages", ["language"], unique=False)
 
 
 def downgrade() -> None:
