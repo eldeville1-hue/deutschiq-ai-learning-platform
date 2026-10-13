@@ -38,6 +38,16 @@ export const Plan: React.FC = () => {
 
   useEffect(() => { void load(); }, [load]);
 
+  // Telegram WebViews can stay mounted while the learner completes a lesson
+  // elsewhere. Refresh the server-owned plan when the app becomes visible.
+  useEffect(() => {
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === 'visible') void load();
+    };
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+    return () => document.removeEventListener('visibilitychange', refreshWhenVisible);
+  }, [load]);
+
   const current = useMemo(() => selectCurrentLesson(lessons), [lessons]);
   const week = current?.week || 1;
   const weekLessons = lessons.filter(item => item.week === week);
