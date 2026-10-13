@@ -117,23 +117,38 @@ class LessonResumeTests(unittest.TestCase):
             self.assertEqual(1, recovered['next_exercise_index'])
         self.assertEqual(1, self.db.query(LearningSession).count())
 
-    def test_repeated_completion_cannot_award_xp_again(self):
+    def test_repeated_completion_recovers_result_without_awarding_xp(self):
         user = self.db.get(User, 1)
         user.xp = 42
         self.db.add(LearningSession(
-            id='already-finished', user_id=1, lesson_id=77, status='passed'))
+            id='already-finished', user_id=1, lesson_id=77,
+            status='passed', score=90))
         self.db.commit()
 
         for _ in range(2):
-            with self.assertRaises(HTTPException) as caught:
-                asyncio.run(complete_lesson(
-                    CompleteLessonRequest(user_id=9001, lesson_id=77,
-                                          session_id='already-finished'),
-                    self.db, authenticated_id=9001))
-            self.assertEqual(409, caught.exception.status_code)
+            result = asyncio.run(complete_lesson(
+                CompleteLessonRequest(user_id=9001, lesson_id=77,
+                                      session_id='already-finished'),
+                self.db, authenticated_id=9001))
+            self.assertTrue(result['passed'])
+            self.assertEqual(90, result['score'])
+            self.assertEqual(0, result['xp_gained'])
+            self.assertTrue(result['recovered'])
         self.db.refresh(user)
         self.assertEqual(42, user.xp)
         self.assertEqual(1, self.db.query(LearningSession).count())
+
+    def test_completed_session_cannot_be_recovered_by_another_user(self):
+        self.db.add(LearningSession(
+            id='private-result', user_id=2, lesson_id=77,
+            status='passed', score=100))
+        self.db.commit()
+        with self.assertRaises(HTTPException) as caught:
+            asyncio.run(complete_lesson(
+                CompleteLessonRequest(user_id=9001, lesson_id=77,
+                                      session_id='private-result'),
+                self.db, authenticated_id=9001))
+        self.assertEqual(409, caught.exception.status_code)
 
     def test_finished_session_is_not_reopened(self):
         first = self.start()

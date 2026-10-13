@@ -62,9 +62,11 @@ class LessonCompletionPersistenceTests(unittest.TestCase):
         self.assertEqual(50, self.db.get(User, 1).xp)
         self.assertTrue(self.db.query(UserProgress).filter_by(user_id=1, lesson_id=10).one().completed)
         self.assertEqual("passed", self.db.get(LearningSession, "learner-one").status)
-        with self.assertRaises(HTTPException) as error:
-            self.complete()
-        self.assertEqual(409, error.exception.status_code)
+        recovered = self.complete()
+        self.assertTrue(recovered["passed"])
+        self.assertTrue(recovered["recovered"])
+        self.assertEqual(result["score"], recovered["score"])
+        self.assertEqual(0, recovered["xp_gained"])
         self.assertEqual(50, self.db.get(User, 1).xp)
         self.assertEqual(1, self.db.query(UserProgress).filter_by(user_id=1, lesson_id=10).count())
 
