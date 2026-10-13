@@ -8,7 +8,7 @@ from sqlalchemy import ARRAY, create_engine
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import Session
 
-from app.api.endpoints.lesson import (StartLessonRequest, CheckAnswerRequest, start_lesson, check_answer, next_unanswered_exercise_index)
+from app.api.endpoints.lesson import (StartLessonRequest, CheckAnswerRequest, CompleteLessonRequest, start_lesson, check_answer, complete_lesson, next_unanswered_exercise_index)
 from app.models.user import User
 from app.models.lesson import Lesson
 from app.models.learning import LearningSession, ExerciseAttempt, TopicMastery
@@ -115,6 +115,24 @@ class LessonResumeTests(unittest.TestCase):
             recovered = self.start(first['session_id'])
             self.assertEqual(first['session_id'], recovered['session_id'])
             self.assertEqual(1, recovered['next_exercise_index'])
+        self.assertEqual(1, self.db.query(LearningSession).count())
+
+    def test_repeated_completion_cannot_award_xp_again(self):
+        user = self.db.get(User, 1)
+        user.xp = 42
+        self.db.add(LearningSession(
+            id='already-finished', user_id=1, lesson_id=77, status='passed'))
+        self.db.commit()
+
+        for _ in range(2):
+            with self.assertRaises(HTTPException) as caught:
+                asyncio.run(complete_lesson(
+                    CompleteLessonRequest(user_id=9001, lesson_id=77,
+                                          session_id='already-finished'),
+                    self.db, authenticated_id=9001))
+            self.assertEqual(409, caught.exception.status_code)
+        self.db.refresh(user)
+        self.assertEqual(42, user.xp)
         self.assertEqual(1, self.db.query(LearningSession).count())
 
     def test_finished_session_is_not_reopened(self):
