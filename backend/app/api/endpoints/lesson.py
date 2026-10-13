@@ -372,9 +372,71 @@ async def complete_lesson(data: CompleteLessonRequest, db: Session = Depends(get
     if not lesson:
         raise HTTPException(status_code=404, detail="Урок не найден")
     
-    session = db.query(LearningSession).filter(LearningSession.id == data.session_id, LearningSession.user_id == user.id, LearningSession.lesson_id == lesson.id, LearningSession.status == "active").first()
+    session = db.query(LearningSession).filter(
+        LearningSession.id == data.session_id,
+        LearningSession.user_id == user.id,
+        LearningSession.lesson_id == lesson.id,
+    ).first()
     if not session:
         raise HTTPException(status_code=409, detail="Learning session is missing or already completed")
+    if session.status in {"passed", "practice_needed"}:
+        # The original response may have been lost after commit. Reconstruct a
+        # read-only outcome for this exact session; never award XP again.
+        previous_attempts = db.query(ExerciseAttempt).filter(
+            ExerciseAttempt.user_id == user.id,
+            ExerciseAttempt.lesson_id == lesson.id,
+            ExerciseAttempt.session_id == session.id,
+        ).all()
+        previous_summary = summarize_attempts(previous_attempts)
+        previous_content = normalize_lesson_content(lesson.content or {}, lesson.topic, lesson.level)
+        previous_exercises = previous_content.get("exercises") or []
+        final_indices = [
+            index for index, exercise in enumerate(previous_exercises)
+            if exercise.get("mission_role") == "final"
+        ]
+        if not final_indices:
+            final_indices = [
+                index for index, exercise in enumerate(previous_exercises)
+                if exercise.get("type") in {"production", "dialogue"}
+            ]
+        mission_index = final_indices[-1] if final_indices else None
+        previous_mission = summarize_mission(previous_attempts, mission_index)
+        mission_exercise = previous_exercises[mission_index] if mission_index is not None else {}
+        passed = session.status == "passed"
+        previous_mastery = db.query(TopicMastery).filter(
+            TopicMastery.user_id == user.id, TopicMastery.topic == lesson.topic
+        ).first()
+        duration = max(0, round((
+            session.completed_at.replace(tzinfo=None) - session.started_at.replace(tzinfo=None)
+        ).total_seconds())) if session.completed_at and session.started_at else 0
+        return {
+            "status": session.status,
+            "passed": passed,
+            "score": session.score if session.score is not None else previous_summary["score"],
+            "mastery": round(previous_mastery.mastery) if previous_mastery else 0,
+            "xp_gained": 0,
+            "already_completed": True,
+            "recovered": True,
+            "streak": user.streak or 0,
+            "first_try_correct": previous_summary["first_try_correct"],
+            "corrected_retries": previous_summary["corrected_retries"],
+            "needs_review": previous_summary["needs_review"],
+            "exercise_count": previous_summary["exercise_count"],
+            "mission_required": previous_mission["mission_required"],
+            "mission_attempted": previous_mission["mission_attempted"],
+            "mission_passed": previous_mission["mission_passed"],
+            "mission_score": previous_mission["mission_score"],
+            "mission_answer": previous_mission["mission_answer"],
+            "mission_prompt": mission_exercise.get("question"),
+            "mission_model": mission_exercise.get("model_answer") or mission_exercise.get("answer"),
+            "review_in_days": None,
+            "review_at": previous_mastery.next_review_at.isoformat() if passed and previous_mastery and previous_mastery.next_review_at else None,
+            "duration_seconds": duration,
+            "next_action": "plan" if passed else "retry",
+            "checkpoint_ready": False,
+        }
+    if session.status != "active":
+        raise HTTPException(status_code=409, detail="Learning session is not active")
     attempts = db.query(ExerciseAttempt).filter(
         ExerciseAttempt.user_id == user.id,
         ExerciseAttempt.lesson_id == data.lesson_id,
