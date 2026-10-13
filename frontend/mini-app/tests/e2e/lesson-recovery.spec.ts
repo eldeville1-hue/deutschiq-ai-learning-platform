@@ -68,7 +68,7 @@ test('mobile lesson recovers server cursor after duplicate answer conflict', asy
   await expect(page.getByText('Reopen the lesson from your plan to continue.')).toHaveCount(0);
 });
 
-import { expect, test } from '@playwright/test';
+
 
 test('mobile lesson preserves selected answer when server returns 500', async ({ page }) => {
   await page.addInitScript(() => {
