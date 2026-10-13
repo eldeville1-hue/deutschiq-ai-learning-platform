@@ -261,9 +261,9 @@ def seed():
             validation_errors = validate_roadmap_content(content)
             if validation_errors:
                 raise ValueError(f"Refusing to publish 30-day roadmap: {', '.join(validation_errors)}")
-            existing = next((item for item in existing_lessons if isinstance(item.content, dict) and item.content.get("day") == day), None)
+            existing = next((item for item in existing_lessons if isinstance(item.content, dict) and item.content.get("day") == day and item.content.get("track") not in ("A1", "A2", "B1", "B2")), None)
             if not existing:
-                existing = next((item for item in existing_lessons if item.topic == topic), None)
+                existing = next((item for item in existing_lessons if item.topic == topic and isinstance(item.content, dict) and item.content.get("track") not in ("A1", "A2", "B1", "B2")), None)
             if existing:
                 # Topic is a stable skill id; display titles live in localized content.
                 existing.topic = tag
