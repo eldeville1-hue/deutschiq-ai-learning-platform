@@ -278,3 +278,52 @@ test('mobile lesson recovers a saved result after a lost completion response', a
   await expect(page.locator('.mission-xp')).toHaveCount(0);
   expect(completions).toBe(2);
 });
+
+test('mobile plan fetches fresh server progress when the WebView becomes visible', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
+  let planReads = 0;
+  let dashboardReads = 0;
+  let journeyReads = 0;
+  let completed = false;
+
+  await page.route('**/api/plan/9001?*', route => {
+    planReads += 1;
+    return route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify([{
+        id: 77, level: 'A1', topic: 'Practice', title: 'First lesson',
+        week: 1, completed, attempts: completed ? 1 : 0,
+      }, {
+        id: 78, level: 'A1', topic: 'Practice', title: 'Second lesson',
+        week: 1, completed: false, attempts: 0,
+      }]),
+    });
+  });
+  await page.route('**/api/dashboard/9001', route => {
+    dashboardReads += 1;
+    return route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify({ level: 'A1', targetLevel: 'A2', xp: completed ? 15 : 0 }),
+    });
+  });
+  await page.route('**/api/plan/journey/9001', route => {
+    journeyReads += 1;
+    return route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify({ current_level: 'A1', levels: [] }),
+    });
+  });
+  await page.route('**/api/events', route => route.fulfill({ status: 204, body: '' }));
+
+  await page.goto('/plan');
+  await expect(page.getByRole('heading', { name: 'First lesson' })).toBeVisible();
+  const before = { planReads, dashboardReads, journeyReads };
+  completed = true;
+  // A Telegram WebView can resume while the Plan component remains mounted.
+  // The new requests must bypass the otherwise valid 30-second API cache.
+  await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+  await expect.poll(() => planReads).toBeGreaterThan(before.planReads);
+  await expect.poll(() => dashboardReads).toBeGreaterThan(before.dashboardReads);
+  await expect.poll(() => journeyReads).toBeGreaterThan(before.journeyReads);
+  await expect(page.getByRole('heading', { name: 'Second lesson' })).toBeVisible();
+});
