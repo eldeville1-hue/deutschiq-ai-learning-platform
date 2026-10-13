@@ -95,7 +95,7 @@ export const Plan: React.FC = () => {
         <span>{tr(lang, 'Твой маршрут по навыкам', 'Dein Weg nach Fähigkeiten', 'Your skill-based path')}</span>
       </header>
 
-      {loadError && <div className="rc-notice saved"><span>{tr(lang, 'Показываем сохранённый маршрут', 'Gespeicherter Lernweg wird angezeigt', 'Showing your saved path')}</span><button type="button" onClick={load}>{tr(lang, 'Обновить', 'Aktualisieren', 'Refresh')}</button></div>}
+      {loadError && <div className="rc-notice saved"><span>{tr(lang, 'Показываем сохранённый маршрут', 'Gespeicherter Lernweg wird angezeigt', 'Showing your saved path')}</span><button type="button" onClick={() => void load(true)}>{tr(lang, 'Обновить', 'Aktualisieren', 'Refresh')}</button></div>}
 
       {(journey?.levels || []).some((item: any) => item.total_lessons > 0) && <section className="dq-level-switcher" aria-label={tr(lang, 'Путь по уровням', 'Niveaureise', 'Level journey')}>
         <div className="dq-levels">{(journey?.levels || []).filter((item: any) => item.total_lessons > 0).map((item: any) => {
