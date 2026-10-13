@@ -226,3 +226,55 @@ test('mobile learner completes a lesson and sees the server-saved result', async
   expect(checks).toBe(1);
   expect(completions).toBe(1);
 });
+
+test('mobile lesson recovers a saved result after a lost completion response', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
+  let completions = 0;
+  await page.route('**/api/lesson/77?*', route => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({
+      id: 77, level: 'A1', topic: 'Practice',
+      content: {
+        title: 'Practice', examples: ['Hallo!'],
+        exercises: [{ type: 'choice', question: 'First question', options: ['Correct', 'Wrong'], answer: 'Correct' }],
+      },
+    }),
+  }));
+  await page.route('**/api/lesson/start', route => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({ session_id: 'saved-session', resumed: false, next_exercise_index: 0 }),
+  }));
+  await page.route('**/api/lesson/check-answer', route => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({ correct: true, evaluation_status: 'accepted', correct_answer: 'Correct' }),
+  }));
+  await page.route('**/api/lesson/complete', async route => {
+    completions += 1;
+    if (completions === 1) {
+      // Simulate a response lost after the backend committed the completion.
+      await route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ detail: 'Connection lost' }) });
+    } else {
+      await route.fulfill({
+        status: 200, contentType: 'application/json',
+        body: JSON.stringify({
+          status: 'passed', passed: true, score: 100, mastery: 100,
+          xp_gained: 0, already_completed: true, recovered: true,
+          exercise_count: 1, first_try_correct: 1,
+        }),
+      });
+    }
+  });
+  await page.route('**/api/events', route => route.fulfill({ status: 204, body: '' }));
+
+  await page.goto('/lesson/77');
+  await page.getByRole('button', { name: 'Understand with an example' }).click();
+  await page.getByRole('button', { name: 'Start practice' }).click();
+  await page.getByRole('radio', { name: 'Correct' }).click();
+  await page.getByRole('button', { name: 'Check' }).click();
+  await page.getByRole('button', { name: 'Next' }).click();
+  await expect(page.getByRole('heading', { name: 'This is your German now' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Save again' }).click();
+  await expect(page.getByRole('heading', { name: 'This is your German now' })).toBeVisible();
+  await expect(page.locator('.mission-xp')).toHaveCount(0);
+  expect(completions).toBe(2);
+});
