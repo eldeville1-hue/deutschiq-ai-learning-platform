@@ -327,3 +327,60 @@ test('mobile plan fetches fresh server progress when the WebView becomes visible
   await expect.poll(() => journeyReads).toBeGreaterThan(before.journeyReads);
   await expect(page.getByRole('heading', { name: 'Second lesson' })).toBeVisible();
 });
+
+test('mobile lesson resumes from server after closing and reopening the app page', async ({ page, context }) => {
+  await context.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
+  const questions = [
+    { type: 'choice', question: 'First question', options: ['Correct', 'Wrong'], answer: 'Correct' },
+    { type: 'choice', question: 'Second question', options: ['Next', 'Other'], answer: 'Next' },
+  ];
+  let serverCursor = 0;
+  let checks = 0;
+  let starts = 0;
+  await context.route('**/api/lesson/77?*', route => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({
+      id: 77, level: 'A1', topic: 'Practice',
+      content: { title: 'Practice', examples: ['Hallo!'], exercises: questions },
+    }),
+  }));
+  await context.route('**/api/lesson/start', route => {
+    starts += 1;
+    return route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify({
+        session_id: 'saved-session',
+        resumed: serverCursor > 0,
+        next_exercise_index: serverCursor,
+      }),
+    });
+  });
+  await context.route('**/api/lesson/check-answer', route => {
+    checks += 1;
+    serverCursor = 1;
+    return route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify({ correct: true, evaluation_status: 'accepted', correct_answer: 'Correct' }),
+    });
+  });
+  await context.route('**/api/events', route => route.fulfill({ status: 204, body: '' }));
+
+  await page.goto('/lesson/77');
+  await page.getByRole('button', { name: 'Understand with an example' }).click();
+  await page.getByRole('button', { name: 'Start practice' }).click();
+  await page.getByRole('radio', { name: 'Correct' }).click();
+  await page.getByRole('button', { name: 'Check' }).click();
+  await expect(page.getByText('Correct', { exact: true }).first()).toBeVisible();
+  expect(checks).toBe(1);
+
+  // Closing the tab destroys React state, unlike a simple page reload.
+  // A fresh page in the same Telegram browser context must resume from the
+  // backend's committed cursor, not repeat the already answered question.
+  await page.close();
+  const reopened = await context.newPage();
+  await reopened.goto('/lesson/77');
+  await expect(reopened.getByRole('heading', { name: 'Second question' })).toBeVisible();
+  await expect(reopened.getByRole('heading', { name: 'First question' })).toHaveCount(0);
+  expect(starts).toBeGreaterThanOrEqual(2);
+  expect(checks).toBe(1);
+});
