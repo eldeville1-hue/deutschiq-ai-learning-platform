@@ -136,3 +136,43 @@ test('mobile lesson preserves selected answer when server returns 500', async ({
   await expect(page.getByRole('radio', { name: 'Correct' })).toHaveAttribute('aria-checked', 'true');
   expect(checks).toBe(1);
 });
+
+test('mobile lesson reload restores the server-authoritative exercise cursor', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
+
+  const questions = [
+    { type: 'choice', question: 'First question', options: ['Correct', 'Wrong'], answer: 'Correct' },
+    { type: 'choice', question: 'Second question', options: ['Next', 'Other'], answer: 'Next' },
+  ];
+  let serverCursor = 0;
+  let reloadStarted = false;
+  await page.route('**/api/lesson/77?*', route => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({
+      id: 77, level: 'A1', topic: 'Practice',
+      content: { title: 'Practice', examples: ['Hallo!'], exercises: questions },
+    }),
+  }));
+  await page.route('**/api/lesson/start', route => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({
+      session_id: 'saved-session',
+      resumed: reloadStarted,
+      next_exercise_index: serverCursor,
+    }),
+  }));
+  await page.route('**/api/events', route => route.fulfill({ status: 204, body: '' }));
+
+  await page.goto('/lesson/77');
+  await page.getByRole('button', { name: 'Understand with an example' }).click();
+  await page.getByRole('button', { name: 'Start practice' }).click();
+  await expect(page.getByRole('heading', { name: 'First question' })).toBeVisible();
+
+  // Simulate a committed first answer before the WebView is closed/reloaded.
+  // On reopening, the server cursor must override any stale local draft.
+  serverCursor = 1;
+  reloadStarted = true;
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Second question' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'First question' })).toHaveCount(0);
+});
