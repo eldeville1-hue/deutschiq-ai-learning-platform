@@ -4,7 +4,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from fastapi import HTTPException
-from sqlalchemy import ARRAY, create_engine
+from sqlalchemy import ARRAY, JSON, create_engine
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import Session
 
@@ -22,6 +22,8 @@ def sqlite_array(_type, _compiler, **_kwargs):
 
 class LessonResumeTests(unittest.TestCase):
     def setUp(self):
+        self._review_dates_type = UserProgress.__table__.c.review_dates.type
+        UserProgress.__table__.c.review_dates.type = JSON()
         self.engine = create_engine('sqlite:///:memory:')
         for model in (User, Lesson, LearningSession, ExerciseAttempt, TopicMastery, UserProgress):
             model.__table__.create(self.engine)
@@ -34,6 +36,7 @@ class LessonResumeTests(unittest.TestCase):
     def tearDown(self):
         self.db.close()
         self.engine.dispose()
+        UserProgress.__table__.c.review_dates.type = self._review_dates_type
 
     def start(self, resume_id=None):
         return asyncio.run(start_lesson(StartLessonRequest(user_id=9001, lesson_id=77,
