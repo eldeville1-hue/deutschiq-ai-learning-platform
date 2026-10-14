@@ -2,7 +2,7 @@
 import asyncio
 import unittest
 from datetime import datetime, timedelta
-from sqlalchemy import ARRAY, create_engine
+from sqlalchemy import ARRAY, JSON, create_engine
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import Session
 
@@ -10,6 +10,7 @@ from app.api.endpoints.lesson import CheckAnswerRequest, check_answer
 from app.models.learning import ExerciseAttempt, LearningSession, TopicMastery
 from app.models.lesson import Lesson
 from app.models.user import User
+from app.models.progress import UserProgress
 
 
 @compiles(ARRAY, "sqlite")
@@ -19,8 +20,10 @@ def sqlite_array(_type, _compiler, **kwargs):
 
 class ReviewAnswerPersistenceTests(unittest.TestCase):
     def setUp(self):
+        self._review_dates_type = UserProgress.__table__.c.review_dates.type
+        UserProgress.__table__.c.review_dates.type = JSON()
         self.engine = create_engine("sqlite:///:memory:")
-        for model in (User, Lesson, LearningSession, ExerciseAttempt, TopicMastery):
+        for model in (User, Lesson, LearningSession, ExerciseAttempt, TopicMastery, UserProgress):
             model.__table__.create(self.engine, checkfirst=True)
         self.db = Session(self.engine)
         self.db.add_all([
@@ -37,6 +40,7 @@ class ReviewAnswerPersistenceTests(unittest.TestCase):
     def tearDown(self):
         self.db.close()
         self.engine.dispose()
+        UserProgress.__table__.c.review_dates.type = self._review_dates_type
 
     def review(self, answer, session_id):
         self.db.add(LearningSession(id=session_id, user_id=1, lesson_id=10, status="active"))
@@ -52,6 +56,16 @@ class ReviewAnswerPersistenceTests(unittest.TestCase):
         self.assertEqual("passed" if result["correct"] else "practice_needed",
                          self.db.get(LearningSession, session_id).status)
         return result, mastery
+
+    def test_review_consumes_overdue_lesson_dates_but_preserves_future(self):
+        overdue = datetime.now() - timedelta(days=2)
+        upcoming = datetime.now() + timedelta(days=3)
+        self.db.add(UserProgress(user_id=1, lesson_id=10, completed=True,
+                                 review_dates=[overdue.isoformat(), upcoming.isoformat()]))
+        self.db.commit()
+        self.review("der", "review-consume")
+        progress = self.db.query(UserProgress).filter_by(user_id=1, lesson_id=10).one()
+        self.assertEqual([upcoming.isoformat()], progress.review_dates)
 
     def test_correct_review_saves_new_due_date(self):
         result, mastery = self.review("der", "review-correct")
