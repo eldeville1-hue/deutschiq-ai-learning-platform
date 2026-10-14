@@ -6,7 +6,7 @@ from sqlalchemy import ARRAY, JSON, create_engine
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import Session
 
-from app.api.endpoints.lesson import CheckAnswerRequest, check_answer
+from app.api.endpoints.lesson import CheckAnswerRequest, check_answer, get_due_lesson_reviews
 from app.models.learning import ExerciseAttempt, LearningSession, TopicMastery
 from app.models.lesson import Lesson
 from app.models.user import User
@@ -64,6 +64,26 @@ class ReviewAnswerPersistenceTests(unittest.TestCase):
                                  review_dates=[overdue.isoformat(), upcoming.isoformat()]))
         self.db.commit()
         self.review("der", "review-consume")
+        progress = self.db.query(UserProgress).filter_by(user_id=1, lesson_id=10).one()
+        self.assertEqual([upcoming.isoformat()], progress.review_dates)
+
+    def test_due_queue_lifecycle_after_verified_answer(self):
+        overdue = datetime.now() - timedelta(days=2)
+        upcoming = datetime.now() + timedelta(days=3)
+        self.db.add(UserProgress(user_id=1, lesson_id=10, completed=True,
+                                 review_dates=[overdue.isoformat(), upcoming.isoformat()]))
+        self.db.commit()
+        before = asyncio.run(get_due_lesson_reviews(
+            limit=5, db=self.db, authenticated_id=9001,
+        ))
+        self.assertEqual(1, before["count"])
+        self.assertEqual(10, before["reviews"][0]["lesson_id"])
+        self.assertEqual("articles", before["reviews"][0]["title"])
+        self.review("der", "review-queue-lifecycle")
+        after = asyncio.run(get_due_lesson_reviews(
+            limit=5, db=self.db, authenticated_id=9001,
+        ))
+        self.assertEqual({"reviews": [], "count": 0}, after)
         progress = self.db.query(UserProgress).filter_by(user_id=1, lesson_id=10).one()
         self.assertEqual([upcoming.isoformat()], progress.review_dates)
 
