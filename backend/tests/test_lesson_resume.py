@@ -105,6 +105,24 @@ class LessonResumeTests(unittest.TestCase):
         self.db.commit()
         self.assertEqual(1, self.start()['next_exercise_index'])
 
+    def test_reopen_with_new_database_session_recovers_cursor(self):
+        first = self.start()
+        self.db.add(ExerciseAttempt(
+            user_id=1, lesson_id=77, session_id=first['session_id'],
+            exercise_index=0, topic='advice', answer='correct', correct=True))
+        self.db.commit()
+
+        # Reopening the Telegram app produces a fresh API request and DB session.
+        # Reuse the test engine but not the original ORM session.
+        with Session(self.engine) as reopened_db:
+            resumed = asyncio.run(start_lesson(
+                StartLessonRequest(user_id=9001, lesson_id=77),
+                reopened_db, authenticated_id=9001))
+            self.assertTrue(resumed['resumed'])
+            self.assertEqual(first['session_id'], resumed['session_id'])
+            self.assertEqual(1, resumed['next_exercise_index'])
+            self.assertEqual(1, reopened_db.query(LearningSession).count())
+
     def test_repeated_resume_requests_preserve_progress(self):
         first = self.start()
         self.db.add(ExerciseAttempt(user_id=1, lesson_id=77,
