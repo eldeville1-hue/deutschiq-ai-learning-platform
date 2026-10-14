@@ -500,6 +500,9 @@ async def complete_lesson(data: CompleteLessonRequest, db: Session = Depends(get
         elif last_day != today:
             user.streak = 1
         user.last_activity = datetime.now()
+    # Ensure the current completion is visible to the checkpoint query,
+    # including when UserProgress was just inserted in this transaction.
+    db.flush()
     checkpoint_ready = False
     lesson_track = (lesson.content or {}).get("track") if isinstance(lesson.content, dict) else None
     current_track = normalize_cefr(user.current_level)
