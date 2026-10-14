@@ -27,12 +27,11 @@ export const Dashboard: React.FC = () => {
   const load = useCallback(async () => {
     setStatus(current => current === 'ready' || current === 'partial' ? current : 'loading');
     void api.trackEvent({ user_id: userId, event_name: 'dashboard_viewed' });
-    const [dashboard, plan, today, due, dueLessonResult] = await Promise.allSettled([
+    const [dashboard, plan, today, due] = await Promise.allSettled([
       api.getDashboard(userId),
       api.getPlan(userId, lang),
       api.getLearningToday(userId, lang),
       api.getPersistedDueReviews(),
-      api.getDueLessonReviews(),
     ]);
     setData(dashboard.status === 'fulfilled' ? dashboard.value : null);
     if (plan.status === 'fulfilled') {
@@ -40,7 +39,7 @@ export const Dashboard: React.FC = () => {
     }
     setLearning(today.status === 'fulfilled' ? today.value : null);
     setPersistedDueCount(due.status === 'fulfilled' ? Number(due.value.count || 0) : 0);
-    setDueLessons(dueLessonResult.status === 'fulfilled' ? dueLessonResult.value.reviews : []);
+
     if (today.status === 'fulfilled') {
       void api.trackEvent({ user_id: userId, event_name: 'today_viewed', properties: { due_count: Number(today.value?.due_count || 0), topic: String(today.value?.next_lesson?.topic || '') } });
     }
@@ -50,6 +49,15 @@ export const Dashboard: React.FC = () => {
       ? (plan.status === 'fulfilled' || today.status === 'fulfilled' ? 'ready' : 'partial')
       : hasLesson ? 'partial' : 'error');
   }, [lang, userId]);
+
+  useEffect(() => {
+    let active = true;
+    // Review suggestions are optional; never delay the main daily lesson.
+    void api.getDueLessonReviews()
+      .then(result => { if (active) setDueLessons(result.reviews || []); })
+      .catch(() => { if (active) setDueLessons([]); });
+    return () => { active = false; };
+  }, [userId]);
 
   useEffect(() => { void load(); }, [load]);
 
