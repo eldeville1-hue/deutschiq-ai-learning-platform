@@ -112,6 +112,7 @@ apiClient.interceptors.response.use(
 
 export const api = {
   getVersion: () => apiClient.get('/api/version').then(r => r.data),
+  getDueLessonReviews: () => apiClient.get('/api/lesson/reviews/lessons/due?limit=5').then(r => r.data as { reviews: Array<{ lesson_id: number; title: string; due_at: string; overdue_count: number }>; count: number }),
   trackEvent: (payload: { user_id: number; event_name: string; properties?: Record<string, string | number | boolean> }) =>
     apiClient.post('/api/events', payload).catch(() => undefined),
   submitBetaFeedback: (payload: { user_id: number; message: string; language: AppLanguage; page: string; useful?: 'yes'|'partly'|'no'; pro_intent?: 'yes'|'maybe'|'no' }) =>
