@@ -156,6 +156,28 @@ class LessonResumeTests(unittest.TestCase):
         self.assertEqual(42, user.xp)
         self.assertEqual(1, self.db.query(LearningSession).count())
 
+    def test_lost_completion_response_recovers_across_new_database_session(self):
+        user = self.db.get(User, 1)
+        user.xp = 92
+        self.db.add(LearningSession(
+            id='committed-completion', user_id=1, lesson_id=77,
+            status='passed', score=100))
+        self.db.commit()
+
+        # The first completion response was lost after the transaction committed.
+        # A new request must recover the saved result without granting XP again.
+        with Session(self.engine) as reopened_db:
+            result = asyncio.run(complete_lesson(
+                CompleteLessonRequest(user_id=9001, lesson_id=77,
+                                      session_id='committed-completion'),
+                reopened_db, authenticated_id=9001))
+            self.assertTrue(result['passed'])
+            self.assertTrue(result['recovered'])
+            self.assertEqual(0, result['xp_gained'])
+            self.assertEqual(100, result['score'])
+            self.assertEqual(92, reopened_db.get(User, 1).xp)
+            self.assertEqual(1, reopened_db.query(LearningSession).count())
+
     def test_completed_session_cannot_be_recovered_by_another_user(self):
         self.db.add(LearningSession(
             id='private-result', user_id=2, lesson_id=77,
