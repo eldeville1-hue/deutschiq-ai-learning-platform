@@ -53,3 +53,31 @@ def test_review_schedule_persists_five_intervals(tmp_path):
     finally:
         engine.dispose()
         UserProgress.__table__.c.review_dates.type = original_type
+
+
+def test_repeated_scheduling_preserves_existing_review_dates(tmp_path):
+    """A second scheduler call must not move an existing review plan."""
+    original_type = UserProgress.__table__.c.review_dates.type
+    UserProgress.__table__.c.review_dates.type = JSON()
+    engine = create_engine(f"sqlite:///{tmp_path / 'repeat_srs.sqlite'}")
+    try:
+        lessons = Table("lessons", Base.metadata, Column("id", Integer, primary_key=True), extend_existing=True)
+        Base.metadata.create_all(engine, tables=[User.__table__, lessons, UserProgress.__table__])
+        original_dates = [
+            (datetime(2026, 10, 15) + timedelta(days=days)).isoformat()
+            for days in (0, 2, 6, 13, 29)
+        ]
+        with Session(engine) as db:
+            db.add(User(id=2, telegram_id=23456))
+            db.execute(lessons.insert().values(id=43))
+            db.add(UserProgress(user_id=2, lesson_id=43, completed=True, review_dates=original_dates))
+            db.commit()
+
+        with Session(engine) as db:
+            schedule_review(db, 2, 43)
+        with Session(engine) as reopened:
+            saved = reopened.query(UserProgress).filter_by(user_id=2, lesson_id=43).one()
+            assert saved.review_dates == original_dates
+    finally:
+        engine.dispose()
+        UserProgress.__table__.c.review_dates.type = original_type
