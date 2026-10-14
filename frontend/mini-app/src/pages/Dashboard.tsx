@@ -20,6 +20,7 @@ export const Dashboard: React.FC = () => {
   const [lesson, setLesson] = useState<JourneyLesson | null>(null);
   const [learning, setLearning] = useState<any>(null);
   const [persistedDueCount, setPersistedDueCount] = useState(0);
+  const [dueLessons, setDueLessons] = useState<Array<{ lesson_id: number; title: string; overdue_count: number }>>([]);
   const [status, setStatus] = useState<'loading' | 'ready' | 'partial' | 'error'>('loading');
   const [resume, setResume] = useState(() => readDailySession(userId));
 
@@ -38,6 +39,7 @@ export const Dashboard: React.FC = () => {
     }
     setLearning(today.status === 'fulfilled' ? today.value : null);
     setPersistedDueCount(due.status === 'fulfilled' ? Number(due.value.count || 0) : 0);
+
     if (today.status === 'fulfilled') {
       void api.trackEvent({ user_id: userId, event_name: 'today_viewed', properties: { due_count: Number(today.value?.due_count || 0), topic: String(today.value?.next_lesson?.topic || '') } });
     }
@@ -47,6 +49,15 @@ export const Dashboard: React.FC = () => {
       ? (plan.status === 'fulfilled' || today.status === 'fulfilled' ? 'ready' : 'partial')
       : hasLesson ? 'partial' : 'error');
   }, [lang, userId]);
+
+  useEffect(() => {
+    let active = true;
+    // Review suggestions are optional; never delay the main daily lesson.
+    void api.getDueLessonReviews()
+      .then(result => { if (active) setDueLessons(result.reviews || []); })
+      .catch(() => { if (active) setDueLessons([]); });
+    return () => { active = false; };
+  }, [userId]);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -118,6 +129,18 @@ export const Dashboard: React.FC = () => {
           <button type="button" className="dq-main-action" onClick={startLesson}><span><FaPlay /> {selectedLesson?.id ? (resume ? tr(lang, 'Продолжить занятие', 'Einheit fortsetzen', 'Continue session') : dueCount ? tr(lang, 'Начать с повторения', 'Mit Wiederholung starten', 'Start with review') : tr(lang, 'Начать урок', 'Lektion starten', 'Start lesson')) : tr(lang, 'Открыть план', 'Plan öffnen', 'Open plan')}</span><FaArrowRight /></button>
         </div>
       </section>
+
+      {dueLessons.length > 0 && (
+        <section className="dq-due-lessons" aria-label={tr(lang, 'Повторение уроков', 'Lektionen wiederholen', 'Lesson reviews')} style={{ marginTop: 16, padding: 16, borderRadius: 18, background: 'rgba(255,255,255,0.05)' }}>
+          <h2 style={{ margin: '0 0 12px', fontSize: '1rem' }}>{tr(lang, 'Пора повторить', 'Bereit zur Wiederholung', 'Ready for review')}</h2>
+          {dueLessons.map(item => (
+            <button key={item.lesson_id} type="button" onClick={() => navigate(withUser(`/lesson/${item.lesson_id}`))}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 12, padding: '12px 4px', border: 0, borderTop: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: 'inherit', textAlign: 'left', cursor: 'pointer' }}>
+              <span>{item.title}</span><FaArrowRight aria-hidden="true" />
+            </button>
+          ))}
+        </section>
+      )}
 
       <footer className="dq-home-after" aria-label={tr(lang, 'После урока', 'Nach der Lektion', 'After the lesson')}>
         <div>{dueCount ? <FaRedoAlt /> : <FaCheck />}<span><strong>{dueCount ? `${dueCount} ${tr(lang, 'на повтор', 'zu wiederholen', 'to review')}` : tr(lang, 'Маршрут готов', 'Dein Weg ist bereit', 'Your path is ready')}</strong><small>{dueCount ? tr(lang, 'Сначала вернём важное в память', 'Zuerst holen wir Wichtiges zurück', 'We will recall the important parts first') : tr(lang, 'Продолжай в своём темпе', 'Weiter in deinem Tempo', 'Continue at your pace')}</small></span></div>
