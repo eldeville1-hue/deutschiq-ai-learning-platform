@@ -14,7 +14,7 @@ import uuid
 from typing import Literal
 from app.core.telegram_auth import telegram_user_id, assert_owner
 from app.services.srs import schedule_review
-from app.services.srs_due import due_reviews, due_review_dates
+from app.services.srs_due import due_reviews, due_review_dates, consume_due_review
 from app.models.learning import ExerciseAttempt, TopicMastery, LearningSession
 from app.services.learning_engine import adaptive_mastery_update, next_stability, retrieval_review_interval, retention_score, summarize_attempts, summarize_mission
 from app.services.skill_graph import skill_for
@@ -333,6 +333,7 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
         session.score = (production_feedback or {}).get("score", 100 if correct else 0)
         session.status = "passed" if correct else "practice_needed"
         session.completed_at = datetime.now()
+        consume_due_review(db, user.id, lesson.id)
     else:
         interval_days = 1
     db.commit()
