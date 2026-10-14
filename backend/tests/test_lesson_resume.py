@@ -4,7 +4,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from fastapi import HTTPException
-from sqlalchemy import ARRAY, create_engine
+from sqlalchemy import ARRAY, JSON, create_engine
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import Session
 
@@ -12,6 +12,7 @@ from app.api.endpoints.lesson import (StartLessonRequest, CheckAnswerRequest, Co
 from app.models.user import User
 from app.models.lesson import Lesson
 from app.models.learning import LearningSession, ExerciseAttempt, TopicMastery
+from app.models.progress import UserProgress
 
 
 @compiles(ARRAY, 'sqlite')
@@ -21,8 +22,10 @@ def sqlite_array(_type, _compiler, **_kwargs):
 
 class LessonResumeTests(unittest.TestCase):
     def setUp(self):
+        self._review_dates_type = UserProgress.__table__.c.review_dates.type
+        UserProgress.__table__.c.review_dates.type = JSON()
         self.engine = create_engine('sqlite:///:memory:')
-        for model in (User, Lesson, LearningSession, ExerciseAttempt, TopicMastery):
+        for model in (User, Lesson, LearningSession, ExerciseAttempt, TopicMastery, UserProgress):
             model.__table__.create(self.engine)
         self.db = Session(self.engine)
         self.db.add_all([User(id=1, telegram_id=9001), User(id=2, telegram_id=9002),
@@ -33,6 +36,7 @@ class LessonResumeTests(unittest.TestCase):
     def tearDown(self):
         self.db.close()
         self.engine.dispose()
+        UserProgress.__table__.c.review_dates.type = self._review_dates_type
 
     def start(self, resume_id=None):
         return asyncio.run(start_lesson(StartLessonRequest(user_id=9001, lesson_id=77,
@@ -155,6 +159,48 @@ class LessonResumeTests(unittest.TestCase):
         self.db.refresh(user)
         self.assertEqual(42, user.xp)
         self.assertEqual(1, self.db.query(LearningSession).count())
+
+    def test_first_pass_awards_xp_once_and_persists_completion(self):
+        from app.models.progress import UserProgress
+
+        # A valid authored exercise and a saved correct answer form the first pass.
+        lesson = self.db.get(Lesson, 77)
+        lesson.content = {"exercises": [
+            {"type": "multiple_choice", "question": "Choose", "options": ["ist", "sind"], "answer": "ist"}
+        ]}
+        self.db.add(LearningSession(
+            id='first-pass-transaction', user_id=1, lesson_id=77, status='active'))
+        self.db.add(ExerciseAttempt(
+            user_id=1, lesson_id=77, session_id='first-pass-transaction',
+            exercise_index=0, topic='advice', answer='ist', correct=True))
+        self.db.commit()
+
+        # SRS review_dates is a PostgreSQL ARRAY of datetimes; the isolated
+        # SQLite fixture cannot persist it. Test the completion transaction
+        # independently of the post-commit review scheduler.
+        with patch("app.api.endpoints.lesson.schedule_review"):
+            result = asyncio.run(complete_lesson(
+                CompleteLessonRequest(user_id=9001, lesson_id=77,
+                                      session_id='first-pass-transaction'),
+                self.db, authenticated_id=9001))
+        self.assertTrue(result['passed'])
+        self.assertEqual(lesson.xp_reward, result['xp_gained'])
+
+        with Session(self.engine) as reopened_db:
+            user = reopened_db.get(User, 1)
+            progress = reopened_db.query(UserProgress).filter_by(
+                user_id=1, lesson_id=77).one()
+            self.assertEqual(lesson.xp_reward, user.xp)
+            self.assertTrue(progress.completed)
+            self.assertEqual('passed', reopened_db.get(
+                LearningSession, 'first-pass-transaction').status)
+            retry = asyncio.run(complete_lesson(
+                CompleteLessonRequest(user_id=9001, lesson_id=77,
+                                      session_id='first-pass-transaction'),
+                reopened_db, authenticated_id=9001))
+            self.assertTrue(retry['recovered'])
+            self.assertEqual(0, retry['xp_gained'])
+            self.assertEqual(lesson.xp_reward, reopened_db.get(User, 1).xp)
 
     def test_lost_completion_response_recovers_across_new_database_session(self):
         user = self.db.get(User, 1)
