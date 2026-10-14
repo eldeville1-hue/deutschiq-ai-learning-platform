@@ -79,8 +79,20 @@ export const Review: React.FC = () => {
           response_ms: Math.max(0, Date.now() - startedAt),
         },
       });
-    } catch {
-      setError(tr(lang, 'Ответ не отправился. Проверь соединение и повтори.', 'Die Antwort wurde nicht gesendet. Prüfe die Verbindung und versuche es erneut.', 'Your answer was not sent. Check the connection and try again.'));
+    } catch (caught) {
+      const status = (caught as { response?: { status?: number } })?.response?.status;
+      if (status === 409) {
+        // A previous submission may already have been accepted, or the
+        // learning session may have closed. Refresh instead of replaying a
+        // potentially successful answer and awarding duplicate progress.
+        setSessionId('');
+        setError(tr(lang,
+          'Сессия изменилась. Обнови повторения, чтобы продолжить.',
+          'Die Sitzung hat sich geändert. Lade die Wiederholungen neu.',
+          'The session changed. Reload reviews to continue.'));
+      } else {
+        setError(tr(lang, 'Ответ не отправился. Проверь соединение и повтори.', 'Die Antwort wurde nicht gesendet. Prüfe die Verbindung und versuche es erneut.', 'Your answer was not sent. Check the connection and try again.'));
+      }
     } finally { setChecking(false); }
   };
   const next = () => {
@@ -105,7 +117,7 @@ export const Review: React.FC = () => {
 
         {!feedback && <ExerciseInteraction exercise={{ ...item, id: `review-${item.lesson_id}-${item.exercise_index}` }} answer={answer} onAnswer={setAnswer} lang={lang} />}
 
-        {error && <div className="rc-notice error"><span>{error}</span></div>}
+        {error && <div className="rc-notice error"><span>{error}</span>{!checking && <button type="button" onClick={() => { setIndex(0); setAnswer(''); setFeedback(null); setSessionId(''); setLoadAttempt(value => value + 1); }}>{tr(lang, 'Обновить', 'Neu laden', 'Reload')}</button>}</div>}
 
         {!feedback
           ? <button type="button" className="rc-primary" disabled={!answer.trim() || checking} onClick={check}>{checking ? tr(lang, 'Проверяем…', 'Wird geprüft…', 'Checking…') : tr(lang, 'Проверить', 'Prüfen', 'Check')}</button>
