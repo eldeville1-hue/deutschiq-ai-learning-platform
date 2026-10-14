@@ -87,6 +87,29 @@ class ReviewAnswerPersistenceTests(unittest.TestCase):
         progress = self.db.query(UserProgress).filter_by(user_id=1, lesson_id=10).one()
         self.assertEqual([upcoming.isoformat()], progress.review_dates)
 
+    def test_wrong_review_remains_due_until_correct_retry(self):
+        overdue = datetime.now() - timedelta(days=2)
+        upcoming = datetime.now() + timedelta(days=3)
+        self.db.add(UserProgress(user_id=1, lesson_id=10, completed=True,
+                                 review_dates=[overdue.isoformat(), upcoming.isoformat()]))
+        self.db.commit()
+        wrong, _ = self.review("die", "review-wrong-then-right")
+        self.assertFalse(wrong["correct"])
+        pending = asyncio.run(get_due_lesson_reviews(
+            limit=5, db=self.db, authenticated_id=9001,
+        ))
+        self.assertEqual(1, pending["count"])
+        self.assertEqual(2, len(self.db.query(UserProgress).filter_by(
+            user_id=1, lesson_id=10).one().review_dates))
+        correct, _ = self.review("der", "review-right-after-wrong")
+        self.assertTrue(correct["correct"])
+        after = asyncio.run(get_due_lesson_reviews(
+            limit=5, db=self.db, authenticated_id=9001,
+        ))
+        self.assertEqual(0, after["count"])
+        self.assertEqual([upcoming.isoformat()], self.db.query(UserProgress).filter_by(
+            user_id=1, lesson_id=10).one().review_dates)
+
     def test_correct_review_saves_new_due_date(self):
         result, mastery = self.review("der", "review-correct")
         self.assertTrue(result["correct"])
