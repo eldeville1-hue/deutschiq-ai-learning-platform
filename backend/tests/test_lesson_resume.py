@@ -175,10 +175,14 @@ class LessonResumeTests(unittest.TestCase):
             exercise_index=0, topic='advice', answer='ist', correct=True))
         self.db.commit()
 
-        result = asyncio.run(complete_lesson(
-            CompleteLessonRequest(user_id=9001, lesson_id=77,
-                                  session_id='first-pass-transaction'),
-            self.db, authenticated_id=9001))
+        # SRS review_dates is a PostgreSQL ARRAY of datetimes; the isolated
+        # SQLite fixture cannot persist it. Test the completion transaction
+        # independently of the post-commit review scheduler.
+        with patch("app.api.endpoints.lesson.schedule_review"):
+            result = asyncio.run(complete_lesson(
+                CompleteLessonRequest(user_id=9001, lesson_id=77,
+                                      session_id='first-pass-transaction'),
+                self.db, authenticated_id=9001))
         self.assertTrue(result['passed'])
         self.assertEqual(lesson.xp_reward, result['xp_gained'])
 
