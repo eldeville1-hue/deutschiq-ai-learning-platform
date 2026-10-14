@@ -5,6 +5,13 @@ column is not written or read here. No production credentials are needed.
 """
 from sqlalchemy import Column, Integer, Table, create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.sql.sqltypes import ARRAY
+
+
+@compiles(ARRAY, 'sqlite')
+def compile_array_for_sqlite(_type, _compiler, **_kw):
+    return 'JSON'
 
 from app.models.base import Base
 from app.models.user import User
