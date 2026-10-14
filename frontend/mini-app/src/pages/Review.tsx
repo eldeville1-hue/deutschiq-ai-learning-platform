@@ -22,6 +22,7 @@ export const Review: React.FC = () => {
   const [startedAt, setStartedAt] = useState(Date.now());
   const [sessionId, setSessionId] = useState('');
   const [checking, setChecking] = useState(false);
+  const [reinforce, setReinforce] = useState(false);
   const [error, setError] = useState('');
   const [loadAttempt, setLoadAttempt] = useState(0);
 
@@ -99,7 +100,7 @@ export const Review: React.FC = () => {
     const nextIndex = index + 1;
     setIndex(nextIndex);
     if (nextLesson) saveDailySession(userId, { nextLessonId: nextLesson, stage: 'review' });
-    setAnswer(''); setFeedback(null); setSessionId(''); setError(''); setStartedAt(Date.now());
+    setAnswer(''); setFeedback(null); setSessionId(''); setReinforce(false); setError(''); setStartedAt(Date.now());
   };
   const progress = ((index + (feedback ? 1 : 0)) / items.length) * 100;
 
@@ -115,13 +116,14 @@ export const Review: React.FC = () => {
         {item.repair_dimension && <div className="rc-repair-target">{tr(lang, 'Фокус', 'Fokus', 'Focus')}: {({ task_completion: tr(lang, 'выполнение задачи', 'Aufgabenerfüllung', 'task completion'), grammar: tr(lang, 'грамматика', 'Grammatik', 'grammar'), vocabulary: tr(lang, 'лексика', 'Wortschatz', 'vocabulary'), coherence: tr(lang, 'связность', 'Kohärenz', 'coherence'), register: tr(lang, 'регистр', 'Register', 'register') } as Record<string,string>)[item.repair_dimension]} · {item.repair_score}%</div>}
         <h1>{item.question}</h1>
 
+        {reinforce && <div className="rc-notice"><span>{tr(lang, 'Вспомни правило и попробуй ответить самостоятельно.', 'Erinnere dich an die Regel und versuche es selbst.', 'Recall the rule and try answering independently.')}</span></div>}
         {!feedback && <ExerciseInteraction exercise={{ ...item, id: `review-${item.lesson_id}-${item.exercise_index}` }} answer={answer} onAnswer={setAnswer} lang={lang} />}
 
         {error && <div className="rc-notice error"><span>{error}</span>{!checking && <button type="button" onClick={() => { setIndex(0); setAnswer(''); setFeedback(null); setSessionId(''); setLoadAttempt(value => value + 1); }}>{tr(lang, 'Обновить', 'Neu laden', 'Reload')}</button>}</div>}
 
         {!feedback
           ? <button type="button" className="rc-primary" disabled={!answer.trim() || checking} onClick={check}>{checking ? tr(lang, 'Проверяем…', 'Wird geprüft…', 'Checking…') : tr(lang, 'Проверить', 'Prüfen', 'Check')}</button>
-          : <div className={`rc-review-feedback ${feedback.correct ? 'correct' : 'wrong'}`}><header><span>{feedback.correct ? <FaCheck /> : <FaRedo />}</span><strong>{feedback.correct ? tr(lang, 'Верно', 'Richtig', 'Correct') : tr(lang, 'Закрепим ещё раз', 'Noch einmal festigen', 'Let’s reinforce it')}</strong></header><div><small>{tr(lang, 'ПРАВИЛЬНЫЙ ОТВЕТ', 'RICHTIGE ANTWORT', 'CORRECT ANSWER')}</small><strong>{feedback.correct_answer}</strong><p>{feedback.explanation}</p></div><button type="button" className="rc-primary" onClick={next}>{index + 1 === items.length ? tr(lang, 'Завершить', 'Abschließen', 'Finish') : tr(lang, 'Следующая карточка', 'Nächste Karte', 'Next card')} <FaArrowRight /></button></div>}
+          : <div className={`rc-review-feedback ${feedback.correct ? 'correct' : 'wrong'}`}><header><span>{feedback.correct ? <FaCheck /> : <FaRedo />}</span><strong>{feedback.correct ? tr(lang, 'Верно', 'Richtig', 'Correct') : tr(lang, 'Закрепим ещё раз', 'Noch einmal festigen', 'Let’s reinforce it')}</strong></header><div><small>{tr(lang, 'ПРАВИЛЬНЫЙ ОТВЕТ', 'RICHTIGE ANTWORT', 'CORRECT ANSWER')}</small><strong>{feedback.correct_answer}</strong><p>{feedback.explanation}</p></div>{!feedback.correct && <button type="button" className="rc-primary" onClick={() => { setFeedback(null); setAnswer(''); setSessionId(''); setReinforce(true); setStartedAt(Date.now()); }}>{tr(lang, 'Попробовать ещё раз', 'Noch einmal versuchen', 'Try again')} <FaRedo /></button>}<button type="button" className="rc-primary" onClick={next}>{index + 1 === items.length ? tr(lang, 'Завершить', 'Abschließen', 'Finish') : tr(lang, 'Следующая карточка', 'Nächste Karte', 'Next card')} <FaArrowRight /></button></div>}
       </section>
     </main>
   );
