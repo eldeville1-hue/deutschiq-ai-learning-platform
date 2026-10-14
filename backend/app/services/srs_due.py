@@ -12,7 +12,8 @@ def due_review_dates(review_dates, *, as_of=None):
     now = as_of or datetime.now()
     if not review_dates:
         return []
-    return sorted(date for date in review_dates if date <= now)
+    dates = [datetime.fromisoformat(date) if isinstance(date, str) else date for date in review_dates]
+    return sorted(date for date in dates if date <= now)
 
 
 def due_reviews(db, user_id: int, *, as_of=None):
