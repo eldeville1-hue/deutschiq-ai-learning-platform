@@ -333,7 +333,9 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
         session.score = (production_feedback or {}).get("score", 100 if correct else 0)
         session.status = "passed" if correct else "practice_needed"
         session.completed_at = datetime.now()
-        consume_due_review(db, user.id, lesson.id)
+        if correct:
+            # An incorrect recall must remain due until the learner retrieves it.
+            consume_due_review(db, user.id, lesson.id)
     else:
         interval_days = 1
     db.commit()
