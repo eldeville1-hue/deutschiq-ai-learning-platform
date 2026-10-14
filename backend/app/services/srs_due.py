@@ -45,7 +45,8 @@ def consume_due_review(db, user_id: int, lesson_id: int, *, as_of=None):
     ).first()
     if progress is None or not progress.review_dates:
         return False
-    remaining = [date for date in progress.review_dates if date > now]
+    remaining = [date for date in progress.review_dates
+                 if (datetime.fromisoformat(date) if isinstance(date, str) else date) > now]
     if len(remaining) == len(progress.review_dates):
         return False
     progress.review_dates = remaining
