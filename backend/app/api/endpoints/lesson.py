@@ -90,7 +90,7 @@ async def get_due_lesson_reviews(
     reviews = [
         {
             "lesson_id": progress.lesson_id,
-            "title": lessons[progress.lesson_id].title,
+            "title": (lessons[progress.lesson_id].content or {}).get("title") or lessons[progress.lesson_id].topic,
             "due_at": due_review_dates(progress.review_dates, as_of=now)[0].isoformat(),
             "overdue_count": len(due_review_dates(progress.review_dates, as_of=now)),
         }

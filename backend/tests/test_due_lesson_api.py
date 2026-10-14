@@ -10,7 +10,7 @@ from app.api.endpoints.lesson import get_due_lesson_reviews
 def test_due_lesson_api_filters_to_authenticated_user_and_limits():
     now = datetime.now()
     progress = SimpleNamespace(lesson_id=77, review_dates=[now - timedelta(days=2)])
-    lesson = SimpleNamespace(id=77, title="Review lesson")
+    lesson = SimpleNamespace(id=77, topic="articles", content={"title": "Review lesson"})
     user = SimpleNamespace(id=1)
     db = MagicMock()
     db.query.return_value.filter.return_value.first.return_value = user
@@ -20,6 +20,7 @@ def test_due_lesson_api_filters_to_authenticated_user_and_limits():
             result = asyncio.run(get_due_lesson_reviews(limit=5, db=db, authenticated_id=9001))
             assert result["count"] == 1
             assert result["reviews"][0]["lesson_id"] == 77
+            assert result["reviews"][0]["title"] == "Review lesson"
             assert result["reviews"][0]["overdue_count"] == 1
             due.assert_called_once()
             assert due.call_args.args[1] == 1
@@ -28,3 +29,15 @@ def test_due_lesson_api_filters_to_authenticated_user_and_limits():
         assert False, "Expected 422"
     except HTTPException as exc:
         assert exc.status_code == 422
+
+
+def test_due_lesson_api_uses_topic_when_content_has_no_title():
+    now = datetime.now()
+    progress = SimpleNamespace(lesson_id=77, review_dates=[now - timedelta(days=1)])
+    lesson = SimpleNamespace(id=77, topic="articles", content={"exercises": []})
+    db = MagicMock()
+    db.query.return_value.filter.return_value.first.return_value = SimpleNamespace(id=1)
+    db.query.return_value.filter.return_value.all.return_value = [lesson]
+    with patch("app.api.endpoints.lesson.due_reviews", return_value=[progress]):
+        result = asyncio.run(get_due_lesson_reviews(limit=5, db=db, authenticated_id=9001))
+    assert result["reviews"][0]["title"] == "articles"
