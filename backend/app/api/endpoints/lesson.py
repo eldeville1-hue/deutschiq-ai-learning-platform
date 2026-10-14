@@ -14,6 +14,7 @@ import uuid
 from typing import Literal
 from app.core.telegram_auth import telegram_user_id, assert_owner
 from app.services.srs import schedule_review
+from app.services.srs_due import due_reviews, due_review_dates
 from app.models.learning import ExerciseAttempt, TopicMastery, LearningSession
 from app.services.learning_engine import adaptive_mastery_update, next_stability, retrieval_review_interval, retention_score, summarize_attempts, summarize_mission
 from app.services.skill_graph import skill_for
@@ -62,6 +63,38 @@ async def get_due_reviews(limit: int = 5, db: Session = Depends(get_db),
          "next_review_at": row.next_review_at.isoformat(),
          "lapses": row.lapse_count or 0}
         for row in rows
+    ]
+    return {"reviews": reviews, "count": len(reviews)}
+
+
+@router.get("/reviews/lessons/due")
+async def get_due_lesson_reviews(
+    limit: int = 5,
+    db: Session = Depends(get_db),
+    authenticated_id: int = Depends(telegram_user_id),
+):
+    """List due completed lessons for the authenticated Telegram learner."""
+    if not 1 <= limit <= 20:
+        raise HTTPException(status_code=422, detail="limit must be between 1 and 20")
+    user = db.query(User).filter(User.telegram_id == authenticated_id).first()
+    if user is None:
+        return {"reviews": [], "count": 0}
+    now = datetime.now()
+    due = due_reviews(db, user.id, as_of=now)[:limit]
+    lesson_ids = [progress.lesson_id for progress in due]
+    lessons = {
+        lesson.id: lesson for lesson in db.query(Lesson).filter(
+            Lesson.id.in_(lesson_ids)
+        ).all()
+    } if lesson_ids else {}
+    reviews = [
+        {
+            "lesson_id": progress.lesson_id,
+            "title": lessons[progress.lesson_id].title,
+            "due_at": due_review_dates(progress.review_dates, as_of=now)[0].isoformat(),
+            "overdue_count": len(due_review_dates(progress.review_dates, as_of=now)),
+        }
+        for progress in due if progress.lesson_id in lessons
     ]
     return {"reviews": reviews, "count": len(reviews)}
 
