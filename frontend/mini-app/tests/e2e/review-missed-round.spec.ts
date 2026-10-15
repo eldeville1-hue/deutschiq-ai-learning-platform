@@ -27,14 +27,14 @@ test('missed-card round submits retry evidence instead of first-attempt mastery'
   await page.getByRole('button', { name: 'Check' }).click();
   await expect(page.getByText('Let’s reinforce it')).toBeVisible();
   await page.getByRole('button', { name: 'Finish' }).click();
-  await expect(page.getByText('0 of 1 correct. Missed items remain due for review.')).toBeVisible();
+  await expect(page.getByText('0 of 1 correct on the first try. Missed items remain due for review.')).toBeVisible();
   await page.getByRole('button', { name: 'Practice missed cards' }).click();
   await expect(page.getByRole('heading', { name: 'Choose the right order' })).toBeVisible();
   await page.getByRole('radio', { name: 'Correct' }).click();
   await page.getByRole('button', { name: 'Check' }).click();
   await expect(page.getByText('Correct', { exact: true }).first()).toBeVisible();
   await page.getByRole('button', { name: 'Finish' }).click();
-  await expect(page.getByText('1 of 1 correct. This is extra practice, not a replacement for your next scheduled review.', { exact: true })).toBeVisible();
+  await expect(page.getByText('1 of 1 correct on the first try. This is extra practice, not a replacement for your next scheduled review.', { exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Review complete' })).toBeVisible();
   await expect(page.getByText('Missed items remain due for review.', { exact: false })).toHaveCount(0);
   expect(submissions).toEqual([
@@ -74,7 +74,7 @@ test('review keeps selected answer after temporary network failure and does not 
   await expect(page.getByRole('button', { name: 'Finish' })).toBeVisible();
   expect(submissions).toBe(2);
   await page.getByRole('button', { name: 'Finish' }).click();
-  await expect(page.getByText('1 of 1 correct.', { exact: true })).toBeVisible();
+  await expect(page.getByText('1 of 1 correct on the first try.', { exact: true })).toBeVisible();
   await expect(page.getByText('Missed items remain due for review.', { exact: false })).toHaveCount(0);
 });
 
@@ -144,7 +144,7 @@ test('a corrected retry still enters missed-card practice', async ({ page }) => 
   await page.getByRole('button', { name: 'Check' }).click();
   await expect(page.getByText('Correct', { exact: true }).first()).toBeVisible();
   await page.getByRole('button', { name: 'Finish' }).click();
-  await expect(page.getByText('0 of 1 correct. Missed items remain due for review.')).toBeVisible();
+  await expect(page.getByText('0 of 1 correct on the first try. Missed items remain due for review.')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Practice missed cards' })).toBeVisible();
   expect(retries).toEqual([false, true]);
 });
