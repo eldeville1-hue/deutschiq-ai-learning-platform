@@ -3,6 +3,7 @@ set -eu
 
 echo "Applying database migrations..."
 alembic upgrade head
+python -m scripts.verify_migration_head
 echo "Synchronizing validated curriculum..."
 python seed_30_day_plan.py
 echo "Checking persisted curriculum answer quality..."
