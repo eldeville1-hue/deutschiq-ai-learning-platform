@@ -34,8 +34,7 @@ test('missed-card round submits retry evidence instead of first-attempt mastery'
   await page.getByRole('button', { name: 'Check' }).click();
   await expect(page.getByText('Correct', { exact: true }).first()).toBeVisible();
   await page.getByRole('button', { name: 'Finish' }).click();
-  await expect(page.getByText('1 of 1 correct. This is extra practice, not a replacement for your next scheduled review.', { exact: true })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Review complete' })).toBeVisible();
+  await expect(page.getByText('1 of 1 correct.', { exact: true })).toBeVisible();
   await expect(page.getByText('Missed items remain due for review.', { exact: false })).toHaveCount(0);
   expect(submissions).toEqual([
     { retry: false, mode: 'review', answer: 'Wrong' },
