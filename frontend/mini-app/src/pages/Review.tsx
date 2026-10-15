@@ -22,6 +22,7 @@ export const Review: React.FC = () => {
   const [startedAt, setStartedAt] = useState(Date.now());
   const [sessionId, setSessionId] = useState('');
   const [checking, setChecking] = useState(false);
+  const [sessionConflict, setSessionConflict] = useState(false);
   const [reinforce, setReinforce] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [missedRound, setMissedRound] = useState(false);
@@ -57,7 +58,7 @@ export const Review: React.FC = () => {
     return session.session_id;
   };
   const check = async () => {
-    if (!answer.trim() || checking) return;
+    if (!answer.trim() || checking || sessionConflict) return;
     setChecking(true);
     setError('');
     try {
@@ -92,6 +93,7 @@ export const Review: React.FC = () => {
         // learning session may have closed. Refresh instead of replaying a
         // potentially successful answer and awarding duplicate progress.
         setSessionId('');
+        setSessionConflict(true);
         setError(tr(lang,
           'Сессия изменилась. Обнови повторения, чтобы продолжить.',
           'Die Sitzung hat sich geändert. Lade die Wiederholungen neu.',
@@ -125,10 +127,10 @@ export const Review: React.FC = () => {
         {reinforce && <div className="rc-notice"><span>{tr(lang, 'Вспомни правило и попробуй ответить самостоятельно.', 'Erinnere dich an die Regel und versuche es selbst.', 'Recall the rule and try answering independently.')}</span></div>}
         {!feedback && <ExerciseInteraction exercise={{ ...item, id: `review-${item.lesson_id}-${item.exercise_index}` }} answer={answer} onAnswer={setAnswer} lang={lang} />}
 
-        {error && <div className="rc-notice error"><span>{error}</span>{!checking && <button type="button" onClick={() => { setIndex(0); setAnswer(''); setFeedback(null); setSessionId(''); setCorrectCount(0); setMissedIndices([]); setMissedRound(false); setRetryCount(0); setReinforce(false); setStartedAt(Date.now()); setLoadAttempt(value => value + 1); }}>{tr(lang, 'Обновить', 'Neu laden', 'Reload')}</button>}</div>}
+        {error && <div className="rc-notice error"><span>{error}</span>{!checking && <button type="button" onClick={() => { setIndex(0); setAnswer(''); setFeedback(null); setSessionId(''); setCorrectCount(0); setMissedIndices([]); setMissedRound(false); setRetryCount(0); setReinforce(false); setStartedAt(Date.now()); setSessionConflict(false); setLoadAttempt(value => value + 1); }}>{tr(lang, 'Обновить', 'Neu laden', 'Reload')}</button>}</div>}
 
         {!feedback
-          ? <button type="button" className="rc-primary" disabled={!answer.trim() || checking} onClick={check}>{checking ? tr(lang, 'Проверяем…', 'Wird geprüft…', 'Checking…') : tr(lang, 'Проверить', 'Prüfen', 'Check')}</button>
+          ? <button type="button" className="rc-primary" disabled={!answer.trim() || checking || sessionConflict} onClick={check}>{checking ? tr(lang, 'Проверяем…', 'Wird geprüft…', 'Checking…') : tr(lang, 'Проверить', 'Prüfen', 'Check')}</button>
           : <div className={`rc-review-feedback ${feedback.correct ? 'correct' : 'wrong'}`}><header><span>{feedback.correct ? <FaCheck /> : <FaRedo />}</span><strong>{feedback.correct ? tr(lang, 'Верно', 'Richtig', 'Correct') : tr(lang, 'Закрепим ещё раз', 'Noch einmal festigen', 'Let’s reinforce it')}</strong></header><div><small>{tr(lang, 'ПРАВИЛЬНЫЙ ОТВЕТ', 'RICHTIGE ANTWORT', 'CORRECT ANSWER')}</small><strong>{feedback.correct_answer}</strong><p>{feedback.explanation}</p></div>{!feedback.correct && <button type="button" className="rc-primary" onClick={() => { setFeedback(null); setAnswer(''); setSessionId(''); setReinforce(true); setRetryCount(value => value + 1); setStartedAt(Date.now()); }}>{tr(lang, 'Попробовать ещё раз', 'Noch einmal versuchen', 'Try again')} <FaRedo /></button>}<button type="button" className="rc-primary" onClick={next}>{index + 1 === items.length ? tr(lang, 'Завершить', 'Abschließen', 'Finish') : tr(lang, 'Следующая карточка', 'Nächste Karte', 'Next card')} <FaArrowRight /></button></div>}
       </section>
     </main>
