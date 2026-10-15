@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { FaArrowRight, FaCheck, FaRedo, FaTimes } from 'react-icons/fa';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../services/api';
@@ -22,6 +22,7 @@ export const Review: React.FC = () => {
   const [startedAt, setStartedAt] = useState(Date.now());
   const [sessionId, setSessionId] = useState('');
   const [checking, setChecking] = useState(false);
+  const checkingRef = useRef(false);
   const [sessionConflict, setSessionConflict] = useState(false);
   const [reinforce, setReinforce] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
@@ -59,7 +60,8 @@ export const Review: React.FC = () => {
     return session.session_id;
   };
   const check = async () => {
-    if (!answer.trim() || checking || sessionConflict) return;
+    if (!answer.trim() || checkingRef.current || checking || sessionConflict) return;
+    checkingRef.current = true;
     setChecking(true);
     setError('');
     try {
@@ -103,7 +105,7 @@ export const Review: React.FC = () => {
       } else {
         setError(tr(lang, 'Ответ не отправился. Проверь соединение и повтори.', 'Die Antwort wurde nicht gesendet. Prüfe die Verbindung und versuche es erneut.', 'Your answer was not sent. Check the connection and try again.'));
       }
-    } finally { setChecking(false); }
+    } finally { checkingRef.current = false; setChecking(false); }
   };
   const next = () => {
     const nextIndex = index + 1;
