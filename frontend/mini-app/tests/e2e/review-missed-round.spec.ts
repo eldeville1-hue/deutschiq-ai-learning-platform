@@ -34,7 +34,8 @@ test('missed-card round submits retry evidence instead of first-attempt mastery'
   await page.getByRole('button', { name: 'Check' }).click();
   await expect(page.getByText('Correct', { exact: true }).first()).toBeVisible();
   await page.getByRole('button', { name: 'Finish' }).click();
-  await expect(page.getByText('1 of 1 correct. Missed items remain due for review.')).toBeVisible();
+  await expect(page.getByText('1 of 1 correct.', { exact: true })).toBeVisible();
+  await expect(page.getByText('Missed items remain due for review.', { exact: false })).toHaveCount(0);
   expect(submissions).toEqual([
     { retry: false, mode: 'review', answer: 'Wrong' },
     { retry: true, mode: 'review', answer: 'Correct' },
@@ -72,7 +73,8 @@ test('review keeps selected answer after temporary network failure and does not 
   await expect(page.getByRole('button', { name: 'Finish' })).toBeVisible();
   expect(submissions).toBe(2);
   await page.getByRole('button', { name: 'Finish' }).click();
-  await expect(page.getByText('1 of 1 correct. Missed items remain due for review.')).toBeVisible();
+  await expect(page.getByText('1 of 1 correct.', { exact: true })).toBeVisible();
+  await expect(page.getByText('Missed items remain due for review.', { exact: false })).toHaveCount(0);
 });
 
 test('review session conflict requires reload rather than replaying an accepted answer', async ({ page }) => {
