@@ -23,6 +23,7 @@ export const Review: React.FC = () => {
   const [sessionId, setSessionId] = useState('');
   const [checking, setChecking] = useState(false);
   const [reinforce, setReinforce] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const [error, setError] = useState('');
   const [loadAttempt, setLoadAttempt] = useState(0);
 
@@ -58,7 +59,7 @@ export const Review: React.FC = () => {
     setError('');
     try {
       const activeSession = await ensureSession();
-      const result = await api.checkLessonAnswer({ user_id: userId, lesson_id: item.lesson_id, exercise_index: item.exercise_index, answer, session_id: activeSession, language: lang, confidence: 'okay', response_ms: Date.now() - startedAt, mode: 'review' });
+      const result = await api.checkLessonAnswer({ user_id: userId, lesson_id: item.lesson_id, exercise_index: item.exercise_index, answer, session_id: activeSession, language: lang, confidence: 'okay', response_ms: Date.now() - startedAt, retry: retryCount > 0, mode: 'review' });
       if (result.evaluation_status && result.evaluation_status !== 'verified') {
         setError(result.retry_instruction || tr(lang,
           'Не удалось проверить ответ. Попробуй ещё раз.',
@@ -100,7 +101,7 @@ export const Review: React.FC = () => {
     const nextIndex = index + 1;
     setIndex(nextIndex);
     if (nextLesson) saveDailySession(userId, { nextLessonId: nextLesson, stage: 'review' });
-    setAnswer(''); setFeedback(null); setSessionId(''); setReinforce(false); setError(''); setStartedAt(Date.now());
+    setAnswer(''); setFeedback(null); setSessionId(''); setReinforce(false); setRetryCount(0); setError(''); setStartedAt(Date.now());
   };
   const progress = ((index + (feedback ? 1 : 0)) / items.length) * 100;
 
@@ -123,7 +124,7 @@ export const Review: React.FC = () => {
 
         {!feedback
           ? <button type="button" className="rc-primary" disabled={!answer.trim() || checking} onClick={check}>{checking ? tr(lang, 'Проверяем…', 'Wird geprüft…', 'Checking…') : tr(lang, 'Проверить', 'Prüfen', 'Check')}</button>
-          : <div className={`rc-review-feedback ${feedback.correct ? 'correct' : 'wrong'}`}><header><span>{feedback.correct ? <FaCheck /> : <FaRedo />}</span><strong>{feedback.correct ? tr(lang, 'Верно', 'Richtig', 'Correct') : tr(lang, 'Закрепим ещё раз', 'Noch einmal festigen', 'Let’s reinforce it')}</strong></header><div><small>{tr(lang, 'ПРАВИЛЬНЫЙ ОТВЕТ', 'RICHTIGE ANTWORT', 'CORRECT ANSWER')}</small><strong>{feedback.correct_answer}</strong><p>{feedback.explanation}</p></div>{!feedback.correct && <button type="button" className="rc-primary" onClick={() => { setFeedback(null); setAnswer(''); setSessionId(''); setReinforce(true); setStartedAt(Date.now()); }}>{tr(lang, 'Попробовать ещё раз', 'Noch einmal versuchen', 'Try again')} <FaRedo /></button>}<button type="button" className="rc-primary" onClick={next}>{index + 1 === items.length ? tr(lang, 'Завершить', 'Abschließen', 'Finish') : tr(lang, 'Следующая карточка', 'Nächste Karte', 'Next card')} <FaArrowRight /></button></div>}
+          : <div className={`rc-review-feedback ${feedback.correct ? 'correct' : 'wrong'}`}><header><span>{feedback.correct ? <FaCheck /> : <FaRedo />}</span><strong>{feedback.correct ? tr(lang, 'Верно', 'Richtig', 'Correct') : tr(lang, 'Закрепим ещё раз', 'Noch einmal festigen', 'Let’s reinforce it')}</strong></header><div><small>{tr(lang, 'ПРАВИЛЬНЫЙ ОТВЕТ', 'RICHTIGE ANTWORT', 'CORRECT ANSWER')}</small><strong>{feedback.correct_answer}</strong><p>{feedback.explanation}</p></div>{!feedback.correct && <button type="button" className="rc-primary" onClick={() => { setFeedback(null); setAnswer(''); setSessionId(''); setReinforce(true); setRetryCount(value => value + 1); setStartedAt(Date.now()); }}>{tr(lang, 'Попробовать ещё раз', 'Noch einmal versuchen', 'Try again')} <FaRedo /></button>}<button type="button" className="rc-primary" onClick={next}>{index + 1 === items.length ? tr(lang, 'Завершить', 'Abschließen', 'Finish') : tr(lang, 'Следующая карточка', 'Nächste Karte', 'Next card')} <FaArrowRight /></button></div>}
       </section>
     </main>
   );
