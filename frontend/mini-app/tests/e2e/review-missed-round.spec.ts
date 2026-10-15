@@ -102,6 +102,9 @@ test('review session conflict requires reload rather than replaying an accepted 
   await page.getByRole('button', { name: 'Check' }).click();
   await expect(page.getByText('The session changed. Reload reviews to continue.')).toBeVisible();
   expect(submissions).toBe(1);
+  await expect(page.getByRole('button', { name: 'Check' })).toBeDisabled();
+  await page.getByRole('button', { name: 'Check' }).click({ force: true });
+  expect(submissions).toBe(1);
   reloaded = true;
   await page.getByRole('button', { name: 'Reload' }).click();
   await expect(page.getByRole('heading', { name: 'All done for today' })).toBeVisible();
