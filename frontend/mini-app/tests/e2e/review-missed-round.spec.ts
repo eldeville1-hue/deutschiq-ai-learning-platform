@@ -112,3 +112,38 @@ test('review session conflict requires reload rather than replaying an accepted 
   expect(submissions).toBe(1);
   expect(loads).toBeGreaterThanOrEqual(2);
 });
+
+
+test('a corrected retry still enters missed-card practice', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
+  const retries: boolean[] = [];
+  await page.route('**/api/learning/reviews/**', route => route.fulfill({
+    json: { reviews: [{ lesson_id: 77, exercise_index: 0, topic: 'word_order',
+      type: 'choice', question: 'Choose the right order', options: ['Wrong', 'Correct'] }] },
+  }));
+  let session = 0;
+  await page.route('**/api/lesson/start', route => route.fulfill({
+    json: { session_id: 'retry-session-' + ++session },
+  }));
+  await page.route('**/api/lesson/check-answer', route => {
+    const payload = route.request().postDataJSON();
+    retries.push(payload.retry);
+    return route.fulfill({ json: {
+      evaluation_status: 'verified', correct: payload.answer === 'Correct',
+      correct_answer: 'Correct', explanation: 'Check the word order.',
+    } });
+  });
+  await page.route('**/api/events', route => route.fulfill({ status: 204, body: '' }));
+
+  await page.goto('/review');
+  await page.getByRole('radio', { name: 'Wrong' }).click();
+  await page.getByRole('button', { name: 'Check' }).click();
+  await expect(page.getByText('Let’s reinforce it')).toBeVisible();
+  await page.getByRole('button', { name: 'Try again' }).click();
+  await page.getByRole('radio', { name: 'Correct' }).click();
+  await page.getByRole('button', { name: 'Check' }).click();
+  await expect(page.getByText('Correct', { exact: true }).first()).toBeVisible();
+  await page.getByRole('button', { name: 'Finish' }).click();
+  await expect(page.getByRole('button', { name: 'Practice missed cards' })).toBeVisible();
+  expect(retries).toEqual([false, true]);
+});
