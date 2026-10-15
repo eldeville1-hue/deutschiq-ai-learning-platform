@@ -144,6 +144,7 @@ test('a corrected retry still enters missed-card practice', async ({ page }) => 
   await page.getByRole('button', { name: 'Check' }).click();
   await expect(page.getByText('Correct', { exact: true }).first()).toBeVisible();
   await page.getByRole('button', { name: 'Finish' }).click();
+  await expect(page.getByText('0 of 1 correct. Missed items remain due for review.')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Practice missed cards' })).toBeVisible();
   expect(retries).toEqual([false, true]);
 });
