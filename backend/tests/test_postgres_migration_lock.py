@@ -29,6 +29,22 @@ class PostgresMigrationLockTests(unittest.TestCase):
         finally:
             engine.dispose()
 
+    def test_rollback_releases_lock(self):
+        engine = create_engine(os.environ["TEST_POSTGRES_URL"])
+        try:
+            with engine.connect() as first, engine.connect() as second:
+                transaction = first.begin()
+                try:
+                    first.execute(text("SELECT pg_advisory_xact_lock(:id)"), {"id": LOCK_ID})
+                    with second.begin():
+                        self.assertFalse(second.scalar(text("SELECT pg_try_advisory_xact_lock(:id)"), {"id": LOCK_ID}))
+                finally:
+                    transaction.rollback()
+                with second.begin():
+                    self.assertTrue(second.scalar(text("SELECT pg_try_advisory_xact_lock(:id)"), {"id": LOCK_ID}))
+        finally:
+            engine.dispose()
+
 
 if __name__ == "__main__":
     unittest.main()
