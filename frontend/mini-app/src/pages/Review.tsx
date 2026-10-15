@@ -27,6 +27,7 @@ export const Review: React.FC = () => {
   const [retryCount, setRetryCount] = useState(0);
   const [missedRound, setMissedRound] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
+  const [firstAttemptMissed, setFirstAttemptMissed] = useState(false);
   const [missedIndices, setMissedIndices] = useState<number[]>([]);
   const [error, setError] = useState('');
   const [loadAttempt, setLoadAttempt] = useState(0);
@@ -48,7 +49,7 @@ export const Review: React.FC = () => {
   };
   if (items === null) return <main className="lesson-flow rc-review"><div className="skeleton rc-hero-skeleton" /></main>;
   if (!items.length) return <main className="lesson-flow rc-review rc-review-state"><span className="rc-state-icon"><FaCheck /></span><p>{tr(lang, 'ПОВТОРЕНИЕ', 'WIEDERHOLUNG', 'REVIEW')}</p><h1>{error ? tr(lang, 'Не удалось загрузить', 'Laden fehlgeschlagen', 'Could not load') : tr(lang, 'На сегодня всё', 'Für heute erledigt', 'All done for today')}</h1><span>{error || tr(lang, 'Новые карточки появятся после урока.', 'Neue Karten erscheinen nach der Lektion.', 'New cards appear after a lesson.')}</span><button type="button" className="rc-primary" onClick={error ? () => setLoadAttempt(value => value + 1) : continueSession}>{error ? tr(lang, 'Попробовать снова', 'Erneut versuchen', 'Try again') : nextLesson ? tr(lang, 'Перейти к новому навыку', 'Zum neuen Lernziel', 'Continue to new skill') : tr(lang, 'На главную', 'Zur Übersicht', 'Back to overview')}</button></main>;
-  if (index >= items.length) return <main className="lesson-flow rc-review rc-review-state"><span className="rc-state-icon success"><FaCheck /></span><p>{tr(lang, 'ГОТОВО', 'FERTIG', 'DONE')}</p><h1>{correctCount === items.length && !missedRound ? tr(lang, 'Память укреплена', 'Erinnerung gefestigt', 'Memory strengthened') : tr(lang, 'Повторение завершено', 'Wiederholung abgeschlossen', 'Review complete')}</h1><span>{tr(lang, `${correctCount} из ${items.length} ответов верно.${missedRound ? ' Это повторная практика: она не заменяет следующее плановое повторение.' : missedIndices.length ? ' Ошибки остаются для повторения.' : ''}`, `${correctCount} von ${items.length} richtig.${missedRound ? ' Das ist zusätzliche Übung und ersetzt nicht die nächste geplante Wiederholung.' : missedIndices.length ? ' Fehler bleiben zur Wiederholung.' : ''}`, `${correctCount} of ${items.length} correct.${missedRound ? ' This is extra practice, not a replacement for your next scheduled review.' : missedIndices.length ? ' Missed items remain due for review.' : ''}`)}</span>{missedIndices.length > 0 && <button type="button" className="rc-primary" onClick={() => { setItems(missedIndices.map(i => items[i])); setIndex(0); setMissedIndices([]); setMissedRound(true); setCorrectCount(0); setAnswer(''); setFeedback(null); setSessionId(''); setRetryCount(0); setReinforce(false); setError(''); setStartedAt(Date.now()); }}>{tr(lang, 'Повторить ошибки', 'Fehler wiederholen', 'Practice missed cards')} <FaRedo /></button>}<button type="button" className="rc-primary" onClick={() => { void api.trackEvent({ user_id: getUserId(), event_name: 'review_completed', properties: { count: items.length, correct_count: correctCount } }); continueSession(); }}>{nextLesson ? tr(lang, 'Новый навык', 'Neues Lernziel', 'New skill') : tr(lang, 'Продолжить', 'Weiter', 'Continue')} <FaArrowRight /></button></main>;
+  if (index >= items.length) return <main className="lesson-flow rc-review rc-review-state"><span className="rc-state-icon success"><FaCheck /></span><p>{tr(lang, 'ГОТОВО', 'FERTIG', 'DONE')}</p><h1>{correctCount === items.length && !missedRound ? tr(lang, 'Память укреплена', 'Erinnerung gefestigt', 'Memory strengthened') : tr(lang, 'Повторение завершено', 'Wiederholung abgeschlossen', 'Review complete')}</h1><span>{tr(lang, `${correctCount} из ${items.length} ответов верно.${missedRound ? ' Это повторная практика: она не заменяет следующее плановое повторение.' : missedIndices.length ? ' Ошибки остаются для повторения.' : ''}`, `${correctCount} von ${items.length} richtig.${missedRound ? ' Das ist zusätzliche Übung und ersetzt nicht die nächste geplante Wiederholung.' : missedIndices.length ? ' Fehler bleiben zur Wiederholung.' : ''}`, `${correctCount} of ${items.length} correct.${missedRound ? ' This is extra practice, not a replacement for your next scheduled review.' : missedIndices.length ? ' Missed items remain due for review.' : ''}`)}</span>{missedIndices.length > 0 && <button type="button" className="rc-primary" onClick={() => { setItems(missedIndices.map(i => items[i])); setIndex(0); setMissedIndices([]); setMissedRound(true); setCorrectCount(0); setFirstAttemptMissed(false); setAnswer(''); setFeedback(null); setSessionId(''); setRetryCount(0); setReinforce(false); setError(''); setStartedAt(Date.now()); }}>{tr(lang, 'Повторить ошибки', 'Fehler wiederholen', 'Practice missed cards')} <FaRedo /></button>}<button type="button" className="rc-primary" onClick={() => { void api.trackEvent({ user_id: getUserId(), event_name: 'review_completed', properties: { count: items.length, correct_count: correctCount } }); continueSession(); }}>{nextLesson ? tr(lang, 'Новый навык', 'Neues Lernziel', 'New skill') : tr(lang, 'Продолжить', 'Weiter', 'Continue')} <FaArrowRight /></button></main>;
 
   const item = items[index];
   const ensureSession = async () => {
@@ -73,6 +74,7 @@ export const Review: React.FC = () => {
       }
       setFeedback(result);
       if (result.correct) setCorrectCount(value => value + 1);
+      else setFirstAttemptMissed(true);
       void api.trackEvent({
         user_id: userId,
         event_name: 'review_answered',
@@ -105,10 +107,10 @@ export const Review: React.FC = () => {
   };
   const next = () => {
     const nextIndex = index + 1;
-    if (!feedback?.correct) setMissedIndices(value => [...value, index]);
+    if (!feedback?.correct || firstAttemptMissed) setMissedIndices(value => [...value, index]);
     setIndex(nextIndex);
     if (nextLesson) saveDailySession(userId, { nextLessonId: nextLesson, stage: 'review' });
-    setAnswer(''); setFeedback(null); setSessionId(''); setReinforce(false); setRetryCount(0); setError(''); setStartedAt(Date.now());
+    setAnswer(''); setFeedback(null); setSessionId(''); setReinforce(false); setRetryCount(0); setFirstAttemptMissed(false); setError(''); setStartedAt(Date.now());
   };
   const progress = ((index + (feedback ? 1 : 0)) / items.length) * 100;
 
@@ -127,7 +129,7 @@ export const Review: React.FC = () => {
         {reinforce && <div className="rc-notice"><span>{tr(lang, 'Вспомни правило и попробуй ответить самостоятельно.', 'Erinnere dich an die Regel und versuche es selbst.', 'Recall the rule and try answering independently.')}</span></div>}
         {!feedback && <ExerciseInteraction exercise={{ ...item, id: `review-${item.lesson_id}-${item.exercise_index}` }} answer={answer} onAnswer={setAnswer} lang={lang} />}
 
-        {error && <div className="rc-notice error"><span>{error}</span>{!checking && <button type="button" onClick={() => { setIndex(0); setAnswer(''); setFeedback(null); setSessionId(''); setCorrectCount(0); setMissedIndices([]); setMissedRound(false); setRetryCount(0); setReinforce(false); setStartedAt(Date.now()); setSessionConflict(false); setLoadAttempt(value => value + 1); }}>{tr(lang, 'Обновить', 'Neu laden', 'Reload')}</button>}</div>}
+        {error && <div className="rc-notice error"><span>{error}</span>{!checking && <button type="button" onClick={() => { setIndex(0); setAnswer(''); setFeedback(null); setSessionId(''); setCorrectCount(0); setMissedIndices([]); setMissedRound(false); setRetryCount(0); setFirstAttemptMissed(false); setReinforce(false); setStartedAt(Date.now()); setSessionConflict(false); setLoadAttempt(value => value + 1); }}>{tr(lang, 'Обновить', 'Neu laden', 'Reload')}</button>}</div>}
 
         {!feedback
           ? <button type="button" className="rc-primary" disabled={!answer.trim() || checking || sessionConflict} onClick={check}>{checking ? tr(lang, 'Проверяем…', 'Wird geprüft…', 'Checking…') : tr(lang, 'Проверить', 'Prüfen', 'Check')}</button>
