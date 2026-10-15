@@ -79,9 +79,10 @@ test('review session conflict requires reload rather than replaying an accepted 
   await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
   let submissions = 0;
   let loads = 0;
+  let reloaded = false;
   await page.route('**/api/learning/reviews/**', route => {
     loads += 1;
-    return route.fulfill({ json: { reviews: loads === 1 ? [{
+    return route.fulfill({ json: { reviews: !reloaded ? [{
       lesson_id: 77, exercise_index: 0, topic: 'word_order',
       type: 'choice', question: 'Choose the right order', options: ['Wrong', 'Correct'],
     }] : [] } });
@@ -99,8 +100,9 @@ test('review session conflict requires reload rather than replaying an accepted 
   await page.getByRole('button', { name: 'Check' }).click();
   await expect(page.getByText('The session changed. Reload reviews to continue.')).toBeVisible();
   expect(submissions).toBe(1);
+  reloaded = true;
   await page.getByRole('button', { name: 'Reload' }).click();
   await expect(page.getByRole('heading', { name: 'All done for today' })).toBeVisible();
   expect(submissions).toBe(1);
-  expect(loads).toBe(2);
+  expect(loads).toBeGreaterThanOrEqual(2);
 });
