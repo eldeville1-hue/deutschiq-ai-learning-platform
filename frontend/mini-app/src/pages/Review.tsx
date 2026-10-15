@@ -73,7 +73,7 @@ export const Review: React.FC = () => {
         return;
       }
       setFeedback(result);
-      if (result.correct) setCorrectCount(value => value + 1);
+      if (result.correct && !firstAttemptMissed && retryCount === 0) setCorrectCount(value => value + 1);
       else setFirstAttemptMissed(true);
       void api.trackEvent({
         user_id: userId,
