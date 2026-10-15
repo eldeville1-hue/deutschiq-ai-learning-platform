@@ -125,7 +125,7 @@ export const Review: React.FC = () => {
         {reinforce && <div className="rc-notice"><span>{tr(lang, 'Вспомни правило и попробуй ответить самостоятельно.', 'Erinnere dich an die Regel und versuche es selbst.', 'Recall the rule and try answering independently.')}</span></div>}
         {!feedback && <ExerciseInteraction exercise={{ ...item, id: `review-${item.lesson_id}-${item.exercise_index}` }} answer={answer} onAnswer={setAnswer} lang={lang} />}
 
-        {error && <div className="rc-notice error"><span>{error}</span>{!checking && <button type="button" onClick={() => { setIndex(0); setAnswer(''); setFeedback(null); setSessionId(''); setLoadAttempt(value => value + 1); }}>{tr(lang, 'Обновить', 'Neu laden', 'Reload')}</button>}</div>}
+        {error && <div className="rc-notice error"><span>{error}</span>{!checking && <button type="button" onClick={() => { setIndex(0); setAnswer(''); setFeedback(null); setSessionId(''); setCorrectCount(0); setMissedIndices([]); setMissedRound(false); setRetryCount(0); setReinforce(false); setStartedAt(Date.now()); setLoadAttempt(value => value + 1); }}>{tr(lang, 'Обновить', 'Neu laden', 'Reload')}</button>}</div>}
 
         {!feedback
           ? <button type="button" className="rc-primary" disabled={!answer.trim() || checking} onClick={check}>{checking ? tr(lang, 'Проверяем…', 'Wird geprüft…', 'Checking…') : tr(lang, 'Проверить', 'Prüfen', 'Check')}</button>
