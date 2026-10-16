@@ -66,5 +66,41 @@ class DatabaseUncertainAnswerTests(unittest.TestCase):
                 self.assertEqual(0, self.db.query(UserProgress).count())
 
 
+    def test_pending_production_review_preserves_database_state(self):
+        exercise = {
+            "type": "dialogue",
+            "answer": "Sehr geehrte Frau Klein, ich möchte den Termin verschieben. Mit freundlichen Grüßen, Mia Weber.",
+            "assessment_criteria": [
+                "formal_greeting", "rescheduling_request",
+                "alternative_time", "formal_closing",
+            ],
+        }
+        request = CheckAnswerRequest(
+            user_id=9001, lesson_id=77, exercise_index=0,
+            answer="Sehr geehrte Frau Klein, können wir den Termin auf Dienstag verschieben? Mit freundlichen Grüßen, Mia Weber.",
+            session_id="active-session", language="de",
+        )
+        with patch("app.api.endpoints.lesson.normalize_lesson_content",
+                   return_value={"exercises": [exercise], "cefr": "A2"}):
+            with patch("app.api.endpoints.lesson.localize_lesson_content",
+                       return_value={"exercises": [exercise], "cefr": "A2"}):
+                with patch("app.api.endpoints.lesson.evaluate_production",
+                           return_value={"correct": False, "assessment_pending": True}):
+                    result = asyncio.run(check_answer(request, db=self.db, authenticated_id=9001))
+        self.db.expire_all()
+        user = self.db.query(User).filter_by(id=1).one()
+        mastery = self.db.query(TopicMastery).filter_by(user_id=1).one()
+        session = self.db.query(LearningSession).filter_by(id="active-session").one()
+        self.assertEqual("needs_review", result["evaluation_status"])
+        self.assertEqual("wait_for_review", result["next_action"])
+        self.assertEqual((55, 4), (user.xp, user.streak))
+        self.assertEqual((0.6, 3, 2, 2),
+                         (mastery.mastery, mastery.attempts, mastery.correct_streak, mastery.correct_total))
+        self.assertEqual(("active", None, None),
+                         (session.status, session.score, session.completed_at))
+        self.assertEqual(0, self.db.query(ExerciseAttempt).count())
+        self.assertEqual(0, self.db.query(UserProgress).count())
+
+
 if __name__ == "__main__":
     unittest.main()
