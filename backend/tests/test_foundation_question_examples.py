@@ -5,6 +5,11 @@ from app.content.foundation_curriculum import A1_CURRICULUM, A2_CURRICULUM
 
 
 class FoundationQuestionExamplesTests(unittest.TestCase):
+    def test_dative_accusative_teaches_roles_not_fixed_order(self):
+        row = next(row for row in A2_CURRICULUM if row[2] == "dative_accusative")
+        self.assertEqual(row[7], "Empfänger im Dativ, Sache im Akkusativ")
+        self.assertEqual(row[8], "Der Lehrer erklärt den Schülern die Aufgabe.")
+
     def test_perfekt_sein_focus_is_not_all_movement_verbs(self):
         row = next(row for row in A2_CURRICULUM if row[2] == "perfect_sein")
         self.assertIn("Ortswechsel", row[7])
