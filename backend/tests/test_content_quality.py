@@ -23,6 +23,24 @@ class ContentQualityTests(unittest.TestCase):
                 self.assertTrue(all(item.get("skill_id") == row[2]
                                     for item in content["exercises"]))
 
+    def test_b2_specialist_dialogues_match_their_communication_tasks(self):
+        cases = {
+            "formal_register": ("schriftliche Bestätigung", "written confirmation", "Bestätigung"),
+            "data_description": ("Wert und Zeitraum", "value and time period", "Zeitraum"),
+        }
+        for row in B2_CURRICULUM:
+            if row[2] not in cases:
+                continue
+            german, english, partner = cases[row[2]]
+            content = build_b2_content(row)
+            dialogue = next(item for item in content["exercises"] if item["type"] == "dialogue")
+            de_turns = dialogue["i18n"]["de"]["conversation_turns"]
+            en_turns = dialogue["i18n"]["en"]["conversation_turns"]
+            self.assertIn(german, de_turns[1]["goal"])
+            self.assertIn(english, en_turns[1]["goal"])
+            self.assertTrue(any(partner in turn["partner"] for turn in de_turns))
+            self.assertEqual(3, len(de_turns))
+
     def test_advanced_curricula_only_offer_valid_authored_retries(self):
         for rows, builder in ((B1_CURRICULUM, build_b1_content),
                               (B2_CURRICULUM, build_b2_content)):
