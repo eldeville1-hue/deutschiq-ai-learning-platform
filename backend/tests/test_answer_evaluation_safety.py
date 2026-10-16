@@ -63,6 +63,30 @@ class AnswerEvaluationSafetyTests(unittest.TestCase):
         self.assertFalse(result["correct"])
         self.assertEqual(result["evaluation_status"], "uncertain")
 
+    def test_multiple_authored_answers_do_not_invent_grammar_diagnosis(self):
+        result = self.evaluate(
+            "Ich fahre morgen nach Berlin.", "Morgen gehe ich nach Berlin.",
+            kind="choice", accepted_answers=["Ich gehe morgen nach Berlin."],
+        )
+        self.assertFalse(result["correct"])
+        self.assertEqual(result["errors"][0]["type"], "answer_mismatch")
+        self.assertNotEqual(result["errors"][0]["type"], "word_order")
+
+    def test_invalid_authored_alternatives_never_grant_credit(self):
+        result = self.evaluate(
+            "Ich lerne nicht.", "Ich lerne.",
+            accepted_answers=["", None, 123, {"text": "Ich lerne nicht."}],
+        )
+        self.assertFalse(result["correct"])
+        self.assertEqual(result["evaluation_status"], "uncertain")
+
+    def test_missing_reference_requires_review(self):
+        result = evaluate_structured_answer("Ich lerne Deutsch.", {
+            "type": "translation", "answer": "", "accepted_answers": [],
+        })
+        self.assertFalse(result["correct"])
+        self.assertEqual(result["evaluation_status"], "needs_review")
+
     def test_empty_answer_is_incorrect(self):
         result = self.evaluate("", "Ich lerne Deutsch.")
         self.assertFalse(result["correct"])
