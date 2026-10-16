@@ -5,6 +5,18 @@ from app.content.foundation_curriculum import A1_CURRICULUM, A2_CURRICULUM
 
 
 class FoundationQuestionExamplesTests(unittest.TestCase):
+    def test_a2_formal_message_requires_independent_writing(self):
+        from app.content.foundation_curriculum import build_foundation_content
+        row = next(row for row in A2_CURRICULUM if row[2] == "formal_message_a2")
+        content = build_foundation_content(row, "A2")
+        writing = next(item for item in content["exercises"] if item["type"] == "production")
+        self.assertEqual(writing["stage"], "transfer")
+        self.assertEqual(len(writing["assessment_criteria"]), 4)
+        self.assertIn("alternative_time", writing["assessment_criteria"])
+        for lang in ("ru", "de", "en"):
+            self.assertTrue(writing["i18n"][lang]["question"])
+            self.assertTrue(writing["i18n"][lang]["hint"])
+
     def test_a2_formal_message_model_has_greeting_request_and_closing(self):
         row = next(row for row in A2_CURRICULUM if row[2] == "formal_message_a2")
         model = row[8]
