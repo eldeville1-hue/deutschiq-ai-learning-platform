@@ -71,7 +71,7 @@ def _formal_message_missing_parts(answer: str, exercise: dict) -> list[str]:
     """Check only observable components; do not claim to assess German grammar."""
     if "formal_closing" not in (exercise.get("assessment_criteria") or []):
         return []
-    value = answer.casefold()
+    value = answer.lower()
     missing = []
     if not re.search(r"\b(sehr geehrte(?:r|n)?|guten tag)\b", value):
         missing.append("formal_greeting")
