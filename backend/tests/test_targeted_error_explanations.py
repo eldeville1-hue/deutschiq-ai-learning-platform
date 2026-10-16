@@ -34,6 +34,14 @@ class TargetedExplanationTests(unittest.TestCase):
         self.check_category("Das Fahrrad, den ich gekauft habe, ist neu.",
                             "Das Fahrrad, das ich gekauft habe, ist neu.", "relative_pronoun")
 
+    def test_relative_pronoun_explanation_is_specific(self):
+        result = evaluate_structured_answer("Das Fahrrad, den ich gekauft habe, ist neu.", {
+            "type": "choice", "answer": "Das Fahrrad, das ich gekauft habe, ist neu.",
+            "target_feature": "relative_pronoun",
+        })
+        self.assertIn("relative pronoun", result["errors"][0]["explanation"].lower())
+        self.assertNotIn("noun’s gender", result["errors"][0]["explanation"])
+
     def test_b2_infinitive(self):
         self.check_category("Die Maßnahme trägt dazu bei, Energie sparen.",
                             "Die Maßnahme trägt dazu bei, Energie zu sparen.", "infinitive")
