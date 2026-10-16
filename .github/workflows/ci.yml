@@ -46,6 +46,8 @@ jobs:
         run: |
           test -n "$TEST_POSTGRES_URL"
           python -m unittest tests.test_verify_migration_head tests.test_postgres_migration_lock -v
+      - name: A1-B2 answer evaluation safety regressions
+        run: python -m unittest tests.test_answer_evaluation_safety -v
       - run: python -m unittest discover -s tests -v
       - name: Validate all authored curriculum lessons
         run: python audit_curriculum.py --output curriculum-audit.json
