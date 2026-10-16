@@ -77,7 +77,7 @@ def _formal_message_missing_parts(answer: str, exercise: dict) -> list[str]:
         missing.append("formal_greeting")
     if not re.search(r"\b(termin|verabredung)\b", value):
         missing.append("rescheduling_request")
-    if not re.search(r"\b(mit freundlichen grüßen|freundliche grüße|beste grüße)\b", value):
+    if not re.search(r"\b(mit freundlichen grüßen|freundliche grüße|beste grüße)(?=\W|$)", value):
         missing.append("formal_closing")
     return missing
 
