@@ -52,6 +52,20 @@ class TargetedExplanationTests(unittest.TestCase):
         self.assertEqual(result["errors"][0]["type"], "auxiliary")
         self.assertIn("haben or sein", result["errors"][0]["explanation"])
 
+    def test_present_tense_verb_choice_does_not_claim_perfekt(self):
+        result = evaluate_structured_answer("Ich bin Hunger.", {
+            "type": "choice", "answer": "Ich habe Hunger.",
+        })
+        self.assertEqual(result["errors"][0]["type"], "auxiliary")
+        self.assertNotIn("Perfekt", result["errors"][0]["explanation"])
+        self.assertIn("meaning and construction", result["errors"][0]["explanation"])
+
+    def test_perfekt_participle_keeps_specific_auxiliary_explanation(self):
+        result = evaluate_structured_answer("Ich habe gestern gegangen.", {
+            "type": "choice", "answer": "Ich bin gestern gegangen.",
+        })
+        self.assertIn("Perfekt", result["errors"][0]["explanation"])
+
     def test_b1_relative_pronoun(self):
         self.check_category("Das Fahrrad, den ich gekauft habe, ist neu.",
                             "Das Fahrrad, das ich gekauft habe, ist neu.", "relative_pronoun")
