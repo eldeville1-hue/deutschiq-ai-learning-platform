@@ -153,12 +153,37 @@ def build_b2_content(row: tuple) -> dict:
         "Welcher Beleg stützt Ihre Position?",
         "Was entgegnen Sie dem wichtigsten Gegenargument?",
     ]
+    if topic == "formal_register":
+        partners = [
+            "Worum geht es in Ihrer Nachricht?",
+            "Welche Bestätigung benötigen Sie?",
+            "Wie schließen Sie Ihre Anfrage höflich ab?",
+        ]
+    elif topic == "data_description":
+        partners = [
+            "Welche Entwicklung zeigen die Zahlen?",
+            "Welche Werte oder Zeiträume können Sie nennen?",
+            "Was lässt sich aus der Entwicklung vorsichtig schließen?",
+        ]
     turn_models = [model, alternatives[0], alternatives[1]]
     turn_goals = {
         "ru": ["Чётко сформулируй позицию.", "Добавь конкретное обоснование.", "Учти возражение и сделай вывод."],
         "de": ["Formuliere eine klare Position.", "Füge eine konkrete Begründung hinzu.", "Berücksichtige einen Einwand und ziehe ein Fazit."],
         "en": ["State a clear position.", "Add specific support.", "Address an objection and conclude."],
     }
+
+    if topic == "formal_register":
+        turn_goals = {
+            "ru": ["Назови причину обращения.", "Вежливо попроси письменное подтверждение.", "Заверши сообщение в подходящем официальном регистре."],
+            "de": ["Nenne den Anlass deiner Nachricht.", "Bitte höflich um eine schriftliche Bestätigung.", "Schließe die Nachricht in angemessen formellem Register ab."],
+            "en": ["State why you are writing.", "Politely request written confirmation.", "Close the message in an appropriate formal register."],
+        }
+    elif topic == "data_description":
+        turn_goals = {
+            "ru": ["Опиши общую тенденцию.", "Приведи конкретное число и период.", "Сделай осторожный вывод без неподтверждённых причин."],
+            "de": ["Beschreibe den allgemeinen Trend.", "Nenne einen konkreten Wert und Zeitraum.", "Ziehe eine vorsichtige Schlussfolgerung ohne unbelegte Ursachen."],
+            "en": ["Describe the overall trend.", "Give a specific value and time period.", "Draw a cautious conclusion without unsupported causes."],
+        }
 
     def conversation_turns(language: str) -> list[dict]:
         return [
