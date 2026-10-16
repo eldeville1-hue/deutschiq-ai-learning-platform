@@ -5,6 +5,13 @@ from app.content.foundation_curriculum import A1_CURRICULUM, A2_CURRICULUM
 
 
 class FoundationQuestionExamplesTests(unittest.TestCase):
+    def test_a2_formal_message_model_has_greeting_request_and_closing(self):
+        row = next(row for row in A2_CURRICULUM if row[2] == "formal_message_a2")
+        model = row[8]
+        self.assertIn("Sehr geehrte Frau", model)
+        self.assertIn("Termin verschieben", model)
+        self.assertIn("Mit freundlichen Grüßen", model)
+
     def test_dative_accusative_teaches_roles_not_fixed_order(self):
         row = next(row for row in A2_CURRICULUM if row[2] == "dative_accusative")
         self.assertEqual(row[7], "Empfänger im Dativ, Sache im Akkusativ")
