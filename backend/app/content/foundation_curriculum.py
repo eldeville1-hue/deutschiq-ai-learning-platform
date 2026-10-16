@@ -904,6 +904,15 @@ def build_foundation_content(row: tuple, level: str) -> dict:
                 {"question":"Say the sentence aloud.","explanation":"Speak calmly. The key words should be clear.","accessibility_label":"Repeat the German sentence"},
             ),
         ]
+        if level == "A2" and topic == "formal_message_a2":
+            writing = next(item for item in exercises if item["type"] == "dialogue")
+            writing["type"] = "production"
+            writing["question"] = "Напиши официальное письмо Frau Klein: попроси перенести термин, предложи другое время и вежливо попрощайся."
+            writing["assessment_criteria"] = ["formal_greeting", "rescheduling_request", "alternative_time", "formal_closing"]
+            writing["target_patterns"] = ["Sehr geehrte", "Termin", "Mit freundlichen Grüßen"]
+            writing["i18n"]["ru"]["question"] = writing["question"]
+            writing["i18n"]["de"]["question"] = "Schreibe Frau Klein eine formelle Nachricht: Bitte um einen neuen Termin, schlage eine andere Zeit vor und verabschiede dich höflich."
+            writing["i18n"]["en"]["question"] = "Write a formal message to Frau Klein: ask to reschedule, suggest another time and close politely."
         context_exercise = _localized(
                 {"id":f"{exercise_prefix}-{day}-context","type":"context_choice","stage":"independent","question":f"Ситуация: {scenario_ru} Что ты скажешь?","answer":context_model,"accepted_answers":[context_model],"options":choices,"explanation":rule_ru,"misconception":"foundation_mission_context","accessibility_label":"Выбери естественный ответ для ситуации"},
                 {"question":f"Ситуация: {scenario_ru} Что ты скажешь?","explanation":rule_ru,"accessibility_label":"Выбери естественный ответ для ситуации"},
