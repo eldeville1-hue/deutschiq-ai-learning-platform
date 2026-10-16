@@ -7,7 +7,7 @@ A1_CURRICULUM = [
     (1,1,"greetings","speaking","Приветствие","Begrüßung","Greetings","Begrüßung","Guten Morgen! Ich heiße Mia.","Guten Morgen! Ich heißen Mia."),
     (2,1,"personal_details","speaking","О себе","Sich vorstellen","Introducing yourself","ich heiße / ich komme aus","Ich heiße Amir und komme aus Hamburg.","Ich heiße Amir und ich aus Hamburg."),
     (3,1,"main_clause","grammar","Простое предложение","Aussagesatz","Main clauses","Verb auf Position 2","Heute lerne ich Deutsch.","Heute ich lerne Deutsch."),
-    (4,1,"yes_no_questions","grammar","Общие вопросы","Ja-/Nein-Fragen","Yes/no questions","Verb auf Position 1","Wohnst du in Berlin?","Du wohnst in Berlin?"),
+    (4,1,"yes_no_questions","grammar","Общие вопросы","Ja-/Nein-Fragen","Yes/no questions","Verb auf Position 1","Wohnst du in Berlin?","Wohnst in du Berlin?"),
     (5,1,"w_questions","grammar","Вопросы с W-словом","W-Fragen","W-questions","Wort + Verb + Subjekt","Wo arbeitest du?","Wo du arbeitest?"),
     (6,2,"present_regular","grammar","Глаголы в Präsens","Regelmäßige Verben","Regular present tense","Präsens-Endungen","Wir lernen jeden Abend Deutsch.","Wir lernt jeden Abend Deutsch."),
     (7,2,"sein_haben","grammar","sein и haben","Sein und haben","Sein and haben","bin / bist / ist; habe / hast","Ich bin müde, aber ich habe Zeit.","Ich sein müde, aber ich haben Zeit."),
