@@ -169,8 +169,10 @@ def _classify_aligned_errors(answer: str, model: str, target_feature: str = "", 
             kind = "case"
             explanation = f"Use '{want}' instead of '{got}'. Check which case the verb or preposition requires."
         elif target_feature == "preposition" and got in article_forms and want in article_forms:
-            kind = "preposition"
-            explanation = "Check the case required by the preposition."
+            # The preposition itself is unchanged; diagnose the inflection,
+            # not a substitution of the preposition.
+            kind = "case"
+            explanation = "The preposition is unchanged. Check the case of the following article."
         elif target_feature == "comparison" and (
                 (got, want) in {("wie", "als"), ("als", "wie")} or
                 (want == got + "er" and len(got) > 3)):
