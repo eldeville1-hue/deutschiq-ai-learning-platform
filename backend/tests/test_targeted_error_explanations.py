@@ -66,6 +66,14 @@ class TargetedExplanationTests(unittest.TestCase):
         })
         self.assertIn("Perfekt", result["errors"][0]["explanation"])
 
+    def test_unrecognized_difference_does_not_invent_vocabulary_error(self):
+        result = evaluate_structured_answer("Ich mag Tee.", {
+            "type": "choice", "answer": "Ich mag Kaffee.",
+        })
+        self.assertFalse(result["correct"])
+        self.assertEqual(result["errors"][0]["type"], "answer_mismatch")
+        self.assertIn("context", result["errors"][0]["explanation"])
+
     def test_b1_relative_pronoun(self):
         self.check_category("Das Fahrrad, den ich gekauft habe, ist neu.",
                             "Das Fahrrad, das ich gekauft habe, ist neu.", "relative_pronoun")
