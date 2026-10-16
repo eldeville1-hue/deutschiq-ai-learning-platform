@@ -1048,6 +1048,23 @@ def build_foundation_content(row: tuple, level: str) -> dict:
             {"question":"Say the model aloud.","explanation":"Speak calmly and clearly."},
         ),
     ]
+    if level == "A2" and topic == "formal_message_a2":
+        # Writing is an open task: names, dates and wording may differ.
+        task_copy = {
+            "ru": "Напиши официальное сообщение Frau Klein: попроси перенести встречу, предложи другое время и вежливо попрощайся.",
+            "de": "Schreibe Frau Klein eine formelle Nachricht: Bitte um einen neuen Termin, schlage eine andere Zeit vor und verabschiede dich höflich.",
+            "en": "Write a formal message to Frau Klein: ask to reschedule, suggest another time and close politely.",
+        }
+        writing = next(item for item in exercises if item["type"] == "dialogue")
+        writing["type"] = "production"
+        writing["question"] = task_copy["ru"]
+        writing["target_patterns"] = ["Sehr geehrte", "Termin", "Mit freundlichen Grüßen"]
+        writing["assessment_criteria"] = ["formal_greeting", "rescheduling_request", "alternative_time", "formal_closing"]
+        writing["hint"] = "Обращение → просьба → новое время → прощание."
+        writing["explanation"] = "Проверь все четыре части. Дата, имя и формулировки могут отличаться."
+        writing["i18n"]["ru"].update({"question": task_copy["ru"], "hint": writing["hint"], "explanation": writing["explanation"]})
+        writing["i18n"]["de"].update({"question": task_copy["de"], "hint": "Anrede → Bitte → neuer Terminvorschlag → Grußformel.", "explanation": "Prüfe alle vier Teile. Name und Datum dürfen abweichen."})
+        writing["i18n"]["en"].update({"question": task_copy["en"], "hint": "Greeting → request → alternative time → closing.", "explanation": "Check all four parts. Names and dates may vary."})
     track_curriculum = A1_CURRICULUM if level == "A1" else A2_CURRICULUM
     prerequisites = [] if day == 1 else [track_curriculum[day - 2][2]]
     # Every authored exercise inherits its lesson's stable curriculum skill.
