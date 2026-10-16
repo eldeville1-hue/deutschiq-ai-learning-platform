@@ -906,7 +906,6 @@ def build_foundation_content(row: tuple, level: str) -> dict:
         ]
         if level == "A2" and topic == "formal_message_a2":
             writing = next(item for item in exercises if item["type"] == "dialogue")
-            writing["type"] = "production"
             writing["question"] = "Напиши официальное письмо Frau Klein: попроси перенести термин, предложи другое время и вежливо попрощайся."
             writing["assessment_criteria"] = ["formal_greeting", "rescheduling_request", "alternative_time", "formal_closing"]
             writing["target_patterns"] = ["Sehr geehrte", "Termin", "Mit freundlichen Grüßen"]
@@ -1065,7 +1064,6 @@ def build_foundation_content(row: tuple, level: str) -> dict:
             "en": "Write a formal message to Frau Klein: ask to reschedule, suggest another time and close politely.",
         }
         writing = next(item for item in exercises if item["type"] == "dialogue")
-        writing["type"] = "production"
         writing["question"] = task_copy["ru"]
         writing["target_patterns"] = ["Sehr geehrte", "Termin", "Mit freundlichen Grüßen"]
         writing["assessment_criteria"] = ["formal_greeting", "rescheduling_request", "alternative_time", "formal_closing"]
