@@ -45,6 +45,7 @@ const LessonScreen: React.FC = () => {
   const [speechResult, setSpeechResult] = useState<any>(null);
   const [checking, setChecking] = useState(false);
   const [checkError, setCheckError] = useState('');
+  const [reviewPending, setReviewPending] = useState(false);
   const [milestoneSent, setMilestoneSent] = useState(() => localStorage.getItem(`deutschiq-beta-milestone-${getUserId()}`) === '1');
   const [showHint, setShowHint] = useState(false);
   const [easyMode, setEasyMode] = useState(false);
@@ -254,7 +255,7 @@ const LessonScreen: React.FC = () => {
   };
   const check = async () => {
     if (!answer.trim() || !sessionId || checking) return;
-    setChecking(true); setCheckError('');
+    setChecking(true); setCheckError(''); setReviewPending(false);
     try {
       const result = await api.checkLessonAnswer({ user_id: getUserId(), lesson_id: Number(id), exercise_index: exerciseIndex, answer, session_id: sessionId, language: lang, confidence, response_ms: Date.now() - startedAt, retry: Boolean(retried[exerciseIndex]) });
       if (result.evaluation_status === 'uncertain' || result.evaluation_status === 'needs_review') {
@@ -262,6 +263,7 @@ const LessonScreen: React.FC = () => {
         // the same task without activating the guided-retry/penalty flow.
         setChecked(null);
         setFeedback(null);
+        setReviewPending(result.evaluation_status === 'needs_review');
         setCheckError(result.retry_instruction || tr(lang,
           'Не удалось надёжно оценить ответ. Попробуй переформулировать.',
           'Die Antwort konnte nicht sicher bewertet werden. Bitte formuliere sie anders.',
@@ -594,7 +596,12 @@ const LessonScreen: React.FC = () => {
               {!checked && activeExercise.mission_role !== 'final' && <button type="button" className="feedback-skip" onClick={() => void skipExercise('after_feedback')}>{tr(lang, 'Продолжить пока', 'Vorerst weiter', 'Continue for now')}</button>}
             </div>
           )}
-          {checkError && <div className="lesson-check-error" role="alert">{checkError}</div>}
+          {checkError && <div className="lesson-check-error" role="alert">
+            {checkError}
+            {reviewPending && <button type="button" className="feedback-skip" disabled={checking} onClick={() => void check()}>
+              {tr(lang, 'Проверить ещё раз', 'Erneut prüfen', 'Try checking again')}
+            </button>}
+          </div>}
         </section>
       )}
       {step >= total && <LessonCompletion
