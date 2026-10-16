@@ -200,7 +200,7 @@ def build_b2_content(row: tuple) -> dict:
     used_answers = {
         " ".join(str(value).split()).rstrip(".?!").casefold()
         for item in exercises
-        for value in (item.get("accepted_answers") or [item.get("answer", "")])
+        for value in [item.get("answer", ""), *(item.get("accepted_answers") or [])]
     }
     retry_examples = [
         {"skill_id": topic, "sentence": sentence}
