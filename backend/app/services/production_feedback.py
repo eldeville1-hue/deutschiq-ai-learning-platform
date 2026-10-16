@@ -104,7 +104,12 @@ def local_feedback(answer: str, exercise: dict, rule: str, lang: str = "en", cef
         feedback = {"ru": "В официальном письме не хватает обязательных частей.", "de": "In der formellen Nachricht fehlen wichtige Teile.", "en": "The formal message is missing required parts."}.get(lang, "The formal message is missing required parts.")
     improvement = copy[improvement_key]
     if missing_parts:
-        improvement = {"ru": "Добавь обращение, просьбу о переносе и вежливое завершение.", "de": "Ergänze Anrede, Terminanfrage und Grußformel.", "en": "Include a greeting, rescheduling request and formal closing."}.get(lang, "Include a greeting, rescheduling request and formal closing.")
+        suggestions = {
+            "formal_greeting": {"ru": "Добавь официальное обращение (например, Sehr geehrte Frau Klein).", "de": "Ergänze eine formelle Anrede (z. B. Sehr geehrte Frau Klein).", "en": "Add a formal greeting (e.g. Sehr geehrte Frau Klein)."},
+            "rescheduling_request": {"ru": "Укажи, что хочешь перенести встречу.", "de": "Schreibe, dass du den Termin verschieben möchtest.", "en": "State that you want to reschedule the appointment."},
+            "formal_closing": {"ru": "Заверши письмо формулой Mit freundlichen Grüßen и подписью.", "de": "Schließe mit Mit freundlichen Grüßen und deinem Namen.", "en": "Close with Mit freundlichen Grüßen and your name."},
+        }
+        improvement = suggestions[missing_parts[0]].get(lang, suggestions[missing_parts[0]]["en"])
     if not passed and not missing_parts and weakest == "task_completion" and rule:
         improvement = f"{improvement} {rule}"
     corrected = answer.strip() if passed else model
