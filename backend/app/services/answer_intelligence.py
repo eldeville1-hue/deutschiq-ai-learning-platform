@@ -101,7 +101,10 @@ def _classify_aligned_errors(answer: str, model: str, target_feature: str = "", 
                                     explanation="Check the grammatical ending of the negating determiner.")]
     if actual != expected and Counter(actual) == Counter(expected):
         # A permutation is not automatically a grammatical mistake in German.
-        # Free word order can be valid, especially in translations and writing.
+        # For open writing, even a word-order target needs linguistic review:
+        # a matching word bag does not prove the submitted order is wrong.
+        if exercise_type in {"translation", "translate", "free_text", "sentence", "writing"}:
+            return []
         if target_feature != "word_order" and exercise_type != "reorder":
             return []
         return [LinguisticError(type="word_order", span=answer, correction=model,
