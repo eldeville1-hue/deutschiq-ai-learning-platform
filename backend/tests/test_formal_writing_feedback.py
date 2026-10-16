@@ -68,6 +68,17 @@ class FormalWritingFeedbackTests(unittest.TestCase):
         self.assertFalse(result["correct"])
         self.assertTrue(result["assessment_pending"])
 
+    def test_missing_ai_marks_review_pending_not_incorrect(self):
+        import asyncio
+        from unittest.mock import patch
+        from app.services.production_feedback import evaluate_production
+        from app.core.config import settings
+        answer = "Sehr geehrte Frau Klein, ich möchte meinen Termin verschieben. Am Dienstag um zehn Uhr? Mit freundlichen Grüßen, Mia Weber."
+        with patch.object(settings, "OPENAI_API_KEY", ""):
+            result = asyncio.run(evaluate_production(answer, self.exercise, {"cefr": "A2"}, "de"))
+        self.assertTrue(result["assessment_pending"])
+        self.assertFalse(result["correct"])
+
     def test_unrelated_production_not_affected(self):
         exercise = dict(self.exercise, assessment_criteria=[])
         result = local_feedback("Ich habe morgen Zeit.", exercise, "", "en", "A2")
