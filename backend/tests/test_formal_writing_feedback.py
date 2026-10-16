@@ -18,6 +18,12 @@ class FormalWritingFeedbackTests(unittest.TestCase):
         self.assertFalse(result["correct"])
         self.assertIn("formal_closing", result["missing_task_parts"])
 
+    def test_missing_closing_gets_specific_repair_hint(self):
+        answer = "Sehr geehrte Frau Klein, ich möchte meinen Termin verschieben."
+        result = local_feedback(answer, self.exercise, "", "ru", "A2")
+        self.assertFalse(result["correct"])
+        self.assertIn("Mit freundlichen Grüßen", result["improvement"])
+
     def test_missing_greeting_does_not_pass(self):
         answer = "Ich möchte meinen Termin verschieben. Mit freundlichen Grüßen, Mia Weber."
         result = local_feedback(answer, self.exercise, "", "en", "A2")
