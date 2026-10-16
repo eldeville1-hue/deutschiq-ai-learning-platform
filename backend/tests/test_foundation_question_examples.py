@@ -9,7 +9,7 @@ class FoundationQuestionExamplesTests(unittest.TestCase):
         from app.content.foundation_curriculum import build_foundation_content
         row = next(row for row in A2_CURRICULUM if row[2] == "formal_message_a2")
         content = build_foundation_content(row, "A2")
-        writing = next(item for item in content["exercises"] if item["type"] == "production")
+        writing = next(item for item in content["exercises"] if item["type"] == "dialogue")
         self.assertEqual(writing["stage"], "transfer")
         self.assertEqual(len(writing["assessment_criteria"]), 4)
         self.assertIn("alternative_time", writing["assessment_criteria"])
