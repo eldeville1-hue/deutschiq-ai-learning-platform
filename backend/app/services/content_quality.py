@@ -132,7 +132,7 @@ def validate_lesson_content(content: dict) -> list[str]:
     original_answers = {
         (item.get("skill_id"), " ".join(str(answer).split()).rstrip(".?!").casefold())
         for item in content.get("exercises") or [] if isinstance(item, dict)
-        for answer in (item.get("accepted_answers") or [item.get("answer", "")])
+        for answer in [item.get("answer", ""), *(item.get("accepted_answers") or [])]
         if item.get("skill_id") in skill_ids
     }
     for index, item in enumerate(content.get("retry_examples") or []):
