@@ -128,8 +128,11 @@ def _classify_aligned_errors(answer: str, model: str, target_feature: str = "", 
                 kind = "negation"
                 explanation = "Check the negation and its effect on the intended meaning."
         elif got in auxiliaries and want in auxiliaries:
-            kind = "conjugation" if target_feature == "conjugation" else "auxiliary"
-            explanation = (f"Use '{want}' instead of '{got}'. Match the verb ending to the subject."
+            sein_forms = {"bin", "bist", "ist", "sind", "seid"}
+            haben_forms = {"habe", "hast", "hat", "haben", "habt"}
+            same_verb = (got in sein_forms and want in sein_forms) or (got in haben_forms and want in haben_forms)
+            kind = "conjugation" if same_verb else "auxiliary"
+            explanation = (f"Use '{want}' instead of '{got}'. Match the verb form to the subject."
                            if kind == "conjugation" else
                            f"Use '{want}' instead of '{got}'. In Perfekt, check whether the verb takes haben or sein.")
         elif target_feature == "case" and got in case_pronouns and want in case_pronouns:
