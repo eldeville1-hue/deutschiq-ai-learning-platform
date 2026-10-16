@@ -37,6 +37,32 @@ class AnswerEvaluationSafetyTests(unittest.TestCase):
         self.assertFalse(result["correct"])
         self.assertEqual(result["evaluation_status"], "uncertain")
 
+    def test_authored_alternative_with_different_word_order_is_accepted(self):
+        result = self.evaluate(
+            "Heute lernen wir Deutsch.", "Wir lernen heute Deutsch.",
+            accepted_answers=["Heute lernen wir Deutsch."],
+            target_feature="word_order",
+        )
+        self.assertTrue(result["correct"])
+        self.assertEqual(result["evaluation_status"], "verified")
+
+    def test_unlisted_word_order_variant_stays_uncertain(self):
+        result = self.evaluate(
+            "Heute lernen wir Deutsch.", "Wir lernen heute Deutsch.",
+            target_feature="word_order",
+        )
+        self.assertFalse(result["correct"])
+        self.assertEqual(result["evaluation_status"], "uncertain")
+        self.assertNotIn("word_order", result["candidate_error_types"])
+
+    def test_authored_alternative_does_not_allow_negated_variant(self):
+        result = self.evaluate(
+            "Ich lerne heute nicht Deutsch.", "Ich lerne heute Deutsch.",
+            accepted_answers=["Heute lerne ich Deutsch."],
+        )
+        self.assertFalse(result["correct"])
+        self.assertEqual(result["evaluation_status"], "uncertain")
+
     def test_empty_answer_is_incorrect(self):
         result = self.evaluate("", "Ich lerne Deutsch.")
         self.assertFalse(result["correct"])
