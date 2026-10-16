@@ -27,6 +27,14 @@ class TargetedExplanationTests(unittest.TestCase):
     def test_a2_preposition(self):
         self.check_category("Ich interessiere mich an Musik.", "Ich interessiere mich für Musik.", "preposition")
 
+    def test_preposition_target_with_wrong_article_reports_case(self):
+        result = evaluate_structured_answer("Ich warte auf dem Bus.", {
+            "type": "choice", "answer": "Ich warte auf den Bus.",
+            "target_feature": "preposition",
+        })
+        self.assertEqual(result["errors"][0]["type"], "case")
+        self.assertIn("preposition is unchanged", result["errors"][0]["explanation"].lower())
+
     def test_a2_auxiliary(self):
         self.check_category("Ich habe gestern nach Hause gegangen.", "Ich bin gestern nach Hause gegangen.", "auxiliary")
 
