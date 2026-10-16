@@ -243,6 +243,20 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
     else:
         structured_feedback = evaluate_structured_answer(data.answer, exercise)
         correct = structured_feedback["correct"]
+    if production_feedback and production_feedback.get("assessment_pending"):
+        # AI was unavailable: this is not a verified mistake. Do not record an
+        # attempt, reduce mastery, award XP, or advance the lesson.
+        return {
+            "correct": False,
+            "evaluation_status": "needs_review",
+            "needs_support": True,
+            "next_action": "wait_for_review",
+            "retry_instruction": {
+                "ru": "Проверка письма временно недоступна. Ответ не засчитан как ошибка. Попробуй проверить позже.",
+                "de": "Die Briefprüfung ist vorübergehend nicht verfügbar. Deine Antwort zählt nicht als Fehler. Versuche es später erneut.",
+                "en": "Writing review is temporarily unavailable. Your answer is not marked wrong. Please try again later.",
+            }[normalize_language(data.language)],
+        }
     evaluation = structured_feedback or {}
     if structured_feedback and evaluation.get("evaluation_status") != "verified":
         # No attempt, mastery, XP, or review mutation for unverified judgments.
