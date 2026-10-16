@@ -124,12 +124,14 @@ def _ai_feedback(answer: str, exercise: dict, lesson_content: dict, lang: str) -
 
     cefr = str(lesson_content.get("cefr", "A2")).upper()
     client = OpenAI(api_key=settings.OPENAI_API_KEY, timeout=8.0, max_retries=0)
-    prompt = {"cefr": cefr, "pass_mark": PASS_MARKS.get(cefr, 70), "objective": lesson_content.get("objective", ""), "rule": lesson_content.get("rule", ""), "task": exercise.get("question", ""), "target_patterns": exercise.get("target_patterns", []), "assessment_rubric": lesson_content.get("assessment_rubric", []), "model_answer": exercise.get("model_answer") or exercise.get("answer", ""), "learner_answer": answer}
+    prompt = {"assessment_criteria": exercise.get("assessment_criteria", []), "cefr": cefr, "pass_mark": PASS_MARKS.get(cefr, 70), "objective": lesson_content.get("objective", ""), "rule": lesson_content.get("rule", ""), "task": exercise.get("question", ""), "target_patterns": exercise.get("target_patterns", []), "assessment_rubric": lesson_content.get("assessment_rubric", []), "model_answer": exercise.get("model_answer") or exercise.get("answer", ""), "learner_answer": answer}
     response = client.chat.completions.create(
         model=settings.OPENAI_MODEL, temperature=0.1, max_tokens=420, response_format={"type": "json_object"},
         messages=[
             {"role": "system", "content": (
                 "Evaluate an independent German learner response at the stated CEFR. Do not require the model wording. Reject off-topic answers and fragments. "
+                "If assessment_criteria are supplied, evaluate each task requirement, including proposing an alternative appointment time. "
+                "Do not give a passing task_completion score if any required element is absent. "
                 "Score task_completion, grammar, vocabulary, coherence, and register from 0-100. Give one brief diagnosis and exactly one actionable improvement. "
                 f"Write feedback in { {'ru':'Russian','de':'German','en':'English'}.get(lang, 'English') }. Return JSON only: "
                 '{"dimension_scores":{"task_completion":0,"grammar":0,"vocabulary":0,"coherence":0,"register":0},"feedback":"brief diagnosis","improvement":"one next step","corrected_answer":"natural German correction","error_type":"brief category or null"}.'
@@ -145,13 +147,16 @@ def _ai_feedback(answer: str, exercise: dict, lesson_content: dict, lang: str) -
     score = _overall(scores)
     threshold = PASS_MARKS.get(cefr, 70)
     passed = score >= threshold and scores["task_completion"] >= 60 and scores["grammar"] >= 50
+    missing_parts = _formal_message_missing_parts(answer, exercise)
+    if missing_parts:
+        passed = False
     corrected = str(result.get("corrected_answer") or exercise.get("answer", ""))
     return {
         "correct": passed, "score": score, "dimension_scores": scores,
         "feedback": str(result.get("feedback") or _copy(lang)["grammar"]), "improvement": str(result.get("improvement") or _copy(lang)["expand"]),
         "corrected_answer": corrected, "source": "ai", "error_type": None if passed else (result.get("error_type") or "production_below_cefr"),
         "missing_words": [] if passed else word_diff(answer, corrected)["missing"], "extra_words": [] if passed else word_diff(answer, corrected)["extra"],
-        "cefr_standard": cefr, "pass_mark": threshold,
+        "cefr_standard": cefr, "pass_mark": threshold, "missing_task_parts": missing_parts,
     }
 
 
