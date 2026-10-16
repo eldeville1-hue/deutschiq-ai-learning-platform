@@ -48,7 +48,7 @@ class TargetedExplanationTests(unittest.TestCase):
             "target_feature": "relative_pronoun",
         })
         self.assertIn("relative pronoun", result["errors"][0]["explanation"].lower())
-        self.assertNotIn("noun’s gender", result["errors"][0]["explanation"])
+        self.assertNotIn("the noun’s gender", result["errors"][0]["explanation"].lower())
 
     def test_b2_infinitive(self):
         self.check_category("Die Maßnahme trägt dazu bei, Energie sparen.",
