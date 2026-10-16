@@ -29,6 +29,28 @@ class FormalWritingFeedbackTests(unittest.TestCase):
         self.assertEqual(result["missing_task_parts"], [])
         self.assertTrue(result["correct"])
 
+    def test_ai_grading_cannot_override_missing_formal_closing(self):
+        from unittest.mock import MagicMock, patch
+        from app.services.production_feedback import _ai_feedback
+        from app.core.config import settings
+        response = MagicMock()
+        response.choices[0].message.content = (
+            '{"dimension_scores":{"task_completion":100,"grammar":100,'
+            '"vocabulary":100,"coherence":100,"register":100},'
+            '"feedback":"Good","improvement":"None","corrected_answer":"OK"}'
+        )
+        client = MagicMock()
+        client.chat.completions.create.return_value = response
+        with patch("openai.OpenAI", return_value=client):
+            result = _ai_feedback(
+                "Sehr geehrte Frau Klein, ich möchte meinen Termin verschieben.",
+                self.exercise, {"cefr": "A2"}, "en",
+            )
+        self.assertFalse(result["correct"])
+        self.assertIn("formal_closing", result["missing_task_parts"])
+        sent = client.chat.completions.create.call_args.kwargs["messages"][1]["content"]
+        self.assertIn("alternative_time", sent)
+
     def test_unrelated_production_not_affected(self):
         exercise = dict(self.exercise, assessment_criteria=[])
         result = local_feedback("Ich habe morgen Zeit.", exercise, "", "en", "A2")
