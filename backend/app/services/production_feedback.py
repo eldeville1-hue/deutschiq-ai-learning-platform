@@ -67,6 +67,21 @@ def _local_scores(answer: str, exercise: dict, cefr: str) -> tuple[dict[str, int
     return scores, reason
 
 
+def _formal_message_missing_parts(answer: str, exercise: dict) -> list[str]:
+    """Check only observable components; do not claim to assess German grammar."""
+    if "formal_closing" not in (exercise.get("assessment_criteria") or []):
+        return []
+    value = answer.casefold()
+    missing = []
+    if not re.search(r"\b(sehr geehrte(?:r|n)?|guten tag)\b", value):
+        missing.append("formal_greeting")
+    if not re.search(r"\b(termin|verabredung)\b", value):
+        missing.append("rescheduling_request")
+    if not re.search(r"\b(mit freundlichen grüßen|freundliche grüße|beste grüße)\b", value):
+        missing.append("formal_closing")
+    return missing
+
+
 def local_feedback(answer: str, exercise: dict, rule: str, lang: str = "en", cefr: str = "A1") -> dict[str, Any]:
     cefr = str(cefr or "A1").upper()
     scores, blocking_error = _local_scores(answer, exercise, cefr)
@@ -77,13 +92,20 @@ def local_feedback(answer: str, exercise: dict, rule: str, lang: str = "en", cef
     score = _overall(scores)
     threshold = PASS_MARKS.get(cefr, 70)
     passed = blocking_error is None and score >= threshold and scores["task_completion"] >= 60 and scores["grammar"] >= 50
+    missing_parts = _formal_message_missing_parts(answer, exercise)
+    if missing_parts:
+        passed = False
     copy = _copy(lang)
     weakest = min(DIMENSIONS, key=lambda name: scores[name])
     improvement_key = {"task_completion": "structure", "grammar": "grammar", "vocabulary": "expand", "coherence": "expand", "register": "register"}[weakest]
     blocking_copy = {"response_too_short": "short", "off_topic": "off_topic"}.get(blocking_error)
     feedback = copy["passed"] if passed else copy[blocking_copy or improvement_key]
+    if missing_parts:
+        feedback = {"ru": "В официальном письме не хватает обязательных частей.", "de": "In der formellen Nachricht fehlen wichtige Teile.", "en": "The formal message is missing required parts."}.get(lang, "The formal message is missing required parts.")
     improvement = copy[improvement_key]
-    if not passed and weakest == "task_completion" and rule:
+    if missing_parts:
+        improvement = {"ru": "Добавь обращение, просьбу о переносе и вежливое завершение.", "de": "Ergänze Anrede, Terminanfrage und Grußformel.", "en": "Include a greeting, rescheduling request and formal closing."}.get(lang, "Include a greeting, rescheduling request and formal closing.")
+    if not passed and not missing_parts and weakest == "task_completion" and rule:
         improvement = f"{improvement} {rule}"
     corrected = answer.strip() if passed else model
     diff = word_diff(answer, model)
@@ -92,7 +114,7 @@ def local_feedback(answer: str, exercise: dict, rule: str, lang: str = "en", cef
         "feedback": feedback, "improvement": improvement, "corrected_answer": corrected,
         "source": "local", "error_type": None if passed else (blocking_error or exercise.get("misconception") or f"weak_{weakest}"),
         "missing_words": [] if passed else diff["missing"], "extra_words": [] if passed else diff["extra"],
-        "cefr_standard": cefr, "pass_mark": threshold,
+        "cefr_standard": cefr, "pass_mark": threshold, "missing_task_parts": missing_parts,
     }
 
 
