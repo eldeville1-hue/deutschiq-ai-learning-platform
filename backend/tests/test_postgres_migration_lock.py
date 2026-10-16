@@ -12,6 +12,7 @@ LOCK_ID = 8820261015
 
 @unittest.skipUnless(os.environ.get("TEST_POSTGRES_URL"), "TEST_POSTGRES_URL is required")
 class PostgresMigrationLockTests(unittest.TestCase):
+    """Check the exact advisory-lock key used by migrations/env.py."""
     def test_second_connection_cannot_acquire_lock_until_first_commits(self):
         engine = create_engine(os.environ["TEST_POSTGRES_URL"])
         try:
