@@ -180,8 +180,12 @@ def _classify_aligned_errors(answer: str, model: str, target_feature: str = "", 
             kind = "tense"
             explanation = "Check the tense required by the sentence."
         elif got in article_forms and want in article_forms:
+            # Article-shaped tokens may also be relative pronouns. Only label
+            # the latter when the exercise explicitly targets that feature.
             kind = target_feature if target_feature in {"case", "relative_pronoun"} else "article"
-            explanation = f"Use '{want}' instead of '{got}'. Check the noun’s gender, number and grammatical case."
+            explanation = (f"Use '{want}' instead of '{got}'. Check the relative pronoun’s gender, number and case."
+                           if kind == "relative_pronoun" else
+                           f"Use '{want}' instead of '{got}'. Check the noun’s gender, number and grammatical case.")
         elif target_feature == "subjunctive" and got != want:
             # A tagged correction is a targeted exercise, not a claim that
             # these verb forms are interchangeable in open-ended writing.
