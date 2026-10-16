@@ -240,8 +240,10 @@ def _classify_aligned_errors(answer: str, model: str, target_feature: str = "", 
             kind = "conjugation"
             explanation = f"Use '{want}' instead of '{got}'. Match the verb ending to the subject."
         else:
-            kind = "vocabulary"
-            explanation = "This word differs from the expected wording; verify its meaning."
+            # A changed token alone does not prove a vocabulary mistake.
+            # Use a neutral mismatch diagnosis instead of inventing a semantic error.
+            kind = "answer_mismatch"
+            explanation = f"Use '{want}' instead of '{got}' for this exercise. Check the intended meaning and context."
         errors.append(LinguisticError(type=kind, span=got, correction=want, explanation=explanation))
     return errors
 
