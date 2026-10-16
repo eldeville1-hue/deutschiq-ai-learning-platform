@@ -62,6 +62,22 @@ class TargetedExplanationTests(unittest.TestCase):
         self.assertFalse(result["correct"])
         self.assertEqual(result["errors"][0]["type"], "word_order")
 
+    def test_open_translation_permutation_has_no_word_order_diagnosis(self):
+        result = evaluate_structured_answer("Heute lernen wir Deutsch.", {
+            "type": "translation", "answer": "Wir lernen heute Deutsch.",
+            "target_feature": "word_order",
+        })
+        self.assertEqual(result["evaluation_status"], "uncertain")
+        self.assertFalse(result["correct"])
+        self.assertNotIn("word_order", result["candidate_error_types"])
+
+    def test_targeted_choice_permutation_reports_word_order(self):
+        result = evaluate_structured_answer("Ich glaube, dass er kommt heute.", {
+            "type": "choice", "answer": "Ich glaube, dass er heute kommt.",
+            "target_feature": "word_order",
+        })
+        self.assertEqual(result["errors"][0]["type"], "word_order")
+
     def test_free_writing_does_not_claim_verified_grammar_error(self):
         result = evaluate_structured_answer("Ich warte auf dem Bus.", {
             "type": "translation", "answer": "Ich warte auf den Bus.",
