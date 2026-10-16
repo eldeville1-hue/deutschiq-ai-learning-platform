@@ -421,3 +421,38 @@ test('mobile pending AI writing review preserves answer and allows retry without
   await expect(writing).toHaveValue(letter);
   await expect(page.getByText('Almost', { exact: true })).toHaveCount(0);
 });
+
+
+test('mobile writing review succeeds after AI service recovers', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
+  const letter = 'Sehr geehrte Frau Klein, ich möchte den Termin verschieben. Am Dienstag um zehn Uhr? Mit freundlichen Grüßen, Mia Weber.';
+  const exercise = { type: 'production', question: 'Write a formal appointment change request.', model_answer: 'Sehr geehrte Frau Klein, könnten wir den Termin auf Mittwoch verschieben? Mit freundlichen Grüßen, Alex Weber.', assessment_criteria: ['formal_greeting', 'rescheduling_request', 'alternative_time', 'formal_closing'] };
+  let checks = 0;
+  await page.route('**/api/lesson/77?*', route => route.fulfill({ json: {
+    id: 77, level: 'A2', topic: 'formal_message_a2',
+    content: { title: 'Formal messages', examples: ['Sehr geehrte Frau Klein,'], exercises: [exercise] },
+  }}));
+  await page.route('**/api/lesson/start', route => route.fulfill({ json: {
+    session_id: 'writing-session', resumed: false, next_exercise_index: 0,
+  }}));
+  await page.route('**/api/lesson/check-answer', route => {
+    checks += 1;
+    return route.fulfill({ json: checks === 1
+      ? { correct: false, evaluation_status: 'needs_review', retry_instruction: 'Writing review is temporarily unavailable.' }
+      : { correct: true, evaluation_status: 'verified', explanation: 'Good formal request.', production: true, production_score: 85, pass_mark: 70, cefr_standard: 'A2' },
+    });
+  });
+  await page.route('**/api/events', route => route.fulfill({ status: 204, body: '' }));
+  await page.goto('/lesson/77');
+  await page.getByRole('button', { name: 'Understand with an example' }).click();
+  await page.getByRole('button', { name: 'Start practice' }).click();
+  const writing = page.getByRole('textbox');
+  await writing.fill(letter);
+  await page.getByRole('button', { name: 'Check', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Try checking again' })).toBeVisible();
+  await page.getByRole('button', { name: 'Try checking again' }).click();
+  await expect.poll(() => checks).toBe(2);
+  await expect(page.getByText('Correct', { exact: true })).toBeVisible();
+  await expect(page.getByText('Try checking again')).toHaveCount(0);
+  await expect(page.getByText('Writing review is temporarily unavailable.')).toHaveCount(0);
+});
