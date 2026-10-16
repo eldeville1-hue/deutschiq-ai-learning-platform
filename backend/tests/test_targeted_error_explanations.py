@@ -38,6 +38,20 @@ class TargetedExplanationTests(unittest.TestCase):
     def test_a2_auxiliary(self):
         self.check_category("Ich habe gestern nach Hause gegangen.", "Ich bin gestern nach Hause gegangen.", "auxiliary")
 
+    def test_same_auxiliary_family_is_conjugation(self):
+        result = evaluate_structured_answer("Du hat Zeit.", {
+            "type": "choice", "answer": "Du hast Zeit.",
+        })
+        self.assertEqual(result["errors"][0]["type"], "conjugation")
+        self.assertIn("subject", result["errors"][0]["explanation"].lower())
+
+    def test_different_auxiliary_family_is_auxiliary_selection(self):
+        result = evaluate_structured_answer("Ich habe gestern gegangen.", {
+            "type": "choice", "answer": "Ich bin gestern gegangen.",
+        })
+        self.assertEqual(result["errors"][0]["type"], "auxiliary")
+        self.assertIn("haben or sein", result["errors"][0]["explanation"])
+
     def test_b1_relative_pronoun(self):
         self.check_category("Das Fahrrad, den ich gekauft habe, ist neu.",
                             "Das Fahrrad, das ich gekauft habe, ist neu.", "relative_pronoun")
