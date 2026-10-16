@@ -132,9 +132,19 @@ def _classify_aligned_errors(answer: str, model: str, target_feature: str = "", 
             haben_forms = {"habe", "hast", "hat", "haben", "habt"}
             same_verb = (got in sein_forms and want in sein_forms) or (got in haben_forms and want in haben_forms)
             kind = "conjugation" if same_verb else "auxiliary"
+            # Only mention Perfekt when the sentence contains a likely past participle.
+            # Otherwise the auxiliary-family contrast may concern a present-tense verb.
+            has_participle = any(
+                token not in {got, want} and (
+                    (token.startswith("ge") and (token.endswith("t") or token.endswith("en")))
+                    or token.endswith("iert")
+                ) for token in expected
+            )
             explanation = (f"Use '{want}' instead of '{got}'. Match the verb form to the subject."
                            if kind == "conjugation" else
-                           f"Use '{want}' instead of '{got}'. In Perfekt, check whether the verb takes haben or sein.")
+                           f"Use '{want}' instead of '{got}'. In Perfekt, check whether the verb takes haben or sein."
+                           if has_participle else
+                           f"Use '{want}' instead of '{got}'. Check which verb fits the meaning and construction.")
         elif target_feature == "case" and got in case_pronouns and want in case_pronouns:
             kind = "case"
             explanation = "Check the pronoun case required by the verb or construction."
