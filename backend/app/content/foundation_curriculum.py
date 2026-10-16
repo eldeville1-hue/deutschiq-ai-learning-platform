@@ -28,7 +28,7 @@ A1_CURRICULUM = [
 
 A2_CURRICULUM = [
     (1,1,"dative_a2","grammar","Dativ","Dativ","Dative","Empfänger im Dativ","Ich gebe meiner Freundin das Buch.","Ich gebe meine Freundin das Buch."),
-    (2,1,"dative_accusative","grammar","Dativ и Akkusativ","Dativ und Akkusativ","Dative and accusative","Person vor Sache","Der Lehrer erklärt den Schülern die Aufgabe.","Der Lehrer erklärt die Schüler die Aufgabe."),
+    (2,1,"dative_accusative","grammar","Dativ и Akkusativ","Dativ und Akkusativ","Dative and accusative","Empfänger im Dativ, Sache im Akkusativ","Der Lehrer erklärt den Schülern die Aufgabe.","Der Lehrer erklärt die Schüler die Aufgabe."),
     (3,1,"two_way_prepositions","grammar","Wechselpräpositionen","Wechselpräpositionen","Two-way prepositions","wo = Dativ, wohin = Akkusativ","Ich stelle die Vase auf den Tisch.","Ich stelle die Vase auf der Tisch."),
     (4,1,"dative_prepositions","grammar","Предлоги с Dativ","Dativpräpositionen","Dative prepositions","mit / nach / bei / seit","Seit einem Jahr wohne ich bei meiner Tante.","Seit einen Jahr wohne ich bei meine Tante."),
     (5,1,"accusative_prepositions","grammar","Предлоги с Akkusativ","Akkusativpräpositionen","Accusative prepositions","für / ohne / durch / gegen","Das Geschenk ist für meinen Bruder.","Das Geschenk ist für meinem Bruder."),
