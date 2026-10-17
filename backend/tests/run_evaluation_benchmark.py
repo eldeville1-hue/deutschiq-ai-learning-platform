@@ -142,9 +142,8 @@ def run(rows, evaluator=evaluate_structured_answer):
     report["failed_gates"] = failures
     report["validation_type"] = "synthetic_provisional_not_independently_validated"
     report["independent_accuracy_demonstrated"] = False
-    # Passing metrics is not a substitute for independent human sign-off,
-    # frontend/mobile E2E, AI-assisted latency or a production smoke test.
-    report["release_gate"] = "blocked" if failures else "requires_manual_signoff"
+    # Reviewed metrics can pass this benchmark, but cannot attest to a production release.
+    report["release_gate"] = "blocked" if failures else "benchmark_passed_release_unverified"
     return report
 
 def validation_report(rows, evaluator=evaluate_structured_answer):
