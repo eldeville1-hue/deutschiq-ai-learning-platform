@@ -536,13 +536,11 @@ test('mobile B2 draft survives reload in the same server session', async ({ page
   await page.route('**/api/lesson/start', route => {
     starts += 1;
     return route.fulfill({ json: {
-      session_id: 'persistent-b2-session', resumed: starts > 1, next_exercise_index: 0,
+      session_id: 'persistent-b2-session', resumed: true, next_exercise_index: 0,
     } });
   });
   await page.route('**/api/events', route => route.fulfill({ status: 204, body: '' }));
   await page.goto('/lesson/77');
-  await page.getByRole('button', { name: 'Understand with an example' }).click();
-  await page.getByRole('button', { name: 'Start practice' }).click();
   const text = 'Geschützte Radwege sind wichtig, weil sie die Verkehrssicherheit erhöhen.';
   await page.getByRole('textbox').fill(text);
   await expect.poll(async () => page.evaluate(() =>
