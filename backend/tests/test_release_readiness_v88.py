@@ -12,7 +12,21 @@ class ReleaseReadinessTests(unittest.TestCase):
         self.assertTrue(report["checks"]["deterministic_performance"])
         self.assertFalse(report["checks"]["independent_linguistic_review"])
         self.assertFalse(report["checks"]["xp_safety_ci_signoff"])
-        self.assertIn("external_human_signoff", report["failed_gates"])
+        self.assertIn("independent_review_evidence", report["failed_gates"])
+
+    def test_independent_review_only_passes_with_complete_evidence(self):
+        sha = "a" * 40
+        benchmark = {"deterministic_latency_gate": True, "failure_rate": 0.0}
+        linguistic = {"release_checks": {"independent_holdout": True}, "reviewed": 400,
+                      "pending": 0, "failed_gates": [], "ingestion_errors": []}
+        report = build_report(holdout_path="external_holdout.jsonl", benchmark=benchmark,
+                              linguistic=linguistic)
+        self.assertTrue(report["checks"]["independent_review_evidence"])
+        self.assertFalse(report["checks"]["production_smoke"])
+        self.assertEqual(report["release_gate"], "blocked")
+        report = build_report(holdout_path="external_holdout.jsonl", benchmark=benchmark,
+                              linguistic=dict(linguistic, pending=1))
+        self.assertFalse(report["checks"]["independent_review_evidence"])
 
     def test_ci_evidence_must_match_sha_and_complete_successfully(self):
         expected = "a" * 40
