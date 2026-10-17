@@ -30,8 +30,8 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
     }
     // Only flag a reversed pairing when the year and its value are adjacent.
     // Longer prose can mention both years and values in different orders.
-    const reversedPair = /\\b2020\\b\\s*(?:[:–—-]|(?:lag|waren|betrug|bei))?\\s*(?:bei\\s*)?48\\s*%?/i.test(answerText)
-      || /\\b2025\\b\\s*(?:[:–—-]|(?:lag|waren|betrug|bei))?\\s*(?:bei\\s*)?36\\s*%?/i.test(answerText);
+    const reversedPair = /\b2020\b\s*(?:[:–—-]|(?:lag|waren|betrug|bei))?\s*(?:bei\s*)?48\s*%?/i.test(answerText)
+      || /\b2025\b\s*(?:[:–—-]|(?:lag|waren|betrug|bei))?\s*(?:bei\s*)?36\s*%?/i.test(answerText);
     if (reversedPair)
       missingElements.push(tr(lang,
         'Проверь соответствие данных: в 2020 году было 36 %, в 2025 году — 48 %.',
