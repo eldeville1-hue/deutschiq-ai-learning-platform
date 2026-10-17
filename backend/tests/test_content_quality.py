@@ -198,6 +198,16 @@ class ContentQualityTests(unittest.TestCase):
         self.assertEqual(content["audio_text"], "Ich lerne.")
         self.assertIn("objective", content)
 
+    def test_validator_rejects_whitespace_only_explanation(self):
+        content = {
+            "objective": "Practice a sentence", "rule": "Use the verb in second position",
+            "examples": ["Ich lerne Deutsch."], "audio_text": "Ich lerne Deutsch.",
+            "common_mistakes": ["Keep the finite verb second."],
+            "exercises": [{"type": "fill", "question": "Complete the sentence",
+                           "answer": "lerne", "explanation": "   "}],
+        }
+        self.assertIn("exercise:0:missing_explanation", validate_lesson_content(content))
+
     def test_validator_rejects_uncheckable_exercise(self):
         content = normalize_lesson_content({"rule":"x", "examples":["x"], "exercises":[{"type":"fill", "question":"q"}]}, "x", "A1")
         errors = validate_lesson_content(content)
