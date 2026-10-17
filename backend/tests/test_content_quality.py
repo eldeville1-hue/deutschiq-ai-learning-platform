@@ -74,6 +74,24 @@ class ContentQualityTests(unittest.TestCase):
             self.assertTrue(any(partner in turn["partner"] for turn in de_turns))
             self.assertEqual(2, len(de_turns))
 
+    def test_b2_specialist_dialogue_models_demonstrate_each_stage(self):
+        cases = {
+            "formal_register": ("Sehr geehrte", "schriftliche Bestätigung", "Mit freundlichen Grüßen"),
+            "presentation_structure": ("Heute stelle ich", "komme ich nun", "Zusammenfassend"),
+            "discussion_language": ("Ich verstehe", "Sie haben recht", "Allerdings"),
+            "data_description": ("Anstieg", "36 auf 48", "Ursachen"),
+        }
+        for row in B2_CURRICULUM:
+            if row[2] not in cases:
+                continue
+            dialogue = next(item for item in build_b2_content(row)["exercises"] if item["type"] == "dialogue")
+            expected = cases[row[2]]
+            for language in ("ru", "de", "en"):
+                turns = dialogue["i18n"][language]["conversation_turns"]
+                self.assertEqual(3, len(turns))
+                for turn, fragment in zip(turns, expected):
+                    self.assertIn(fragment, turn["model"], (row[2], language))
+
     def test_b2_speaking_dialogues_use_authentic_stage_goals(self):
         cases = {
             "presentation_structure": ("Gliederung", "Transition", "Zusammenfassung"),
