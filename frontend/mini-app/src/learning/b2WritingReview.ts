@@ -7,10 +7,20 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
   const minimumWords = 12;
   const words = answerText.match(/[\p{L}\p{N}]+/gu) || [];
   if (words.length < minimumWords && ['argument_structure-dialogue', 'counterargument-dialogue', 'data_description-dialogue'].includes(exerciseId)) {
+    if (exerciseId === 'argument_structure-dialogue')
+      return [tr(lang,
+        'Разверни ответ: сформулируй позицию, объясни причину и добавь конкретный пример.',
+        'Baue deinen Text aus: Formuliere deine Position, begründe sie und ergänze ein konkretes Beispiel.',
+        'Develop your answer: state your position, explain why, and add a concrete example.')];
+    if (exerciseId === 'counterargument-dialogue')
+      return [tr(lang,
+        'Разверни ответ: признай опасение о расходах и объясни, почему твой аргумент его перевешивает.',
+        'Baue deinen Text aus: Greife die Sorge um die Kosten auf und begründe deine Erwiderung.',
+        'Develop your answer: acknowledge the cost concern and explain your response.')];
     return [tr(lang,
-      'Ответ пока слишком краткий для содержательной самопроверки. Раскрой мысль несколькими предложениями.',
-      'Dein Text ist für eine sinnvolle Selbstkontrolle noch sehr kurz. Führe deine Gedanken in mehreren Sätzen aus.',
-      'Your response is too brief for a useful self-check. Develop your ideas in several sentences.')];
+      'Разверни описание: сравни 2020 год (36 %) и 2025 год (48 %) и назови разницу в процентных пунктах.',
+      'Baue deine Beschreibung aus: Vergleiche 2020 (36 %) mit 2025 (48 %) und nenne die Differenz in Prozentpunkten.',
+      'Develop your description: compare 2020 (36%) with 2025 (48%) and state the difference in percentage points.')];
   }
   const missingElements: string[] = [];
   if (exerciseId === 'argument_structure-dialogue') {
