@@ -75,3 +75,16 @@ def test_changed_personal_pronoun_is_not_treated_as_equivalent():
     assert result["evaluation_status"] == "uncertain"
     assert result["correct"] is False
     assert result["task_satisfied"] is None
+
+
+def test_uncertain_open_answer_explains_that_it_is_not_confirmed_wrong():
+    result = grade("Morgen fahre ich nach Berlin.", "Ich fahre morgen nach Berlin.", kind="translate")
+    assert result["evaluation_status"] == "uncertain"
+    assert "further review" in result["learner_feedback"]
+    assert "confirmed errors" in result["learner_feedback"]
+
+
+def test_missing_reference_gives_actionable_feedback_without_claiming_error():
+    result = evaluate_structured_answer("Ich lerne Deutsch.", {"type": "translate"})
+    assert result["evaluation_status"] == "needs_review"
+    assert "no valid reference" in result["learner_feedback"]
