@@ -74,6 +74,19 @@ class ContentQualityTests(unittest.TestCase):
             self.assertTrue(any(partner in turn["partner"] for turn in de_turns))
             self.assertEqual(2, len(de_turns))
 
+    def test_b2_specialist_dialogues_define_communicative_assessment_criteria(self):
+        expected = {
+            "formal_register": {"formal_greeting", "reason_for_writing", "written_confirmation_request", "formal_closing"},
+            "presentation_structure": {"topic_introduction", "presentation_outline", "transition", "summary"},
+            "discussion_language": {"respectful_response", "acknowledge_valid_point", "reasoned_disagreement"},
+            "data_description": {"overall_trend", "numeric_value_and_period", "cautious_interpretation"},
+        }
+        for row in B2_CURRICULUM:
+            if row[2] not in expected:
+                continue
+            dialogue = next(item for item in build_b2_content(row)["exercises"] if item["type"] == "dialogue")
+            self.assertEqual(set(dialogue["assessment_criteria"]), expected[row[2]])
+
     def test_b2_specialist_dialogue_models_demonstrate_each_stage(self):
         cases = {
             "formal_register": ("Sehr geehrte", "schriftliche Bestätigung", "Mit freundlichen Grüßen"),
