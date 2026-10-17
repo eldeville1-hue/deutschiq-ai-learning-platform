@@ -10,6 +10,30 @@ from app.services.content_i18n import localize_lesson_content
 
 
 class ContentQualityTests(unittest.TestCase):
+    def test_all_cefr_curricula_have_unique_day_and_skill_pairs(self):
+        for level, rows in (
+            ("A1", A1_CURRICULUM), ("A2", A2_CURRICULUM),
+            ("B1", B1_CURRICULUM), ("B2", B2_CURRICULUM),
+        ):
+            pairs = [(row[0], row[2]) for row in rows]
+            self.assertEqual(len(pairs), len(set(pairs)), level)
+            self.assertTrue(all(isinstance(day, int) and day > 0 and skill
+                                for day, skill in pairs), level)
+
+    def test_all_cefr_exercises_have_nonempty_learning_feedback(self):
+        for level, rows, builder in (
+            ("A1", A1_CURRICULUM, lambda row: build_foundation_content(row, "A1")),
+            ("A2", A2_CURRICULUM, lambda row: build_foundation_content(row, "A2")),
+            ("B1", B1_CURRICULUM, build_b1_content),
+            ("B2", B2_CURRICULUM, build_b2_content),
+        ):
+            for row in rows:
+                for index, exercise in enumerate(builder(row)["exercises"]):
+                    self.assertTrue(str(exercise.get("question", "")).strip(),
+                                    (level, row[2], index, "question"))
+                    self.assertTrue(str(exercise.get("explanation", "")).strip(),
+                                    (level, row[2], index, "explanation"))
+
     def test_curriculum_builders_assign_stable_skill_ids(self):
         for rows, builder in (
             (A1_CURRICULUM, lambda row: build_foundation_content(row, "A1")),
