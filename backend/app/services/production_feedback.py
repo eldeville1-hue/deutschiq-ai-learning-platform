@@ -165,6 +165,32 @@ def _ai_feedback(answer: str, exercise: dict, lesson_content: dict, lang: str) -
     }
 
 
+def _requires_ai_task_review(exercise: dict) -> bool:
+    """Complex communicative rubrics cannot be verified by lexical heuristics."""
+    criteria = set(exercise.get("assessment_criteria") or [])
+    return bool(criteria & {
+        "alternative_time",
+        "written_confirmation_request",
+        "topic_introduction",
+        "presentation_outline",
+        "respectful_response",
+        "acknowledge_valid_point",
+        "overall_trend",
+        "numeric_value_and_period",
+    })
+
+
+def _mark_review_pending(fallback: dict, lang: str) -> dict:
+    fallback["correct"] = False
+    fallback["assessment_pending"] = True
+    fallback["feedback"] = {
+        "ru": "Для проверки выполнения всех требований задания нужна AI-оценка. Попробуй ещё раз.",
+        "de": "Die vollständige Aufgabenbewertung benötigt eine KI-Prüfung. Bitte versuche es erneut.",
+        "en": "Checking all task requirements needs AI review. Please try again.",
+    }.get(lang, "Checking all task requirements needs AI review. Please try again.")
+    return fallback
+
+
 async def evaluate_production(answer: str, exercise: dict, lesson_content: dict, lang: str = "en") -> dict[str, Any]:
     from app.core.config import settings
 
@@ -173,21 +199,8 @@ async def evaluate_production(answer: str, exercise: dict, lesson_content: dict,
     if model and normalize_text(answer) == normalize_text(str(model)):
         return fallback
     if not settings.OPENAI_API_KEY:
-        # A rubric requiring an alternative appointment cannot be reliably
-        # verified by the generic local word-count and pattern heuristics.
-        if "alternative_time" in (exercise.get("assessment_criteria") or []):
-            fallback["correct"] = False
-            fallback["assessment_pending"] = True
-            fallback["feedback"] = {
-                "ru": "Для проверки предложенного времени нужна AI-оценка.",
-                "de": "Der alternative Terminvorschlag benötigt eine KI-Prüfung.",
-                "en": "The alternative appointment suggestion needs AI review.",
-            }.get(lang, "The alternative appointment suggestion needs AI review.")
-        return fallback
+        return _mark_review_pending(fallback, lang) if _requires_ai_task_review(exercise) else fallback
     try:
         return await asyncio.wait_for(asyncio.to_thread(_ai_feedback, answer, exercise, lesson_content, lang), timeout=10)
     except Exception:
-        if "alternative_time" in (exercise.get("assessment_criteria") or []):
-            fallback["correct"] = False
-            fallback["assessment_pending"] = True
-        return fallback
+        return _mark_review_pending(fallback, lang) if _requires_ai_task_review(exercise) else fallback
