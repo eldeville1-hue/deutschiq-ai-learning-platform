@@ -47,6 +47,14 @@ class ContentQualityTests(unittest.TestCase):
                 self.assertIn(scenario_text, prompt)
                 self.assertIn("\n\n", prompt)
 
+    def test_b2_data_description_provides_the_numbers_to_describe(self):
+        row = next(row for row in B2_CURRICULUM if row[2] == "data_description")
+        task = next(item for item in build_b2_content(row)["exercises"] if item["type"] == "dialogue")
+        for lang in ("ru", "de", "en"):
+            prompt = task["i18n"][lang]["question"]
+            for number in ("2020", "2025", "36", "48"):
+                self.assertIn(number, prompt)
+
     def test_foundation_practice_markers_match_authored_models(self):
         from app.content.foundation_curriculum import PRACTICE_VARIANTS
         for skill in ("present_regular", "perfect_participles"):
