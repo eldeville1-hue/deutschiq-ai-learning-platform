@@ -28,8 +28,13 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
       if (!new RegExp(`(^|\\D)${number}(?!\\d)`).test(answerText))
         missingElements.push(tr(lang, `Проверь, указано ли значение ${number}.`, `Prüfe, ob der Wert ${number} genannt wird.`, `Check whether you included ${number}.`));
     }
-    if (!/\b(12|zwölf)\b/i.test(answerText))
-      missingElements.push(tr(lang, 'Проверь разницу: 12 процентных пунктов.', 'Prüfe die Differenz: 12 Prozentpunkte.', 'Check the difference: 12 percentage points.'));
+    const mentionsDifference = /\\b(12|zwölf)\\b/i.test(answerText);
+    const mentionsPoints = /prozentpunkt(?:e|en)?|percentage.points?/i.test(answerText);
+    if (!mentionsDifference || !mentionsPoints)
+      missingElements.push(tr(lang,
+        'Проверь, указана ли разница именно в процентных пунктах (12), а не в процентах.',
+        'Prüfe, ob du den Unterschied als 12 Prozentpunkte und nicht als 12 Prozent angegeben hast.',
+        'Check that the difference is expressed as 12 percentage points, not 12 percent.'));
   }
 
   return missingElements;
