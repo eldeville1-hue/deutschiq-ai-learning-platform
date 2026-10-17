@@ -643,7 +643,7 @@ const LessonScreen: React.FC = () => {
               tr(lang, 'Я привёл(а) аргументы или нужные данные', 'Ich habe Gründe oder nötige Daten genannt', 'I included reasons or required data'),
               tr(lang, 'Я проверил(а) грамматику и стиль', 'Ich habe Grammatik und Register geprüft', 'I checked grammar and register'),
             ]).map((label, index) => <label key={index} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
-              <input type="checkbox" checked={selfCheckMarks[index]} onChange={event => setSelfCheckMarks(previous => previous.map((value, i) => i === index ? event.target.checked : value))} />
+              <input type="checkbox" style={{ appearance: "auto", WebkitAppearance: "checkbox", width: 18, height: 18, opacity: 1, position: "static", pointerEvents: "auto", flexShrink: 0 }} checked={selfCheckMarks[index]} onChange={event => setSelfCheckMarks(previous => previous.map((value, i) => i === index ? event.target.checked : value))} />
               <span>{label}</span>
             </label>)}
             <button type="button" className="feedback-skip" onClick={() => { setWritingSelfCheck(false); setSelfCheckMarks([false, false, false]); }}>
