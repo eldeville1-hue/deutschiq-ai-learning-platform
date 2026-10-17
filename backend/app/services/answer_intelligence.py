@@ -322,4 +322,10 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
         "review_reason": ("open_answer_not_proven_equivalent_or_incorrect" if status == "uncertain" else
                           "missing_reference_answer" if status == "needs_review" else None),
         "candidate_error_types": ([item.type for item in errors] if status == "uncertain" else []),
+        "learner_feedback": (
+            "Your answer needs further review. The model is one possible response; do not treat differences as confirmed errors."
+            if status == "uncertain" else
+            "This exercise has no valid reference answer yet. Your response cannot be graded reliably."
+            if status == "needs_review" else None
+        ),
     }
