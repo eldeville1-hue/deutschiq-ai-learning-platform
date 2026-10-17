@@ -289,15 +289,15 @@ const LessonScreen: React.FC = () => {
         const answerText = answer.toLocaleLowerCase('de-DE');
         const missingElements: string[] = [];
         if (isB2Writing && activeExercise?.id === 'argument_structure-dialogue') {
-          if (!/\b(weil|denn|da|deshalb|daher|denn|zumal)\b/i.test(answerText))
-            missingElements.push(tr(lang, 'Добавь объяснение причины (например, weil или denn).', 'Ergänze eine Begründung (z. B. weil oder denn).', 'Consider adding a reason (e.g. weil or denn).'));
-          if (!/\b(zum beispiel|beispielsweise|etwa)\b/i.test(answerText))
-            missingElements.push(tr(lang, 'Подумай о конкретном примере.', 'Überlege dir ein konkretes Beispiel.', 'Consider adding a concrete example.'));
+          if (!/\b(weil|denn|da|deshalb|daher|zumal|aufgrund|wegen|aus diesem grund|ein grund|führt dazu|trägt dazu bei|ermöglicht|bewirkt)\b/i.test(answerText))
+            missingElements.push(tr(lang, 'Проверь, понятна ли причина твоей позиции. Её можно выразить разными способами.', 'Prüfe, ob deine Begründung deutlich wird. Du kannst sie unterschiedlich formulieren.', 'Check whether your reasoning is clear; there are several ways to express it.'));
+          if (!/\b(zum beispiel|beispielsweise|etwa|konkret|beispiel|belegen|zeigt sich|so könnte|etwa wenn)\b/i.test(answerText))
+            missingElements.push(tr(lang, 'Проверь, есть ли конкретный пример или доказательство.', 'Prüfe, ob ein konkretes Beispiel oder ein Beleg enthalten ist.', 'Check whether you included a concrete example or supporting evidence.'));
         } else if (isB2Writing && activeExercise?.id === 'counterargument-dialogue') {
-          if (!/\b(zwar|obwohl|auch wenn|einerseits|natürlich|verständlich)\b/i.test(answerText))
+          if (!/\b(zwar|obwohl|auch wenn|einerseits|natürlich|verständlich|nachvollziehbar|es stimmt|ich verstehe|der einwand|die sorge|zugegeben)\b/i.test(answerText))
             missingElements.push(tr(lang, 'Проверь, признал(а) ли ты возражение.', 'Prüfe, ob du den Einwand aufgegriffen hast.', 'Check whether you acknowledged the objection.'));
-          if (!/\b(aber|jedoch|dennoch|andererseits|trotzdem|allerdings)\b/i.test(answerText))
-            missingElements.push(tr(lang, 'Добавь аргументированный ответ на возражение.', 'Ergänze eine begründete Erwiderung.', 'Add a reasoned response to the objection.'));
+          if (!/\b(aber|jedoch|dennoch|andererseits|trotzdem|allerdings|hingegen|gleichwohl|dagegen|demgegenüber|auf lange sicht|langfristig)\b/i.test(answerText))
+            missingElements.push(tr(lang, 'Проверь, есть ли обоснованный ответ на возражение.', 'Prüfe, ob du dem Einwand eine begründete Antwort gegenüberstellst.', 'Check whether you gave a reasoned response to the objection.'));
         } else if (isB2Writing && activeExercise?.id === 'data_description-dialogue') {
           for (const number of ['2020', '2025', '36', '48']) {
             if (!answerText.includes(number))
