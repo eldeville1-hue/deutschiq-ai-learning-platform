@@ -157,6 +157,8 @@ A2_REPAIR_ALTERNATIVES = {
     "two_way_prepositions": ["Auf den Tisch stelle ich die Vase."],
     "perfect_participles": ["Sie hat die E-Mail geschrieben und dann abgeschickt."],
     "past_sequence": ["Zuerst bin ich aufgestanden. Danach habe ich gefrühstückt."],
+    "perfect_haben": ["Gestern habe ich einen Film gesehen."],
+    "perfect_sein": ["Am Wochenende sind wir nach Lübeck gefahren."],
     "wenn_clause": ["Ich besuche meine Freunde, wenn ich Zeit habe."],
     "reflexive_verbs": ["Für moderne Kunst interessiere ich mich."],
     "opinions_a2": ["Weil wir viel sprechen, finde ich den Kurs gut."],
