@@ -47,6 +47,18 @@ class ContentQualityTests(unittest.TestCase):
                 self.assertIn(scenario_text, prompt)
                 self.assertIn("\n\n", prompt)
 
+    def test_b2_argument_tasks_include_concrete_debate_context(self):
+        expected = {
+            "argument_structure": (("парковочных", "Stadtrat", "parking"),),
+            "counterargument": (("школьное", "Schulgebäude", "school building"),),
+        }
+        for topic, marker_groups in expected.items():
+            row = next(row for row in B2_CURRICULUM if row[2] == topic)
+            task = next(item for item in build_b2_content(row)["exercises"] if item["type"] == "dialogue")
+            for markers in marker_groups:
+                for lang, marker in zip(("ru", "de", "en"), markers):
+                    self.assertIn(marker, task["i18n"][lang]["question"])
+
     def test_b2_data_description_provides_the_numbers_to_describe(self):
         row = next(row for row in B2_CURRICULUM if row[2] == "data_description")
         task = next(item for item in build_b2_content(row)["exercises"] if item["type"] == "dialogue")
