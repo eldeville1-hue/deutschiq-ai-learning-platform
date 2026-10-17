@@ -33,6 +33,14 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
         'Проверь соответствие данных: в 2020 году было 36 %, в 2025 году — 48 %.',
         'Prüfe die Zuordnung: 2020 waren es 36 %, 2025 waren es 48 %.',
         'Check the year-to-value pairing: 36% in 2020 and 48% in 2025.'));
+    // Detect only explicit claims of decline; do not infer meaning from
+    // unrelated words such as "Rückgang" in a comparison or quoted opinion.
+    const claimsDecline = /\b(?:der anteil|die quote|der wert|die zahl)\s+(?:ist|war|hat sich)\s+(?:gesunken|gefallen|verringert|reduziert)\b|\b(?:der anteil|die quote|der wert|die zahl)\s+(?:sank|fiel)\b/i.test(answerText);
+    if (claimsDecline)
+      missingElements.push(tr(lang,
+        'Проверь направление изменения: показатель вырос с 36 % до 48 %.',
+        'Prüfe die Richtung der Veränderung: Der Wert stieg von 36 % auf 48 %.',
+        'Check the direction of change: the value increased from 36% to 48%.'));
     const mentionsDifference = /\b(12|zwölf)\b/i.test(answerText);
     const mentionsPoints = /prozentpunkt(?:e|en)?|percentage.points?/i.test(answerText);
     if (!mentionsDifference || !mentionsPoints)
