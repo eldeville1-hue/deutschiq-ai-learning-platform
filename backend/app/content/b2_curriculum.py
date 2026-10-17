@@ -159,6 +159,18 @@ def build_b2_content(row: tuple) -> dict:
             "Welche Bestätigung benötigen Sie?",
             "Wie schließen Sie Ihre Anfrage höflich ab?",
         ]
+    elif topic == "presentation_structure":
+        partners = [
+            "Wie eröffnen Sie Ihre Präsentation und kündigen die Gliederung an?",
+            "Wie leiten Sie zum nächsten Punkt über?",
+            "Wie schließen Sie die Präsentation mit einer Zusammenfassung ab?",
+        ]
+    elif topic == "discussion_language":
+        partners = [
+            "Ihr Kollege behauptet, die Lösung funktioniere immer. Wie reagieren Sie?",
+            "Welchen Teil des Arguments können Sie anerkennen?",
+            "Wie formulieren Sie Ihren Widerspruch sachlich?",
+        ]
     elif topic == "data_description":
         partners = [
             "Welche Entwicklung zeigen die Zahlen?",
@@ -177,6 +189,18 @@ def build_b2_content(row: tuple) -> dict:
             "ru": ["Назови причину обращения.", "Вежливо попроси письменное подтверждение.", "Заверши сообщение в подходящем официальном регистре."],
             "de": ["Nenne den Anlass deiner Nachricht.", "Bitte höflich um eine schriftliche Bestätigung.", "Schließe die Nachricht in angemessen formellem Register ab."],
             "en": ["State why you are writing.", "Politely request written confirmation.", "Close the message in an appropriate formal register."],
+        }
+    elif topic == "presentation_structure":
+        turn_goals = {
+            "ru": ["Объяви тему и структуру презентации.", "Используй переход к следующему пункту.", "Заверши выступление кратким выводом."],
+            "de": ["Kündige Thema und Gliederung der Präsentation an.", "Leite zum nächsten Punkt über.", "Schließe mit einer kurzen Zusammenfassung ab."],
+            "en": ["Introduce the topic and outline of the presentation.", "Transition to the next point.", "Finish with a brief summary."],
+        }
+    elif topic == "discussion_language":
+        turn_goals = {
+            "ru": ["Вежливо отреагируй на обобщение.", "Признай разумную часть аргумента.", "Сформулируй несогласие без личной критики."],
+            "de": ["Reagiere höflich auf die Verallgemeinerung.", "Erkenne einen berechtigten Punkt an.", "Widersprich sachlich ohne persönliche Kritik."],
+            "en": ["Respond politely to the generalisation.", "Acknowledge a valid point.", "Disagree respectfully without personal criticism."],
         }
     elif topic == "data_description":
         turn_goals = {
