@@ -10,6 +10,13 @@ from app.services.content_i18n import localize_lesson_content
 
 
 class ContentQualityTests(unittest.TestCase):
+    def test_b1_obwohl_guided_repair_accepts_both_clause_orders(self):
+        row = next(row for row in B1_CURRICULUM if row[2] == "subordinate_clauses")
+        lesson = build_b1_content(row)
+        guided = next(item for item in lesson["exercises"] if item["stage"] == "guided")
+        self.assertIn("Obwohl es regnet, gehen wir spazieren.", guided["accepted_answers"])
+        self.assertIn("Wir gehen spazieren, obwohl es regnet.", guided["accepted_answers"])
+
     def test_foundation_practice_markers_match_authored_models(self):
         from app.content.foundation_curriculum import PRACTICE_VARIANTS
         for skill in ("present_regular", "perfect_participles"):
