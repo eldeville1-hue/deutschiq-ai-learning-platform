@@ -208,6 +208,11 @@ def build_b1_content(row):
         dialogue["answer"] = dialogue_answer
         dialogue["model_answer"] = dialogue_answer
         dialogue["accepted_answers"] = [dialogue_answer]
+    # The guided repair has a fixed meaning; accept only editorially checked
+    # reformulations, never unrelated transfer examples.
+    if topic == "subordinate_clauses":
+        guided = next(item for item in exercises if item["stage"] == "guided")
+        guided["accepted_answers"].append("Wir gehen spazieren, obwohl es regnet.")
     turn_models = [dialogue_answer, alternatives[0]]
     if topic == "formal_email":
         turn_models = [
