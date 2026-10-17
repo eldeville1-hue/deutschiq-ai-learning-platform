@@ -529,6 +529,7 @@ test('mobile B2 draft survives reload in the same server session', async ({ page
   await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
   const exercise = { id: 'argument_structure-dialogue', type: 'dialogue', question: 'Give an argument.', answer: 'Radwege erhöhen die Sicherheit.' };
   let starts = 0;
+  let serverSessionId = 'persistent-b2-session';
   await page.route('**/api/lesson/77?*', route => route.fulfill({ json: {
     id: 77, level: 'B2', topic: 'argument_structure',
     content: { title: 'Argument structure', examples: ['Radwege erhöhen die Sicherheit.'], exercises: [exercise] },
@@ -536,7 +537,7 @@ test('mobile B2 draft survives reload in the same server session', async ({ page
   await page.route('**/api/lesson/start', route => {
     starts += 1;
     return route.fulfill({ json: {
-      session_id: 'persistent-b2-session', resumed: true, next_exercise_index: 0,
+      session_id: serverSessionId, resumed: true, next_exercise_index: 0,
     } });
   });
   await page.route('**/api/events', route => route.fulfill({ status: 204, body: '' }));
@@ -551,4 +552,7 @@ test('mobile B2 draft survives reload in the same server session', async ({ page
   await expect(page.getByRole('textbox')).toHaveValue(text);
   await expect(page.getByRole('heading', { name: 'Give an argument.' })).toBeVisible();
   expect(starts).toBeGreaterThanOrEqual(2);
+  serverSessionId = 'new-b2-session';
+  await page.reload();
+  await expect(page.getByRole('textbox')).toHaveValue('');
 });
