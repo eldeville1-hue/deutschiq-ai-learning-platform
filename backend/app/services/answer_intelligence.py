@@ -103,7 +103,7 @@ def _classify_aligned_errors(answer: str, model: str, target_feature: str = "", 
         # A permutation is not automatically a grammatical mistake in German.
         # For open writing, even a word-order target needs linguistic review:
         # a matching word bag does not prove the submitted order is wrong.
-        if exercise_type in {"translation", "translate", "free_text", "sentence", "writing"}:
+        if exercise_type in {"translation", "translate", "free_text", "sentence", "writing", "dialogue"}:
             return []
         if target_feature != "word_order" and exercise_type != "reorder":
             return []
