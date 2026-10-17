@@ -39,7 +39,7 @@ class EvidenceIntegrationTests(unittest.TestCase):
         self.assertTrue(report["checks"]["mobile_e2e_signoff"])
         self.assertTrue(report["checks"]["ai_assisted_performance"])
         self.assertEqual(report["release_gate"], "blocked")
-        self.assertFalse(report["checks"]["external_human_signoff"])
+        self.assertFalse(report["checks"]["independent_review_evidence"])
 
 
 if __name__ == "__main__":
