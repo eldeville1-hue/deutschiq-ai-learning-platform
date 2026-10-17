@@ -23,6 +23,24 @@ class ContentQualityTests(unittest.TestCase):
                 self.assertTrue(all(item.get("skill_id") == row[2]
                                     for item in content["exercises"]))
 
+    def test_b1_listening_narrative_and_final_dialogues_are_contextual(self):
+        cases = {
+            "listening_attitude": ("Haltung des Sprechers", "linguistic cue", "Haltung"),
+            "spoken_narrative": ("ersten Ereignis", "finish the story", "zuerst"),
+            "b1_final": ("Großstadt", "conclusion", "Großstadt"),
+        }
+        for row in B1_CURRICULUM:
+            if row[2] not in cases:
+                continue
+            first_goal, second_goal, partner_keyword = cases[row[2]]
+            dialogue = next(item for item in build_b1_content(row)["exercises"] if item["type"] == "dialogue")
+            german = dialogue["i18n"]["de"]["conversation_turns"]
+            english = dialogue["i18n"]["en"]["conversation_turns"]
+            self.assertIn(first_goal, german[0]["goal"])
+            self.assertIn(second_goal, english[1]["goal"])
+            self.assertTrue(any(partner_keyword in turn["partner"] for turn in german))
+            self.assertEqual(2, len(german))
+
     def test_b1_writing_dialogues_have_task_specific_goals(self):
         expected = {
             "formal_email": ("formellen Anrede", "new appointment", "neuen Termin"),
