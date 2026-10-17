@@ -286,6 +286,26 @@ const LessonScreen: React.FC = () => {
           ],
         };
         const criterion = writingCriteria[String(activeExercise?.id || '')];
+        const answerText = answer.toLocaleLowerCase('de-DE');
+        const missingElements: string[] = [];
+        if (isB2Writing && activeExercise?.id === 'argument_structure-dialogue') {
+          if (!/\\b(weil|denn|da|deshalb|daher|denn|zumal)\\b/i.test(answerText))
+            missingElements.push(tr(lang, 'Добавь объяснение причины (например, weil или denn).', 'Ergänze eine Begründung (z. B. weil oder denn).', 'Consider adding a reason (e.g. weil or denn).'));
+          if (!/\\b(zum beispiel|beispielsweise|etwa)\\b/i.test(answerText))
+            missingElements.push(tr(lang, 'Подумай о конкретном примере.', 'Überlege dir ein konkretes Beispiel.', 'Consider adding a concrete example.'));
+        } else if (isB2Writing && activeExercise?.id === 'counterargument-dialogue') {
+          if (!/\\b(zwar|obwohl|auch wenn|einerseits|natürlich|verständlich)\\b/i.test(answerText))
+            missingElements.push(tr(lang, 'Проверь, признал(а) ли ты возражение.', 'Prüfe, ob du den Einwand aufgegriffen hast.', 'Check whether you acknowledged the objection.'));
+          if (!/\\b(aber|jedoch|dennoch|andererseits|trotzdem|allerdings)\\b/i.test(answerText))
+            missingElements.push(tr(lang, 'Добавь аргументированный ответ на возражение.', 'Ergänze eine begründete Erwiderung.', 'Add a reasoned response to the objection.'));
+        } else if (isB2Writing && activeExercise?.id === 'data_description-dialogue') {
+          for (const number of ['2020', '2025', '36', '48']) {
+            if (!answerText.includes(number))
+              missingElements.push(tr(lang, `Проверь, указано ли значение ${number}.`, `Prüfe, ob der Wert ${number} genannt wird.`, `Check whether you included ${number}.`));
+          }
+          if (!/\\b(12|zwölf)\\b/i.test(answerText))
+            missingElements.push(tr(lang, 'Проверь разницу: 12 процентных пунктов.', 'Prüfe die Differenz: 12 Prozentpunkte.', 'Check the difference: 12 percentage points.'));
+        }
         const writingGuidance = isB2Writing
           ? (criterion
               ? tr(lang, criterion[0], criterion[1], criterion[2])
