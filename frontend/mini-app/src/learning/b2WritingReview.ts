@@ -24,10 +24,6 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
     if (!/\b(aber|jedoch|dennoch|andererseits|trotzdem|allerdings|hingegen|gleichwohl|dagegen|demgegenüber|auf lange sicht|langfristig)\b/i.test(answerText))
       missingElements.push(tr(lang, 'Проверь, есть ли обоснованный ответ на возражение.', 'Prüfe, ob du dem Einwand eine begründete Antwort gegenüberstellst.', 'Check whether you gave a reasoned response to the objection.'));
   } else if (exerciseId === 'data_description-dialogue') {
-    for (const number of ['2020', '2025', '36', '48']) {
-      if (!new RegExp(`(^|\\D)${number}(?!\\d)`).test(answerText))
-        missingElements.push(tr(lang, `Проверь, указано ли значение ${number}.`, `Prüfe, ob der Wert ${number} genannt wird.`, `Check whether you included ${number}.`));
-    }
     // Only flag a reversed pairing when the year and its value are adjacent.
     // Longer prose can mention both years and values in different orders.
     const reversedPair = /\b2020\b\s*(?:[:–—-]|(?:lag|waren|betrug|bei))?\s*(?:bei\s*)?48\s*%?/i.test(answerText)
@@ -44,6 +40,10 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
         'Проверь, указана ли разница именно в процентных пунктах (12), а не в процентах.',
         'Prüfe, ob du den Unterschied als 12 Prozentpunkte und nicht als 12 Prozent angegeben hast.',
         'Check that the difference is expressed as 12 percentage points, not 12 percent.'));
+    for (const number of ['2020', '2025', '36', '48']) {
+      if (!new RegExp(`(^|\\D)${number}(?!\\d)`).test(answerText))
+        missingElements.push(tr(lang, `Проверь, указано ли значение ${number}.`, `Prüfe, ob der Wert ${number} genannt wird.`, `Check whether you included ${number}.`));
+    }
   }
 
   // Keep the first actionable revision steps visible rather than overwhelming
