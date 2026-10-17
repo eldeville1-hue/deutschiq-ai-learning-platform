@@ -264,6 +264,13 @@ const LessonScreen: React.FC = () => {
         setChecked(null);
         setFeedback(null);
         setReviewPending(result.evaluation_status === 'needs_review');
+        const isB2Writing = lesson?.level === 'B2' && activeExercise?.type === 'dialogue';
+        const writingGuidance = isB2Writing
+          ? tr(lang,
+              'Проверь свой текст по четырём пунктам: выполнена ли задача, есть ли обоснование, верна ли грамматика и подходит ли стиль. Это самопроверка, не автоматическая оценка.',
+              'Prüfe deinen Text in vier Punkten: Aufgabenerfüllung, Begründung, Grammatik und angemessener Stil. Das ist eine Selbstkontrolle, keine automatische Bewertung.',
+              'Review four aspects of your text: task completion, supporting reasons, grammar and appropriate register. This is a self-check, not an automated grade.')
+          : '';
         setCheckError(tr(lang,
           result.evaluation_status === 'needs_review'
             ? 'Для этого задания пока нет надёжного эталона. Ответ не оценён — это не ошибка.'
@@ -273,7 +280,7 @@ const LessonScreen: React.FC = () => {
             : 'Deine Antwort lässt sich nicht eindeutig bewerten. Das bedeutet nicht, dass sie falsch ist. Du kannst sie präzisieren.',
           result.evaluation_status === 'needs_review'
             ? 'This task has no reliable reference answer yet. Your response has not been marked wrong.'
-            : 'Your answer cannot be verified conclusively. That does not mean it is wrong. You can clarify your wording.'));
+            : 'Your answer cannot be verified conclusively. That does not mean it is wrong. You can clarify your wording.') + (writingGuidance ? '\n\n' + writingGuidance : ''));
         return;
       }
       setChecked(Boolean(result.correct)); setFeedback(result);
