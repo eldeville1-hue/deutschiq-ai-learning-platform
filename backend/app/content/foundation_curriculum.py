@@ -799,6 +799,10 @@ for _level, _curriculum, _blueprints in (
 # Reorder tasks still use only the displayed tokens and their target sentence.
 A1_REPAIR_ALTERNATIVES = {
     "main_clause": ["Ich lerne heute Deutsch."],
+    "present_regular": ["Jeden Abend lernen wir Deutsch."],
+    "time_daily_routine": ["Ich stehe um sieben Uhr auf."],
+    "appointments": ["Am Montag um zehn Uhr ist der Termin."],
+    "simple_past_experience": ["Ich habe gestern lange gearbeitet."],
     "noun_gender": ["Das ist ein Buch. Das ist eine Lampe."],
     "negation": ["Ich habe kein Auto, aber ich fahre gerne Rad."],
     "separable_verbs_a1": ["Um neun Uhr fängt der Kurs an."],
