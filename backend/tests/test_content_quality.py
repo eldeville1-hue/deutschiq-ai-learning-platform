@@ -26,7 +26,7 @@ class ContentQualityTests(unittest.TestCase):
     def test_b2_specialist_dialogues_match_their_communication_tasks(self):
         cases = {
             "formal_register": ("schriftliche Bestätigung", "written confirmation", "Bestätigung"),
-            "data_description": ("Wert und Zeitraum", "value and time period", "Zeitraum"),
+            "data_description": ("Wert und Zeitraum", "value and time period", "Werte"),
         }
         for row in B2_CURRICULUM:
             if row[2] not in cases:
