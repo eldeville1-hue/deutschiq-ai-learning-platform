@@ -48,6 +48,7 @@ const LessonScreen: React.FC = () => {
   const [checkError, setCheckError] = useState('');
   const [reviewPending, setReviewPending] = useState(false);
   const [writingSelfCheck, setWritingSelfCheck] = useState(false);
+  const [showWritingModel, setShowWritingModel] = useState(false);
   const [selfCheckMarks, setSelfCheckMarks] = useState<boolean[]>([false, false, false]);
   const [milestoneSent, setMilestoneSent] = useState(() => localStorage.getItem(`deutschiq-beta-milestone-${getUserId()}`) === '1');
   const [showHint, setShowHint] = useState(false);
@@ -568,6 +569,7 @@ const LessonScreen: React.FC = () => {
           <ExerciseInteraction exercise={{ ...activeExercise, id: `${id}-${exerciseIndex}-${retried[exerciseIndex] ? 'retry' : 'first'}` }} answer={answer} onAnswer={nextAnswer => {
             if (nextAnswer !== answer && writingSelfCheck) {
               setSelfCheckMarks([false, false, false]);
+              setShowWritingModel(false);
               setWritingSelfCheck(false);
               setCheckError('');
             }
@@ -679,7 +681,19 @@ const LessonScreen: React.FC = () => {
               <input type="checkbox" style={{ appearance: "auto", WebkitAppearance: "checkbox", width: 18, height: 18, opacity: 1, position: "static", pointerEvents: "auto", flexShrink: 0 }} checked={selfCheckMarks[index]} onChange={event => setSelfCheckMarks(previous => previous.map((value, i) => i === index ? event.target.checked : value))} />
               <span>{label}</span>
             </label>)}
-            <button type="button" className="feedback-skip" onClick={() => { setWritingSelfCheck(false); setSelfCheckMarks([false, false, false]); }}>
+            {['argument_structure-dialogue', 'counterargument-dialogue', 'data_description-dialogue'].includes(String(activeExercise?.id || '')) && (
+              <div>
+                <button type="button" className="feedback-skip" aria-expanded={showWritingModel} onClick={() => setShowWritingModel(value => !value)}>
+                  {showWritingModel
+                    ? tr(lang, 'Скрыть образец', 'Beispiel ausblenden', 'Hide example')
+                    : tr(lang, 'Сравнить с образцом', 'Mit Beispiel vergleichen', 'Compare with example')}
+                </button>
+                {showWritingModel && <p aria-label={tr(lang, 'Образец ответа', 'Beispielantwort', 'Example answer')}>
+                  {String(activeExercise?.answer || tr(lang, 'Образец недоступен', 'Kein Beispiel verfügbar', 'Example unavailable'))}
+                </p>}
+              </div>
+            )}
+            <button type="button" className="feedback-skip" onClick={() => { setWritingSelfCheck(false); setShowWritingModel(false); setSelfCheckMarks([false, false, false]); }}>
               {tr(lang, 'Вернуться к редактированию', 'Text weiter bearbeiten', 'Continue editing')}
             </button>
           </div>}
