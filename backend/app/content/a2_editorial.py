@@ -160,6 +160,8 @@ A2_REPAIR_ALTERNATIVES = {
     "perfect_haben": ["Einen Film habe ich gestern gesehen."],
     "perfect_sein": ["Am Wochenende sind wir nach Lübeck gefahren."],
     "wenn_clause": ["Ich besuche meine Freunde, wenn ich Zeit habe."],
+    "weil_clause": ["Weil ich in Deutschland arbeite, lerne ich Deutsch."],
+    "dass_clause": ["Dass der Kurs sehr hilfreich ist, glaube ich."],
     "reflexive_verbs": ["Für moderne Kunst interessiere ich mich."],
     "opinions_a2": ["Weil wir viel sprechen, finde ich den Kurs gut."],
     "a2_final": ["Ich bin letztes Jahr umgezogen, weil ich eine neue Stelle gefunden habe."],
