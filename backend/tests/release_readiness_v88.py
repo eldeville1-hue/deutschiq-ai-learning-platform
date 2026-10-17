@@ -66,7 +66,12 @@ def build_report(holdout_path=None, benchmark=None, linguistic=None, ci_evidence
         "xp_safety_ci_signoff": job_verified and jobs.get("backend", {}).get("conclusion") == "success",
         "mobile_e2e_signoff": job_verified and jobs.get("e2e-mobile", {}).get("conclusion") == "success",
         "frontend_ci_signoff": job_verified and jobs.get("frontend", {}).get("conclusion") == "success",
-        "external_human_signoff": False,
+        "independent_review_evidence": bool(holdout_path)
+            and linguistic.get("release_checks", {}).get("independent_holdout") is True
+            and linguistic.get("reviewed", 0) >= 400
+            and linguistic.get("pending", 1) == 0
+            and not linguistic.get("ingestion_errors")
+            and not any(x for x in linguistic.get("failed_gates", []) if not x.startswith("manual:")),
         "production_smoke": False,
     }
     return {
