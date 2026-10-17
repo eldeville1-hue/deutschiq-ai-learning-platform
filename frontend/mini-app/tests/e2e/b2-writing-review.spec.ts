@@ -65,6 +65,14 @@ test('B2 data review flags explicit false decline without penalizing correct inc
   expect(getB2WritingReviewHints('data_description-dialogue', right, 'en').some(hint => hint.includes('direction of change'))).toBe(false);
 });
 
+test('B2 argument review does not mistake approximate numbers for examples', () => {
+  const approximate = 'Ich befürworte sichere Radwege, weil die Sicherheit wichtig ist. Etwa 20 Prozent der Menschen nutzen schon das Fahrrad in der Stadt.';
+  const hints = getB2WritingReviewHints('argument_structure-dialogue', approximate, 'en');
+  expect(hints.some(hint => hint.includes('concrete example'))).toBe(true);
+  const example = 'Ich befürworte sichere Radwege, weil die Sicherheit wichtig ist. Zum Beispiel könnten Kinder dadurch sicherer zur Schule fahren.';
+  expect(getB2WritingReviewHints('argument_structure-dialogue', example, 'en').some(hint => hint.includes('concrete example'))).toBe(false);
+});
+
 test('unknown writing tasks never receive guessed B2 criteria', () => {
   expect(getB2WritingReviewHints('unknown-dialogue', 'Any answer', 'en')).toEqual([]);
 });
