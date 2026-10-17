@@ -39,8 +39,13 @@ class ContentQualityTests(unittest.TestCase):
             lesson = build_b2_content(row)
             task = next(item for item in lesson["exercises"] if item["type"] == "dialogue")
             self.assertIn(markers[0], task["question"])
-            for lang, marker in zip(("ru", "de", "en"), markers):
-                self.assertIn(marker, task["i18n"][lang]["question"])
+            from app.content.b2_curriculum import B2_TRANSFER
+            scenario = B2_TRANSFER[topic]
+            for lang, marker, scenario_text in zip(("ru", "de", "en"), markers, scenario[:3]):
+                prompt = task["i18n"][lang]["question"]
+                self.assertIn(marker, prompt)
+                self.assertIn(scenario_text, prompt)
+                self.assertIn("\\n\\n", prompt)
 
     def test_foundation_practice_markers_match_authored_models(self):
         from app.content.foundation_curriculum import PRACTICE_VARIANTS
