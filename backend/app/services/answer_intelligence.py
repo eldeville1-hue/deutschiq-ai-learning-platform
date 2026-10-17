@@ -266,7 +266,7 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
     if legacy["correct"] and not exact:
         legacy["correct"] = False
         legacy["error_type"] = "answer_mismatch"
-    open_ended = exercise.get("type") in {"translation", "translate", "free_text", "sentence", "writing"}
+    open_ended = exercise.get("type") in {"translation", "translate", "free_text", "sentence", "writing", "dialogue"}
     empty_submission = not normalize_text(answer)
     # An empty response cannot satisfy a non-empty reference, even for open tasks.
     # This is a task-completion judgment, not a grammatical diagnosis.
