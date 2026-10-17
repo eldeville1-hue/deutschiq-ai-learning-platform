@@ -63,6 +63,19 @@ class EvaluationBenchmarkTests(unittest.TestCase):
         self.assertEqual(report["reviewed"], 1)
         self.assertEqual(report["pending"], 479)
 
+    def test_perfect_reviewed_benchmark_does_not_approve_release(self):
+        rows = build_cases()
+        for row in rows:
+            row["human_review"] = {"reviewed_at": "2026-10-08T12:00:00Z",
+                "protocol_version": "v88-1", "blind_to_prediction": True,
+                "independent_of_generation": True, "status": "approved",
+                "reviewer": "test-fixture", "decision": "correct", "error_types": []}
+        def always_correct(answer, exercise):
+            return {"evaluation_status": "verified", "correct": True, "errors": []}
+        report = run(rows, evaluator=always_correct)
+        self.assertEqual(report["release_gate"], "blocked" if report["failed_gates"] else "benchmark_passed_release_unverified")
+        self.assertFalse(report["independent_accuracy_demonstrated"])
+
     def test_deferral_cannot_pass_accuracy_or_coverage(self):
         rows = build_cases()
         for row in rows:
