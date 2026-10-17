@@ -46,6 +46,8 @@ const LessonScreen: React.FC = () => {
   const [checking, setChecking] = useState(false);
   const [checkError, setCheckError] = useState('');
   const [reviewPending, setReviewPending] = useState(false);
+  const [writingSelfCheck, setWritingSelfCheck] = useState(false);
+  const [selfCheckMarks, setSelfCheckMarks] = useState<boolean[]>([false, false, false]);
   const [milestoneSent, setMilestoneSent] = useState(() => localStorage.getItem(`deutschiq-beta-milestone-${getUserId()}`) === '1');
   const [showHint, setShowHint] = useState(false);
   const [easyMode, setEasyMode] = useState(false);
@@ -255,7 +257,7 @@ const LessonScreen: React.FC = () => {
   };
   const check = async () => {
     if (!answer.trim() || !sessionId || checking) return;
-    setChecking(true); setCheckError(''); setReviewPending(false);
+    setChecking(true); setCheckError(''); setReviewPending(false); setWritingSelfCheck(false);
     try {
       const result = await api.checkLessonAnswer({ user_id: getUserId(), lesson_id: Number(id), exercise_index: exerciseIndex, answer, session_id: sessionId, language: lang, confidence, response_ms: Date.now() - startedAt, retry: Boolean(retried[exerciseIndex]) });
       if (result.evaluation_status === 'uncertain' || result.evaluation_status === 'needs_review') {
@@ -264,6 +266,7 @@ const LessonScreen: React.FC = () => {
         setChecked(null);
         setFeedback(null);
         setReviewPending(result.evaluation_status === 'needs_review');
+        setWritingSelfCheck(lesson?.level === 'B2' && activeExercise?.type === 'dialogue');
         const isB2Writing = lesson?.level === 'B2' && activeExercise?.type === 'dialogue';
         const writingCriteria: Record<string, [string, string, string]> = {
           'argument_structure-dialogue': [
@@ -633,6 +636,20 @@ const LessonScreen: React.FC = () => {
               {!checked && activeExercise.mission_role !== 'final' && <button type="button" className="feedback-skip" onClick={() => void skipExercise('after_feedback')}>{tr(lang, 'Продолжить пока', 'Vorerst weiter', 'Continue for now')}</button>}
             </div>
           )}
+          {writingSelfCheck && <div className="lesson-writing-self-check" aria-label={tr(lang, 'Самопроверка текста', 'Text selbst prüfen', 'Writing self-check')}>
+            <p>{tr(lang, 'Отметь после проверки своего текста:', 'Markiere nach der Prüfung deines Textes:', 'Tick each item after reviewing your text:')}</p>
+            {([
+              tr(lang, 'Я выполнил(а) задачу', 'Ich habe die Aufgabe erfüllt', 'I addressed the task'),
+              tr(lang, 'Я привёл(а) аргументы или нужные данные', 'Ich habe Gründe oder nötige Daten genannt', 'I included reasons or required data'),
+              tr(lang, 'Я проверил(а) грамматику и стиль', 'Ich habe Grammatik und Register geprüft', 'I checked grammar and register'),
+            ]).map((label, index) => <label key={index} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+              <input type="checkbox" checked={selfCheckMarks[index]} onChange={event => setSelfCheckMarks(previous => previous.map((value, i) => i === index ? event.target.checked : value))} />
+              <span>{label}</span>
+            </label>)}
+            <button type="button" className="feedback-skip" onClick={() => { setWritingSelfCheck(false); setSelfCheckMarks([false, false, false]); }}>
+              {tr(lang, 'Вернуться к редактированию', 'Text weiter bearbeiten', 'Continue editing')}
+            </button>
+          </div>}
           {checkError && <div className="lesson-check-error" role="alert" style={{ whiteSpace: "pre-line" }}>
             {checkError}
             {reviewPending && <button type="button" className="feedback-skip" disabled={checking} onClick={() => void check()}>
