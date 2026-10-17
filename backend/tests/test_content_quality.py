@@ -41,6 +41,20 @@ class ContentQualityTests(unittest.TestCase):
             self.assertTrue(any(partner_keyword in turn["partner"] for turn in german))
             self.assertEqual(2, len(german))
 
+    def test_b1_formal_email_model_demonstrates_full_message(self):
+        row = next(row for row in B1_CURRICULUM if row[2] == "formal_email")
+        content = build_b1_content(row)
+        dialogue = next(item for item in content["exercises"] if item["type"] == "dialogue")
+        model = dialogue["model_answer"]
+        self.assertIn("Sehr geehrte", model)
+        self.assertIn("neuen Termin", model)
+        self.assertIn("Mit freundlichen Grüßen", model)
+        self.assertEqual(model, dialogue["answer"])
+        self.assertIn(model, dialogue["accepted_answers"])
+        turns = dialogue["i18n"]["de"]["conversation_turns"]
+        self.assertIn("Sehr geehrte", turns[0]["model"])
+        self.assertIn("Mit freundlichen Grüßen", turns[1]["model"])
+
     def test_b1_writing_dialogues_have_task_specific_goals(self):
         expected = {
             "formal_email": ("formellen Anrede", "new appointment", "neuen Termin"),
