@@ -41,9 +41,10 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
         'Проверь направление изменения: показатель вырос с 36 % до 48 %.',
         'Prüfe die Richtung der Veränderung: Der Wert stieg von 36 % auf 48 %.',
         'Check the direction of change: the value increased from 36% to 48%.'));
-    const mentionsDifference = /\b(12|zwölf)\b/i.test(answerText);
-    const mentionsPoints = /prozentpunkt(?:e|en)?|percentage.points?/i.test(answerText);
-    if (!mentionsDifference || !mentionsPoints)
+    // A number and its unit must describe the same difference, not merely
+    // appear in unrelated parts of the response.
+    const mentionsDifferenceInPoints = /\b(?:12|zwölf)\s*(?:prozentpunkt(?:e|en)?|percentage[\s-]+points?)\b|\b(?:prozentpunkt(?:e|en)?|percentage[\s-]+points?)\s*(?:von\s+)?(?:12|zwölf)\b/i.test(answerText);
+    if (!mentionsDifferenceInPoints)
       missingElements.push(tr(lang,
         'Проверь, указана ли разница именно в процентных пунктах (12), а не в процентах.',
         'Prüfe, ob du den Unterschied als 12 Prozentpunkte und nicht als 12 Prozent angegeben hast.',
