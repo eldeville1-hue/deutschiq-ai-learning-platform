@@ -1,7 +1,17 @@
 import { tr } from "../i18n/language";
 
 export function getB2WritingReviewHints(exerciseId: string, answer: string, lang: Parameters<typeof tr>[0]): string[] {
-  const answerText = answer.toLocaleLowerCase('de-DE');
+  const answerText = answer.toLocaleLowerCase('de-DE').trim();
+  // Keyword presence is only a weak signal, never evidence of writing quality.
+  // Avoid claiming that a very short or empty response meets the criteria.
+  const minimumWords = 12;
+  const words = answerText.match(/[\\p{L}\\p{N}]+/gu) || [];
+  if (words.length < minimumWords && ['argument_structure-dialogue', 'counterargument-dialogue', 'data_description-dialogue'].includes(exerciseId)) {
+    return [tr(lang,
+      'Ответ пока слишком краткий для содержательной самопроверки. Раскрой мысль несколькими предложениями.',
+      'Dein Text ist für eine sinnvolle Selbstkontrolle noch sehr kurz. Führe deine Gedanken in mehreren Sätzen aus.',
+      'Your response is too brief for a useful self-check. Develop your ideas in several sentences.')];
+  }
   const missingElements: string[] = [];
   if (exerciseId === 'argument_structure-dialogue') {
     if (!/\b(weil|denn|da|deshalb|daher|zumal|aufgrund|wegen|aus diesem grund|ein grund|führt dazu|trägt dazu bei|ermöglicht|bewirkt)\b/i.test(answerText))
