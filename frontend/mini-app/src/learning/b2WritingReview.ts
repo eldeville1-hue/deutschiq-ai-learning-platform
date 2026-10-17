@@ -28,7 +28,7 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
       if (!new RegExp(`(^|\\D)${number}(?!\\d)`).test(answerText))
         missingElements.push(tr(lang, `Проверь, указано ли значение ${number}.`, `Prüfe, ob der Wert ${number} genannt wird.`, `Check whether you included ${number}.`));
     }
-    const mentionsDifference = /\\b(12|zwölf)\\b/i.test(answerText);
+    const mentionsDifference = /\b(12|zwölf)\b/i.test(answerText);
     const mentionsPoints = /prozentpunkt(?:e|en)?|percentage.points?/i.test(answerText);
     if (!mentionsDifference || !mentionsPoints)
       missingElements.push(tr(lang,
