@@ -109,3 +109,13 @@ def test_authored_dialogue_alternative_still_receives_credit():
     )
     assert result["evaluation_status"] == "verified"
     assert result["correct"] is True
+
+
+def test_dialogue_word_order_variant_has_no_confirmed_word_order_error():
+    result = evaluate_structured_answer(
+        "Morgen fahre ich nach Berlin.",
+        {"type": "dialogue", "answer": "Ich fahre morgen nach Berlin.", "target_feature": "word_order"},
+    )
+    assert result["evaluation_status"] == "uncertain"
+    assert result["task_satisfied"] is None
+    assert not any(error["type"] == "word_order" for error in result["errors"])
