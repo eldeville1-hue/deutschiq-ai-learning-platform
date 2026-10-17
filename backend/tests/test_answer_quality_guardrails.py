@@ -119,3 +119,16 @@ def test_dialogue_word_order_variant_has_no_confirmed_word_order_error():
     assert result["evaluation_status"] == "uncertain"
     assert result["task_satisfied"] is None
     assert not any(error["type"] == "word_order" for error in result["errors"])
+
+
+def test_a1_repair_accepts_authored_word_order_variants():
+    from app.content.foundation_curriculum import A1_CURRICULUM, A1_REPAIR_ALTERNATIVES
+    for topic in ("present_regular", "time_daily_routine", "appointments", "simple_past_experience"):
+        model = next(row[8] for row in A1_CURRICULUM if row[2] == topic)
+        for alternative in A1_REPAIR_ALTERNATIVES[topic]:
+            result = evaluate_structured_answer(alternative, {
+                "type": "error_repair", "answer": model,
+                "accepted_answers": [model, alternative],
+            })
+            assert result["evaluation_status"] == "verified", topic
+            assert result["correct"] is True, topic
