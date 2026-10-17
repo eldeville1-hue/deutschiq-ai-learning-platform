@@ -132,3 +132,19 @@ def test_a1_repair_accepts_authored_word_order_variants():
             })
             assert result["evaluation_status"] == "verified", topic
             assert result["correct"] is True, topic
+
+
+def test_a2_past_tense_repairs_accept_verified_alternative_word_order():
+    from app.content.a2_editorial import A2_REPAIR_ALTERNATIVES
+    references = {
+        "perfect_haben": "Ich habe gestern einen Film gesehen.",
+        "perfect_sein": "Wir sind am Wochenende nach Lübeck gefahren.",
+    }
+    for topic, model in references.items():
+        for alternative in A2_REPAIR_ALTERNATIVES[topic]:
+            result = evaluate_structured_answer(alternative, {
+                "type": "error_repair", "answer": model,
+                "accepted_answers": [model, alternative],
+            })
+            assert result["evaluation_status"] == "verified", topic
+            assert result["correct"] is True, topic
