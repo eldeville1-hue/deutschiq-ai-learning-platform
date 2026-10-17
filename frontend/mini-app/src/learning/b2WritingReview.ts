@@ -46,5 +46,7 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
         'Check that the difference is expressed as 12 percentage points, not 12 percent.'));
   }
 
-  return missingElements;
+  // Keep the first actionable revision steps visible rather than overwhelming
+  // the learner with a long checklist. This is guidance, not a correctness score.
+  return missingElements.slice(0, 3);
 }
