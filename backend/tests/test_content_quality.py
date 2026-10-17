@@ -10,6 +10,14 @@ from app.services.content_i18n import localize_lesson_content
 
 
 class ContentQualityTests(unittest.TestCase):
+    def test_foundation_practice_markers_match_authored_models(self):
+        from app.content.foundation_curriculum import PRACTICE_VARIANTS
+        for skill in ("present_regular", "perfect_participles"):
+            model = PRACTICE_VARIANTS[skill][3].casefold()
+            markers = PRACTICE_VARIANTS[skill][4]
+            self.assertTrue(any(marker.casefold() in model for marker in markers),
+                            (skill, model, markers))
+
     def test_a1_personal_details_variant_practices_kommen_aus(self):
         from app.content.foundation_curriculum import PRACTICE_VARIANTS
         model = PRACTICE_VARIANTS["personal_details"][3]
