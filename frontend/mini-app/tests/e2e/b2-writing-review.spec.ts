@@ -40,6 +40,15 @@ test('B2 data review flags explicitly swapped year-value pairs', () => {
   expect(getB2WritingReviewHints('data_description-dialogue', correct, 'en').some(hint => hint.includes('year-to-value pairing'))).toBe(false);
 });
 
+test('B2 self-review limits data feedback to three prioritized revision steps', () => {
+  const draft = 'Die Statistik beschreibt eine Veränderung über mehrere Jahre. Leider fehlen in dieser Beschreibung noch die konkreten Zahlen und ein klarer Vergleich zwischen beiden Zeitpunkten.';
+  const hints = getB2WritingReviewHints('data_description-dialogue', draft, 'en');
+  expect(hints).toHaveLength(3);
+  expect(hints[0]).toContain('2020');
+  expect(hints[1]).toContain('2025');
+  expect(hints[2]).toContain('36');
+});
+
 test('unknown writing tasks never receive guessed B2 criteria', () => {
   expect(getB2WritingReviewHints('unknown-dialogue', 'Any answer', 'en')).toEqual([]);
 });
