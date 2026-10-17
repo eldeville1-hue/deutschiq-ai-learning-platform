@@ -513,6 +513,13 @@ test('mobile B2 argument writing shows skill-specific self-check without penalty
   await expect(page.locator('.answer-feedback.wrong')).toHaveCount(0);
   const checklist = page.getByLabel('Writing self-check');
   await expect(checklist).toBeVisible();
+  const compare = checklist.getByRole('button', { name: 'Compare with example' });
+  await expect(compare).toHaveAttribute('aria-expanded', 'false');
+  await expect(checklist.getByLabel('Example answer')).toHaveCount(0);
+  await compare.click();
+  await expect(checklist.getByLabel('Example answer')).toContainText('Für den Ausbau spricht');
+  await checklist.getByRole('button', { name: 'Hide example' }).click();
+  await expect(checklist.getByLabel('Example answer')).toHaveCount(0);
   const items = checklist.getByRole('checkbox');
   await expect(items).toHaveCount(3);
   await expect(checklist.getByText('My position is clear')).toBeVisible();
