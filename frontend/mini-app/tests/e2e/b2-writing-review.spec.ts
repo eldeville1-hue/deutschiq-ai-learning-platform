@@ -3,7 +3,7 @@ import { getB2WritingReviewHints } from '../../src/learning/b2WritingReview';
 
 test('B2 argument hints recognize alternative reasoning and evidence', () => {
   const complete = 'Aufgrund der besseren Sicherheit ist der Ausbau sinnvoll. Konkret profitieren Schulkinder davon, weil sie sicherer zur Schule fahren können.';
-  expect(getB2WritingReviewHints('argument_structure-dialogue', complete, 'en')).toEqual([]);
+  expect(getB2WritingReviewHints('argument_structure-dialogue', complete, 'en')).toEqual([expect.stringContaining('actually support your reason')]);
   const incomplete = getB2WritingReviewHints('argument_structure-dialogue', 'Ich bin für Radwege.', 'en');
   expect(incomplete).toHaveLength(1);
   expect(incomplete[0]).toContain('too brief');
@@ -15,7 +15,7 @@ test('B2 argument hints recognize alternative reasoning and evidence', () => {
 
 test('B2 rebuttal hints recognize acknowledgment and response without fixed phrases', () => {
   const complete = 'Die Sorge ist nachvollziehbar und die Kosten sind wichtig. Langfristig spart die Modernisierung Energie und verbessert die Lernbedingungen.';
-  expect(getB2WritingReviewHints('counterargument-dialogue', complete, 'en')).toEqual([]);
+  expect(getB2WritingReviewHints('counterargument-dialogue', complete, 'en')).toEqual([expect.stringContaining('represented fairly')]);
   expect(getB2WritingReviewHints('counterargument-dialogue', 'Das ist zu teuer.', 'en')[0]).toContain('too brief');
 });
 
