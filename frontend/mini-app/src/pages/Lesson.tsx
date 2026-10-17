@@ -100,7 +100,7 @@ const LessonScreen: React.FC = () => {
           // Server attempts are authoritative; local drafts may be stale after a reload.
           const restoredStep = 2 + Math.min(serverIndex, maxExercises);
           setStep(restoredStep);
-          const draftMatchesStep = Number(initialDraft.current?.step) === restoredStep;
+          const draftMatchesStep = initialDraft.current?.sessionId === session.session_id && Number(initialDraft.current?.step) === restoredStep;
           if (!draftMatchesStep) {
             setAnswer(''); setChecked(null); setFeedback(null);
             setRetried({}); setRetryExercises({});
