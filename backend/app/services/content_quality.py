@@ -123,7 +123,7 @@ def validate_lesson_content(content: dict) -> list[str]:
             errors.append(f"exercise:{index}:missing_question")
         if not (exercise.get("answer") or exercise.get("accepted_answers")):
             errors.append(f"exercise:{index}:missing_answer")
-        if not exercise.get("explanation"):
+        if not isinstance(exercise.get("explanation"), str) or not exercise["explanation"].strip():
             errors.append(f"exercise:{index}:missing_explanation")
     # Skill-tagged retries must have a real, different authored answer.
     skill_ids = {item.get("skill_id") for item in content.get("exercises") or []
