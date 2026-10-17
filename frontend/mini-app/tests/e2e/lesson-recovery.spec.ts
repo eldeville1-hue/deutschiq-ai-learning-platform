@@ -423,6 +423,32 @@ test('mobile pending AI writing review preserves answer and allows retry without
 });
 
 
+test('mobile uncertain translation keeps the response without wrong-answer feedback', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
+  const exercise = { type: 'translate', question: 'Write a sentence about tomorrow.', answer: 'Ich fahre morgen nach Berlin.' };
+  await page.route('**/api/lesson/77?*', route => route.fulfill({ json: {
+    id: 77, level: 'A1', topic: 'Practice',
+    content: { title: 'Practice', examples: ['Ich fahre morgen nach Berlin.'], exercises: [exercise] },
+  }}));
+  await page.route('**/api/lesson/start', route => route.fulfill({ json: {
+    session_id: 'uncertain-session', resumed: false, next_exercise_index: 0,
+  }}));
+  await page.route('**/api/lesson/check-answer', route => route.fulfill({ json: {
+    correct: false, evaluation_status: 'uncertain',
+    learner_feedback: 'Your answer needs further review.',
+  }}));
+  await page.route('**/api/events', route => route.fulfill({ status: 204, body: '' }));
+  await page.goto('/lesson/77');
+  await page.getByRole('button', { name: 'Understand with an example' }).click();
+  await page.getByRole('button', { name: 'Start practice' }).click();
+  const writing = page.getByRole('textbox');
+  await writing.fill('Morgen fahre ich nach Berlin.');
+  await page.getByRole('button', { name: 'Check', exact: true }).click();
+  await expect(page.getByText('Your answer cannot be verified conclusively. That does not mean it is wrong. You can clarify your wording.')).toBeVisible();
+  await expect(writing).toHaveValue('Morgen fahre ich nach Berlin.');
+  await expect(page.locator('.answer-feedback.wrong')).toHaveCount(0);
+});
+
 test('mobile writing review succeeds after AI service recovers', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
   const letter = 'Sehr geehrte Frau Klein, ich möchte den Termin verschieben. Am Dienstag um zehn Uhr? Mit freundlichen Grüßen, Mia Weber.';
