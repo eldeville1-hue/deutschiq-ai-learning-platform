@@ -502,8 +502,11 @@ test('mobile B2 argument writing shows skill-specific self-check without penalty
   await page.getByRole('button', { name: 'Understand with an example' }).click();
   await page.getByRole('button', { name: 'Start practice' }).click();
   const writing = page.getByRole('textbox');
+  const writingPlan = page.getByLabel('Writing plan');
+  await expect(writingPlan.getByText('Position → 2. Reason → 3. Your example', { exact: false })).toBeVisible();
   await writing.fill('Geschützte Radwege sind sinnvoll, weil sie Unfälle vermeiden helfen.');
   await page.getByRole('button', { name: 'Check', exact: true }).click();
+  await expect(writingPlan).toHaveCount(0);
   await expect(page.getByText(/clear position, supporting reason and concrete example/)).toBeVisible();
   await expect(page.getByText(/Develop your answer: state your position/)).toBeVisible();
   await expect(writing).toHaveValue('Geschützte Radwege sind sinnvoll, weil sie Unfälle vermeiden helfen.');
