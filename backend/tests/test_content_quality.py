@@ -17,6 +17,17 @@ class ContentQualityTests(unittest.TestCase):
         self.assertIn("Obwohl es regnet, gehen wir spazieren.", guided["accepted_answers"])
         self.assertIn("Wir gehen spazieren, obwohl es regnet.", guided["accepted_answers"])
 
+    def test_b1_guided_tasks_accept_vetted_reordered_sentences(self):
+        variants = {
+            "purpose_clauses": "Um die Prüfung zu bestehen, lerne ich viel.",
+            "passive_past": "1990 wurde das Haus gebaut.",
+        }
+        for topic, alternative in variants.items():
+            row = next(row for row in B1_CURRICULUM if row[2] == topic)
+            lesson = build_b1_content(row)
+            guided = next(item for item in lesson["exercises"] if item["stage"] == "guided")
+            self.assertIn(alternative, guided["accepted_answers"], topic)
+
     def test_foundation_practice_markers_match_authored_models(self):
         from app.content.foundation_curriculum import PRACTICE_VARIANTS
         for skill in ("present_regular", "perfect_participles"):
