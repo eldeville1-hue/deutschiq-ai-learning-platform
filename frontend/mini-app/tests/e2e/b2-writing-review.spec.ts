@@ -50,7 +50,7 @@ test('short B2 drafts provide contextual German examples in all interface langua
 
 test('B2 model sentences explicitly encourage independent writing in each language', () => {
   const expected = {
-    ru: 'сво',
+    ru: 'Используй структуру',
     de: 'Nutze die Struktur',
     en: 'Use the structure',
   };
