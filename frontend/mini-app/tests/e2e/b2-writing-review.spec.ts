@@ -44,9 +44,18 @@ test('B2 self-review limits data feedback to three prioritized revision steps', 
   const draft = 'Die Statistik beschreibt eine Veränderung über mehrere Jahre. Leider fehlen in dieser Beschreibung noch die konkreten Zahlen und ein klarer Vergleich zwischen beiden Zeitpunkten.';
   const hints = getB2WritingReviewHints('data_description-dialogue', draft, 'en');
   expect(hints).toHaveLength(3);
-  expect(hints[0]).toContain('2020');
-  expect(hints[1]).toContain('2025');
-  expect(hints[2]).toContain('36');
+  expect(hints[0]).toContain('percentage points');
+  expect(hints[1]).toContain('2020');
+  expect(hints[2]).toContain('2025');
+});
+
+test('B2 data errors outrank omitted figures when feedback is capped', () => {
+  const draft = 'Die Zahlen zeigen einen Unterschied zwischen zwei Jahren. In der Statistik steht 2020: 48 %. Die Veränderung beträgt 12 Prozent, und der Vergleich ist wichtig.';
+  const hints = getB2WritingReviewHints('data_description-dialogue', draft, 'en');
+  expect(hints).toHaveLength(3);
+  expect(hints[0]).toContain('year-to-value pairing');
+  expect(hints[1]).toContain('percentage points');
+  expect(hints[2]).toContain('2025');
 });
 
 test('unknown writing tasks never receive guessed B2 criteria', () => {
