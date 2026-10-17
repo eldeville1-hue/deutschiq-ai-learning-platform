@@ -507,4 +507,13 @@ test('mobile B2 argument writing shows skill-specific self-check without penalty
   await expect(page.getByText(/clear position, supporting reason and concrete example/)).toBeVisible();
   await expect(writing).toHaveValue('Geschützte Radwege sind sinnvoll, weil sie Unfälle vermeiden helfen.');
   await expect(page.locator('.answer-feedback.wrong')).toHaveCount(0);
+  const checklist = page.getByLabel('Writing self-check');
+  await expect(checklist).toBeVisible();
+  const items = checklist.getByRole('checkbox');
+  await expect(items).toHaveCount(3);
+  await items.nth(0).check();
+  await expect(items.nth(0)).toBeChecked();
+  await checklist.getByRole('button', { name: 'Continue editing' }).click();
+  await expect(checklist).toHaveCount(0);
+  await expect(writing).toHaveValue('Geschützte Radwege sind sinnvoll, weil sie Unfälle vermeiden helfen.');
 });
