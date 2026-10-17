@@ -48,6 +48,20 @@ test('short B2 drafts provide contextual German examples in all interface langua
   }
 });
 
+test('B2 model sentences explicitly encourage independent writing in each language', () => {
+  const expected = {
+    ru: 'сво',
+    de: 'Nutze die Struktur',
+    en: 'Use the structure',
+  };
+  for (const lang of ['ru', 'de', 'en'] as const) {
+    for (const exerciseId of ['argument_structure-dialogue', 'counterargument-dialogue', 'data_description-dialogue']) {
+      const [hint] = getB2WritingReviewHints(exerciseId, 'Kurz.', lang);
+      expect(hint).toContain(expected[lang]);
+    }
+  }
+});
+
 test('B2 figures require whole numbers and do not confuse 36 with 136', () => {
   const complete = '2020 lag der Anteil bei 36 Prozent, 2025 bei 48 Prozent. Das sind 12 Prozentpunkte mehr.';
   expect(getB2WritingReviewHints('data_description-dialogue', complete, 'en')).toEqual([expect.stringContaining('which conclusion the data supports')]);
