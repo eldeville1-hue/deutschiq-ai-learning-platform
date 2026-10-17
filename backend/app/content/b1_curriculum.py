@@ -208,6 +208,37 @@ def build_b1_content(row):
         "en": ["Respond appropriately using the target structure.", "Add a reason, contrast, or detail."],
     }
 
+    if topic == "formal_email":
+        turn_partners = [
+            "Warum schreiben Sie diese E-Mail?",
+            "Wie bitten Sie höflich um einen neuen Termin?",
+        ]
+        turn_goals = {
+            "ru": ["Начни официальное письмо с обращения и объясни причину.", "Вежливо попроси новый термин и заверши письмо."],
+            "de": ["Beginne mit einer formellen Anrede und nenne den Anlass.", "Bitte höflich um einen neuen Termin und schließe die E-Mail ab."],
+            "en": ["Start with a formal greeting and state why you are writing.", "Politely request a new appointment and close the email."],
+        }
+    elif topic == "opinion":
+        turn_partners = [
+            "Sollte Homeoffice häufiger möglich sein?",
+            "Was spricht für deine Meinung? Nenne ein Beispiel.",
+        ]
+        turn_goals = {
+            "ru": ["Вырази собственную позицию о работе из дома.", "Обоснуй её и приведи конкретный пример."],
+            "de": ["Äußere deine Position zum Homeoffice.", "Begründe sie mit einem konkreten Beispiel."],
+            "en": ["State your position on working from home.", "Support it with a concrete example."],
+        }
+    elif topic == "argumentation":
+        turn_partners = [
+            "Welchen Vorteil haben Onlinekurse?",
+            "Welchen Nachteil siehst du trotz dieses Vorteils?",
+        ]
+        turn_goals = {
+            "ru": ["Назови преимущество онлайн-курсов.", "Противопоставь ему недостаток, используя подходящую связку."],
+            "de": ["Nenne einen Vorteil von Onlinekursen.", "Stelle ihm mit einer passenden Verbindung einen Nachteil gegenüber."],
+            "en": ["Name an advantage of online courses.", "Contrast it with a disadvantage using an appropriate connector."],
+        }
+
     def conversation_turns(language: str) -> list[dict]:
         return [
             {
