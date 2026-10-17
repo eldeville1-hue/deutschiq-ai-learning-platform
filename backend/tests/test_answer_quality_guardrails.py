@@ -52,3 +52,26 @@ def test_unlisted_open_answer_with_missing_negation_is_uncertain():
     result = grade("Ich kann kommen", "Ich kann nicht kommen", kind="translate")
     assert result["evaluation_status"] == "uncertain"
     assert result["correct"] is False
+
+
+def test_unlisted_valid_word_order_variant_is_not_automatically_rejected():
+    result = grade("Morgen fahre ich nach Berlin.", "Ich fahre morgen nach Berlin.", kind="translate")
+    assert result["evaluation_status"] == "uncertain"
+    assert result["task_satisfied"] is None
+    assert result["correct"] is False
+
+
+def test_authored_word_order_variant_receives_full_credit():
+    result = grade(
+        "Morgen fahre ich nach Berlin.", "Ich fahre morgen nach Berlin.",
+        kind="translate", accepted_answers=["Morgen fahre ich nach Berlin."],
+    )
+    assert result["evaluation_status"] == "verified"
+    assert result["correct"] is True
+
+
+def test_changed_personal_pronoun_is_not_treated_as_equivalent():
+    result = grade("Du lernst Deutsch.", "Ich lerne Deutsch.", kind="translate")
+    assert result["evaluation_status"] == "uncertain"
+    assert result["correct"] is False
+    assert result["task_satisfied"] is None
