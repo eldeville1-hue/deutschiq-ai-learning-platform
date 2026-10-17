@@ -148,3 +148,20 @@ def test_a2_past_tense_repairs_accept_verified_alternative_word_order():
             })
             assert result["evaluation_status"] == "verified", topic
             assert result["correct"] is True, topic
+
+
+def test_a2_subordinate_clause_repair_accepts_authored_fronting():
+    from app.content.a2_editorial import A2_REPAIR_ALTERNATIVES
+    references = {
+        "weil_clause": "Ich lerne Deutsch, weil ich in Deutschland arbeite.",
+        "dass_clause": "Ich glaube, dass der Kurs sehr hilfreich ist.",
+        "wenn_clause": "Wenn ich Zeit habe, besuche ich meine Freunde.",
+    }
+    for topic, model in references.items():
+        for alternative in A2_REPAIR_ALTERNATIVES[topic]:
+            result = evaluate_structured_answer(alternative, {
+                "type": "error_repair", "answer": model,
+                "accepted_answers": [model, alternative],
+            })
+            assert result["evaluation_status"] == "verified", topic
+            assert result["correct"] is True, topic
