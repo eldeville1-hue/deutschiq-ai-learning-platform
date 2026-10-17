@@ -58,6 +58,13 @@ test('B2 data errors outrank omitted figures when feedback is capped', () => {
   expect(hints[2]).toContain('2025');
 });
 
+test('B2 data review flags explicit false decline without penalizing correct increase', () => {
+  const wrong = 'Im Jahr 2020 lag der Anteil bei 36 Prozent, 2025 bei 48 Prozent. Der Anteil ist gesunken, um 12 Prozentpunkte.';
+  expect(getB2WritingReviewHints('data_description-dialogue', wrong, 'en').some(hint => hint.includes('direction of change'))).toBe(true);
+  const right = 'Im Jahr 2020 lag der Anteil bei 36 Prozent, 2025 bei 48 Prozent. Der Anteil ist gestiegen, um 12 Prozentpunkte.';
+  expect(getB2WritingReviewHints('data_description-dialogue', right, 'en').some(hint => hint.includes('direction of change'))).toBe(false);
+});
+
 test('unknown writing tasks never receive guessed B2 criteria', () => {
   expect(getB2WritingReviewHints('unknown-dialogue', 'Any answer', 'en')).toEqual([]);
 });
