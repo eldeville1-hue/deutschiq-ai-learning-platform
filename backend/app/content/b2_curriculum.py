@@ -137,6 +137,31 @@ def build_b2_content(row: tuple) -> dict:
             {"question": "Say the model aloud.", "explanation": "Keep the sentence stress and pace natural."},
         ),
     ]
+    # Transfer tasks should tell learners what a complete B2 answer needs.
+    # These are instructions, not automatic grading criteria.
+    writing_goals = {
+        "argument_structure": (
+            "Сформулируй позицию, объясни причину и приведи конкретный пример.",
+            "Formuliere eine These, begründe sie und nenne ein konkretes Beispiel.",
+            "State a position, give a reason and provide a concrete example.",
+        ),
+        "counterargument": (
+            "Признай один контраргумент, затем аргументированно ответь на него.",
+            "Greife ein Gegenargument auf und entkräfte es sachlich.",
+            "Acknowledge a counterargument and respond with a reasoned rebuttal.",
+        ),
+        "data_description": (
+            "Назови начальное и конечное значения, период и разницу в процентных пунктах. Не придумывай причины.",
+            "Nenne Ausgangswert, Endwert, Zeitraum und Unterschied in Prozentpunkten. Erfinde keine Ursachen.",
+            "Give the starting value, ending value, period and percentage-point difference. Do not invent causes.",
+        ),
+    }
+    if topic in writing_goals:
+        dialogue = next(item for item in exercises if item["type"] == "dialogue")
+        for language, goal in zip(("ru", "de", "en"), writing_goals[topic]):
+            if language == "ru":
+                dialogue["question"] = goal
+            dialogue["i18n"][language]["question"] = goal
     module_titles = {
         1: ("Строй сложные связи", "Komplexe Zusammenhänge", "Build complex connections"),
         2: ("Пиши точно и объективно", "Präzise und objektiv schreiben", "Write precisely and objectively"),
