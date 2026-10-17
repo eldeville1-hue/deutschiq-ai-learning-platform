@@ -7,6 +7,9 @@ test('B2 argument hints recognize alternative reasoning and evidence', () => {
   const incomplete = getB2WritingReviewHints('argument_structure-dialogue', 'Ich bin für Radwege.', 'en');
   expect(incomplete).toHaveLength(1);
   expect(incomplete[0]).toContain('too brief');
+  const expanded = 'Ich unterstütze Radwege in der Stadt, weil sie die Sicherheit für alle verbessern. Deshalb sollten wir diese Lösung wählen.';
+  expect(getB2WritingReviewHints('argument_structure-dialogue', expanded, 'en')).toHaveLength(1);
+
   expect(getB2WritingReviewHints('argument_structure-dialogue', 'Ich bin für mehr Radwege in der Stadt, denn das ist für viele Menschen wichtig.', 'en')).toHaveLength(1);
 });
 
