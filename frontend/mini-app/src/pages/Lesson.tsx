@@ -554,7 +554,7 @@ const LessonScreen: React.FC = () => {
             </div>
           )}
           {(showTranscript || easyMode) && activeExercise.audio_text && <div className="listening-transcript"><small>{tr(lang, 'ТЕКСТ', 'TEXT', 'TRANSCRIPT')}</small><span>{activeExercise.audio_text}</span></div>}
-          {['argument_structure-dialogue', 'counterargument-dialogue', 'data_description-dialogue'].includes(String(activeExercise?.id || '')) && checked === null && (
+          {['argument_structure-dialogue', 'counterargument-dialogue', 'data_description-dialogue'].includes(String(activeExercise?.id || '')) && checked === null && !writingSelfCheck && (
             <div className="lesson-writing-self-check" aria-label={tr(lang, 'План ответа', 'Schreibplan', 'Writing plan')}>
               <strong>{tr(lang, 'Сначала твой ответ', 'Zuerst dein eigener Text', 'Your answer first')}</strong>
               <p>{String(activeExercise?.id) === 'argument_structure-dialogue'
