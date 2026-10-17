@@ -178,6 +178,30 @@ def build_b2_content(row: tuple) -> dict:
             "Was lässt sich aus der Entwicklung vorsichtig schließen?",
         ]
     turn_models = [model, alternatives[0], alternatives[1]]
+    if topic == "formal_register":
+        turn_models = [
+            "Sehr geehrte Damen und Herren, ich schreibe Ihnen wegen meiner Anmeldung.",
+            "Ich möchte Sie um eine schriftliche Bestätigung meiner Anmeldung bitten.",
+            "Vielen Dank für Ihre Rückmeldung. Mit freundlichen Grüßen, Alex Weber.",
+        ]
+    elif topic == "presentation_structure":
+        turn_models = [
+            "Heute stelle ich die Ausgangslage vor, erläutere zwei Lösungswege und ziehe ein Fazit.",
+            "Nachdem wir die Ausgangslage betrachtet haben, komme ich nun zu den möglichen Lösungen.",
+            "Zusammenfassend lässt sich sagen, dass beide Ansätze Vor- und Nachteile haben.",
+        ]
+    elif topic == "discussion_language":
+        turn_models = [
+            "Ich verstehe Ihren Standpunkt, aber das gilt nicht in jeder Situation.",
+            "Sie haben recht, dass die Lösung in vielen Fällen hilfreich ist.",
+            "Allerdings sollten wir auch die möglichen Nachteile berücksichtigen.",
+        ]
+    elif topic == "data_description":
+        turn_models = [
+            "Die Zahlen zeigen einen Anstieg des Nutzeranteils über fünf Jahre.",
+            "Der Anteil stieg von 36 auf 48 Prozent, also um zwölf Prozentpunkte.",
+            "Insgesamt deutet dies auf eine Zunahme hin; die Ursachen lassen sich daraus allein nicht ableiten.",
+        ]
     turn_goals = {
         "ru": ["Чётко сформулируй позицию.", "Добавь конкретное обоснование.", "Учти возражение и сделай вывод."],
         "de": ["Formuliere eine klare Position.", "Füge eine konkrete Begründung hinzu.", "Berücksichtige einen Einwand und ziehe ein Fazit."],
