@@ -43,6 +43,8 @@ class FormalWritingFeedbackTests(unittest.TestCase):
         response.choices[0].message.content = (
             '{"dimension_scores":{"task_completion":100,"grammar":100,'
             '"vocabulary":100,"coherence":100,"register":100},'
+            '"criteria_met":{"formal_greeting":true,"rescheduling_request":true,'
+            '"alternative_time":true,"formal_closing":true},'
             '"feedback":"Good","improvement":"None","corrected_answer":"OK"}'
         )
         client = MagicMock()
