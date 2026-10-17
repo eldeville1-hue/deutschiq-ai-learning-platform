@@ -9,17 +9,17 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
   if (words.length < minimumWords && ['argument_structure-dialogue', 'counterargument-dialogue', 'data_description-dialogue'].includes(exerciseId)) {
     if (exerciseId === 'argument_structure-dialogue')
       return [tr(lang,
-        'Разверни ответ: сформулируй позицию, объясни причину и добавь конкретный пример.',
-        'Baue deinen Text aus: Formuliere deine Position, begründe sie und ergänze ein konkretes Beispiel.',
+        'Разверни ответ: сформулируй позицию, объясни причину и добавь конкретный пример. Образец: Ich bin für sichere Radwege, weil sie Unfälle verhindern können. Zum Beispiel kommen Kinder so sicherer zur Schule.',
+        'Baue deinen Text aus: Formuliere deine Position, begründe sie und ergänze ein konkretes Beispiel. Beispiel: Ich bin für sichere Radwege, weil sie Unfälle verhindern können. Zum Beispiel kommen Kinder so sicherer zur Schule.',
         'Develop your answer: state your position, explain why, and add a concrete example. Example: Ich bin für sichere Radwege, weil sie Unfälle verhindern können. Zum Beispiel kommen Kinder so sicherer zur Schule.')];
     if (exerciseId === 'counterargument-dialogue')
       return [tr(lang,
-        'Разверни ответ: признай опасение о расходах и объясни, почему твой аргумент его перевешивает.',
-        'Baue deinen Text aus: Greife die Sorge um die Kosten auf und begründe deine Erwiderung.',
+        'Разверни ответ: признай опасение о расходах и объясни, почему твой аргумент его перевешивает. Образец: Die Sorge um die Kosten ist verständlich. Langfristig kann die Modernisierung jedoch Energie sparen.',
+        'Baue deinen Text aus: Greife die Sorge um die Kosten auf und begründe deine Erwiderung. Beispiel: Die Sorge um die Kosten ist verständlich. Langfristig kann die Modernisierung jedoch Energie sparen.',
         'Develop your answer: acknowledge the cost concern and explain your response. Example: Die Sorge um die Kosten ist verständlich. Langfristig kann die Modernisierung jedoch Energie sparen.')];
     return [tr(lang,
-      'Разверни описание: сравни 2020 год (36 %) и 2025 год (48 %) и назови разницу в процентных пунктах.',
-      'Baue deine Beschreibung aus: Vergleiche 2020 (36 %) mit 2025 (48 %) und nenne die Differenz in Prozentpunkten.',
+      'Разверни описание: сравни 2020 год (36 %) и 2025 год (48 %) и назови разницу в процентных пунктах. Образец: Der Anteil stieg von 36 % im Jahr 2020 auf 48 % im Jahr 2025, also um 12 Prozentpunkte.',
+      'Baue deine Beschreibung aus: Vergleiche 2020 (36 %) mit 2025 (48 %) und nenne die Differenz in Prozentpunkten. Beispiel: Der Anteil stieg von 36 % im Jahr 2020 auf 48 % im Jahr 2025, also um 12 Prozentpunkte.',
       'Develop your description: compare 2020 (36%) with 2025 (48%) and state the difference in percentage points. Example: Der Anteil stieg von 36 % im Jahr 2020 auf 48 % im Jahr 2025, also um 12 Prozentpunkte.')];
   }
   const missingElements: string[] = [];
