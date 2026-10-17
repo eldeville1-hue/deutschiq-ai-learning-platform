@@ -609,7 +609,7 @@ const LessonScreen: React.FC = () => {
               {!checked && activeExercise.mission_role !== 'final' && <button type="button" className="feedback-skip" onClick={() => void skipExercise('after_feedback')}>{tr(lang, 'Продолжить пока', 'Vorerst weiter', 'Continue for now')}</button>}
             </div>
           )}
-          {checkError && <div className="lesson-check-error" role="alert">
+          {checkError && <div className="lesson-check-error" role="alert" style={{ whiteSpace: "pre-line" }}>
             {checkError}
             {reviewPending && <button type="button" className="feedback-skip" disabled={checking} onClick={() => void check()}>
               {tr(lang, 'Проверить ещё раз', 'Erneut prüfen', 'Try checking again')}
