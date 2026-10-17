@@ -33,6 +33,21 @@ test('short B2 statistical drafts receive a task-specific revision step', () => 
   expect(hints[0]).toContain('percentage points');
 });
 
+test('short B2 drafts provide contextual German examples in all interface languages', () => {
+  const tasks = [
+    ['argument_structure-dialogue', 'Ich bin für sichere Radwege'],
+    ['counterargument-dialogue', 'Die Sorge um die Kosten'],
+    ['data_description-dialogue', 'Der Anteil stieg von 36 %'],
+  ];
+  for (const [exerciseId, example] of tasks) {
+    for (const lang of ['ru', 'de', 'en'] as const) {
+      const hints = getB2WritingReviewHints(exerciseId, 'Kurz.', lang);
+      expect(hints).toHaveLength(1);
+      expect(hints[0]).toContain(example);
+    }
+  }
+});
+
 test('B2 figures require whole numbers and do not confuse 36 with 136', () => {
   const complete = '2020 lag der Anteil bei 36 Prozent, 2025 bei 48 Prozent. Das sind 12 Prozentpunkte mehr.';
   expect(getB2WritingReviewHints('data_description-dialogue', complete, 'en')).toEqual([expect.stringContaining('which conclusion the data supports')]);
