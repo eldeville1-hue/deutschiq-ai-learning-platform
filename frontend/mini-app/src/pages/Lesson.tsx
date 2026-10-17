@@ -317,7 +317,7 @@ const LessonScreen: React.FC = () => {
                 'Это самопроверка, не автоматическая оценка.',
                 'Das ist eine Selbstkontrolle, keine automatische Bewertung.',
                 'This is a self-check, not an automated grade.')
-            + (missingElements.length ? '\\n' + missingElements.join('\\n') : '')
+            + (missingElements.length ? '\n' + missingElements.join('\n') : '')
           : '';
         setCheckError(tr(lang,
           result.evaluation_status === 'needs_review'
