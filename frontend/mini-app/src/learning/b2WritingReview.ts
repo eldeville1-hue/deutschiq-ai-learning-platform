@@ -46,6 +46,19 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
     }
   }
 
+  // Even when common signal words are present, a checklist cannot establish
+  // whether the argument is convincing or the objection is answered fairly.
+  if (missingElements.length === 0 && exerciseId === 'argument_structure-dialogue') {
+    missingElements.push(tr(lang,
+      'Перечитай текст: ясно ли выражена твоя позиция и действительно ли пример подтверждает довод?',
+      'Lies deinen Text noch einmal: Ist deine Position klar und stützt dein Beispiel wirklich die Begründung?',
+      'Reread your draft: Is your position clear, and does your example actually support your reason?'));
+  } else if (missingElements.length === 0 && exerciseId === 'counterargument-dialogue') {
+    missingElements.push(tr(lang,
+      'Перечитай текст: честно ли представлено возражение и объяснено ли, почему твой ответ убедителен?',
+      'Lies deinen Text noch einmal: Ist der Einwand fair dargestellt und ist deine Erwiderung nachvollziehbar begründet?',
+      'Reread your draft: Is the objection represented fairly, and is your response supported by reasoning?'));
+  }
   // Keep the first actionable revision steps visible rather than overwhelming
   // the learner with a long checklist. This is guidance, not a correctness score.
   return missingElements.slice(0, 3);
