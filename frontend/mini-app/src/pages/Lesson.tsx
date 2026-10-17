@@ -551,7 +551,14 @@ const LessonScreen: React.FC = () => {
             </div>
           )}
           {(showTranscript || easyMode) && activeExercise.audio_text && <div className="listening-transcript"><small>{tr(lang, 'ТЕКСТ', 'TEXT', 'TRANSCRIPT')}</small><span>{activeExercise.audio_text}</span></div>}
-          <ExerciseInteraction exercise={{ ...activeExercise, id: `${id}-${exerciseIndex}-${retried[exerciseIndex] ? 'retry' : 'first'}` }} answer={answer} onAnswer={setAnswer} disabled={checked !== null} lang={lang} onAudio={sessionId ? transcribe : undefined} onPlayAudio={playAudio} guided={Boolean(retried[exerciseIndex]) || exerciseKind(activeExercise) === 'repair'} />
+          <ExerciseInteraction exercise={{ ...activeExercise, id: `${id}-${exerciseIndex}-${retried[exerciseIndex] ? 'retry' : 'first'}` }} answer={answer} onAnswer={nextAnswer => {
+            if (nextAnswer !== answer && writingSelfCheck) {
+              setSelfCheckMarks([false, false, false]);
+              setWritingSelfCheck(false);
+              setCheckError('');
+            }
+            setAnswer(nextAnswer);
+          }} disabled={checked !== null} lang={lang} onAudio={sessionId ? transcribe : undefined} onPlayAudio={playAudio} guided={Boolean(retried[exerciseIndex]) || exerciseKind(activeExercise) === 'repair'} />
           </div>}
             {speechResult?.transcript && (
               <div className="speech-result">
