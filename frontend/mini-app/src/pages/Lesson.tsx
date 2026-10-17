@@ -264,10 +264,16 @@ const LessonScreen: React.FC = () => {
         setChecked(null);
         setFeedback(null);
         setReviewPending(result.evaluation_status === 'needs_review');
-        setCheckError(result.retry_instruction || tr(lang,
-          'Не удалось надёжно оценить ответ. Попробуй переформулировать.',
-          'Die Antwort konnte nicht sicher bewertet werden. Bitte formuliere sie anders.',
-          'We could not assess that answer reliably. Please rephrase it.'));
+        setCheckError(tr(lang,
+          result.evaluation_status === 'needs_review'
+            ? 'Для этого задания пока нет надёжного эталона. Ответ не оценён — это не ошибка.'
+            : 'Ответ нельзя проверить однозначно. Это не означает, что он неправильный. Попробуй уточнить формулировку.',
+          result.evaluation_status === 'needs_review'
+            ? 'Für diese Aufgabe fehlt noch eine verlässliche Musterlösung. Deine Antwort wurde nicht als falsch bewertet.'
+            : 'Deine Antwort lässt sich nicht eindeutig bewerten. Das bedeutet nicht, dass sie falsch ist. Du kannst sie präzisieren.',
+          result.evaluation_status === 'needs_review'
+            ? 'This task has no reliable reference answer yet. Your response has not been marked wrong.'
+            : 'Your answer cannot be verified conclusively. That does not mean it is wrong. You can clarify your wording.'));
         return;
       }
       setChecked(Boolean(result.correct)); setFeedback(result);
