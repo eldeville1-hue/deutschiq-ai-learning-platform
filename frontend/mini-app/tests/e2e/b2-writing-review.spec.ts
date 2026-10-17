@@ -40,6 +40,13 @@ test('B2 data review distinguishes percentage points from percentages', () => {
   expect(getB2WritingReviewHints('data_description-dialogue', incorrectUnit, 'en').some(hint => hint.includes('percentage points'))).toBe(true);
 });
 
+test('B2 difference and percentage-point unit must refer to the same quantity', () => {
+  const unrelated = 'Im Jahr 2020 waren es 36 Prozent, im Jahr 2025 waren es 48 Prozent. Es gibt 12 Gruppen und viele Prozentpunkte Unterschied.';
+  expect(getB2WritingReviewHints('data_description-dialogue', unrelated, 'en').some(hint => hint.includes('12 percentage points'))).toBe(true);
+  const explicit = 'Im Jahr 2020 waren es 36 Prozent, im Jahr 2025 waren es 48 Prozent. Die Differenz beträgt 12 Prozentpunkte.';
+  expect(getB2WritingReviewHints('data_description-dialogue', explicit, 'en').some(hint => hint.includes('12 percentage points'))).toBe(false);
+});
+
 test('B2 data review flags explicitly swapped year-value pairs', () => {
   const reversed = 'Die Statistik zeigt: 2020: 48 %, 2025: 36 %. Insgesamt sind das 12 Prozentpunkte Unterschied bei den Nutzern.';
   expect(getB2WritingReviewHints('data_description-dialogue', reversed, 'en').some(hint => hint.includes('year-to-value pairing'))).toBe(true);
