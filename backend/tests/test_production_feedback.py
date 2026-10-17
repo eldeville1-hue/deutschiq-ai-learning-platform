@@ -8,6 +8,36 @@ from app.services.answer_intelligence import evaluate_structured_answer, normali
 
 
 class ProductionFeedbackTests(unittest.TestCase):
+    def test_ai_criteria_must_report_each_required_judgment(self):
+        from app.services.production_feedback import _ai_feedback
+        from types import SimpleNamespace
+        import json
+
+        def fake_response(criteria_met):
+            payload = {
+                "criteria_met": criteria_met,
+                "dimension_scores": {"task_completion": 95, "grammar": 95, "vocabulary": 95, "coherence": 95, "register": 95},
+                "feedback": "Gut.", "improvement": "Weiter üben.",
+                "corrected_answer": "Ein Beispiel."
+            }
+            return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=json.dumps(payload)))])
+
+        exercise = {
+            "assessment_criteria": ["overall_trend", "numeric_value_and_period"],
+            "answer": "Der Anteil stieg von 36 auf 48 Prozent.",
+        }
+        lesson = {"cefr": "B2"}
+        with patch("openai.OpenAI") as client:
+            client.return_value.chat.completions.create.return_value = fake_response({
+                "overall_trend": True, "numeric_value_and_period": False,
+            })
+            result = _ai_feedback("Der Anteil stieg.", exercise, lesson, "de")
+            self.assertFalse(result["correct"])
+            self.assertIn("numeric_value_and_period", result["missing_task_parts"])
+            client.return_value.chat.completions.create.return_value = fake_response({"overall_trend": True})
+            with self.assertRaises(ValueError):
+                _ai_feedback("Der Anteil stieg.", exercise, lesson, "de")
+
     def test_b2_complex_rubric_never_receives_unverified_local_pass(self):
         exercise = {
             "answer": "Der Anteil stieg von 36 auf 48 Prozent.",
