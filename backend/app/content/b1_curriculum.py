@@ -239,6 +239,37 @@ def build_b1_content(row):
             "en": ["Name an advantage of online courses.", "Contrast it with a disadvantage using an appropriate connector."],
         }
 
+    elif topic == "listening_attitude":
+        turn_partners = [
+            "Die Idee ist zwar interessant, aber kaum realistisch. Wie klingt diese Haltung?",
+            "Welches Wort oder welche Wendung verrät die Haltung?",
+        ]
+        turn_goals = {
+            "ru": ["Определи позицию говорящего по услышанной фразе.", "Назови языковой сигнал, который подтверждает вывод."],
+            "de": ["Bestimme die Haltung des Sprechers anhand der Aussage.", "Nenne ein sprachliches Signal als Beleg."],
+            "en": ["Identify the speaker's attitude from the statement.", "Name a linguistic cue supporting your interpretation."],
+        }
+    elif topic == "spoken_narrative":
+        turn_partners = [
+            "Erzähl von einem schwierigen Tag. Was geschah zuerst?",
+            "Was passierte danach, und wie ging die Geschichte schließlich aus?",
+        ]
+        turn_goals = {
+            "ru": ["Начни рассказ с первого события.", "Продолжи хронологию и закончи историю."],
+            "de": ["Beginne deine Erzählung mit dem ersten Ereignis.", "Führe die zeitliche Abfolge fort und schließe die Geschichte ab."],
+            "en": ["Begin your story with the first event.", "Continue the sequence and finish the story."],
+        }
+    elif topic == "b1_final":
+        turn_partners = [
+            "Ist das Leben in einer Großstadt besser? Was meinst du?",
+            "Warum denkst du das? Gib ein Beispiel und ziehe ein Fazit.",
+        ]
+        turn_goals = {
+            "ru": ["Вырази позицию о жизни в большом городе.", "Добавь причину, пример и вывод."],
+            "de": ["Äußere deine Position zum Leben in einer Großstadt.", "Ergänze einen Grund, ein Beispiel und ein Fazit."],
+            "en": ["State your view on living in a large city.", "Add a reason, an example and a conclusion."],
+        }
+
     def conversation_turns(language: str) -> list[dict]:
         return [
             {
