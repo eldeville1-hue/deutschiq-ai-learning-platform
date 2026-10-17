@@ -158,10 +158,13 @@ def build_b2_content(row: tuple) -> dict:
     }
     if topic in writing_goals:
         dialogue = next(item for item in exercises if item["type"] == "dialogue")
+        # Keep the actual scenario visible: a checklist alone is not a writing task.
+        scenarios = {"ru": scenario_ru, "de": scenario_de, "en": scenario_en}
         for language, goal in zip(("ru", "de", "en"), writing_goals[topic]):
+            prompt = f"{scenarios[language]}\\n\\n{goal}"
             if language == "ru":
-                dialogue["question"] = goal
-            dialogue["i18n"][language]["question"] = goal
+                dialogue["question"] = prompt
+            dialogue["i18n"][language]["question"] = prompt
     module_titles = {
         1: ("Строй сложные связи", "Komplexe Zusammenhänge", "Build complex connections"),
         2: ("Пиши точно и объективно", "Präzise und objektiv schreiben", "Write precisely and objectively"),
