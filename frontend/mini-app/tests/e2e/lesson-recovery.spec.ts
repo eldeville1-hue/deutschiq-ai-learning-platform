@@ -482,3 +482,29 @@ test('mobile writing review succeeds after AI service recovers', async ({ page }
   await expect(page.getByText('Try checking again')).toHaveCount(0);
   await expect(page.getByText('Writing review is temporarily unavailable.')).toHaveCount(0);
 });
+
+
+test('mobile B2 argument writing shows skill-specific self-check without penalty', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
+  const exercise = { id: 'argument_structure-dialogue', type: 'dialogue', question: 'Give an argument.', answer: 'Für den Ausbau spricht, dass Radwege sicherer sind.' };
+  await page.route('**/api/lesson/77?*', route => route.fulfill({ json: {
+    id: 77, level: 'B2', topic: 'argument_structure',
+    content: { title: 'Argument structure', examples: ['Für den Ausbau spricht die Sicherheit.'], exercises: [exercise] },
+  }}));
+  await page.route('**/api/lesson/start', route => route.fulfill({ json: {
+    session_id: 'b2-argument-session', resumed: false, next_exercise_index: 0,
+  }}));
+  await page.route('**/api/lesson/check-answer', route => route.fulfill({ json: {
+    correct: false, evaluation_status: 'uncertain',
+  }}));
+  await page.route('**/api/events', route => route.fulfill({ status: 204, body: '' }));
+  await page.goto('/lesson/77');
+  await page.getByRole('button', { name: 'Understand with an example' }).click();
+  await page.getByRole('button', { name: 'Start practice' }).click();
+  const writing = page.getByRole('textbox');
+  await writing.fill('Geschützte Radwege sind sinnvoll, weil sie Unfälle vermeiden helfen.');
+  await page.getByRole('button', { name: 'Check', exact: true }).click();
+  await expect(page.getByText(/clear position, supporting reason and concrete example/)).toBeVisible();
+  await expect(writing).toHaveValue('Geschützte Radwege sind sinnvoll, weil sie Unfälle vermeiden helfen.');
+  await expect(page.locator('.answer-feedback.wrong')).toHaveCount(0);
+});
