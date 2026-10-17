@@ -210,9 +210,14 @@ def build_b1_content(row):
         dialogue["accepted_answers"] = [dialogue_answer]
     # The guided repair has a fixed meaning; accept only editorially checked
     # reformulations, never unrelated transfer examples.
-    if topic == "subordinate_clauses":
+    guided_alternatives = {
+        "subordinate_clauses": ["Wir gehen spazieren, obwohl es regnet."],
+        "purpose_clauses": ["Um die Prüfung zu bestehen, lerne ich viel."],
+        "passive_past": ["1990 wurde das Haus gebaut."],
+    }
+    if topic in guided_alternatives:
         guided = next(item for item in exercises if item["stage"] == "guided")
-        guided["accepted_answers"].append("Wir gehen spazieren, obwohl es regnet.")
+        guided["accepted_answers"].extend(guided_alternatives[topic])
     turn_models = [dialogue_answer, alternatives[0]]
     if topic == "formal_email":
         turn_models = [
