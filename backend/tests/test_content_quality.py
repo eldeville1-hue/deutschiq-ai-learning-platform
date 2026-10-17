@@ -23,6 +23,25 @@ class ContentQualityTests(unittest.TestCase):
                 self.assertTrue(all(item.get("skill_id") == row[2]
                                     for item in content["exercises"]))
 
+    def test_b1_writing_dialogues_have_task_specific_goals(self):
+        expected = {
+            "formal_email": ("formellen Anrede", "new appointment", "neuen Termin"),
+            "opinion": ("Position zum Homeoffice", "concrete example", "Homeoffice"),
+            "argumentation": ("Vorteil von Onlinekursen", "disadvantage", "Nachteil"),
+        }
+        for row in B1_CURRICULUM:
+            if row[2] not in expected:
+                continue
+            german, english, partner = expected[row[2]]
+            content = build_b1_content(row)
+            dialogue = next(item for item in content["exercises"] if item["type"] == "dialogue")
+            de_turns = dialogue["i18n"]["de"]["conversation_turns"]
+            en_turns = dialogue["i18n"]["en"]["conversation_turns"]
+            self.assertIn(german, de_turns[0]["goal"])
+            self.assertIn(english, en_turns[1]["goal"])
+            self.assertTrue(any(partner in turn["partner"] for turn in de_turns))
+            self.assertEqual(2, len(de_turns))
+
     def test_b2_specialist_dialogues_match_their_communication_tasks(self):
         cases = {
             "formal_register": ("schriftliche Bestätigung", "written confirmation", "Bestätigung"),
