@@ -523,3 +523,34 @@ test('mobile B2 argument writing shows skill-specific self-check without penalty
   await expect(checklist).toHaveCount(0);
   await expect(writing).toHaveValue('Geschützte Radwege sind sinnvoll, weil sie Unfälle vermeiden helfen. Außerdem fördern sie das Radfahren.');
 });
+
+
+test('mobile B2 draft survives reload in the same server session', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
+  const exercise = { id: 'argument_structure-dialogue', type: 'dialogue', question: 'Give an argument.', answer: 'Radwege erhöhen die Sicherheit.' };
+  let starts = 0;
+  await page.route('**/api/lesson/77?*', route => route.fulfill({ json: {
+    id: 77, level: 'B2', topic: 'argument_structure',
+    content: { title: 'Argument structure', examples: ['Radwege erhöhen die Sicherheit.'], exercises: [exercise] },
+  }}));
+  await page.route('**/api/lesson/start', route => {
+    starts += 1;
+    return route.fulfill({ json: {
+      session_id: 'persistent-b2-session', resumed: starts > 1, next_exercise_index: 0,
+    } });
+  });
+  await page.route('**/api/events', route => route.fulfill({ status: 204, body: '' }));
+  await page.goto('/lesson/77');
+  await page.getByRole('button', { name: 'Understand with an example' }).click();
+  await page.getByRole('button', { name: 'Start practice' }).click();
+  const text = 'Geschützte Radwege sind wichtig, weil sie die Verkehrssicherheit erhöhen.';
+  await page.getByRole('textbox').fill(text);
+  await expect.poll(async () => page.evaluate(() =>
+    Object.keys(localStorage).filter(key => key.startsWith('deutschiq-lesson-draft-'))
+      .some(key => JSON.parse(localStorage.getItem(key) || '{}').answer === 'Geschützte Radwege sind wichtig, weil sie die Verkehrssicherheit erhöhen.')
+  )).toBe(true);
+  await page.reload();
+  await expect(page.getByRole('textbox')).toHaveValue(text);
+  await expect(page.getByRole('heading', { name: 'Give an argument.' })).toBeVisible();
+  expect(starts).toBeGreaterThanOrEqual(2);
+});
