@@ -28,6 +28,20 @@ class ContentQualityTests(unittest.TestCase):
             guided = next(item for item in lesson["exercises"] if item["stage"] == "guided")
             self.assertIn(alternative, guided["accepted_answers"], topic)
 
+    def test_b2_writing_transfer_goals_are_explicit_and_localized(self):
+        required = {
+            "argument_structure": ("позицию", "These", "position"),
+            "counterargument": ("контраргумент", "Gegenargument", "counterargument"),
+            "data_description": ("процентных пунктах", "Prozentpunkten", "percentage-point"),
+        }
+        for topic, markers in required.items():
+            row = next(row for row in B2_CURRICULUM if row[2] == topic)
+            lesson = build_b2_content(row)
+            task = next(item for item in lesson["exercises"] if item["type"] == "dialogue")
+            self.assertIn(markers[0], task["question"])
+            for lang, marker in zip(("ru", "de", "en"), markers):
+                self.assertIn(marker, task["i18n"][lang]["question"])
+
     def test_foundation_practice_markers_match_authored_models(self):
         from app.content.foundation_curriculum import PRACTICE_VARIANTS
         for skill in ("present_regular", "perfect_participles"):
