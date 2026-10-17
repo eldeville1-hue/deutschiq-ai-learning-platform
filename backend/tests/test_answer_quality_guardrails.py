@@ -88,3 +88,24 @@ def test_missing_reference_gives_actionable_feedback_without_claiming_error():
     result = evaluate_structured_answer("Ich lerne Deutsch.", {"type": "translate"})
     assert result["evaluation_status"] == "needs_review"
     assert "no valid reference" in result["learner_feedback"]
+
+
+def test_unlisted_dialogue_answer_requires_review_not_automatic_rejection():
+    result = grade(
+        "Ich heiße Anna und komme aus Hamburg.",
+        "Ich heiße Leo und komme aus Berlin.",
+        kind="dialogue",
+    )
+    assert result["evaluation_status"] == "uncertain"
+    assert result["task_satisfied"] is None
+    assert result["correct"] is False
+
+
+def test_authored_dialogue_alternative_still_receives_credit():
+    alternative = "Ich heiße Anna und komme aus Hamburg."
+    result = grade(
+        alternative, "Ich heiße Leo und komme aus Berlin.",
+        kind="dialogue", accepted_answers=[alternative],
+    )
+    assert result["evaluation_status"] == "verified"
+    assert result["correct"] is True
