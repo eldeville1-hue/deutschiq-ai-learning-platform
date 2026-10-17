@@ -26,6 +26,13 @@ test('B2 figures require whole numbers and do not confuse 36 with 136', () => {
   expect(partial.some(hint => hint.includes('36'))).toBe(true);
 });
 
+test('B2 data review distinguishes percentage points from percentages', () => {
+  const correct = 'Im Jahr 2020 lag der Anteil bei 36 Prozent und im Jahr 2025 bei 48 Prozent. Der Anstieg beträgt 12 Prozentpunkte.';
+  expect(getB2WritingReviewHints('data_description-dialogue', correct, 'en')).toEqual([]);
+  const incorrectUnit = 'Im Jahr 2020 lag der Anteil bei 36 Prozent und im Jahr 2025 bei 48 Prozent. Der Anstieg beträgt 12 Prozent.';
+  expect(getB2WritingReviewHints('data_description-dialogue', incorrectUnit, 'en').some(hint => hint.includes('percentage points'))).toBe(true);
+});
+
 test('unknown writing tasks never receive guessed B2 criteria', () => {
   expect(getB2WritingReviewHints('unknown-dialogue', 'Any answer', 'en')).toEqual([]);
 });
