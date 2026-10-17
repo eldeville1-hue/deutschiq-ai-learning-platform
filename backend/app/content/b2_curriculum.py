@@ -239,6 +239,16 @@ def build_b2_content(row: tuple) -> dict:
             for index, partner in enumerate(partners)
         ]
 
+    # Evaluate the communicative task, not an exact match to the sample answer.
+    # These criteria are consumed by the AI feedback rubric for independent work.
+    specialist_criteria = {
+        "formal_register": ["formal_greeting", "reason_for_writing", "written_confirmation_request", "formal_closing"],
+        "presentation_structure": ["topic_introduction", "presentation_outline", "transition", "summary"],
+        "discussion_language": ["respectful_response", "acknowledge_valid_point", "reasoned_disagreement"],
+        "data_description": ["overall_trend", "numeric_value_and_period", "cautious_interpretation"],
+    }
+    if topic in specialist_criteria:
+        dialogue["assessment_criteria"] = specialist_criteria[topic]
     dialogue["conversation_turns"] = conversation_turns("ru")
     for language in ("ru", "de", "en"):
         dialogue["i18n"][language]["conversation_turns"] = conversation_turns(language)
