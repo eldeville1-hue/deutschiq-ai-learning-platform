@@ -265,11 +265,35 @@ const LessonScreen: React.FC = () => {
         setFeedback(null);
         setReviewPending(result.evaluation_status === 'needs_review');
         const isB2Writing = lesson?.level === 'B2' && activeExercise?.type === 'dialogue';
+        const writingCriteria: Record<string, [string, string, string]> = {
+          'argument_structure-dialogue': [
+            'Проверь: ясная позиция, причина и конкретный пример.',
+            'Prüfe: klare These, Begründung und konkretes Beispiel.',
+            'Check: clear position, supporting reason and concrete example.',
+          ],
+          'counterargument-dialogue': [
+            'Проверь: признано возражение и дан аргументированный ответ.',
+            'Prüfe: Gegenargument anerkannt und sachlich entkräftet.',
+            'Check: counterargument acknowledged and answered with reasons.',
+          ],
+          'data_description-dialogue': [
+            'Проверь: начальное и конечное значения, период, разница в процентных пунктах; причины не выдуманы.',
+            'Prüfe: Anfangswert, Endwert, Zeitraum, Unterschied in Prozentpunkten; keine unbelegten Ursachen.',
+            'Check: starting value, ending value, period, percentage-point difference; no invented causes.',
+          ],
+        };
+        const criterion = writingCriteria[String(activeExercise?.id || '')];
         const writingGuidance = isB2Writing
-          ? tr(lang,
-              'Проверь свой текст по четырём пунктам: выполнена ли задача, есть ли обоснование, верна ли грамматика и подходит ли стиль. Это самопроверка, не автоматическая оценка.',
-              'Prüfe deinen Text in vier Punkten: Aufgabenerfüllung, Begründung, Grammatik und angemessener Stil. Das ist eine Selbstkontrolle, keine automatische Bewertung.',
-              'Review four aspects of your text: task completion, supporting reasons, grammar and appropriate register. This is a self-check, not an automated grade.')
+          ? (criterion
+              ? tr(lang, criterion[0], criterion[1], criterion[2])
+              : tr(lang,
+                  'Проверь выполнение задачи, аргументацию, грамматику и стиль.',
+                  'Prüfe Aufgabenerfüllung, Argumentation, Grammatik und Register.',
+                  'Check task completion, reasoning, grammar and register.'))
+            + ' ' + tr(lang,
+                'Это самопроверка, не автоматическая оценка.',
+                'Das ist eine Selbstkontrolle, keine automatische Bewertung.',
+                'This is a self-check, not an automated grade.')
           : '';
         setCheckError(tr(lang,
           result.evaluation_status === 'needs_review'
