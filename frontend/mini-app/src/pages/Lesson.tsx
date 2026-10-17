@@ -648,7 +648,19 @@ const LessonScreen: React.FC = () => {
           )}
           {writingSelfCheck && <div className="lesson-writing-self-check" aria-label={tr(lang, 'Самопроверка текста', 'Text selbst prüfen', 'Writing self-check')}>
             <p>{tr(lang, 'Отметь после проверки своего текста:', 'Markiere nach der Prüfung deines Textes:', 'Tick each item after reviewing your text:')}</p>
-            {([
+            {(String(activeExercise?.id || '') === 'argument_structure-dialogue' ? [
+              tr(lang, 'Моя позиция ясна', 'Meine Position ist klar', 'My position is clear'),
+              tr(lang, 'Я объяснил(а) причину и привёл(а) свой пример', 'Ich habe einen Grund und ein eigenes Beispiel genannt', 'I explained my reason and gave my own example'),
+              tr(lang, 'Я проверил(а) грамматику и стиль', 'Ich habe Grammatik und Stil geprüft', 'I checked grammar and style'),
+            ] : String(activeExercise?.id || '') === 'counterargument-dialogue' ? [
+              tr(lang, 'Я признал(а) опасение о расходах', 'Ich habe die Kostensorge anerkannt', 'I acknowledged the cost concern'),
+              tr(lang, 'Я ответил(а) на возражение своими аргументами', 'Ich habe den Einwand mit eigenen Gründen beantwortet', 'I responded to the objection with my own reasons'),
+              tr(lang, 'Я проверил(а) грамматику и тон', 'Ich habe Grammatik und Ton geprüft', 'I checked grammar and tone'),
+            ] : String(activeExercise?.id || '') === 'data_description-dialogue' ? [
+              tr(lang, 'Я верно указал(а) годы и значения', 'Ich habe Jahre und Werte richtig zugeordnet', 'I paired the years and values correctly'),
+              tr(lang, 'Я описал(а) рост на 12 процентных пунктов', 'Ich habe den Anstieg um 12 Prozentpunkte beschrieben', 'I described the increase of 12 percentage points'),
+              tr(lang, 'Я не придумал(а) причины, которых нет в данных', 'Ich habe keine unbelegten Ursachen erfunden', 'I did not invent unsupported causes'),
+            ] : [
               tr(lang, 'Я выполнил(а) задачу', 'Ich habe die Aufgabe erfüllt', 'I addressed the task'),
               tr(lang, 'Я привёл(а) аргументы или нужные данные', 'Ich habe Gründe oder nötige Daten genannt', 'I included reasons or required data'),
               tr(lang, 'Я проверил(а) грамматику и стиль', 'Ich habe Grammatik und Register geprüft', 'I checked grammar and register'),
