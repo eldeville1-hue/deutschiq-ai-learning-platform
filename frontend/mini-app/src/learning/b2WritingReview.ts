@@ -15,7 +15,7 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
       missingElements.push(tr(lang, 'Проверь, есть ли обоснованный ответ на возражение.', 'Prüfe, ob du dem Einwand eine begründete Antwort gegenüberstellst.', 'Check whether you gave a reasoned response to the objection.'));
   } else if (exerciseId === 'data_description-dialogue') {
     for (const number of ['2020', '2025', '36', '48']) {
-      if (!new RegExp(`(^|\\\\D)${number}(?!\\\\d)`).test(answerText))
+      if (!new RegExp(`(^|\\D)${number}(?!\\d)`).test(answerText))
         missingElements.push(tr(lang, `Проверь, указано ли значение ${number}.`, `Prüfe, ob der Wert ${number} genannt wird.`, `Check whether you included ${number}.`));
     }
     if (!/\b(12|zwölf)\b/i.test(answerText))
