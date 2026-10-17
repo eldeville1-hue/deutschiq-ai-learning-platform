@@ -45,7 +45,7 @@ class ContentQualityTests(unittest.TestCase):
                 prompt = task["i18n"][lang]["question"]
                 self.assertIn(marker, prompt)
                 self.assertIn(scenario_text, prompt)
-                self.assertIn("\\n\\n", prompt)
+                self.assertIn("\n\n", prompt)
 
     def test_foundation_practice_markers_match_authored_models(self):
         from app.content.foundation_curriculum import PRACTICE_VARIANTS
