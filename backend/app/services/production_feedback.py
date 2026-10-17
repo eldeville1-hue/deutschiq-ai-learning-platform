@@ -135,11 +135,11 @@ def _ai_feedback(answer: str, exercise: dict, lesson_content: dict, lang: str) -
         messages=[
             {"role": "system", "content": (
                 "Evaluate an independent German learner response at the stated CEFR. Do not require the model wording. Reject off-topic answers and fragments. "
-                "If assessment_criteria are supplied, evaluate each task requirement, including proposing an alternative appointment time. "
+                "If assessment_criteria are supplied, return criteria_met as an object mapping every criterion key to a boolean. Judge each requirement independently and do not infer missing content. "
                 "Do not give a passing task_completion score if any required element is absent. "
                 "Score task_completion, grammar, vocabulary, coherence, and register from 0-100. Give one brief diagnosis and exactly one actionable improvement. "
                 f"Write feedback in { {'ru':'Russian','de':'German','en':'English'}.get(lang, 'English') }. Return JSON only: "
-                '{"dimension_scores":{"task_completion":0,"grammar":0,"vocabulary":0,"coherence":0,"register":0},"feedback":"brief diagnosis","improvement":"one next step","corrected_answer":"natural German correction","error_type":"brief category or null"}.'
+                '{"criteria_met":{},"dimension_scores":{"task_completion":0,"grammar":0,"vocabulary":0,"coherence":0,"register":0},"feedback":"brief diagnosis","improvement":"one next step","corrected_answer":"natural German correction","error_type":"brief category or null"}.'
             )},
             {"role": "user", "content": json.dumps(prompt, ensure_ascii=False)},
         ],
@@ -149,11 +149,21 @@ def _ai_feedback(answer: str, exercise: dict, lesson_content: dict, lang: str) -
     if not all(name in raw_scores for name in DIMENSIONS):
         raise ValueError("AI assessment omitted rubric dimensions")
     scores = {name: _clamp(raw_scores[name]) for name in DIMENSIONS}
+    criteria = [str(item) for item in exercise.get("assessment_criteria", []) if str(item).strip()]
+    if criteria:
+        reported = result.get("criteria_met")
+        if not isinstance(reported, dict) or any(
+            key not in reported or type(reported[key]) is not bool for key in criteria
+        ):
+            raise ValueError("AI assessment omitted required per-criterion judgments")
+        missing_criteria = [key for key in criteria if not reported[key]]
+    else:
+        missing_criteria = []
     score = _overall(scores)
     threshold = PASS_MARKS.get(cefr, 70)
     passed = score >= threshold and scores["task_completion"] >= 60 and scores["grammar"] >= 50
     missing_parts = _formal_message_missing_parts(answer, exercise)
-    if missing_parts:
+    if missing_parts or missing_criteria:
         passed = False
     corrected = str(result.get("corrected_answer") or exercise.get("answer", ""))
     return {
@@ -161,7 +171,7 @@ def _ai_feedback(answer: str, exercise: dict, lesson_content: dict, lang: str) -
         "feedback": str(result.get("feedback") or _copy(lang)["grammar"]), "improvement": str(result.get("improvement") or _copy(lang)["expand"]),
         "corrected_answer": corrected, "source": "ai", "error_type": None if passed else (result.get("error_type") or "production_below_cefr"),
         "missing_words": [] if passed else word_diff(answer, corrected)["missing"], "extra_words": [] if passed else word_diff(answer, corrected)["extra"],
-        "cefr_standard": cefr, "pass_mark": threshold, "missing_task_parts": missing_parts,
+        "cefr_standard": cefr, "pass_mark": threshold, "missing_task_parts": list(dict.fromkeys(missing_parts + missing_criteria)),
     }
 
 
