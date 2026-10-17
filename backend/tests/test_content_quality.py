@@ -10,6 +10,12 @@ from app.services.content_i18n import localize_lesson_content
 
 
 class ContentQualityTests(unittest.TestCase):
+    def test_a1_personal_details_variant_practices_kommen_aus(self):
+        from app.content.foundation_curriculum import PRACTICE_VARIANTS
+        model = PRACTICE_VARIANTS["personal_details"][3]
+        self.assertIn("komme aus", model)
+        self.assertIn("komme", PRACTICE_VARIANTS["personal_details"][4])
+
     def test_all_cefr_curricula_have_unique_day_and_skill_pairs(self):
         for level, rows in (
             ("A1", A1_CURRICULUM), ("A2", A2_CURRICULUM),
