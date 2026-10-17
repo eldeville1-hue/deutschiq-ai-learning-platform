@@ -197,7 +197,23 @@ def build_b1_content(row):
 
     dialogue = next(item for item in exercises if item["type"] == "dialogue")
     dialogue_answer = dialogue.get("model_answer") or dialogue["answer"]
+    if topic == "formal_email":
+        # A complete email model must demonstrate the greeting and closing
+        # required by the task; the short guided sentence remains unchanged.
+        dialogue_answer = (
+            "Sehr geehrte Damen und Herren,\\n\\n"
+            "mein Termin wurde abgesagt. Könnten Sie mir bitte einen neuen Termin anbieten?\\n\\n"
+            "Mit freundlichen Grüßen\\nAlex Weber"
+        )
+        dialogue["answer"] = dialogue_answer
+        dialogue["model_answer"] = dialogue_answer
+        dialogue["accepted_answers"] = [dialogue_answer]
     turn_models = [dialogue_answer, alternatives[0]]
+    if topic == "formal_email":
+        turn_models = [
+            "Sehr geehrte Damen und Herren, mein Termin wurde abgesagt.",
+            "Könnten Sie mir bitte einen neuen Termin anbieten? Mit freundlichen Grüßen, Alex Weber.",
+        ]
     turn_partners = [
         "Was ist in dieser Situation wichtig?",
         "Kannst du das genauer begründen oder ergänzen?",
