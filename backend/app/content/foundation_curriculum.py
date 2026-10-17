@@ -54,7 +54,7 @@ A2_CURRICULUM = [
 # accepting unrelated text or forcing learners to copy names and places.
 PRACTICE_VARIANTS = {
     "greetings": ("Ты встречаешь соседа утром.", "Du triffst morgens deinen Nachbarn.", "You meet your neighbour in the morning.", "Hallo! Ich bin Sara.", ["hallo", "heiße"]),
-    "personal_details": ("Ты знакомишься с участником курса.", "Du lernst jemanden im Kurs kennen.", "You meet someone in your course.", "Ich bin Leo und wohne in Bremen.", ["ich", "komme"]),
+    "personal_details": ("Ты знакомишься с участником курса.", "Du lernst jemanden im Kurs kennen.", "You meet someone in your course.", "Ich bin Leo und komme aus Bremen.", ["ich", "komme"]),
     "main_clause": ("Ты рассказываешь, что делаешь сегодня.", "Du erzählst, was du heute machst.", "You say what you are doing today.", "Am Abend koche ich zu Hause.", ["ich"]),
     "yes_no_questions": ("Ты уточняешь план друга.", "Du fragst nach dem Plan eines Freundes.", "You check a friend's plan.", "Hast du morgen Zeit?", ["du"]),
     "w_questions": ("Ты хочешь узнать место встречи.", "Du möchtest den Treffpunkt wissen.", "You want to know the meeting place.", "Wann beginnt der Kurs?", ["wo", "wann"]),
