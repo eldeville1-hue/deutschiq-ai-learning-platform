@@ -6,7 +6,7 @@ test('B2 argument hints recognize alternative reasoning and evidence', () => {
   expect(getB2WritingReviewHints('argument_structure-dialogue', complete, 'en')).toEqual([expect.stringContaining('actually support your reason')]);
   const incomplete = getB2WritingReviewHints('argument_structure-dialogue', 'Ich bin für Radwege.', 'en');
   expect(incomplete).toHaveLength(1);
-  expect(incomplete[0]).toContain('too brief');
+  expect(incomplete[0]).toContain('state your position');
   const expanded = 'Ich unterstütze Radwege in der Stadt, weil sie die Sicherheit für alle verbessern. Deshalb sollten wir diese Lösung wählen.';
   expect(getB2WritingReviewHints('argument_structure-dialogue', expanded, 'en')).toHaveLength(1);
 
@@ -16,7 +16,7 @@ test('B2 argument hints recognize alternative reasoning and evidence', () => {
 test('B2 rebuttal hints recognize acknowledgment and response without fixed phrases', () => {
   const complete = 'Die Sorge ist nachvollziehbar und die Kosten sind wichtig. Langfristig spart die Modernisierung Energie und verbessert die Lernbedingungen.';
   expect(getB2WritingReviewHints('counterargument-dialogue', complete, 'en')).toEqual([expect.stringContaining('represented fairly')]);
-  expect(getB2WritingReviewHints('counterargument-dialogue', 'Das ist zu teuer.', 'en')[0]).toContain('too brief');
+  expect(getB2WritingReviewHints('counterargument-dialogue', 'Das ist zu teuer.', 'en')[0]).toContain('acknowledge the cost concern');
 });
 
 test('B2 rebuttal does not mistake generic natürlich for acknowledging an objection', () => {
@@ -24,6 +24,13 @@ test('B2 rebuttal does not mistake generic natürlich for acknowledging an objec
   expect(getB2WritingReviewHints('counterargument-dialogue', generic, 'en').some(hint => hint.includes('acknowledged the objection'))).toBe(true);
   const acknowledged = 'Die Sorge um die Kosten ist nachvollziehbar. Aber wir sollten die Gebäude modernisieren, weil neue Räume bessere Lernbedingungen schaffen.';
   expect(getB2WritingReviewHints('counterargument-dialogue', acknowledged, 'en').some(hint => hint.includes('acknowledged the objection'))).toBe(false);
+});
+
+test('short B2 statistical drafts receive a task-specific revision step', () => {
+  const hints = getB2WritingReviewHints('data_description-dialogue', 'Die Statistik zeigt einen Anstieg.', 'en');
+  expect(hints).toHaveLength(1);
+  expect(hints[0]).toContain('2020 (36%)');
+  expect(hints[0]).toContain('percentage points');
 });
 
 test('B2 figures require whole numbers and do not confuse 36 with 136', () => {
