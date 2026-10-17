@@ -16,7 +16,7 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
   if (exerciseId === 'argument_structure-dialogue') {
     if (!/\b(weil|denn|da|deshalb|daher|zumal|aufgrund|wegen|aus diesem grund|ein grund|führt dazu|trägt dazu bei|ermöglicht|bewirkt)\b/i.test(answerText))
       missingElements.push(tr(lang, 'Проверь, понятна ли причина твоей позиции. Её можно выразить разными способами.', 'Prüfe, ob deine Begründung deutlich wird. Du kannst sie unterschiedlich formulieren.', 'Check whether your reasoning is clear; there are several ways to express it.'));
-    if (!/\b(zum beispiel|beispielsweise|etwa|konkret|beispiel|belegen|zeigt sich|so könnte|etwa wenn)\b/i.test(answerText))
+    if (!/\b(zum beispiel|beispielsweise|etwa wenn|konkret|beispiel|belegen|zeigt sich|so könnte)\b/i.test(answerText))
       missingElements.push(tr(lang, 'Проверь, есть ли конкретный пример или доказательство.', 'Prüfe, ob ein konkretes Beispiel oder ein Beleg enthalten ist.', 'Check whether you included a concrete example or supporting evidence.'));
   } else if (exerciseId === 'counterargument-dialogue') {
     if (!/\b(zwar|obwohl|auch wenn|einerseits|natürlich|verständlich|nachvollziehbar|es stimmt|ich verstehe|der einwand|die sorge|zugegeben)\b/i.test(answerText))
