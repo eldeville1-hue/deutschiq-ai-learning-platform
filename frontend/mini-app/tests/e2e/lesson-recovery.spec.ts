@@ -402,7 +402,7 @@ test('mobile pending AI writing review preserves answer and allows retry without
     checks += 1;
     return route.fulfill({ json: {
       correct: false, evaluation_status: 'needs_review',
-      retry_instruction: 'Writing review is temporarily unavailable. Your answer is not marked wrong. Please try again later.',
+      retry_instruction: 'This task has no reliable reference answer yet. Your response has not been marked wrong.',
     }});
   });
   await page.route('**/api/events', route => route.fulfill({ status: 204, body: '' }));
@@ -413,7 +413,7 @@ test('mobile pending AI writing review preserves answer and allows retry without
   const writing = page.getByRole('textbox');
   await writing.fill(letter);
   await page.getByRole('button', { name: 'Check', exact: true }).click();
-  await expect(page.getByText('Writing review is temporarily unavailable. Your answer is not marked wrong. Please try again later.')).toBeVisible();
+  await expect(page.getByText('This task has no reliable reference answer yet. Your response has not been marked wrong.')).toBeVisible();
   await expect(writing).toHaveValue(letter);
   await expect(page.getByRole('button', { name: 'Try checking again' })).toBeVisible();
   await page.getByRole('button', { name: 'Try checking again' }).click();
