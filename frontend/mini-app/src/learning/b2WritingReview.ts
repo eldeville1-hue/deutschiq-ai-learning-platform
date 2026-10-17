@@ -54,6 +54,14 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
     }
   }
 
+  // Complete numerical coverage still needs a human judgment about clarity
+  // and interpretation; never silently equate an empty checklist with mastery.
+  if (missingElements.length === 0 && exerciseId === 'data_description-dialogue') {
+    missingElements.push(tr(lang,
+      'Перечитай описание: понятно ли, что именно сравнивается, как изменился показатель и какой вывод подтверждают данные?',
+      'Lies deine Beschreibung noch einmal: Ist klar, was verglichen wird, wie sich der Wert verändert hat und welche Schlussfolgerung die Daten stützen?',
+      'Reread your description: Is it clear what is compared, how the value changed, and which conclusion the data supports?'));
+  }
   // Even when common signal words are present, a checklist cannot establish
   // whether the argument is convincing or the objection is answered fairly.
   if (missingElements.length === 0 && exerciseId === 'argument_structure-dialogue') {
