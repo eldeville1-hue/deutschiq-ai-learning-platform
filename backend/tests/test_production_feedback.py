@@ -1,11 +1,37 @@
 import unittest
+from unittest.mock import patch
+import asyncio
 
-from app.services.production_feedback import local_feedback
+from app.services.production_feedback import local_feedback, evaluate_production
 from app.services.misconception_feedback import misconception_feedback
 from app.services.answer_intelligence import evaluate_structured_answer, normalize_text
 
 
 class ProductionFeedbackTests(unittest.TestCase):
+    def test_b2_complex_rubric_never_receives_unverified_local_pass(self):
+        exercise = {
+            "answer": "Der Anteil stieg von 36 auf 48 Prozent.",
+            "model_answer": "Der Anteil stieg von 36 auf 48 Prozent.",
+            "assessment_criteria": ["overall_trend", "numeric_value_and_period", "cautious_interpretation"],
+            "target_patterns": ["Anteil"],
+        }
+        answer = "Der Anteil ist über die Jahre deutlich gestiegen, und ich denke, das ist gut."
+        lesson = {"cefr": "B2", "rule": "Beschreibe die Daten."}
+        with patch("app.core.config.settings.OPENAI_API_KEY", ""):
+            result = asyncio.run(evaluate_production(answer, exercise, lesson, "de"))
+        self.assertFalse(result["correct"])
+        self.assertTrue(result["assessment_pending"])
+
+    def test_exact_model_still_passes_without_ai_for_b2_rubric(self):
+        model = "Der Anteil stieg von 36 auf 48 Prozent, also um zwölf Prozentpunkte."
+        exercise = {
+            "answer": model, "model_answer": model,
+            "assessment_criteria": ["overall_trend", "numeric_value_and_period", "cautious_interpretation"],
+        }
+        with patch("app.core.config.settings.OPENAI_API_KEY", ""):
+            result = asyncio.run(evaluate_production(model, exercise, {"cefr": "B2"}, "de"))
+        self.assertFalse(result.get("assessment_pending", False))
+
     def test_structured_answers_ignore_punctuation_but_do_not_auto_accept_spelling(self):
         exercise = {"answer": "Ich habe gestern gearbeitet.", "accepted_answers": ["Ich habe gestern gearbeitet."]}
         self.assertTrue(evaluate_structured_answer("ich habe gestern gearbeitet!", exercise)["correct"])
