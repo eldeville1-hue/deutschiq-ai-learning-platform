@@ -554,6 +554,17 @@ const LessonScreen: React.FC = () => {
             </div>
           )}
           {(showTranscript || easyMode) && activeExercise.audio_text && <div className="listening-transcript"><small>{tr(lang, 'ТЕКСТ', 'TEXT', 'TRANSCRIPT')}</small><span>{activeExercise.audio_text}</span></div>}
+          {['argument_structure-dialogue', 'counterargument-dialogue', 'data_description-dialogue'].includes(String(activeExercise?.id || '')) && checked === null && (
+            <div className="lesson-writing-self-check" aria-label={tr(lang, 'План ответа', 'Schreibplan', 'Writing plan')}>
+              <strong>{tr(lang, 'Сначала твой ответ', 'Zuerst dein eigener Text', 'Your answer first')}</strong>
+              <p>{String(activeExercise?.id) === 'argument_structure-dialogue'
+                ? tr(lang, '1. Позиция → 2. Причина → 3. Свой пример', '1. Position → 2. Grund → 3. Eigenes Beispiel', '1. Position → 2. Reason → 3. Your example')
+                : String(activeExercise?.id) === 'counterargument-dialogue'
+                  ? tr(lang, '1. Признай опасение → 2. Ответь → 3. Обоснуй', '1. Sorge anerkennen → 2. Antworten → 3. Begründen', '1. Acknowledge concern → 2. Respond → 3. Give a reason')
+                  : tr(lang, '1. Начальное значение → 2. Конечное → 3. Разница', '1. Anfangswert → 2. Endwert → 3. Differenz', '1. Starting value → 2. Ending value → 3. Difference')}</p>
+              <small>{tr(lang, 'Напиши самостоятельно. После проверки появится образец для сравнения.', 'Schreibe selbst. Nach der Prüfung kannst du ein Beispiel vergleichen.', 'Write independently. After checking, you can compare with an example.')}</small>
+            </div>
+          )}
           <ExerciseInteraction exercise={{ ...activeExercise, id: `${id}-${exerciseIndex}-${retried[exerciseIndex] ? 'retry' : 'first'}` }} answer={answer} onAnswer={nextAnswer => {
             if (nextAnswer !== answer && writingSelfCheck) {
               setSelfCheckMarks([false, false, false]);
