@@ -5,7 +5,7 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
   // Keyword presence is only a weak signal, never evidence of writing quality.
   // Avoid claiming that a very short or empty response meets the criteria.
   const minimumWords = 12;
-  const words = answerText.match(/[\\p{L}\\p{N}]+/gu) || [];
+  const words = answerText.match(/[\p{L}\p{N}]+/gu) || [];
   if (words.length < minimumWords && ['argument_structure-dialogue', 'counterargument-dialogue', 'data_description-dialogue'].includes(exerciseId)) {
     return [tr(lang,
       'Ответ пока слишком краткий для содержательной самопроверки. Раскрой мысль несколькими предложениями.',
