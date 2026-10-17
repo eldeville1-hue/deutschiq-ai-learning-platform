@@ -28,14 +28,14 @@ test('B2 rebuttal does not mistake generic natürlich for acknowledging an objec
 
 test('B2 figures require whole numbers and do not confuse 36 with 136', () => {
   const complete = '2020 lag der Anteil bei 36 Prozent, 2025 bei 48 Prozent. Das sind 12 Prozentpunkte mehr.';
-  expect(getB2WritingReviewHints('data_description-dialogue', complete, 'en')).toEqual([]);
+  expect(getB2WritingReviewHints('data_description-dialogue', complete, 'en')).toEqual([expect.stringContaining('which conclusion the data supports')]);
   const partial = getB2WritingReviewHints('data_description-dialogue', 'Im Jahr 2020 lag der Anteil bei 136 Prozent und im Jahr 2025 bei 48 Prozent. Die Differenz beträgt 12 Prozentpunkte.', 'en');
   expect(partial.some(hint => hint.includes('36'))).toBe(true);
 });
 
 test('B2 data review distinguishes percentage points from percentages', () => {
   const correct = 'Im Jahr 2020 lag der Anteil bei 36 Prozent und im Jahr 2025 bei 48 Prozent. Der Anstieg beträgt 12 Prozentpunkte.';
-  expect(getB2WritingReviewHints('data_description-dialogue', correct, 'en')).toEqual([]);
+  expect(getB2WritingReviewHints('data_description-dialogue', correct, 'en')).toEqual([expect.stringContaining('which conclusion the data supports')]);
   const incorrectUnit = 'Im Jahr 2020 lag der Anteil bei 36 Prozent und im Jahr 2025 bei 48 Prozent. Der Anstieg beträgt 12 Prozent.';
   expect(getB2WritingReviewHints('data_description-dialogue', incorrectUnit, 'en').some(hint => hint.includes('percentage points'))).toBe(true);
 });
