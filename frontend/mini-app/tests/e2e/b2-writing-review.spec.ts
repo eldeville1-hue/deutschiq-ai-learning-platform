@@ -19,6 +19,13 @@ test('B2 rebuttal hints recognize acknowledgment and response without fixed phra
   expect(getB2WritingReviewHints('counterargument-dialogue', 'Das ist zu teuer.', 'en')[0]).toContain('too brief');
 });
 
+test('B2 rebuttal does not mistake generic natürlich for acknowledging an objection', () => {
+  const generic = 'Natürlich ist eine gute Schule für alle Kinder wichtig. Aber wir sollten die Gebäude modernisieren, weil neue Räume bessere Lernbedingungen schaffen.';
+  expect(getB2WritingReviewHints('counterargument-dialogue', generic, 'en').some(hint => hint.includes('acknowledged the objection'))).toBe(true);
+  const acknowledged = 'Die Sorge um die Kosten ist nachvollziehbar. Aber wir sollten die Gebäude modernisieren, weil neue Räume bessere Lernbedingungen schaffen.';
+  expect(getB2WritingReviewHints('counterargument-dialogue', acknowledged, 'en').some(hint => hint.includes('acknowledged the objection'))).toBe(false);
+});
+
 test('B2 figures require whole numbers and do not confuse 36 with 136', () => {
   const complete = '2020 lag der Anteil bei 36 Prozent, 2025 bei 48 Prozent. Das sind 12 Prozentpunkte mehr.';
   expect(getB2WritingReviewHints('data_description-dialogue', complete, 'en')).toEqual([]);
