@@ -1,5 +1,12 @@
 import { tr } from "../i18n/language";
 
+// Source figures for the current B2 data-description exercise. Keep these
+// separate from wording recognition so future exercises can supply other data.
+const B2_DATA_DESCRIPTION = {
+  earlier: { year: 2020, percent: 36 },
+  later: { year: 2025, percent: 48 },
+} as const;
+
 export function getB2WritingReviewHints(exerciseId: string, answer: string, lang: Parameters<typeof tr>[0]): string[] {
   const answerText = answer.toLocaleLowerCase('de-DE').trim();
   // Keyword presence is only a weak signal, never evidence of writing quality.
@@ -37,7 +44,7 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
       missingElements.push(tr(lang, 'Проверь, есть ли обоснованный ответ на возражение.', 'Prüfe, ob du dem Einwand eine begründete Antwort gegenüberstellst.', 'Check whether you gave a reasoned response to the objection.'));
   } else if (exerciseId === 'data_description-dialogue') {
     // Recognize local year/value relationships without scanning unrelated prose.
-    const reversedPair = ([ [2020, 48], [2025, 36] ] as const).some(([year, value]) => {
+    const reversedPair = ([ [B2_DATA_DESCRIPTION.earlier.year, B2_DATA_DESCRIPTION.later.percent], [B2_DATA_DESCRIPTION.later.year, B2_DATA_DESCRIPTION.earlier.percent] ] as const).some(([year, value]) => {
       const yearFirst = new RegExp('\\b' + year + '\\b\\s*(?::|[–—-]|\\s+(?:(?:lag|betrug|waren|war)\\s+(?:(?:der\\s+anteil|die\\s+quote|der\\s+wert)\\s+)?(?:bei\\s+)?|bei\\s+))\\s*' + value + '(?=\\s|%|[.,;!?]|$)', 'i');
       const valueFirst = new RegExp('\\b' + value + '\\s*(?:%|prozent)\\s*(?:im\\s+jahr|in|für)\\s+' + year + '\\b', 'i');
       return yearFirst.test(answerText) || valueFirst.test(answerText);
