@@ -62,12 +62,12 @@ class ContentQualityTests(unittest.TestCase):
     def test_b2_argument_and_rebuttal_conversation_turns_are_specific_and_localized(self):
         cases = {
             "argument_structure": {
-                "scenario": ("Radwege", "Radwege", "Radwege"),
+                "scenario": ("Radwege", "Grund", "Beispiel"),
                 "goals": (("позицию", "довод", "пример"), ("Position", "Argument", "Beispiel"), ("position", "reason", "example")),
                 "criteria": ["clear_position", "supporting_reason", "concrete_example"],
             },
             "counterargument": {
-                "scenario": ("Kosten", "Kosten", "Kosten"),
+                "scenario": ("teuer", "Kostenargument", "Zahlen"),
                 "goals": (("расходах", "возражение", "цифр"), ("Kostensorge", "Einwand", "Zahlen"), ("cost concern", "objection", "figures")),
                 "criteria": ["acknowledge_objection", "reasoned_rebuttal", "avoid_unsupported_claims"],
             },
