@@ -582,6 +582,44 @@ test('mobile B2 rebuttal preserves independent writing through review and revisi
   await expect(page.getByRole('textbox')).toHaveValue(draft);
 });
 
+test('mobile B2 data description reviews percentage points without penalizing uncertainty', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
+  const exercise = {
+    id: 'data_description-dialogue', type: 'dialogue',
+    question: 'Describe the user share: 36% in 2020 and 48% in 2025. Avoid unsupported explanations.',
+    answer: 'Der Anteil stieg von 36 auf 48 Prozent, also um zwölf Prozentpunkte.',
+  };
+  await page.route('**/api/lesson/77?*', route => route.fulfill({ json: {
+    id: 77, level: 'B2', topic: 'data_description',
+    content: { title: 'Describe data', examples: ['Der Anteil lag 2020 bei 36 Prozent.'], exercises: [exercise] },
+  }}));
+  await page.route('**/api/lesson/start', route => route.fulfill({ json: {
+    session_id: 'b2-data-session', resumed: true, next_exercise_index: 0,
+  }}));
+  await page.route('**/api/lesson/check-answer', route => route.fulfill({ json: {
+    correct: false, evaluation_status: 'uncertain',
+  }}));
+  await page.route('**/api/events', route => route.fulfill({ status: 204, body: '' }));
+  await page.goto('/lesson/77');
+  const writing = page.getByRole('textbox');
+  await expect(writing).toBeVisible();
+  const draft = 'Im Jahr 2020 lag der Anteil bei 36 Prozent. 2025 waren es 48 Prozent. Das sind zwölf Prozentpunkte mehr.';
+  await writing.fill(draft);
+  await page.getByRole('button', { name: 'Check', exact: true }).click();
+  const checklist = page.getByLabel('Writing self-check');
+  await expect(checklist).toBeVisible();
+  await expect(checklist.getByRole('checkbox')).toHaveCount(3);
+  await expect(page.locator('.answer-feedback.wrong')).toHaveCount(0);
+  await expect(writing).toHaveValue(draft);
+  await expect(checklist.getByRole('button', { name: 'Compare with example' })).toHaveAttribute('aria-expanded', 'false');
+  await page.reload();
+  await expect(page.getByLabel('Writing self-check')).toBeVisible();
+  await expect(page.getByRole('textbox')).toHaveValue(draft);
+  await page.getByLabel('Writing self-check').getByRole('button', { name: 'Improve my answer' }).click();
+  await expect(page.getByLabel('Writing self-check')).toHaveCount(0);
+  await expect(page.getByRole('textbox')).toHaveValue(draft);
+});
+
 test('mobile B2 draft survives reload in the same server session', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
   const exercise = { id: 'argument_structure-dialogue', type: 'dialogue', question: 'Give an argument.', answer: 'Radwege erhöhen die Sicherheit.' };
