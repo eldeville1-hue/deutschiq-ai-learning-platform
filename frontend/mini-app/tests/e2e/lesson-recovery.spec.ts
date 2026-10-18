@@ -507,7 +507,7 @@ test('mobile B2 argument writing shows skill-specific self-check without penalty
   await page.getByRole('button', { name: 'Check', exact: true }).click();
   await expect(writingPlan).toHaveCount(0);
   await expect(page.getByText(/clear position, supporting reason and concrete example/)).toBeVisible();
-  await expect(page.getByText(/Develop your answer: state your position/)).toBeVisible();
+  await expect(page.getByText(/Develop your argument: state your position/)).toBeVisible();
   await expect(writing).toHaveValue('Geschützte Radwege sind sinnvoll, weil sie Unfälle vermeiden helfen.');
   await expect(page.locator('.answer-feedback.wrong')).toHaveCount(0);
   const checklist = page.getByLabel('Writing self-check');
