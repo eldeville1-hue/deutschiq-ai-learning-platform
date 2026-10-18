@@ -65,7 +65,7 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
         'Исправь единицу изменения: рост с 36 % до 48 % составляет 12 процентных пунктов, а не 12 %.',
         'Korrigiere die Einheit: Von 36 % auf 48 % sind es 12 Prozentpunkte, nicht 12 %.',
         'Correct the change unit: 36% to 48% is 12 percentage points, not 12%.'));
-    if (!mentionsDifferenceInPoints)
+    if (!mentionsDifferenceInPoints && !explicitlyWrongDifferenceUnit)
       missingElements.push(tr(lang,
         'Проверь, указана ли разница именно в процентных пунктах (12), а не в процентах.',
         'Prüfe, ob du den Unterschied als 12 Prozentpunkte und nicht als 12 Prozent angegeben hast.',
