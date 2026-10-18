@@ -696,9 +696,7 @@ const LessonScreen: React.FC = () => {
             <button type="button" className="feedback-skip" onClick={() => { setWritingSelfCheck(false); setShowWritingModel(false); setSelfCheckMarks([false, false, false]); setCheckError(''); setReviewPending(false); }}>
               {tr(lang, 'Улучшить свой ответ', 'Eigene Antwort verbessern', 'Improve my answer')}
             </button>
-            <button type="button" className="feedback-skip" onClick={() => { setWritingSelfCheck(false); setShowWritingModel(false); setSelfCheckMarks([false, false, false]); }}>
-              {tr(lang, 'Вернуться к редактированию', 'Text weiter bearbeiten', 'Continue editing')}
-            </button>
+
           </div>}
           {checkError && <div className="lesson-check-error" role="alert" style={{ whiteSpace: "pre-line" }}>
             {checkError}
