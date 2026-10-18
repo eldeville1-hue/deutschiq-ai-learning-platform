@@ -113,6 +113,19 @@ test('B2 data errors outrank omitted figures when feedback is capped', () => {
   expect(hints[2]).toContain('2025');
 });
 
+test('B2 feedback accepts equivalent statistical phrasing and keeps distinct errors visible', () => {
+  const equivalent = '2020 betrug der Anteil 36 Prozent. Im Jahr 2025 lag er bei 48 Prozent. Dies entspricht einer Zunahme um zwölf Prozentpunkte.';
+  const goodHints = getB2WritingReviewHints('data_description-dialogue', equivalent, 'en');
+  expect(goodHints).toEqual([expect.stringContaining('which conclusion the data supports')]);
+
+  const wrongUnitAndMissingYear = 'Die Statistik zeigt 2020: 48 Prozent. Der Anstieg beträgt 12 Prozent. Die Daten müssen noch genauer erläutert werden.';
+  const hints = getB2WritingReviewHints('data_description-dialogue', wrongUnitAndMissingYear, 'en');
+  expect(hints).toHaveLength(3);
+  expect(hints[0]).toContain('year-to-value pairing');
+  expect(hints[1]).toContain('Correct the change unit');
+  expect(hints[2]).toContain('2025');
+});
+
 test('B2 data review flags explicit false decline without penalizing correct increase', () => {
   const wrong = 'Im Jahr 2020 lag der Anteil bei 36 Prozent, 2025 bei 48 Prozent. Der Anteil ist gesunken, um 12 Prozentpunkte.';
   expect(getB2WritingReviewHints('data_description-dialogue', wrong, 'en').some(hint => hint.includes('direction of change'))).toBe(true);
