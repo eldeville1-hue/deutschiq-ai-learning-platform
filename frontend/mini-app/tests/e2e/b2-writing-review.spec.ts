@@ -102,6 +102,13 @@ test('B2 data review handles explicit value-first year pairs without false alarm
   expect(getB2WritingReviewHints('data_description-dialogue', correct, 'en').some(hint => hint.includes('year-to-value pairing'))).toBe(false);
 });
 
+test('B2 data review detects reversed year-first clauses with an intervening verb', () => {
+  const wrong = '2020 lag der Anteil bei 48 Prozent. 2025 lag der Anteil bei 36 Prozent. Die Differenz beträgt zwölf Prozentpunkte.';
+  expect(getB2WritingReviewHints('data_description-dialogue', wrong, 'en').some(hint => hint.includes('year-to-value pairing'))).toBe(true);
+  const correct = '2020 lag der Anteil bei 36 Prozent. 2025 lag der Anteil bei 48 Prozent. Die Differenz beträgt zwölf Prozentpunkte.';
+  expect(getB2WritingReviewHints('data_description-dialogue', correct, 'en').some(hint => hint.includes('year-to-value pairing'))).toBe(false);
+});
+
 test('B2 self-review limits data feedback to three prioritized revision steps', () => {
   const draft = 'Die Statistik beschreibt eine Veränderung über mehrere Jahre. Leider fehlen in dieser Beschreibung noch die konkreten Zahlen und ein klarer Vergleich zwischen beiden Zeitpunkten.';
   const hints = getB2WritingReviewHints('data_description-dialogue', draft, 'en');
