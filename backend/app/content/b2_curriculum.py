@@ -99,6 +99,33 @@ def build_b2_content(row: tuple) -> dict:
         "de": ["Die Aufgabe ist vollständig erfüllt und die Position klar.", "Die Argumente sind logisch verknüpft und entwickelt.", "Register und Grammatik entsprechen dem B2-Niveau."],
         "en": ["The task is fully addressed and the position is clear.", "Arguments are logically connected and developed.", "Register and grammar are appropriate for B2."],
     }
+    # Plausible competing discourse functions require actual listening
+    # comprehension instead of eliminating generic "example/greeting" choices.
+    listening_distractors = {
+        "argument_structure": {
+            "ru": ["Нейтральное описание", "Вежливое приветствие"],
+            "de": ["Neutrale Beschreibung", "Höfliche Begrüßung"],
+            "en": ["Neutral description", "Polite greeting"],
+        },
+        "counterargument": {
+            "ru": ["Безусловное согласие", "Нейтральное описание"],
+            "de": ["Uneingeschränkte Zustimmung", "Neutrale Beschreibung"],
+            "en": ["Unqualified agreement", "Neutral description"],
+        },
+        "data_description": {
+            "ru": ["Объяснение причины", "Личное мнение"],
+            "de": ["Erklärung einer Ursache", "Persönliche Meinung"],
+            "en": ["Explanation of a cause", "Personal opinion"],
+        },
+    }
+    listening_options = {
+        language: [label, *(listening_distractors.get(topic, {}).get(language) or fallback)]
+        for language, label, fallback in (
+            ("ru", listening_function_ru, ["Пример", "Приветствие"]),
+            ("de", listening_function_de, ["Beispiel", "Begrüßung"]),
+            ("en", listening_function_en, ["Example", "Greeting"]),
+        )
+    }
     guided_type = "error_repair" if day % 2 else "transform"
     guided_questions = {
         "ru": f"Исправь: {wrong}" if guided_type == "error_repair" else f"Переформулируй для официального контекста: {wrong}",
@@ -119,10 +146,10 @@ def build_b2_content(row: tuple) -> dict:
             {"question": scenario_en, "explanation": rule["en"]},
         ),
         _localized(
-            {"id": f"{topic}-listen", "type": "listening_choice", "stage": "independent", "question": "Какую функцию выполняет фраза?", "audio_text": alternatives[0], "answer": listening_function_ru, "accepted_answers": [listening_function_ru], "options": [listening_function_ru, "Пример", "Приветствие"], "explanation": alternatives[0], "misconception": "discourse_function", "accessibility_label": "Прослушать фразу уровня B2 и определить её функцию."},
-            {"question": "Какую функцию выполняет фраза?", "answer": listening_function_ru, "accepted_answers": [listening_function_ru], "options": [listening_function_ru, "Пример", "Приветствие"], "explanation": alternatives[0]},
-            {"question": "Welche Funktion erfüllt der Satz?", "answer": listening_function_de, "accepted_answers": [listening_function_de], "options": [listening_function_de, "Beispiel", "Begrüßung"], "explanation": alternatives[0]},
-            {"question": "What function does the sentence serve?", "answer": listening_function_en, "accepted_answers": [listening_function_en], "options": [listening_function_en, "Example", "Greeting"], "explanation": alternatives[0]},
+            {"id": f"{topic}-listen", "type": "listening_choice", "stage": "independent", "question": "Какую функцию выполняет фраза?", "audio_text": alternatives[0], "answer": listening_function_ru, "accepted_answers": [listening_function_ru], "options": listening_options["ru"], "explanation": alternatives[0], "misconception": "discourse_function", "accessibility_label": "Прослушать фразу уровня B2 и определить её функцию."},
+            {"question": "Какую функцию выполняет фраза?", "answer": listening_function_ru, "accepted_answers": [listening_function_ru], "options": listening_options["ru"], "explanation": alternatives[0]},
+            {"question": "Welche Funktion erfüllt der Satz?", "answer": listening_function_de, "accepted_answers": [listening_function_de], "options": listening_options["de"], "explanation": alternatives[0]},
+            {"question": "What function does the sentence serve?", "answer": listening_function_en, "accepted_answers": [listening_function_en], "options": listening_options["en"], "explanation": alternatives[0]},
         ),
         _localized(
             {"id": f"{topic}-dialogue", "type": "dialogue", "stage": "transfer", "mission_role": "final", "question": f"Сформулируй собственный ответ: {scenario_ru}", "answer": model, "model_answer": model, "accepted_answers": [model, model.rstrip(".")], "target_patterns": patterns, "hint": rule["ru"], "explanation": "Ответ может отличаться от модели: оцени выполнение задачи, связность и регистр.", "misconception": "transfer", "accessibility_label": scenario_ru},
