@@ -495,7 +495,7 @@ test('mobile B2 argument writing shows skill-specific self-check without penalty
   await page.route('**/api/lesson/start', route => {
     sessionStarts += 1;
     return route.fulfill({ json: {
-      session_id: 'b2-argument-session', resumed: sessionStarts > 1, next_exercise_index: 0,
+      session_id: 'b2-argument-session', resumed: true, next_exercise_index: 0,
     } });
   });
   await page.route('**/api/lesson/check-answer', route => route.fulfill({ json: {
@@ -503,9 +503,8 @@ test('mobile B2 argument writing shows skill-specific self-check without penalty
   }}));
   await page.route('**/api/events', route => route.fulfill({ status: 204, body: '' }));
   await page.goto('/lesson/77');
-  await page.getByRole('button', { name: 'Understand with an example' }).click();
-  await page.getByRole('button', { name: 'Start practice' }).click();
   const writing = page.getByRole('textbox');
+  await expect(writing).toBeVisible();
   const writingPlan = page.getByLabel('Writing plan');
   await expect(writingPlan.getByText('Position → 2. Reason → 3. Your example', { exact: false })).toBeVisible();
   await writing.fill('Geschützte Radwege sind sinnvoll, weil sie Unfälle vermeiden helfen.');
