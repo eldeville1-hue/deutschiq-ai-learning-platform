@@ -40,7 +40,11 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
     // Longer prose can mention both years and values in different orders.
     const reversedPair = /\b2020\b\s*(?:[:–—-]|(?:lag|waren|betrug|bei))?\s*(?:bei\s*)?48\s*%?/i.test(answerText)
       || /\b2025\b\s*(?:[:–—-]|(?:lag|waren|betrug|bei))?\s*(?:bei\s*)?36\s*%?/i.test(answerText);
-    if (reversedPair)
+    // Also recognize explicit value-first pairs, e.g. "48 % im Jahr 2020".
+    // Do not flag mere co-occurrence of values and years in a long sentence.
+    const reversedValueFirstPair = /\b48\s*(?:%|prozent)\s*(?:im\s+jahr|in|für)\s+2020\b/i.test(answerText)
+      || /\b36\s*(?:%|prozent)\s*(?:im\s+jahr|in|für)\s+2025\b/i.test(answerText);
+    if (reversedPair || reversedValueFirstPair)
       missingElements.push(tr(lang,
         'Проверь соответствие данных: в 2020 году было 36 %, в 2025 году — 48 %.',
         'Prüfe die Zuordnung: 2020 waren es 36 %, 2025 waren es 48 %.',
