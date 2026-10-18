@@ -7,20 +7,22 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
   const minimumWords = 12;
   const words = answerText.match(/[\p{L}\p{N}]+/gu) || [];
   if (words.length < minimumWords && ['argument_structure-dialogue', 'counterargument-dialogue', 'data_description-dialogue'].includes(exerciseId)) {
+    // Give a revision goal, not a ready-made answer. The model is available
+    // separately only after the learner chooses to compare their own draft.
     if (exerciseId === 'argument_structure-dialogue')
       return [tr(lang,
-        'Разверни ответ: сформулируй позицию, объясни причину и добавь конкретный пример. Образец: Ich bin für sichere Radwege, weil sie Unfälle verhindern können. Zum Beispiel kommen Kinder so sicherer zur Schule. Используй структуру, но придумай собственный довод и пример.',
-        'Baue deinen Text aus: Formuliere deine Position, begründe sie und ergänze ein konkretes Beispiel. Beispiel: Ich bin für sichere Radwege, weil sie Unfälle verhindern können. Zum Beispiel kommen Kinder so sicherer zur Schule. Nutze die Struktur, aber formuliere deine eigene Begründung und dein eigenes Beispiel.',
-        'Develop your answer: state your position, explain why, and add a concrete example. Example: Ich bin für sichere Radwege, weil sie Unfälle verhindern können. Zum Beispiel kommen Kinder so sicherer zur Schule. Use the structure, but write your own reason and example.')];
+        'Разверни свой довод: обозначь позицию, объясни причину и добавь собственный конкретный пример. Проверь, что пример действительно подтверждает причину.',
+        'Baue dein Argument aus: Nenne deine Position, begründe sie und ergänze ein eigenes konkretes Beispiel. Prüfe, ob das Beispiel deinen Grund tatsächlich stützt.',
+        'Develop your argument: state your position, explain your reason, and add your own concrete example. Check that your example supports your reason.')];
     if (exerciseId === 'counterargument-dialogue')
       return [tr(lang,
-        'Разверни ответ: признай опасение о расходах и объясни, почему твой аргумент его перевешивает. Образец: Die Sorge um die Kosten ist verständlich. Langfristig kann die Modernisierung jedoch Energie sparen. Используй структуру, но обоснуй ответ своими словами.',
-        'Baue deinen Text aus: Greife die Sorge um die Kosten auf und begründe deine Erwiderung. Beispiel: Die Sorge um die Kosten ist verständlich. Langfristig kann die Modernisierung jedoch Energie sparen. Nutze die Struktur und antworte mit deinen eigenen Gründen.',
-        'Develop your answer: acknowledge the cost concern and explain your response. Example: Die Sorge um die Kosten ist verständlich. Langfristig kann die Modernisierung jedoch Energie sparen. Use the structure, but support your response with your own reasons.')];
+        'Разверни ответ: справедливо изложи опасение о расходах, затем приведи собственный контраргумент и обоснуй его.',
+        'Baue deine Antwort aus: Stelle die Kostensorge fair dar, formuliere dann dein eigenes Gegenargument und begründe es.',
+        'Develop your response: acknowledge the cost concern fairly, then give your own counterargument and explain why it matters.')];
     return [tr(lang,
-      'Разверни описание: сравни 2020 год (36 %) и 2025 год (48 %) и назови разницу в процентных пунктах. Образец: Der Anteil stieg von 36 % im Jahr 2020 auf 48 % im Jahr 2025, also um 12 Prozentpunkte. Используй структуру и опиши изменение своими словами.',
-      'Baue deine Beschreibung aus: Vergleiche 2020 (36 %) mit 2025 (48 %) und nenne die Differenz in Prozentpunkten. Beispiel: Der Anteil stieg von 36 % im Jahr 2020 auf 48 % im Jahr 2025, also um 12 Prozentpunkte. Nutze die Struktur und beschreibe die Veränderung mit eigenen Worten.',
-      'Develop your description: compare 2020 (36%) with 2025 (48%) and state the difference in percentage points. Example: Der Anteil stieg von 36 % im Jahr 2020 auf 48 % im Jahr 2025, also um 12 Prozentpunkte. Use the structure and describe the change in your own words.')];
+      'Разверни описание данных: сопоставь 2020 год (36 %) и 2025 год (48 %), укажи рост на 12 процентных пунктов. Не придумывай причины изменения.',
+      'Baue deine Datenbeschreibung aus: Vergleiche 2020 (36 %) mit 2025 (48 %) und nenne den Anstieg um 12 Prozentpunkte. Erfinde keine Ursachen.',
+      'Develop your data description: compare 2020 (36%) with 2025 (48%) and describe the 12-percentage-point increase. Do not invent causes.')];
   }
   const missingElements: string[] = [];
   if (exerciseId === 'argument_structure-dialogue') {
