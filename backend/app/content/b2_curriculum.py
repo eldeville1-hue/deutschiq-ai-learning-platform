@@ -226,6 +226,18 @@ def build_b2_content(row: tuple) -> dict:
             "Welchen Teil des Arguments können Sie anerkennen?",
             "Wie formulieren Sie Ihren Widerspruch sachlich?",
         ]
+    elif topic == "argument_structure":
+        partners = [
+            "Soll die Stadt sichere Radwege statt weiterer Parkplätze bauen? Welche Position vertreten Sie?",
+            "Was ist Ihr wichtigster Grund für diese Position?",
+            "Können Sie Ihren Grund an einem konkreten Beispiel verdeutlichen?",
+        ]
+    elif topic == "counterargument":
+        partners = [
+            "Ein Teilnehmer sagt: Die Schulmodernisierung ist zu teuer. Was halten Sie von diesem Einwand?",
+            "Wie würden Sie auf das Kostenargument antworten?",
+            "Warum ist Ihre Antwort überzeugend, ohne unbelegte Zahlen zu nennen?",
+        ]
     elif topic == "data_description":
         partners = [
             "Welche Entwicklung zeigen die Zahlen?",
@@ -250,6 +262,18 @@ def build_b2_content(row: tuple) -> dict:
             "Ich verstehe Ihren Standpunkt, aber das gilt nicht in jeder Situation.",
             "Sie haben recht, dass die Lösung in vielen Fällen hilfreich ist.",
             "Allerdings sollten wir auch die möglichen Nachteile berücksichtigen.",
+        ]
+    elif topic == "argument_structure":
+        turn_models = [
+            "Ich befürworte sichere Radwege, weil sie den Schulweg sicherer machen können.",
+            "Ein wichtiger Grund ist, dass Radfahrende dadurch besser vom Autoverkehr getrennt werden.",
+            "Zum Beispiel könnten Kinder an stark befahrenen Straßen geschützter zur Schule fahren.",
+        ]
+    elif topic == "counterargument":
+        turn_models = [
+            "Die Sorge um die Kosten der Schulmodernisierung ist nachvollziehbar.",
+            "Allerdings sollten wir auch berücksichtigen, dass bessere Gebäude langfristig Vorteile bieten können.",
+            "Eine sorgfältige Planung kann helfen, Ausgaben zu begrenzen, ohne notwendige Verbesserungen aufzuschieben.",
         ]
     elif topic == "data_description":
         turn_models = [
@@ -281,6 +305,18 @@ def build_b2_content(row: tuple) -> dict:
             "de": ["Reagiere höflich auf die Verallgemeinerung.", "Erkenne einen berechtigten Punkt an.", "Widersprich sachlich ohne persönliche Kritik."],
             "en": ["Respond politely to the generalisation.", "Acknowledge a valid point.", "Disagree respectfully without personal criticism."],
         }
+    elif topic == "argument_structure":
+        turn_goals = {
+            "ru": ["Вырази позицию по велодорожкам.", "Объясни свой главный довод.", "Приведи конкретный пример, подтверждающий довод."],
+            "de": ["Nenne deine Position zu den Radwegen.", "Erkläre dein wichtigstes Argument.", "Belege das Argument mit einem konkreten Beispiel."],
+            "en": ["State your position on cycle lanes.", "Explain your main reason.", "Support the reason with a concrete example."],
+        }
+    elif topic == "counterargument":
+        turn_goals = {
+            "ru": ["Признай опасение о расходах.", "Ответь на возражение по существу.", "Обоснуй ответ без выдуманных цифр."],
+            "de": ["Erkenne die Kostensorge an.", "Entkräfte den Einwand sachlich.", "Begründe deine Antwort ohne erfundene Zahlen."],
+            "en": ["Acknowledge the cost concern.", "Respond to the objection directly.", "Justify your response without invented figures."],
+        }
     elif topic == "data_description":
         turn_goals = {
             "ru": ["Опиши общую тенденцию.", "Приведи конкретное число и период.", "Сделай осторожный вывод без неподтверждённых причин."],
@@ -301,6 +337,8 @@ def build_b2_content(row: tuple) -> dict:
         "presentation_structure": ["topic_introduction", "presentation_outline", "transition", "summary"],
         "discussion_language": ["respectful_response", "acknowledge_valid_point", "reasoned_disagreement"],
         "data_description": ["overall_trend", "numeric_value_and_period", "cautious_interpretation"],
+        "argument_structure": ["clear_position", "supporting_reason", "concrete_example"],
+        "counterargument": ["acknowledge_objection", "reasoned_rebuttal", "avoid_unsupported_claims"],
     }
     if topic in specialist_criteria:
         dialogue["assessment_criteria"] = specialist_criteria[topic]
