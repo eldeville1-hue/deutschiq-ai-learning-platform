@@ -36,24 +36,13 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
     if (!/\b(aber|jedoch|dennoch|andererseits|trotzdem|allerdings|hingegen|gleichwohl|dagegen|demgegenüber|auf lange sicht|langfristig)\b/i.test(answerText))
       missingElements.push(tr(lang, 'Проверь, есть ли обоснованный ответ на возражение.', 'Prüfe, ob du dem Einwand eine begründete Antwort gegenüberstellst.', 'Check whether you gave a reasoned response to the objection.'));
   } else if (exerciseId === 'data_description-dialogue') {
-    // Only flag a reversed pairing when the year and its value are adjacent.
-    // Longer prose can mention both years and values in different orders.
-    const reversedPair = /\b2020\b\s*(?:[:–—-]|(?:lag|waren|betrug|bei))?\s*(?:bei\s*)?48\s*%?/i.test(answerText)
-      || /\b2025\b\s*(?:[:–—-]|(?:lag|waren|betrug|bei))?\s*(?:bei\s*)?36\s*%?/i.test(answerText);
-    // Also recognize explicit value-first pairs, e.g. "48 % im Jahr 2020".
-    // Do not flag mere co-occurrence of values and years in a long sentence.
-    const reversedValueFirstPair = /\b48\s*(?:%|prozent)\s*(?:im\s+jahr|in|für)\s+2020\b/i.test(answerText)
-      || /\b36\s*(?:%|prozent)\s*(?:im\s+jahr|in|für)\s+2025\b/i.test(answerText);
-    if (reversedPair || reversedValueFirstPair)
-      missingElements.push(tr(lang,
-        'Проверь соответствие данных: в 2020 году было 36 %, в 2025 году — 48 %.',
-        'Prüfe die Zuordnung: 2020 waren es 36 %, 2025 waren es 48 %.',
-        'Check the year-to-value pairing: 36% in 2020 and 48% in 2025.'));
-    // "2020 lag der Anteil bei 48 Prozent" is an explicit wrong pairing
-    // even when a verb separates the year and value.
-    const reversedYearWithVerb = /\b2020\b\s+(?:lag|betrug|waren|war)\s+(?:der\s+anteil\s+|die\s+quote\s+|der\s+wert\s+)?(?:bei\s+)?48\s*(?:%|prozent)?(?=\s|[.,;!?]|$)/i.test(answerText)
-      || /\b2025\b\s+(?:lag|betrug|waren|war)\s+(?:der\s+anteil\s+|die\s+quote\s+|der\s+wert\s+)?(?:bei\s+)?36\s*(?:%|prozent)?(?=\s|[.,;!?]|$)/i.test(answerText);
-    if (reversedYearWithVerb && !reversedPair && !reversedValueFirstPair)
+    // Recognize local year/value relationships without scanning unrelated prose.
+    const reversedPair = ([ [2020, 48], [2025, 36] ] as const).some(([year, value]) => {
+      const yearFirst = new RegExp('\\b' + year + '\\b\\s*(?::|[–—-]|\\s+(?:(?:lag|betrug|waren|war)\\s+(?:(?:der\\s+anteil|die\\s+quote|der\\s+wert)\\s+)?(?:bei\\s+)?|bei\\s+))\\s*' + value + '(?=\\s|%|[.,;!?]|$)', 'i');
+      const valueFirst = new RegExp('\\b' + value + '\\s*(?:%|prozent)\\s*(?:im\\s+jahr|in|für)\\s+' + year + '\\b', 'i');
+      return yearFirst.test(answerText) || valueFirst.test(answerText);
+    });
+    if (reversedPair)
       missingElements.push(tr(lang,
         'Проверь соответствие данных: в 2020 году было 36 %, в 2025 году — 48 %.',
         'Prüfe die Zuordnung: 2020 waren es 36 %, 2025 waren es 48 %.',
