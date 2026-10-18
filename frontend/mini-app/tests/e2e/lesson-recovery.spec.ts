@@ -439,8 +439,13 @@ test('mobile uncertain translation keeps the response without wrong-answer feedb
   }}));
   await page.route('**/api/events', route => route.fulfill({ status: 204, body: '' }));
   await page.goto('/lesson/77');
-  await page.getByRole('button', { name: 'Understand with an example' }).click();
-  await page.getByRole('button', { name: 'Start practice' }).click();
+  // The server cursor may restore the practice step directly.
+  if (await page.getByRole('button', { name: 'Understand with an example' }).isVisible()) {
+    await page.getByRole('button', { name: 'Understand with an example' }).click();
+  }
+  if (await page.getByRole('button', { name: 'Start practice' }).isVisible()) {
+    await page.getByRole('button', { name: 'Start practice' }).click();
+  }
   const writing = page.getByRole('textbox');
   await writing.fill('Morgen fahre ich nach Berlin.');
   await page.getByRole('button', { name: 'Check', exact: true }).click();
