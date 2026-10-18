@@ -33,31 +33,28 @@ test('short B2 statistical drafts receive a task-specific revision step', () => 
   expect(hints[0]).toContain('percentage points');
 });
 
-test('short B2 drafts provide contextual German examples in all interface languages', () => {
+test('short B2 drafts provide revision goals without leaking a model answer', () => {
   const tasks = [
-    ['argument_structure-dialogue', 'Ich bin für sichere Radwege'],
-    ['counterargument-dialogue', 'Die Sorge um die Kosten'],
-    ['data_description-dialogue', 'Der Anteil stieg von 36 %'],
+    ['argument_structure-dialogue', 'own concrete example'],
+    ['counterargument-dialogue', 'own counterargument'],
+    ['data_description-dialogue', '12-percentage-point increase'],
   ];
-  for (const [exerciseId, example] of tasks) {
-    for (const lang of ['ru', 'de', 'en'] as const) {
-      const hints = getB2WritingReviewHints(exerciseId, 'Kurz.', lang);
-      expect(hints).toHaveLength(1);
-      expect(hints[0]).toContain(example);
-    }
+  for (const [exerciseId, goal] of tasks) {
+    const [hint] = getB2WritingReviewHints(exerciseId, 'Kurz.', 'en');
+    expect(hint).toContain(goal);
+    expect(hint).not.toContain('Beispiel:');
+    expect(hint).not.toContain('Example:');
   }
 });
 
-test('B2 model sentences explicitly encourage independent writing in each language', () => {
-  const expected = {
-    ru: 'Используй структуру',
-    de: 'Nutze die Struktur',
-    en: 'Use the structure',
-  };
+test('B2 short-draft guidance is localized and avoids prewritten German sentences', () => {
   for (const lang of ['ru', 'de', 'en'] as const) {
     for (const exerciseId of ['argument_structure-dialogue', 'counterargument-dialogue', 'data_description-dialogue']) {
       const [hint] = getB2WritingReviewHints(exerciseId, 'Kurz.', lang);
-      expect(hint).toContain(expected[lang]);
+      expect(hint.length).toBeGreaterThan(30);
+      expect(hint).not.toContain('Ich bin für sichere Radwege');
+      expect(hint).not.toContain('Die Sorge um die Kosten ist verständlich');
+      expect(hint).not.toContain('Der Anteil stieg von');
     }
   }
 });
