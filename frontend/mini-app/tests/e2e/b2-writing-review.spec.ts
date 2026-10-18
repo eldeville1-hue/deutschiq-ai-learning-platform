@@ -73,6 +73,14 @@ test('B2 data review distinguishes percentage points from percentages', () => {
   expect(getB2WritingReviewHints('data_description-dialogue', incorrectUnit, 'en').some(hint => hint.includes('percentage points'))).toBe(true);
 });
 
+test('B2 data review flags a wrong twelve-percent change even if points appear elsewhere', () => {
+  const draft = '2020 lag der Anteil bei 36 Prozent, 2025 bei 48 Prozent. Der Anstieg beträgt 12 Prozent. An anderer Stelle werden Prozentpunkte erwähnt.';
+  const hints = getB2WritingReviewHints('data_description-dialogue', draft, 'en');
+  expect(hints.some(hint => hint.includes('Correct the change unit'))).toBe(true);
+  const correct = '2020 lag der Anteil bei 36 Prozent, 2025 bei 48 Prozent. Der Anstieg beträgt 12 Prozentpunkte.';
+  expect(getB2WritingReviewHints('data_description-dialogue', correct, 'en').some(hint => hint.includes('Correct the change unit'))).toBe(false);
+});
+
 test('B2 difference and percentage-point unit must refer to the same quantity', () => {
   const unrelated = 'Im Jahr 2020 waren es 36 Prozent, im Jahr 2025 waren es 48 Prozent. Es gibt 12 Gruppen und viele Prozentpunkte Unterschied.';
   expect(getB2WritingReviewHints('data_description-dialogue', unrelated, 'en').some(hint => hint.includes('12 percentage points'))).toBe(true);
