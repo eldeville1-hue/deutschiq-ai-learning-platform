@@ -532,7 +532,7 @@ test('mobile B2 argument writing shows skill-specific self-check without penalty
   await page.getByRole('button', { name: 'Check', exact: true }).click();
   await expect(checklist).toBeVisible();
   await expect(items.nth(0)).not.toBeChecked();
-  await checklist.getByRole('button', { name: 'Continue editing' }).click();
+  await checklist.getByRole('button', { name: 'Improve my answer' }).click();
   await expect(checklist).toHaveCount(0);
   await expect(writing).toHaveValue('Geschützte Radwege sind sinnvoll, weil sie Unfälle vermeiden helfen. Außerdem fördern sie das Radfahren.');
 });
