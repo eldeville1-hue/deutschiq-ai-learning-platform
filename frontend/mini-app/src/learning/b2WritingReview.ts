@@ -58,8 +58,8 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
     const mentionsDifferenceInPoints = /\b(?:12|zwölf)\s*(?:prozentpunkt(?:e|en)?|percentage[\s-]+points?)\b|\b(?:prozentpunkt(?:e|en)?|percentage[\s-]+points?)\s*(?:von\s+)?(?:12|zwölf)\b/i.test(answerText);
     // A draft can contain the correct unit elsewhere while explicitly
     // mislabelling the twelve-point change as twelve percent.
-    const explicitlyWrongDifferenceUnit = /\\b(?:anstieg|zunahme|differenz|unterschied|veränderung|steigerung)\\b[^.!?]{0,65}?\\b(?:um|von|beträgt|liegt bei|ist)\\s+(?:nur\\s+)?(?:12|zwölf)\\s*(?:%|prozent)\\b/i.test(answerText)
-      || /\\b(?:12|zwölf)\\s*(?:%|prozent)\\b[^.!?]{0,35}?\\b(?:mehr|anstieg|zunahme|unterschied)\\b/i.test(answerText);
+    const explicitlyWrongDifferenceUnit = /\b(?:anstieg|zunahme|differenz|unterschied|veränderung|steigerung)\b[^.!?]{0,65}?\b(?:um|von|beträgt|liegt bei|ist)\s+(?:nur\s+)?(?:12|zwölf)\s*(?:%|prozent)(?=\s|[.,;!?]|$)/i.test(answerText)
+      || /\b(?:12|zwölf)\s*(?:%|prozent)(?=\s|[.,;!?]|$)[^.!?]{0,35}?\b(?:mehr|anstieg|zunahme|unterschied)\b/i.test(answerText);
     if (explicitlyWrongDifferenceUnit)
       missingElements.push(tr(lang,
         'Исправь единицу изменения: рост с 36 % до 48 % составляет 12 процентных пунктов, а не 12 %.',
