@@ -491,13 +491,9 @@ test('mobile B2 argument writing shows skill-specific self-check without penalty
     id: 77, level: 'B2', topic: 'argument_structure',
     content: { title: 'Argument structure', examples: ['Für den Ausbau spricht die Sicherheit.'], exercises: [exercise] },
   }}));
-  let sessionStarts = 0;
-  await page.route('**/api/lesson/start', route => {
-    sessionStarts += 1;
-    return route.fulfill({ json: {
-      session_id: 'b2-argument-session', resumed: true, next_exercise_index: 0,
-    } });
-  });
+  await page.route('**/api/lesson/start', route => route.fulfill({ json: {
+    session_id: 'b2-argument-session', resumed: true, next_exercise_index: 0,
+  }}));
   await page.route('**/api/lesson/check-answer', route => route.fulfill({ json: {
     correct: false, evaluation_status: 'uncertain',
   }}));
