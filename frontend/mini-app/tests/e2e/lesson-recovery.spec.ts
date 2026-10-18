@@ -526,6 +526,13 @@ test('mobile B2 argument writing shows skill-specific self-check without penalty
   await expect(checklist.getByText('I explained my reason and gave my own example')).toBeVisible();
   await items.nth(0).check();
   await expect(items.nth(0)).toBeChecked();
+  await expect.poll(async () => page.evaluate(() => Object.keys(localStorage)
+    .filter(key => key.startsWith('deutschiq-lesson-draft-'))
+    .some(key => JSON.parse(localStorage.getItem(key) || '{}').writingSelfCheck === true)
+  )).toBe(true);
+  await page.reload();
+  await expect(page.getByLabel('Writing self-check')).toBeVisible();
+  await expect(page.getByLabel('Writing self-check').getByRole('checkbox').nth(0)).toBeChecked();
   await writing.fill('Geschützte Radwege sind sinnvoll, weil sie Unfälle vermeiden helfen. Außerdem fördern sie das Radfahren.');
   await expect(checklist).toHaveCount(0);
   await expect(page.getByText(/clear position, supporting reason and concrete example/)).toHaveCount(0);
