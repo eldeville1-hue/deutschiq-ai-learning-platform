@@ -49,6 +49,15 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
         'Проверь соответствие данных: в 2020 году было 36 %, в 2025 году — 48 %.',
         'Prüfe die Zuordnung: 2020 waren es 36 %, 2025 waren es 48 %.',
         'Check the year-to-value pairing: 36% in 2020 and 48% in 2025.'));
+    // "2020 lag der Anteil bei 48 Prozent" is an explicit wrong pairing
+    // even when a verb separates the year and value.
+    const reversedYearWithVerb = /\b2020\b\s+(?:lag|betrug|waren|war)\s+(?:der\s+anteil\s+|die\s+quote\s+|der\s+wert\s+)?(?:bei\s+)?48\s*(?:%|prozent)?(?=\s|[.,;!?]|$)/i.test(answerText)
+      || /\b2025\b\s+(?:lag|betrug|waren|war)\s+(?:der\s+anteil\s+|die\s+quote\s+|der\s+wert\s+)?(?:bei\s+)?36\s*(?:%|prozent)?(?=\s|[.,;!?]|$)/i.test(answerText);
+    if (reversedYearWithVerb && !reversedPair && !reversedValueFirstPair)
+      missingElements.push(tr(lang,
+        'Проверь соответствие данных: в 2020 году было 36 %, в 2025 году — 48 %.',
+        'Prüfe die Zuordnung: 2020 waren es 36 %, 2025 waren es 48 %.',
+        'Check the year-to-value pairing: 36% in 2020 and 48% in 2025.'));
     // Detect only explicit claims of decline; do not infer meaning from
     // unrelated words such as "Rückgang" in a comparison or quoted opinion.
     const claimsDecline = /\b(?:der anteil|die quote|der wert|die zahl)\s+(?:ist|war|hat sich)\s+(?:gesunken|gefallen|verringert|reduziert)\b|\b(?:der anteil|die quote|der wert|die zahl)\s+(?:sank|fiel)\b/i.test(answerText);
