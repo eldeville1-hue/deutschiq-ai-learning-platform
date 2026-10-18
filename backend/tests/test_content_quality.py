@@ -59,6 +59,35 @@ class ContentQualityTests(unittest.TestCase):
                 for lang, marker in zip(("ru", "de", "en"), markers):
                     self.assertIn(marker, task["i18n"][lang]["question"])
 
+    def test_b2_argument_and_rebuttal_conversation_turns_are_specific_and_localized(self):
+        cases = {
+            "argument_structure": {
+                "scenario": ("Radwege", "Radwege", "Radwege"),
+                "goals": (("позицию", "довод", "пример"), ("Position", "Argument", "Beispiel"), ("position", "reason", "example")),
+                "criteria": ["clear_position", "supporting_reason", "concrete_example"],
+            },
+            "counterargument": {
+                "scenario": ("Kosten", "Kosten", "Kosten"),
+                "goals": (("расходах", "возражение", "цифр"), ("Kostensorge", "Einwand", "Zahlen"), ("cost concern", "objection", "figures")),
+                "criteria": ["acknowledge_objection", "reasoned_rebuttal", "avoid_unsupported_claims"],
+            },
+        }
+        for topic, case in cases.items():
+            row = next(row for row in B2_CURRICULUM if row[2] == topic)
+            lesson = build_b2_content(row)
+            dialogue = next(item for item in lesson["exercises"] if item["type"] == "dialogue")
+            self.assertEqual(dialogue["assessment_criteria"], case["criteria"])
+            self.assertEqual(len(dialogue["conversation_turns"]), 3)
+            for language, goal_markers in zip(("ru", "de", "en"), case["goals"]):
+                turns = dialogue["i18n"][language]["conversation_turns"]
+                self.assertEqual(len(turns), 3, (topic, language))
+                self.assertEqual(len({turn["partner"] for turn in turns}), 3)
+                for index, (turn, marker) in enumerate(zip(turns, goal_markers)):
+                    self.assertIn(marker.casefold(), turn["goal"].casefold(), (topic, language, index))
+                    self.assertTrue(turn["model"].strip(), (topic, language, index))
+                    self.assertIn(case["scenario"][index], turn["partner"], (topic, language, index))
+            self.assertEqual(dialogue["conversation_turns"], dialogue["i18n"]["ru"]["conversation_turns"])
+
     def test_b2_data_description_provides_the_numbers_to_describe(self):
         row = next(row for row in B2_CURRICULUM if row[2] == "data_description")
         task = next(item for item in build_b2_content(row)["exercises"] if item["type"] == "dialogue")
