@@ -30,7 +30,7 @@ test('short B2 statistical drafts receive a task-specific revision step', () => 
   const hints = getB2WritingReviewHints('data_description-dialogue', 'Die Statistik zeigt einen Anstieg.', 'en');
   expect(hints).toHaveLength(1);
   expect(hints[0]).toContain('2020 (36%)');
-  expect(hints[0]).toContain('percentage points');
+  expect(hints[0]).toContain('12-percentage-point increase');
 });
 
 test('short B2 drafts provide revision goals without leaking a model answer', () => {
