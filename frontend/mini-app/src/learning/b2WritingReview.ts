@@ -66,11 +66,23 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
         `Проверь направление изменения: показатель вырос с ${figures.earlier.percent} % до ${figures.later.percent} %.`,
         `Prüfe die Richtung der Veränderung: Der Wert stieg von ${figures.earlier.percent} % auf ${figures.later.percent} %.`,
         `Check the direction of change: the value increased from ${figures.earlier.percent}% to ${figures.later.percent}%.`));
-    // A number and its unit must describe the same difference, not merely
-    // appear in unrelated parts of the response.
-    const mentionsDifferenceInPoints = /\b(?:12|zwölf)\s*(?:prozentpunkt(?:e|en)?|percentage[\s-]+points?)\b|\b(?:prozentpunkt(?:e|en)?|percentage[\s-]+points?)\s*(?:von\s+)?(?:12|zwölf)\b/i.test(answerText);
-    // A draft can contain the correct unit elsewhere while explicitly
-    // mislabelling the twelve-point change as twelve percent.
+    // Only interpret an explicit percentage-point difference; other
+    // percentages may be base values or relative changes.
+    const pointDifference = /\b(\d+(?:[.,]\d+)?)\s*(?:prozentpunkt(?:e|en)?|percentage[\s-]+points?)\b|\b(?:prozentpunkt(?:e|en)?|percentage[\s-]+points?)\s*(?:von\s+)?(\d+(?:[.,]\d+)?)\b/i;
+    const matches = [...answerText.matchAll(new RegExp(pointDifference.source, "gi"))];
+    const pointValues = matches.map(match => Number((match[1] || match[2]).replace(",", ".")));
+    const correctPointDifference = pointValues.some(value => Math.abs(value - Math.abs(change)) < 0.001);
+    const wrongPointDifference = pointValues.length > 0 && !correctPointDifference;
+    if (wrongPointDifference)
+      missingElements.push(tr(lang,
+        `Проверь разницу: между ${figures.earlier.percent} % и ${figures.later.percent} % — ${Math.abs(change)} процентных пунктов.`,
+        `Prüfe die Differenz: Zwischen ${figures.earlier.percent} % und ${figures.later.percent} % liegen ${Math.abs(change)} Prozentpunkte.`,
+        `Check the difference: ${figures.earlier.percent}% to ${figures.later.percent}% is ${Math.abs(change)} percentage points.`));
+    // Keep the established wording for the original lesson while making
+    // the number-based unit check work for other exercise figures.
+    const mentionsDifferenceInPoints = isDefaultData
+      ? correctPointDifference || /\bzwölf\s+prozentpunkt(?:e|en)?\b/i.test(answerText)
+      : correctPointDifference;
     const explicitlyWrongDifferenceUnit = /\b(?:anstieg|zunahme|differenz|unterschied|veränderung|steigerung)\b[^.!?]{0,65}?\b(?:um|von|beträgt|liegt bei|ist)\s+(?:nur\s+)?(?:12|zwölf)\s*(?:%|prozent)(?=\s|[.,;!?]|$)/i.test(answerText)
       || /\b(?:12|zwölf)\s*(?:%|prozent)(?=\s|[.,;!?]|$)[^.!?]{0,35}?\b(?:mehr|anstieg|zunahme|unterschied)\b/i.test(answerText);
     if (explicitlyWrongDifferenceUnit && isDefaultData)
@@ -78,11 +90,11 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
         'Исправь единицу изменения: рост с 36 % до 48 % составляет 12 процентных пунктов, а не 12 %.',
         'Korrigiere die Einheit: Von 36 % auf 48 % sind es 12 Prozentpunkte, nicht 12 %.',
         'Correct the change unit: 36% to 48% is 12 percentage points, not 12%.'));
-    if (isDefaultData && !mentionsDifferenceInPoints && !explicitlyWrongDifferenceUnit)
+    if (!mentionsDifferenceInPoints && !explicitlyWrongDifferenceUnit && !wrongPointDifference)
       missingElements.push(tr(lang,
-        'Проверь, указана ли разница именно в процентных пунктах (12), а не в процентах.',
-        'Prüfe, ob du den Unterschied als 12 Prozentpunkte und nicht als 12 Prozent angegeben hast.',
-        'Check that the difference is expressed as 12 percentage points, not 12 percent.'));
+        `Проверь, указана ли разница именно в процентных пунктах (${Math.abs(change)}), а не в процентах.`,
+        `Prüfe, ob du den Unterschied als ${Math.abs(change)} Prozentpunkte und nicht als Prozent angegeben hast.`,
+        `Check that the difference is expressed as ${Math.abs(change)} percentage points, not percent.`));
     for (const number of [figures.earlier.year, figures.later.year, figures.earlier.percent, figures.later.percent].map(String)) {
       if (!new RegExp(`(^|\\D)${number}(?!\\d)`).test(answerText))
         missingElements.push(tr(lang, `Проверь, указано ли значение ${number}.`, `Prüfe, ob der Wert ${number} genannt wird.`, `Check whether you included ${number}.`));
