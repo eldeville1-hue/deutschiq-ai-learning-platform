@@ -199,6 +199,23 @@ test('B2 data review detects invented change for unchanged figures', () => {
   expect(getB2WritingReviewHints('data_description-dialogue', right, 'en', figures).some(hint => hint.includes('direction of change'))).toBe(false);
 });
 
+test('B2 short-draft guidance uses actual exercise figures for all trend directions', () => {
+  const cases = [
+    { earlier: { year: 2018, percent: 25 }, later: { year: 2024, percent: 40 }, trend: 'increase', points: '15 percentage points' },
+    { earlier: { year: 2022, percent: 60 }, later: { year: 2026, percent: 45 }, trend: 'decrease', points: '15 percentage points' },
+    { earlier: { year: 2021, percent: 40 }, later: { year: 2025, percent: 40 }, trend: 'unchanged', points: '0 percentage points' },
+  ];
+  for (const figures of cases) {
+    const hints = getB2WritingReviewHints('data_description-dialogue', 'Der Anteil', 'en', figures);
+    expect(hints).toHaveLength(1);
+    expect(hints[0]).toContain(figures.trend);
+    expect(hints[0]).toContain(figures.points);
+    expect(hints[0]).toContain(String(figures.earlier.year));
+    expect(hints[0]).toContain(String(figures.later.year));
+    expect(hints[0]).not.toContain('36%');
+  }
+});
+
 test('unknown writing tasks never receive guessed B2 criteria', () => {
   expect(getB2WritingReviewHints('unknown-dialogue', 'Any answer', 'en')).toEqual([]);
 });
