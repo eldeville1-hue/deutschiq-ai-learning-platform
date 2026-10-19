@@ -651,6 +651,41 @@ test('mobile B2 writing uses exercise-specific statistics from lesson payload', 
   await expect(page.locator('.answer-feedback.wrong')).toHaveCount(0);
 });
 
+test('mobile B2 practice switches between decrease and stable data with matching self-check', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
+  const exercise = {
+    id: 'data_description-dialogue', type: 'dialogue', question: 'Describe the increase.',
+    answer: 'Der Anteil stieg von 36 auf 48 Prozent.',
+    data_figures: { earlier: { year: 2020, percent: 36 }, later: { year: 2025, percent: 48 } },
+    practice_variants: [
+      { id: 'decrease', prompt: { en: 'Describe the decrease from 60% to 45%.' }, model: 'Der Anteil sank um 15 Prozentpunkte.', data_figures: { earlier: { year: 2022, percent: 60 }, later: { year: 2026, percent: 45 } } },
+      { id: 'stable', prompt: { en: 'Describe the unchanged share of 40%.' }, model: 'Der Anteil blieb unverändert.', data_figures: { earlier: { year: 2021, percent: 40 }, later: { year: 2025, percent: 40 } } },
+    ],
+  };
+  await page.route('**/api/lesson/77?*', route => route.fulfill({ json: {
+    id: 77, level: 'B2', topic: 'data_description',
+    content: { title: 'Describe data', examples: ['Compare the figures.'], exercises: [exercise] },
+  }}));
+  await page.route('**/api/lesson/start', route => route.fulfill({ json: {
+    session_id: 'b2-practice-switch-session', resumed: true, next_exercise_index: 0,
+  }}));
+  await page.route('**/api/lesson/check-answer', route => route.fulfill({ json: {
+    correct: false, evaluation_status: 'uncertain',
+  }}));
+  await page.route('**/api/events', route => route.fulfill({ status: 204, body: '' }));
+  await page.goto('/lesson/77');
+  await page.getByRole('button', { name: 'Decrease', exact: true }).click();
+  await expect(page.getByRole('heading', { name: /decrease from 60% to 45%/i })).toBeVisible();
+  const writing = page.getByRole('textbox');
+  await writing.fill('Draft for decrease');
+  await page.getByRole('button', { name: 'No change', exact: true }).click();
+  await expect(writing).toHaveValue('');
+  await expect(page.getByRole('heading', { name: /unchanged share of 40%/i })).toBeVisible();
+  await writing.fill('2021 lag der Anteil bei 40 Prozent. 2025 lag der Anteil bei 40 Prozent. Der Anteil blieb unverändert.');
+  await page.getByRole('button', { name: 'Check', exact: true }).click();
+  await expect(page.getByLabel('Writing self-check')).toContainText('0 percentage points');
+});
+
 test('mobile B2 draft survives reload in the same server session', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
   const exercise = { id: 'argument_structure-dialogue', type: 'dialogue', question: 'Give an argument.', answer: 'Radwege erhöhen die Sicherheit.' };
