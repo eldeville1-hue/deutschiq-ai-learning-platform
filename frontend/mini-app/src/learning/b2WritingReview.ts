@@ -61,11 +61,13 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
     // Detect only explicit claims of decline; do not infer meaning from
     // unrelated words such as "Rückgang" in a comparison or quoted opinion.
     const claimsDecline = /\b(?:der anteil|die quote|der wert|die zahl)\s+(?:ist|war|hat sich)\s+(?:gesunken|gefallen|verringert|reduziert)\b|\b(?:der anteil|die quote|der wert|die zahl)\s+(?:sank|fiel)\b/i.test(answerText);
-    if (claimsDecline && change > 0)
+    const claimsIncrease = /\b(?:der anteil|die quote|der wert|die zahl)\s+(?:ist|war|hat sich)\s+(?:gestiegen|gewachsen|erhöht|vergrößert)\b|\b(?:der anteil|die quote|der wert|die zahl)\s+(?:stieg|wuchs)\b/i.test(answerText);
+    const claimsStable = /\b(?:der anteil|die quote|der wert|die zahl)\s+(?:ist|war|blieb)\s+(?:unverändert|gleich|stabil|konstant)\b|\b(?:keine veränderung|kein unterschied)\b/i.test(answerText);
+    if ((change > 0 && (claimsDecline || claimsStable)) || (change < 0 && (claimsIncrease || claimsStable)) || (change === 0 && (claimsIncrease || claimsDecline)))
       missingElements.push(tr(lang,
-        `Проверь направление изменения: показатель вырос с ${figures.earlier.percent} % до ${figures.later.percent} %.`,
-        `Prüfe die Richtung der Veränderung: Der Wert stieg von ${figures.earlier.percent} % auf ${figures.later.percent} %.`,
-        `Check the direction of change: the value increased from ${figures.earlier.percent}% to ${figures.later.percent}%.`));
+        `Проверь направление изменения: показатель ${change > 0 ? 'вырос' : change < 0 ? 'снизился' : 'не изменился'} с ${figures.earlier.percent} % до ${figures.later.percent} %.`,
+        `Prüfe die Richtung der Veränderung: Der Wert ${change > 0 ? 'stieg' : change < 0 ? 'sank' : 'blieb unverändert'} von ${figures.earlier.percent} % auf ${figures.later.percent} %.`,
+        `Check the direction of change: the value ${change > 0 ? 'increased' : change < 0 ? 'decreased' : 'remained unchanged'} from ${figures.earlier.percent}% to ${figures.later.percent}%.`));
     // Only interpret an explicit percentage-point difference; other
     // percentages may be base values or relative changes.
     const pointDifference = /\b(\d+(?:[.,]\d+)?)\s*(?:prozentpunkt(?:e|en)?|percentage[\s-]+points?)\b|\b(?:prozentpunkt(?:e|en)?|percentage[\s-]+points?)\s*(?:von\s+)?(\d+(?:[.,]\d+)?)\b/i;
