@@ -30,14 +30,14 @@ test('short B2 statistical drafts receive a task-specific revision step', () => 
   const hints = getB2WritingReviewHints('data_description-dialogue', 'Die Statistik zeigt einen Anstieg.', 'en');
   expect(hints).toHaveLength(1);
   expect(hints[0]).toContain('2020 (36%)');
-  expect(hints[0]).toContain('12-percentage-point increase');
+  expect(hints[0]).toContain('increase (12 percentage points)');
 });
 
 test('short B2 drafts provide revision goals without leaking a model answer', () => {
   const tasks = [
     ['argument_structure-dialogue', 'own concrete example'],
     ['counterargument-dialogue', 'own counterargument'],
-    ['data_description-dialogue', '12-percentage-point increase'],
+    ['data_description-dialogue', 'increase (12 percentage points)'],
   ];
   for (const [exerciseId, goal] of tasks) {
     const [hint] = getB2WritingReviewHints(exerciseId, 'Kurz.', 'en');
