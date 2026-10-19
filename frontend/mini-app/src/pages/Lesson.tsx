@@ -70,7 +70,7 @@ const LessonScreen: React.FC = () => {
   const exerciseIndex = step - introSteps;
   const exercise = exercises[exerciseIndex];
   const baseExercise = retried[exerciseIndex] && retryExercises[exerciseIndex] ? retryExercises[exerciseIndex] : exercise;
-  const dataVariants = baseExercise?.id === 'data_description-dialogue' ? (baseExercise.practice_variants || []) : [];
+  const dataVariants = baseExercise?.practice_variants || [];
   const selectedVariant = dataPracticeIndex > 0 ? dataVariants[dataPracticeIndex - 1] : undefined;
   const activeExercise = selectedVariant ? {
     ...baseExercise,
