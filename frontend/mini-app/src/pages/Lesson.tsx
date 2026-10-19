@@ -49,7 +49,7 @@ const LessonScreen: React.FC = () => {
   const [reviewPending, setReviewPending] = useState(false);
   const [writingSelfCheck, setWritingSelfCheck] = useState(() => Boolean(initialDraft.current?.writingSelfCheck));
   const [showWritingModel, setShowWritingModel] = useState(false);
-  const [dataPracticeIndex, setDataPracticeIndex] = useState(0);
+  const [dataPracticeIndex, setDataPracticeIndex] = useState(() => Number(initialDraft.current?.dataPracticeIndex || 0));
   const [selfCheckMarks, setSelfCheckMarks] = useState<boolean[]>(() => Array.isArray(initialDraft.current?.selfCheckMarks) && initialDraft.current.selfCheckMarks.length === 3 ? initialDraft.current.selfCheckMarks.map(Boolean) : [false, false, false]);
   const [milestoneSent, setMilestoneSent] = useState(() => localStorage.getItem(`deutschiq-beta-milestone-${getUserId()}`) === '1');
   const [showHint, setShowHint] = useState(false);
@@ -113,7 +113,7 @@ const LessonScreen: React.FC = () => {
         const hasServerCursor = Number.isInteger(serverIndex) && serverIndex >= 0;
         if (!session.resumed) {
           // A new server session must never inherit feedback or position from a stale draft.
-          setStep(0); setAnswer(''); setChecked(null); setFeedback(null);
+          setStep(0); setAnswer(''); setChecked(null); setFeedback(null); setDataPracticeIndex(0);
           setWritingSelfCheck(false); setSelfCheckMarks([false, false, false]); setShowWritingModel(false);
           setRetried({}); setRetryExercises({});
         } else if (hasServerCursor) {
@@ -122,6 +122,7 @@ const LessonScreen: React.FC = () => {
           setStep(restoredStep);
           const draftMatchesStep = initialDraft.current?.sessionId === session.session_id && Number(initialDraft.current?.step) === restoredStep;
           if (!draftMatchesStep) {
+            setDataPracticeIndex(0);
             setWritingSelfCheck(false);
             setSelfCheckMarks([false, false, false]);
             setShowWritingModel(false);
@@ -152,8 +153,8 @@ const LessonScreen: React.FC = () => {
   }, [id, lang, loadAttempt]);
   useEffect(() => {
     if (!lesson || !sessionId || completionState === 'ready') return;
-    try { localStorage.setItem(draftKey, JSON.stringify({ sessionId, step, answer, confidence, checked, feedback, retried, retryExercises, writingSelfCheck, selfCheckMarks, savedAt: Date.now() })); } catch { /* Recovery is best-effort. */ }
-  }, [answer, confidence, draftKey, lesson, step, sessionId, checked, feedback, retried, retryExercises, writingSelfCheck, selfCheckMarks, completionState]);
+    try { localStorage.setItem(draftKey, JSON.stringify({ sessionId, step, answer, confidence, checked, feedback, retried, retryExercises, writingSelfCheck, selfCheckMarks, dataPracticeIndex, savedAt: Date.now() })); } catch { /* Recovery is best-effort. */ }
+  }, [answer, confidence, draftKey, lesson, step, sessionId, checked, feedback, retried, retryExercises, writingSelfCheck, selfCheckMarks, dataPracticeIndex, completionState]);
   useEffect(() => {
     if (!lesson || !sessionId) return;
     const stage = step === 0 ? 'learn' : step === 1 ? 'model' : step >= total ? 'result' : exercises[step - introSteps]?.stage || 'practice';
