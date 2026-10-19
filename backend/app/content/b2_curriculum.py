@@ -330,6 +330,12 @@ def build_b2_content(row: tuple) -> dict:
             for index, partner in enumerate(partners)
         ]
 
+    if topic == "data_description":
+        dialogue["data_figures"] = {
+            "earlier": {"year": 2020, "percent": 36},
+            "later": {"year": 2025, "percent": 48},
+        }
+
     # Evaluate the communicative task, not an exact match to the sample answer.
     # These criteria are consumed by the AI feedback rubric for independent work.
     specialist_criteria = {
