@@ -674,6 +674,7 @@ test('mobile B2 practice switches between decrease and stable data with matching
     const payload = route.request().postDataJSON();
     submittedAnswer = String(payload.answer || '');
     expect(payload.exercise_index).toBe(0);
+    expect(payload.practice_variant_id).toBe('stable');
     await route.fulfill({ json: { correct: false, evaluation_status: 'uncertain' } });
   });
   await page.route('**/api/events', route => route.fulfill({ status: 204, body: '' }));
