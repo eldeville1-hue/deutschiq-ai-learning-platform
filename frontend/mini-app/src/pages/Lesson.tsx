@@ -69,6 +69,13 @@ const LessonScreen: React.FC = () => {
   const exerciseIndex = step - introSteps;
   const exercise = exercises[exerciseIndex];
   const activeExercise = retried[exerciseIndex] && retryExercises[exerciseIndex] ? retryExercises[exerciseIndex] : exercise;
+  const dataFigures: B2DataFigures = (() => {
+    const figures = activeExercise?.data_figures;
+    return figures && [figures.earlier?.year, figures.earlier?.percent, figures.later?.year, figures.later?.percent].every((value) => typeof value === 'number' && Number.isFinite(value))
+      ? figures as B2DataFigures
+      : { earlier: { year: 2020, percent: 36 }, later: { year: 2025, percent: 48 } };
+  })();
+  const dataChange = dataFigures.later.percent - dataFigures.earlier.percent;
   const activityLabel = activeExercise?.mission_role === 'final'
     ? tr(lang, 'Миссия', 'Mission', 'Mission')
     : activeExercise ? ({
@@ -294,12 +301,7 @@ const LessonScreen: React.FC = () => {
           ],
         };
         const criterion = writingCriteria[String(activeExercise?.id || '')];
-        const rawFigures = activeExercise?.data_figures;
-        const exerciseFigures: B2DataFigures | undefined =
-          rawFigures && [rawFigures.earlier?.year, rawFigures.earlier?.percent, rawFigures.later?.year, rawFigures.later?.percent].every((value) => typeof value === 'number' && Number.isFinite(value))
-            ? rawFigures as B2DataFigures
-            : undefined;
-        const missingElements = isB2Writing ? getB2WritingReviewHints(String(activeExercise?.id || ''), answer, lang, exerciseFigures) : [];
+        const missingElements = isB2Writing ? getB2WritingReviewHints(String(activeExercise?.id || ''), answer, lang, dataFigures) : [];
         const writingGuidance = isB2Writing
           ? (criterion
               ? tr(lang, criterion[0], criterion[1], criterion[2])
@@ -683,9 +685,9 @@ const LessonScreen: React.FC = () => {
             ] : String(activeExercise?.id || '') === 'data_description-dialogue' ? [
               tr(lang, 'Я верно указал(а) годы и значения', 'Ich habe Jahre und Werte richtig zugeordnet', 'I paired the years and values correctly'),
               tr(lang,
-                `Я описал(а) изменение на ${Math.abs((Number(activeExercise?.data_figures?.later?.percent) || 48) - (Number(activeExercise?.data_figures?.earlier?.percent) || 36))} процентных пунктов`,
-                `Ich habe die Veränderung um ${Math.abs((Number(activeExercise?.data_figures?.later?.percent) || 48) - (Number(activeExercise?.data_figures?.earlier?.percent) || 36))} Prozentpunkte beschrieben`,
-                `I described the change of ${Math.abs((Number(activeExercise?.data_figures?.later?.percent) || 48) - (Number(activeExercise?.data_figures?.earlier?.percent) || 36))} percentage points`),
+                `Я описал(а) изменение на ${Math.abs(dataChange)} процентных пунктов`,
+                `Ich habe die Veränderung um ${Math.abs(dataChange)} Prozentpunkte beschrieben`,
+                `I described the change of ${Math.abs(dataChange)} percentage points`),
               tr(lang, 'Я не придумал(а) причины, которых нет в данных', 'Ich habe keine unbelegten Ursachen erfunden', 'I did not invent unsupported causes'),
             ] : [
               tr(lang, 'Я выполнил(а) задачу', 'Ich habe die Aufgabe erfüllt', 'I addressed the task'),
