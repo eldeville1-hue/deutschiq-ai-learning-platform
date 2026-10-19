@@ -242,3 +242,14 @@ test('B2 stable figures accept an explicit no-change statement without zero-poin
   const missingTrend = 'Im Jahr 2021 lag der Anteil bei 40 Prozent und im Jahr 2025 ebenfalls bei 40 Prozent. Die Statistik zeigt zwei Werte.';
   expect(getB2WritingReviewHints('data_description-dialogue', missingTrend, 'en', figures).some(hint => hint.includes('0 percentage points'))).toBe(true);
 });
+
+test('B2 review recognizes natural German trend descriptions', () => {
+  const decrease = { earlier: { year: 2022, percent: 60 }, later: { year: 2026, percent: 45 } };
+  const stable = { earlier: { year: 2021, percent: 40 }, later: { year: 2025, percent: 40 } };
+  const decreaseRight = 'Im Jahr 2022 lag die Quote bei 60 Prozent und 2026 bei 45 Prozent. Die Quote ging zurück, und zwar um 15 Prozentpunkte.';
+  const decreaseWrong = 'Im Jahr 2022 lag die Quote bei 60 Prozent und 2026 bei 45 Prozent. Die Quote nahm zu, und zwar um 15 Prozentpunkte.';
+  expect(getB2WritingReviewHints('data_description-dialogue', decreaseRight, 'en', decrease).some(h => h.includes('direction of change'))).toBe(false);
+  expect(getB2WritingReviewHints('data_description-dialogue', decreaseWrong, 'en', decrease).some(h => h.includes('direction of change'))).toBe(true);
+  const stableRight = 'Im Jahr 2021 lag die Quote bei 40 Prozent und im Jahr 2025 ebenfalls bei 40 Prozent. Die Quote blieb auf demselben Niveau.';
+  expect(getB2WritingReviewHints('data_description-dialogue', stableRight, 'en', stable).some(h => h.includes('0 percentage points'))).toBe(false);
+});
