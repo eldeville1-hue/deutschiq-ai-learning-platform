@@ -59,6 +59,22 @@ class B2PracticeVariantTests(unittest.TestCase):
                     self.assertEqual(selected["data_figures"]["earlier"]["percent"], next(iter(year_values.values())))
                     self.assertEqual(selected["data_figures"]["later"]["percent"], list(year_values.values())[1])
 
+    def test_evidence_scenario_separates_trend_from_unproven_cause(self):
+        original = data_exercise()
+        for language, marker in (
+            ("ru", "реклам"),
+            ("de", "Werbung"),
+            ("en", "advertising"),
+        ):
+            with self.subTest(language=language):
+                selected = resolve_practice_variant(original, original, "data_description-evidence", language)
+                self.assertIn(marker, selected["question"])
+                self.assertIn("25", selected["question"])
+                self.assertIn("35", selected["question"])
+                self.assertEqual(selected["data_figures"]["later"]["percent"] - selected["data_figures"]["earlier"]["percent"], 10)
+                self.assertIn("nicht", selected["answer"])
+                self.assertIn("Werbung", selected["answer"])
+
     def test_invalid_variant_is_rejected(self):
         original = data_exercise()
         with self.assertRaises(HTTPException) as raised:
