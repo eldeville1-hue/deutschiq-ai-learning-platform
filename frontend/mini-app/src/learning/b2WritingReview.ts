@@ -11,6 +11,8 @@ const B2_DATA_DESCRIPTION: B2DataFigures = {
 
 export function getB2WritingReviewHints(exerciseId: string, answer: string, lang: Parameters<typeof tr>[0], figures: B2DataFigures = B2_DATA_DESCRIPTION): string[] {
   const answerText = answer.toLocaleLowerCase('de-DE').trim();
+  const change = figures.later.percent - figures.earlier.percent;
+  const isDefaultData = figures.earlier.year === 2020 && figures.earlier.percent === 36 && figures.later.year === 2025 && figures.later.percent === 48;
   // Keyword presence is only a weak signal, never evidence of writing quality.
   // Avoid claiming that a very short or empty response meets the criteria.
   const minimumWords = 12;
@@ -59,11 +61,11 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
     // Detect only explicit claims of decline; do not infer meaning from
     // unrelated words such as "Rückgang" in a comparison or quoted opinion.
     const claimsDecline = /\b(?:der anteil|die quote|der wert|die zahl)\s+(?:ist|war|hat sich)\s+(?:gesunken|gefallen|verringert|reduziert)\b|\b(?:der anteil|die quote|der wert|die zahl)\s+(?:sank|fiel)\b/i.test(answerText);
-    if (claimsDecline)
+    if (claimsDecline && change > 0)
       missingElements.push(tr(lang,
-        'Проверь направление изменения: показатель вырос с 36 % до 48 %.',
-        'Prüfe die Richtung der Veränderung: Der Wert stieg von 36 % auf 48 %.',
-        'Check the direction of change: the value increased from 36% to 48%.'));
+        `Проверь направление изменения: показатель вырос с ${figures.earlier.percent} % до ${figures.later.percent} %.`,
+        `Prüfe die Richtung der Veränderung: Der Wert stieg von ${figures.earlier.percent} % auf ${figures.later.percent} %.`,
+        `Check the direction of change: the value increased from ${figures.earlier.percent}% to ${figures.later.percent}%.`));
     // A number and its unit must describe the same difference, not merely
     // appear in unrelated parts of the response.
     const mentionsDifferenceInPoints = /\b(?:12|zwölf)\s*(?:prozentpunkt(?:e|en)?|percentage[\s-]+points?)\b|\b(?:prozentpunkt(?:e|en)?|percentage[\s-]+points?)\s*(?:von\s+)?(?:12|zwölf)\b/i.test(answerText);
@@ -71,12 +73,12 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
     // mislabelling the twelve-point change as twelve percent.
     const explicitlyWrongDifferenceUnit = /\b(?:anstieg|zunahme|differenz|unterschied|veränderung|steigerung)\b[^.!?]{0,65}?\b(?:um|von|beträgt|liegt bei|ist)\s+(?:nur\s+)?(?:12|zwölf)\s*(?:%|prozent)(?=\s|[.,;!?]|$)/i.test(answerText)
       || /\b(?:12|zwölf)\s*(?:%|prozent)(?=\s|[.,;!?]|$)[^.!?]{0,35}?\b(?:mehr|anstieg|zunahme|unterschied)\b/i.test(answerText);
-    if (explicitlyWrongDifferenceUnit)
+    if (explicitlyWrongDifferenceUnit && isDefaultData)
       missingElements.push(tr(lang,
         'Исправь единицу изменения: рост с 36 % до 48 % составляет 12 процентных пунктов, а не 12 %.',
         'Korrigiere die Einheit: Von 36 % auf 48 % sind es 12 Prozentpunkte, nicht 12 %.',
         'Correct the change unit: 36% to 48% is 12 percentage points, not 12%.'));
-    if (!mentionsDifferenceInPoints && !explicitlyWrongDifferenceUnit)
+    if (isDefaultData && !mentionsDifferenceInPoints && !explicitlyWrongDifferenceUnit)
       missingElements.push(tr(lang,
         'Проверь, указана ли разница именно в процентных пунктах (12), а не в процентах.',
         'Prüfe, ob du den Unterschied als 12 Prozentpunkte und nicht als 12 Prozent angegeben hast.',
