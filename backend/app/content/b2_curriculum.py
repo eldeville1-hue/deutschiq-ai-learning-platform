@@ -346,7 +346,7 @@ def build_b2_content(row: tuple) -> dict:
                     "later": {"year": 2026, "percent": 45},
                 },
                 "prompt": {
-                    "ru": "Сравни долю пользователей в 2022 и 2026 годах: укажи оба значения, направление изменения и разницу в процентных пунктах. Не выдумывай причины.",
+                    "ru": "Сравни долю пользователей: 60 % в 2022 году и 45 % в 2026 году. Укажи оба значения, направление изменения и разницу в процентных пунктах. Не выдумывай причины.",
                     "de": "Vergleiche den Nutzeranteil 2022 (60 %) und 2026 (45 %). Nenne beide Werte, die Richtung und die Differenz in Prozentpunkten. Erfinde keine Ursachen.",
                     "en": "Compare the user share in 2022 (60%) and 2026 (45%). State both values, the direction and the difference in percentage points. Do not invent causes.",
                 },
