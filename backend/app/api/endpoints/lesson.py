@@ -187,6 +187,21 @@ async def get_lesson(lesson_id: int, lang: str = "en", db: Session = Depends(get
         "learning_profile": profile,
     }
 
+def resolve_practice_variant(original: dict, exercise: dict, variant_id: str, language: str, retry: bool = False) -> dict:
+    """Resolve a learner-selected task only from server-owned lesson content."""
+    variants = original.get("practice_variants") or []
+    variant = next((item for item in variants if item.get("id") == variant_id), None)
+    if variant is None or retry:
+        raise HTTPException(status_code=422, detail="Invalid practice variant")
+    return {
+        **exercise,
+        "question": (variant.get("prompt") or {}).get(normalize_language(language), exercise.get("question")),
+        "answer": variant["model"],
+        "accepted_answers": [variant["model"]],
+        "data_figures": variant["data_figures"],
+    }
+
+
 class CheckAnswerRequest(BaseModel):
     user_id: int
     lesson_id: int
@@ -236,17 +251,7 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
     if exercise is None:
         raise HTTPException(status_code=409, detail='No supported retry exercise is available')
     if data.practice_variant_id is not None:
-        variants = original_exercise.get("practice_variants") or []
-        variant = next((item for item in variants if item.get("id") == data.practice_variant_id), None)
-        if variant is None or data.retry:
-            raise HTTPException(status_code=422, detail="Invalid practice variant")
-        exercise = {
-            **exercise,
-            "question": (variant.get("prompt") or {}).get(normalize_language(data.language), exercise.get("question")),
-            "answer": variant["model"],
-            "accepted_answers": [variant["model"]],
-            "data_figures": variant["data_figures"],
-        }
+        exercise = resolve_practice_variant(original_exercise, exercise, data.practice_variant_id, data.language, data.retry)
 
     accepted = exercise.get("accepted_answers") or [exercise.get("answer", "")]
     production_feedback = None
