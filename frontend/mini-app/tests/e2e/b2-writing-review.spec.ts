@@ -219,3 +219,15 @@ test('B2 short-draft guidance uses actual exercise figures for all trend directi
 test('unknown writing tasks never receive guessed B2 criteria', () => {
   expect(getB2WritingReviewHints('unknown-dialogue', 'Any answer', 'en')).toEqual([]);
 });
+
+test('B2 decline unit guidance is localized and avoids false positives', () => {
+  const figures = { earlier: { year: 2022, percent: 60 }, later: { year: 2026, percent: 45 } };
+  const wrong = '2022 lag der Anteil bei 60 Prozent und 2026 bei 45 Prozent. Der Rückgang beträgt 15 Prozent.';
+  const right = '2022 lag der Anteil bei 60 Prozent und 2026 bei 45 Prozent. Der Rückgang beträgt 15 Prozentpunkte.';
+  for (const [language, expected] of [['ru', '15 процентных пунктов'], ['de', '15 Prozentpunkte, nicht 15 %'], ['en', '15 percentage points, not 15%']] as const) {
+    const wrongHints = getB2WritingReviewHints('data_description-dialogue', wrong, language, figures);
+    expect(wrongHints.join(' ')).toContain(expected);
+    const rightHints = getB2WritingReviewHints('data_description-dialogue', right, language, figures);
+    expect(rightHints.join(' ')).not.toContain(expected);
+  }
+});
