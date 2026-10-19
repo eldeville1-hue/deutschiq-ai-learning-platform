@@ -669,9 +669,13 @@ test('mobile B2 practice switches between decrease and stable data with matching
   await page.route('**/api/lesson/start', route => route.fulfill({ json: {
     session_id: 'b2-practice-switch-session', resumed: true, next_exercise_index: 0,
   }}));
-  await page.route('**/api/lesson/check-answer', route => route.fulfill({ json: {
-    correct: false, evaluation_status: 'uncertain',
-  }}));
+  let submittedAnswer = '';
+  await page.route('**/api/lesson/check-answer', async route => {
+    const payload = route.request().postDataJSON();
+    submittedAnswer = String(payload.answer || '');
+    expect(payload.exercise_index).toBe(0);
+    await route.fulfill({ json: { correct: false, evaluation_status: 'uncertain' } });
+  });
   await page.route('**/api/events', route => route.fulfill({ status: 204, body: '' }));
   await page.goto('/lesson/77');
   await page.getByRole('button', { name: 'Decrease', exact: true }).click();
@@ -688,6 +692,7 @@ test('mobile B2 practice switches between decrease and stable data with matching
   await writing.fill('2021 lag der Anteil bei 40 Prozent. 2025 lag der Anteil bei 40 Prozent. Der Anteil blieb unverändert.');
   await page.getByRole('button', { name: 'Check', exact: true }).click();
   await expect(page.getByLabel('Writing self-check')).toContainText('0 percentage points');
+  expect(submittedAnswer).toContain('blieb unverändert');
 });
 
 test('mobile B2 draft survives reload in the same server session', async ({ page }) => {
