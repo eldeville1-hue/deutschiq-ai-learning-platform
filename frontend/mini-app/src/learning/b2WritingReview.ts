@@ -63,9 +63,9 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
         `Check the year-to-value pairing: ${figures.earlier.percent}% in ${figures.earlier.year} and ${figures.later.percent}% in ${figures.later.year}.`));
     // Detect only explicit claims of decline; do not infer meaning from
     // unrelated words such as "Rückgang" in a comparison or quoted opinion.
-    const claimsDecline = /\b(?:der anteil|die quote|der wert|die zahl)\s+(?:ist|war|hat sich)\s+(?:gesunken|gefallen|verringert|reduziert)\b|\b(?:der anteil|die quote|der wert|die zahl)\s+(?:sank|fiel)\b/i.test(answerText);
-    const claimsIncrease = /\b(?:der anteil|die quote|der wert|die zahl)\s+(?:ist|war|hat sich)\s+(?:gestiegen|gewachsen|erhöht|vergrößert)\b|\b(?:der anteil|die quote|der wert|die zahl)\s+(?:stieg|wuchs)\b/i.test(answerText);
-    const claimsStable = /\b(?:der anteil|die quote|der wert|die zahl)\s+(?:ist|war|blieb)\s+(?:unverändert|gleich|stabil|konstant)\b|\b(?:keine veränderung|kein unterschied)\b/i.test(answerText);
+    const claimsDecline = /\b(?:der anteil|die quote|der wert|die zahl)\s+(?:ist|war|hat sich)\s+(?:gesunken|gefallen|verringert|reduziert)\b|\b(?:der anteil|die quote|der wert|die zahl)\s+(?:sank|fiel)\b/i.test(answerText) || /\b(?:der anteil|die quote|der wert|die zahl)\s+(?:ging|geht)\s+zurück\b|\b(?:der anteil|die quote|der wert|die zahl)\s+(?:nahm|nimmt)\s+ab\b/i.test(answerText);
+    const claimsIncrease = /\b(?:der anteil|die quote|der wert|die zahl)\s+(?:ist|war|hat sich)\s+(?:gestiegen|gewachsen|erhöht|vergrößert)\b|\b(?:der anteil|die quote|der wert|die zahl)\s+(?:stieg|wuchs)\b/i.test(answerText) || /\b(?:der anteil|die quote|der wert|die zahl)\s+(?:nahm|nimmt)\s+zu\b/i.test(answerText);
+    const claimsStable = /\b(?:der anteil|die quote|der wert|die zahl)\s+(?:ist|war|blieb)\s+(?:unverändert|gleich|stabil|konstant)\b|\b(?:keine veränderung|kein unterschied)\b/i.test(answerText) || /\b(?:der anteil|die quote|der wert|die zahl)\s+blieb\s+auf\s+(?:demselben|gleichem|dem gleichen)\s+niveau\b/i.test(answerText);
     if ((change > 0 && (claimsDecline || claimsStable)) || (change < 0 && (claimsIncrease || claimsStable)) || (change === 0 && (claimsIncrease || claimsDecline)))
       missingElements.push(tr(lang,
         `Проверь направление изменения: показатель ${change > 0 ? 'вырос' : change < 0 ? 'снизился' : 'не изменился'} с ${figures.earlier.percent} % до ${figures.later.percent} %.`,
@@ -106,7 +106,7 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
         `Проверь единицу изменения: от ${figures.earlier.percent} % до ${figures.later.percent} % — это ${Math.abs(change)} процентных пунктов, не ${Math.abs(change)} %.`,
         `Prüfe die Einheit: Von ${figures.earlier.percent} % auf ${figures.later.percent} % sind es ${Math.abs(change)} Prozentpunkte, nicht ${Math.abs(change)} %.`,
         `Check the unit: ${figures.earlier.percent}% to ${figures.later.percent}% is ${Math.abs(change)} percentage points, not ${Math.abs(change)}%.`));
-    const describesNoChange = change === 0 && /\b(?:blieb|bleibt|ist|war)\s+(?:unverändert|gleich|stabil|konstant)\b|\b(?:keine veränderung|kein unterschied)\b/i.test(answerText);
+    const describesNoChange = change === 0 && (claimsStable || /\b(?:blieb|bleibt|ist|war)\s+(?:unverändert|gleich|stabil|konstant)\b/i.test(answerText));
     if (!describesNoChange && !mentionsDifferenceInPoints && !explicitlyWrongDifferenceUnit && !statedChangeAsPercent && !wrongPointDifference)
       missingElements.push(tr(lang,
         `Проверь, указана ли разница именно в процентных пунктах (${Math.abs(change)}), а не в процентах.`,
