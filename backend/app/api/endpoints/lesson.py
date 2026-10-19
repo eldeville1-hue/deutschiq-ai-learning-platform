@@ -197,6 +197,7 @@ class CheckAnswerRequest(BaseModel):
     session_id: str
     language: str = "en"
     retry: bool = False
+    practice_variant_id: str | None = Field(default=None, max_length=80)
     mode: Literal["lesson", "review"] = "lesson"
 
 def normalize_answer(value: str) -> str:
@@ -234,6 +235,19 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
     exercise = supported_retry_exercise(original_exercise, lesson_content, data.language) if data.retry else original_exercise
     if exercise is None:
         raise HTTPException(status_code=409, detail='No supported retry exercise is available')
+    if data.practice_variant_id is not None:
+        variants = original_exercise.get("practice_variants") or []
+        variant = next((item for item in variants if item.get("id") == data.practice_variant_id), None)
+        if variant is None or data.retry:
+            raise HTTPException(status_code=422, detail="Invalid practice variant")
+        exercise = {
+            **exercise,
+            "question": (variant.get("prompt") or {}).get(normalize_language(data.language), exercise.get("question")),
+            "answer": variant["model"],
+            "accepted_answers": [variant["model"]],
+            "data_figures": variant["data_figures"],
+        }
+
     accepted = exercise.get("accepted_answers") or [exercise.get("answer", "")]
     production_feedback = None
     structured_feedback = None
