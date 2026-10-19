@@ -620,6 +620,37 @@ test('mobile B2 data description reviews percentage points without penalizing un
   await expect(page.getByRole('textbox')).toHaveValue(draft);
 });
 
+test('mobile B2 writing uses exercise-specific statistics from lesson payload', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
+  const exercise = {
+    id: 'data_description-dialogue', type: 'dialogue',
+    question: 'Describe 25% in 2018 and 40% in 2024.',
+    answer: '2018 lag der Anteil bei 25 Prozent, 2024 bei 40 Prozent.',
+    data_figures: { earlier: { year: 2018, percent: 25 }, later: { year: 2024, percent: 40 } },
+  };
+  await page.route('**/api/lesson/77?*', route => route.fulfill({ json: {
+    id: 77, level: 'B2', topic: 'data_description',
+    content: { title: 'Describe data', examples: ['2018: 25%; 2024: 40%.'], exercises: [exercise] },
+  }}));
+  await page.route('**/api/lesson/start', route => route.fulfill({ json: {
+    session_id: 'b2-custom-data-session', resumed: true, next_exercise_index: 0,
+  }}));
+  await page.route('**/api/lesson/check-answer', route => route.fulfill({ json: {
+    correct: false, evaluation_status: 'uncertain',
+  }}));
+  await page.route('**/api/events', route => route.fulfill({ status: 204, body: '' }));
+  await page.goto('/lesson/77');
+  const writing = page.getByRole('textbox');
+  await expect(writing).toBeVisible();
+  await writing.fill('2018 lag der Anteil bei 25 Prozent. 2024 lag er bei 40 Prozent. Die Differenz beträgt 12 Prozentpunkte.');
+  await page.getByRole('button', { name: 'Check', exact: true }).click();
+  const checklist = page.getByLabel('Writing self-check');
+  await expect(checklist).toBeVisible();
+  await expect(checklist).toContainText('15 percentage points');
+  await expect(checklist).not.toContainText('36%');
+  await expect(page.locator('.answer-feedback.wrong')).toHaveCount(0);
+});
+
 test('mobile B2 draft survives reload in the same server session', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
   const exercise = { id: 'argument_structure-dialogue', type: 'dialogue', question: 'Give an argument.', answer: 'Radwege erhöhen die Sicherheit.' };
