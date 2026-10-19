@@ -8,7 +8,7 @@ import { getUserId, withUser } from "../utils/user";
 import { ExerciseInteraction } from "../components/learning/ExerciseInteraction";
 import { LessonCompletion, type LessonOutcome } from "../components/learning/LessonCompletion";
 import { exerciseKind } from "../learning/exercises";
-import { getB2WritingReviewHints } from "../learning/b2WritingReview";
+import { getB2WritingReviewHints, type B2DataFigures } from "../learning/b2WritingReview";
 import { tr } from "../i18n/language";
 import { clearDailySession, saveDailySession } from "../learning/dailySession";
 import { ProductState } from "../components/ProductState";
@@ -294,7 +294,12 @@ const LessonScreen: React.FC = () => {
           ],
         };
         const criterion = writingCriteria[String(activeExercise?.id || '')];
-        const missingElements = isB2Writing ? getB2WritingReviewHints(String(activeExercise?.id || ''), answer, lang) : [];
+        const rawFigures = activeExercise?.data_figures;
+        const exerciseFigures: B2DataFigures | undefined =
+          rawFigures && [rawFigures.earlier?.year, rawFigures.earlier?.percent, rawFigures.later?.year, rawFigures.later?.percent].every((value) => typeof value === 'number' && Number.isFinite(value))
+            ? rawFigures as B2DataFigures
+            : undefined;
+        const missingElements = isB2Writing ? getB2WritingReviewHints(String(activeExercise?.id || ''), answer, lang, exerciseFigures) : [];
         const writingGuidance = isB2Writing
           ? (criterion
               ? tr(lang, criterion[0], criterion[1], criterion[2])
