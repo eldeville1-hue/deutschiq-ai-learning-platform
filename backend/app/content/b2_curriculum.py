@@ -336,6 +336,37 @@ def build_b2_content(row: tuple) -> dict:
             "later": {"year": 2025, "percent": 48},
         }
 
+        # Independent transfer tasks: each scenario has its own grounded
+        # figures and example, rather than reusing the rising-trend answer.
+        dialogue["practice_variants"] = [
+            {
+                "id": "data_description-decrease",
+                "data_figures": {
+                    "earlier": {"year": 2022, "percent": 60},
+                    "later": {"year": 2026, "percent": 45},
+                },
+                "prompt": {
+                    "ru": "Опиши изменение доли пользователей с 60 % в 2022 году до 45 % в 2026 году. Не выдумывай причины.",
+                    "de": "Beschreibe die Veränderung des Nutzeranteils von 60 % im Jahr 2022 auf 45 % im Jahr 2026. Erfinde keine Ursachen.",
+                    "en": "Describe the user share changing from 60% in 2022 to 45% in 2026. Do not invent causes.",
+                },
+                "model": "Der Anteil sank von 60 Prozent im Jahr 2022 auf 45 Prozent im Jahr 2026, also um 15 Prozentpunkte.",
+            },
+            {
+                "id": "data_description-stable",
+                "data_figures": {
+                    "earlier": {"year": 2021, "percent": 40},
+                    "later": {"year": 2025, "percent": 40},
+                },
+                "prompt": {
+                    "ru": "Сравни долю пользователей: 40 % в 2021 году и 40 % в 2025 году. Не выдумывай тенденцию.",
+                    "de": "Vergleiche den Nutzeranteil: 40 % im Jahr 2021 und 40 % im Jahr 2025. Erfinde keinen Trend.",
+                    "en": "Compare the user share: 40% in 2021 and 40% in 2025. Do not invent a trend.",
+                },
+                "model": "Der Anteil lag sowohl 2021 als auch 2025 bei 40 Prozent und blieb damit unverändert.",
+            },
+        ]
+
     # Evaluate the communicative task, not an exact match to the sample answer.
     # These criteria are consumed by the AI feedback rubric for independent work.
     specialist_criteria = {
