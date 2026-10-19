@@ -106,7 +106,8 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
         `Проверь единицу изменения: от ${figures.earlier.percent} % до ${figures.later.percent} % — это ${Math.abs(change)} процентных пунктов, не ${Math.abs(change)} %.`,
         `Prüfe die Einheit: Von ${figures.earlier.percent} % auf ${figures.later.percent} % sind es ${Math.abs(change)} Prozentpunkte, nicht ${Math.abs(change)} %.`,
         `Check the unit: ${figures.earlier.percent}% to ${figures.later.percent}% is ${Math.abs(change)} percentage points, not ${Math.abs(change)}%.`));
-    if (!mentionsDifferenceInPoints && !explicitlyWrongDifferenceUnit && !statedChangeAsPercent && !wrongPointDifference)
+    const describesNoChange = change === 0 && /\b(?:blieb|bleibt|ist|war)\s+(?:unverändert|gleich|stabil|konstant)\b|\b(?:keine veränderung|kein unterschied)\b/i.test(answerText);
+    if (!describesNoChange && !mentionsDifferenceInPoints && !explicitlyWrongDifferenceUnit && !statedChangeAsPercent && !wrongPointDifference)
       missingElements.push(tr(lang,
         `Проверь, указана ли разница именно в процентных пунктах (${Math.abs(change)}), а не в процентах.`,
         `Prüfe, ob du den Unterschied als ${Math.abs(change)} Prozentpunkte und nicht als Prozent angegeben hast.`,
