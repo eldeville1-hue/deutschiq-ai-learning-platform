@@ -682,7 +682,10 @@ const LessonScreen: React.FC = () => {
               tr(lang, 'Я проверил(а) грамматику и тон', 'Ich habe Grammatik und Ton geprüft', 'I checked grammar and tone'),
             ] : String(activeExercise?.id || '') === 'data_description-dialogue' ? [
               tr(lang, 'Я верно указал(а) годы и значения', 'Ich habe Jahre und Werte richtig zugeordnet', 'I paired the years and values correctly'),
-              tr(lang, 'Я описал(а) рост на 12 процентных пунктов', 'Ich habe den Anstieg um 12 Prozentpunkte beschrieben', 'I described the increase of 12 percentage points'),
+              tr(lang,
+                `Я описал(а) изменение на ${Math.abs((Number(activeExercise?.data_figures?.later?.percent) || 48) - (Number(activeExercise?.data_figures?.earlier?.percent) || 36))} процентных пунктов`,
+                `Ich habe die Veränderung um ${Math.abs((Number(activeExercise?.data_figures?.later?.percent) || 48) - (Number(activeExercise?.data_figures?.earlier?.percent) || 36))} Prozentpunkte beschrieben`,
+                `I described the change of ${Math.abs((Number(activeExercise?.data_figures?.later?.percent) || 48) - (Number(activeExercise?.data_figures?.earlier?.percent) || 36))} percentage points`),
               tr(lang, 'Я не придумал(а) причины, которых нет в данных', 'Ich habe keine unbelegten Ursachen erfunden', 'I did not invent unsupported causes'),
             ] : [
               tr(lang, 'Я выполнил(а) задачу', 'Ich habe die Aufgabe erfüllt', 'I addressed the task'),
