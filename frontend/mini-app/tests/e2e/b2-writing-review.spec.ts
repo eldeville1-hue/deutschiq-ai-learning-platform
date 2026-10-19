@@ -95,6 +95,15 @@ test('B2 data review flags explicitly swapped year-value pairs', () => {
   expect(getB2WritingReviewHints('data_description-dialogue', correct, 'en').some(hint => hint.includes('year-to-value pairing'))).toBe(false);
 });
 
+test('B2 custom data feedback never suggests the default twelve-point increase', () => {
+  const figures = { earlier: { year: 2018, percent: 25 }, later: { year: 2024, percent: 40 } };
+  const draft = '2018 lag der Anteil bei 25 Prozent, 2024 bei 40 Prozent. Der Anteil ist gesunken. Die Differenz beträgt 15 Prozentpunkte.';
+  const hints = getB2WritingReviewHints('data_description-dialogue', draft, 'en', figures);
+  expect(hints.some(hint => hint.includes('increased from 25% to 40%'))).toBe(true);
+  expect(hints.join(' ')).not.toContain('36%');
+  expect(hints.join(' ')).not.toContain('12 percentage points');
+});
+
 test('B2 year-value checks accept exercise-specific figures', () => {
   const figures = { earlier: { year: 2018, percent: 25 }, later: { year: 2024, percent: 40 } };
   const draft = '2018 lag der Anteil bei 40 Prozent. Im Jahr 2024 lag er bei 25 Prozent. Die Ergebnisse sollten verglichen werden.';
