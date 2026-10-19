@@ -231,3 +231,14 @@ test('B2 decline unit guidance is localized and avoids false positives', () => {
     expect(rightHints.join(' ')).not.toContain(expected);
   }
 });
+
+test('B2 stable figures accept an explicit no-change statement without zero-point wording', () => {
+  const figures = { earlier: { year: 2021, percent: 40 }, later: { year: 2025, percent: 40 } };
+  const correct = 'Im Jahr 2021 lag der Anteil bei 40 Prozent und im Jahr 2025 ebenfalls bei 40 Prozent. Der Anteil blieb unverändert.';
+  for (const language of ['ru', 'de', 'en'] as const) {
+    const hints = getB2WritingReviewHints('data_description-dialogue', correct, language, figures);
+    expect(hints.some(hint => hint.includes('0 процентных пунктов') || hint.includes('0 Prozentpunkte') || hint.includes('0 percentage points'))).toBe(false);
+  }
+  const missingTrend = 'Im Jahr 2021 lag der Anteil bei 40 Prozent und im Jahr 2025 ebenfalls bei 40 Prozent. Die Statistik zeigt zwei Werte.';
+  expect(getB2WritingReviewHints('data_description-dialogue', missingTrend, 'en', figures).some(hint => hint.includes('0 percentage points'))).toBe(true);
+});
