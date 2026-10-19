@@ -2,12 +2,14 @@ import { tr } from "../i18n/language";
 
 // Source figures for the current B2 data-description exercise. Keep these
 // separate from wording recognition so future exercises can supply other data.
-const B2_DATA_DESCRIPTION = {
+export type B2DataFigures = { earlier: { year: number; percent: number }; later: { year: number; percent: number } };
+
+const B2_DATA_DESCRIPTION: B2DataFigures = {
   earlier: { year: 2020, percent: 36 },
   later: { year: 2025, percent: 48 },
 } as const;
 
-export function getB2WritingReviewHints(exerciseId: string, answer: string, lang: Parameters<typeof tr>[0]): string[] {
+export function getB2WritingReviewHints(exerciseId: string, answer: string, lang: Parameters<typeof tr>[0], figures: B2DataFigures = B2_DATA_DESCRIPTION): string[] {
   const answerText = answer.toLocaleLowerCase('de-DE').trim();
   // Keyword presence is only a weak signal, never evidence of writing quality.
   // Avoid claiming that a very short or empty response meets the criteria.
@@ -44,16 +46,16 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
       missingElements.push(tr(lang, 'Проверь, есть ли обоснованный ответ на возражение.', 'Prüfe, ob du dem Einwand eine begründete Antwort gegenüberstellst.', 'Check whether you gave a reasoned response to the objection.'));
   } else if (exerciseId === 'data_description-dialogue') {
     // Recognize local year/value relationships without scanning unrelated prose.
-    const reversedPair = ([ [B2_DATA_DESCRIPTION.earlier.year, B2_DATA_DESCRIPTION.later.percent], [B2_DATA_DESCRIPTION.later.year, B2_DATA_DESCRIPTION.earlier.percent] ] as const).some(([year, value]) => {
+    const reversedPair = ([ [figures.earlier.year, figures.later.percent], [figures.later.year, figures.earlier.percent] ] as const).some(([year, value]) => {
       const yearFirst = new RegExp('\\b' + year + '\\b\\s*(?::|[–—-]|\\s+(?:(?:lag|betrug|waren|war)\\s+(?:(?:der\\s+anteil|die\\s+quote|der\\s+wert)\\s+)?(?:bei\\s+)?|bei\\s+))\\s*' + value + '(?=\\s|%|[.,;!?]|$)', 'i');
       const valueFirst = new RegExp('\\b' + value + '\\s*(?:%|prozent)\\s*(?:im\\s+jahr|in|für)\\s+' + year + '\\b', 'i');
       return yearFirst.test(answerText) || valueFirst.test(answerText);
     });
     if (reversedPair)
       missingElements.push(tr(lang,
-        'Проверь соответствие данных: в 2020 году было 36 %, в 2025 году — 48 %.',
-        'Prüfe die Zuordnung: 2020 waren es 36 %, 2025 waren es 48 %.',
-        'Check the year-to-value pairing: 36% in 2020 and 48% in 2025.'));
+        `Проверь соответствие данных: в ${figures.earlier.year} году было ${figures.earlier.percent} %, в ${figures.later.year} году — ${figures.later.percent} %.`,
+        `Prüfe die Zuordnung: ${figures.earlier.year} waren es ${figures.earlier.percent} %, ${figures.later.year} waren es ${figures.later.percent} %.`,
+        `Check the year-to-value pairing: ${figures.earlier.percent}% in ${figures.earlier.year} and ${figures.later.percent}% in ${figures.later.year}.`));
     // Detect only explicit claims of decline; do not infer meaning from
     // unrelated words such as "Rückgang" in a comparison or quoted opinion.
     const claimsDecline = /\b(?:der anteil|die quote|der wert|die zahl)\s+(?:ist|war|hat sich)\s+(?:gesunken|gefallen|verringert|reduziert)\b|\b(?:der anteil|die quote|der wert|die zahl)\s+(?:sank|fiel)\b/i.test(answerText);
@@ -79,7 +81,7 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
         'Проверь, указана ли разница именно в процентных пунктах (12), а не в процентах.',
         'Prüfe, ob du den Unterschied als 12 Prozentpunkte und nicht als 12 Prozent angegeben hast.',
         'Check that the difference is expressed as 12 percentage points, not 12 percent.'));
-    for (const number of ['2020', '2025', '36', '48']) {
+    for (const number of [figures.earlier.year, figures.later.year, figures.earlier.percent, figures.later.percent].map(String)) {
       if (!new RegExp(`(^|\\D)${number}(?!\\d)`).test(answerText))
         missingElements.push(tr(lang, `Проверь, указано ли значение ${number}.`, `Prüfe, ob der Wert ${number} genannt wird.`, `Check whether you included ${number}.`));
     }
