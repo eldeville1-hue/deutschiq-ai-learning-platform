@@ -49,6 +49,7 @@ const LessonScreen: React.FC = () => {
   const [reviewPending, setReviewPending] = useState(false);
   const [writingSelfCheck, setWritingSelfCheck] = useState(() => Boolean(initialDraft.current?.writingSelfCheck));
   const [showWritingModel, setShowWritingModel] = useState(false);
+  const [dataPracticeIndex, setDataPracticeIndex] = useState(0);
   const [selfCheckMarks, setSelfCheckMarks] = useState<boolean[]>(() => Array.isArray(initialDraft.current?.selfCheckMarks) && initialDraft.current.selfCheckMarks.length === 3 ? initialDraft.current.selfCheckMarks.map(Boolean) : [false, false, false]);
   const [milestoneSent, setMilestoneSent] = useState(() => localStorage.getItem(`deutschiq-beta-milestone-${getUserId()}`) === '1');
   const [showHint, setShowHint] = useState(false);
@@ -68,7 +69,16 @@ const LessonScreen: React.FC = () => {
   const total = introSteps + exercises.length;
   const exerciseIndex = step - introSteps;
   const exercise = exercises[exerciseIndex];
-  const activeExercise = retried[exerciseIndex] && retryExercises[exerciseIndex] ? retryExercises[exerciseIndex] : exercise;
+  const baseExercise = retried[exerciseIndex] && retryExercises[exerciseIndex] ? retryExercises[exerciseIndex] : exercise;
+  const dataVariants = baseExercise?.id === 'data_description-dialogue' ? (baseExercise.practice_variants || []) : [];
+  const selectedVariant = dataPracticeIndex > 0 ? dataVariants[dataPracticeIndex - 1] : undefined;
+  const activeExercise = selectedVariant ? {
+    ...baseExercise,
+    question: selectedVariant.prompt?.[lang] || selectedVariant.prompt?.de || baseExercise.question,
+    data_figures: selectedVariant.data_figures,
+    answer: selectedVariant.model,
+    accepted_answers: [selectedVariant.model],
+  } : baseExercise;
   const dataFigures: B2DataFigures = (() => {
     const figures = activeExercise?.data_figures;
     return figures && [figures.earlier?.year, figures.earlier?.percent, figures.later?.year, figures.later?.percent].every((value) => typeof value === 'number' && Number.isFinite(value))
@@ -559,6 +569,19 @@ const LessonScreen: React.FC = () => {
         <section className="lesson-step exercise-step dq-exercise">
           <div className="exercise-stage-row"><p className="eyebrow">{activityLabel}{retried[exerciseIndex] ? tr(lang, " · ещё раз", " · noch einmal", " · try again") : ""}</p><span>{exerciseIndex + 1}/{exercises.length}</span></div>
           {activeExercise.mission_role === 'final' && <div className="mission-stage-banner"><span>{tr(lang, 'БЕЗ МОДЕЛИ', 'OHNE MODELL', 'WITHOUT THE MODEL')}</span><strong>{tr(lang, 'Покажи, что ты можешь сделать это сам', 'Zeige, dass du es selbst kannst', 'Show that you can do it independently')}</strong></div>}
+          {dataVariants.length > 0 && checked === null && (
+            <div className="lesson-task-surface" aria-label="Data practice scenarios">
+              <div className="row" style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {[0, ...dataVariants.map((_: unknown, index: number) => index + 1)].map((index: number) => (
+                  <button key={index} type="button" aria-pressed={dataPracticeIndex === index}
+                    onClick={() => { setDataPracticeIndex(index); setAnswer(''); setFeedback(null); setWritingSelfCheck(false); setSelfCheckMarks([false, false, false]); setShowWritingModel(false); }}
+                    className={dataPracticeIndex === index ? 'primary-btn' : 'secondary-btn'}>
+                    {index === 0 ? tr(lang, 'Рост', 'Anstieg', 'Increase') : index === 1 ? tr(lang, 'Снижение', 'Rückgang', 'Decrease') : tr(lang, 'Без изменений', 'Unverändert', 'No change')}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="exercise-prompt"><h1>{activeExercise.type === "repeat" ? tr(lang, "Произнеси фразу", "Sprich den Satz", "Say the sentence") : activeExercise.question}</h1></div>
           {checked === null && <div className="lesson-task-surface">
           {(activeExercise.type === "listening" || activeExercise.type === "listening_choice") && (
