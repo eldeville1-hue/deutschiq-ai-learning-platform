@@ -30,10 +30,13 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
         'Разверни ответ: справедливо изложи опасение о расходах, затем приведи собственный контраргумент и обоснуй его.',
         'Baue deine Antwort aus: Stelle die Kostensorge fair dar, formuliere dann dein eigenes Gegenargument und begründe es.',
         'Develop your response: acknowledge the cost concern fairly, then give your own counterargument and explain why it matters.')];
+    const directionRu = change > 0 ? 'рост' : change < 0 ? 'снижение' : 'отсутствие изменений';
+    const directionDe = change > 0 ? 'den Anstieg' : change < 0 ? 'den Rückgang' : 'die unveränderten Werte';
+    const directionEn = change > 0 ? 'increase' : change < 0 ? 'decrease' : 'unchanged value';
     return [tr(lang,
-      'Разверни описание данных: сопоставь 2020 год (36 %) и 2025 год (48 %), укажи рост на 12 процентных пунктов. Не придумывай причины изменения.',
-      'Baue deine Datenbeschreibung aus: Vergleiche 2020 (36 %) mit 2025 (48 %) und nenne den Anstieg um 12 Prozentpunkte. Erfinde keine Ursachen.',
-      'Develop your data description: compare 2020 (36%) with 2025 (48%) and describe the 12-percentage-point increase. Do not invent causes.')];
+      `Разверни описание данных: сопоставь ${figures.earlier.year} год (${figures.earlier.percent} %) и ${figures.later.year} год (${figures.later.percent} %), опиши ${directionRu} (${Math.abs(change)} процентных пунктов). Не придумывай причины изменения.`,
+      `Baue deine Datenbeschreibung aus: Vergleiche ${figures.earlier.year} (${figures.earlier.percent} %) mit ${figures.later.year} (${figures.later.percent} %) und beschreibe ${directionDe} (${Math.abs(change)} Prozentpunkte). Erfinde keine Ursachen.`,
+      `Develop your data description: compare ${figures.earlier.year} (${figures.earlier.percent}%) with ${figures.later.year} (${figures.later.percent}%) and describe the ${directionEn} (${Math.abs(change)} percentage points). Do not invent causes.`)];
   }
   const missingElements: string[] = [];
   if (exerciseId === 'argument_structure-dialogue') {
