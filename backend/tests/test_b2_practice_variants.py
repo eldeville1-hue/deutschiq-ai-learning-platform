@@ -30,6 +30,35 @@ class B2PracticeVariantTests(unittest.TestCase):
                 self.assertEqual(selected["accepted_answers"], [selected["answer"]])
                 self.assertNotEqual(selected["question"], original["question"])
 
+    def test_transfer_prompts_require_grounded_comparison_in_all_languages(self):
+        original = data_exercise()
+        cases = [
+            ("data_description-decrease", {2022: 60, 2026: 45}, {
+                "ru": ("процентных пунктах", "Не выдумывай причины"),
+                "de": ("Prozentpunkten", "Erfinde keine Ursachen"),
+                "en": ("percentage points", "Do not invent causes"),
+            }),
+            ("data_description-stable", {2021: 40, 2025: 40}, {
+                "ru": ("изменился ли", "Не выдумывай тенденцию"),
+                "de": ("verändert hat", "Erfinde keinen Trend"),
+                "en": ("whether the share changed", "Do not invent a trend"),
+            }),
+        ]
+        for variant_id, year_values, language_markers in cases:
+            for language, markers in language_markers.items():
+                with self.subTest(variant=variant_id, language=language):
+                    selected = resolve_practice_variant(original, original, variant_id, language)
+                    prompt = selected["question"]
+                    for year, value in year_values.items():
+                        self.assertIn(str(year), prompt)
+                        self.assertIn(str(value), prompt)
+                        self.assertIn(str(year), selected["answer"])
+                        self.assertIn(str(value), selected["answer"])
+                    for marker in markers:
+                        self.assertIn(marker, prompt)
+                    self.assertEqual(selected["data_figures"]["earlier"]["percent"], next(iter(year_values.values())))
+                    self.assertEqual(selected["data_figures"]["later"]["percent"], list(year_values.values())[1])
+
     def test_invalid_variant_is_rejected(self):
         original = data_exercise()
         with self.assertRaises(HTTPException) as raised:
