@@ -95,7 +95,18 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
         'Исправь единицу изменения: рост с 36 % до 48 % составляет 12 процентных пунктов, а не 12 %.',
         'Korrigiere die Einheit: Von 36 % auf 48 % sind es 12 Prozentpunkte, nicht 12 %.',
         'Correct the change unit: 36% to 48% is 12 percentage points, not 12%.'));
-    if (!mentionsDifferenceInPoints && !explicitlyWrongDifferenceUnit && !wrongPointDifference)
+    // In transfer tasks the point difference varies; check explicit unit
+    // confusion against that exercise's numbers, not the original 12-point task.
+    const statedChangeAsPercent = !isDefaultData && new RegExp(
+      '(?:\\b(?:anstieg|zunahme|differenz|unterschied|veränderung|rückgang|abnahme)\\b[^.!?]{0,65}?(?:um|von|beträgt|liegt bei|ist)\\s+|\\bum\\s+)' +
+      Math.abs(change) + '\\s*(?:%|prozent)(?=\\s|[.,;!?]|$)', 'i'
+    ).test(answerText);
+    if (statedChangeAsPercent)
+      missingElements.push(tr(lang,
+        `Проверь единицу изменения: от ${figures.earlier.percent} % до ${figures.later.percent} % — это ${Math.abs(change)} процентных пунктов, не ${Math.abs(change)} %.`,
+        `Prüfe die Einheit: Von ${figures.earlier.percent} % auf ${figures.later.percent} % sind es ${Math.abs(change)} Prozentpunkte, nicht ${Math.abs(change)} %.`,
+        `Check the unit: ${figures.earlier.percent}% to ${figures.later.percent}% is ${Math.abs(change)} percentage points, not ${Math.abs(change)}%.`));
+    if (!mentionsDifferenceInPoints && !explicitlyWrongDifferenceUnit && !statedChangeAsPercent && !wrongPointDifference)
       missingElements.push(tr(lang,
         `Проверь, указана ли разница именно в процентных пунктах (${Math.abs(change)}), а не в процентах.`,
         `Prüfe, ob du den Unterschied als ${Math.abs(change)} Prozentpunkte und nicht als Prozent angegeben hast.`,
