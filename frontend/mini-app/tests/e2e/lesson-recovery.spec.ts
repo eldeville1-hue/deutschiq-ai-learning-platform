@@ -678,6 +678,10 @@ test('mobile B2 practice switches between decrease and stable data with matching
   await expect(page.getByRole('heading', { name: /decrease from 60% to 45%/i })).toBeVisible();
   const writing = page.getByRole('textbox');
   await writing.fill('Draft for decrease');
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'Decrease', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('heading', { name: /decrease from 60% to 45%/i })).toBeVisible();
+  await expect(page.getByRole('textbox')).toHaveValue('Draft for decrease');
   await page.getByRole('button', { name: 'No change', exact: true }).click();
   await expect(writing).toHaveValue('');
   await expect(page.getByRole('heading', { name: /unchanged share of 40%/i })).toBeVisible();
