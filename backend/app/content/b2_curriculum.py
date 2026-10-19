@@ -353,6 +353,19 @@ def build_b2_content(row: tuple) -> dict:
                 "model": "Der Anteil sank von 60 Prozent im Jahr 2022 auf 45 Prozent im Jahr 2026, also um 15 Prozentpunkte.",
             },
             {
+                "id": "data_description-evidence",
+                "data_figures": {
+                    "earlier": {"year": 2020, "percent": 25},
+                    "later": {"year": 2025, "percent": 35},
+                },
+                "prompt": {
+                    "ru": "В 2020 году доля пользователей составляла 25 %, а в 2025 году — 35 %. Опиши изменение и сделай только один вывод, подтверждённый этими данными. Можно ли утверждать, что рост вызван рекламой? Объясни, почему нельзя делать такой вывод.",
+                    "de": "2020 lag der Nutzeranteil bei 25 %, 2025 bei 35 %. Beschreibe die Veränderung und ziehe nur eine durch die Daten gestützte Schlussfolgerung. Belegen die Zahlen, dass Werbung den Anstieg verursacht hat? Begründe deine Antwort.",
+                    "en": "The user share was 25% in 2020 and 35% in 2025. Describe the change and give only a conclusion supported by these figures. Do the figures prove that advertising caused the increase? Explain why not.",
+                },
+                "model": "Der Anteil stieg von 25 Prozent im Jahr 2020 auf 35 Prozent im Jahr 2025, also um 10 Prozentpunkte. Die Zahlen zeigen einen Anstieg, belegen aber nicht, dass Werbung die Ursache war.",
+            },
+            {
                 "id": "data_description-stable",
                 "data_figures": {
                     "earlier": {"year": 2021, "percent": 40},
