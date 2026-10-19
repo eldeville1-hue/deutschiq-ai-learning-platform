@@ -181,6 +181,24 @@ test('B2 argument review does not mistake approximate numbers for examples', () 
   expect(getB2WritingReviewHints('argument_structure-dialogue', example, 'en').some(hint => hint.includes('concrete example'))).toBe(false);
 });
 
+test('B2 data review detects false growth and false stability for falling figures', () => {
+  const figures = { earlier: { year: 2022, percent: 60 }, later: { year: 2026, percent: 45 } };
+  const wrong = '2022 lag der Anteil bei 60 Prozent, 2026 bei 45 Prozent. Der Anteil ist gestiegen, um 15 Prozentpunkte.';
+  expect(getB2WritingReviewHints('data_description-dialogue', wrong, 'en', figures).some(hint => hint.includes('decreased from 60% to 45%'))).toBe(true);
+  const stable = '2022 lag der Anteil bei 60 Prozent, 2026 bei 45 Prozent. Der Anteil blieb stabil, mit 15 Prozentpunkten Unterschied.';
+  expect(getB2WritingReviewHints('data_description-dialogue', stable, 'en', figures).some(hint => hint.includes('direction of change'))).toBe(true);
+  const right = '2022 lag der Anteil bei 60 Prozent, 2026 bei 45 Prozent. Der Anteil ist gesunken, um 15 Prozentpunkte.';
+  expect(getB2WritingReviewHints('data_description-dialogue', right, 'en', figures).some(hint => hint.includes('direction of change'))).toBe(false);
+});
+
+test('B2 data review detects invented change for unchanged figures', () => {
+  const figures = { earlier: { year: 2022, percent: 40 }, later: { year: 2026, percent: 40 } };
+  const wrong = '2022 lag der Anteil bei 40 Prozent, 2026 bei 40 Prozent. Der Anteil ist gestiegen, um 10 Prozentpunkte.';
+  expect(getB2WritingReviewHints('data_description-dialogue', wrong, 'en', figures).some(hint => hint.includes('remained unchanged'))).toBe(true);
+  const right = '2022 lag der Anteil bei 40 Prozent, 2026 bei 40 Prozent. Der Anteil blieb stabil, es gab keine Veränderung.';
+  expect(getB2WritingReviewHints('data_description-dialogue', right, 'en', figures).some(hint => hint.includes('direction of change'))).toBe(false);
+});
+
 test('unknown writing tasks never receive guessed B2 criteria', () => {
   expect(getB2WritingReviewHints('unknown-dialogue', 'Any answer', 'en')).toEqual([]);
 });
