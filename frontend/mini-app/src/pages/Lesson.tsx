@@ -680,6 +680,15 @@ const LessonScreen: React.FC = () => {
                       ['coherence', tr(lang, 'Связность', 'Kohärenz', 'Coherence')],
                       ['register', tr(lang, 'Регистр', 'Register', 'Register')],
                     ].map(([key, label]) => <span key={key}><small>{label}</small><b>{feedback.dimension_scores[key]}%</b></span>)}</div>}
+                    {Array.isArray(feedback.missing_task_parts) && feedback.missing_task_parts.length > 0 && (
+                      <p><b>{tr(lang, 'Нужно доработать:', 'Noch zu ergänzen:', 'Needs improvement:')}</b>{' '}
+                        {feedback.missing_task_parts.map((criterion: string) => ({
+                          overall_trend: tr(lang, 'тенденция', 'Entwicklung', 'overall trend'),
+                          numeric_value_and_period: tr(lang, 'числа и годы', 'Werte und Jahre', 'values and years'),
+                          cautious_interpretation: tr(lang, 'обоснованность вывода', 'vorsichtige Interpretation', 'evidence-based interpretation'),
+                        } as Record<string, string>)[criterion] || tr(lang, 'требование задания', 'Aufgabenanforderung', 'task requirement')).join(' · ')}
+                      </p>
+                    )}
                     {feedback.improvement && <p><b>{tr(lang, 'Следующий шаг:', 'Nächster Schritt:', 'Next step:')}</b> {feedback.improvement}</p>}
                     {!checked && feedback.correct_answer && <small>{tr(lang, 'Возможный вариант:', 'Mögliche Fassung:', 'Possible revision:')} {feedback.correct_answer}</small>}
                   </div>
