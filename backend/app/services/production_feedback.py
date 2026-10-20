@@ -123,6 +123,36 @@ def local_feedback(answer: str, exercise: dict, rule: str, lang: str = "en", cef
     }
 
 
+
+# Learner-facing explanations for missing mandatory assessment requirements.
+# Keep these distinct from grammar and vocabulary scores.
+CRITERION_GUIDANCE = {
+    "overall_trend": {
+        "ru": "Опиши направление изменения показателя: рост, снижение или отсутствие изменений.",
+        "de": "Beschreibe die Entwicklung: Anstieg, Rückgang oder unveränderter Wert.",
+        "en": "Describe the overall trend: increase, decrease, or no change.",
+    },
+    "numeric_value_and_period": {
+        "ru": "Назови значения и соответствующие годы; проверь разницу в процентных пунктах.",
+        "de": "Nenne die Werte und die zugehörigen Jahre; prüfe die Differenz in Prozentpunkten.",
+        "en": "State the values and their years; check the percentage-point difference.",
+    },
+    "cautious_interpretation": {
+        "ru": "Отдели наблюдаемый рост от возможной причины: одни эти числа не доказывают влияние рекламы.",
+        "de": "Trenne den beobachteten Anstieg von einer möglichen Ursache: Diese Zahlen allein belegen keine Wirkung der Werbung.",
+        "en": "Separate the observed increase from a possible cause: these figures alone do not prove an advertising effect.",
+    },
+}
+
+def _criterion_improvement(missing: list[str], lang: str) -> str | None:
+    language = lang if lang in ("ru", "de", "en") else "en"
+    for key in missing:
+        guidance = CRITERION_GUIDANCE.get(key)
+        if guidance:
+            return guidance[language]
+    return None
+
+
 def _ai_feedback(answer: str, exercise: dict, lesson_content: dict, lang: str) -> dict[str, Any]:
     from openai import OpenAI
     from app.core.config import settings
@@ -178,7 +208,7 @@ def _ai_feedback(answer: str, exercise: dict, lesson_content: dict, lang: str) -
     corrected = str(result.get("corrected_answer") or exercise.get("answer", ""))
     return {
         "correct": passed, "score": score, "dimension_scores": scores,
-        "feedback": str(result.get("feedback") or _copy(lang)["grammar"]), "improvement": str(result.get("improvement") or _copy(lang)["expand"]),
+        "feedback": str(result.get("feedback") or _copy(lang)["grammar"]), "improvement": _criterion_improvement(missing_criteria, lang) or str(result.get("improvement") or _copy(lang)["expand"]),
         "corrected_answer": corrected, "source": "ai", "error_type": None if passed else (result.get("error_type") or "production_below_cefr"),
         "missing_words": [] if passed else word_diff(answer, corrected)["missing"], "extra_words": [] if passed else word_diff(answer, corrected)["extra"],
         "cefr_standard": cefr, "pass_mark": threshold, "missing_task_parts": list(dict.fromkeys(missing_parts + missing_criteria)),
