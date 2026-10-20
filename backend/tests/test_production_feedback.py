@@ -8,6 +8,43 @@ from app.services.answer_intelligence import evaluate_structured_answer, normali
 
 
 class ProductionFeedbackTests(unittest.TestCase):
+    def test_b2_full_answer_cannot_pass_with_swapped_figures_despite_ai_approval(self):
+        from app.services.production_feedback import _ai_feedback
+        from types import SimpleNamespace
+        import json
+
+        exercise = {
+            "question": "Beschreibe den Anstieg und bewerte die Werbungsbehauptung.",
+            "answer": "2020: 25 %, 2025: 35 %. Der Anteil stieg um 10 Prozentpunkte.",
+            "data_figures": {
+                "earlier": {"year": 2020, "percent": 25},
+                "later": {"year": 2025, "percent": 35},
+            },
+            "assessment_criteria": [
+                "overall_trend", "numeric_value_and_period", "cautious_interpretation"
+            ],
+        }
+        payload = {
+            "criteria_met": {key: True for key in exercise["assessment_criteria"]},
+            "dimension_scores": {key: 98 for key in (
+                "task_completion", "grammar", "vocabulary", "coherence", "register"
+            )},
+            "feedback": "Ausgezeichnet.", "improvement": "Weiter so.",
+        }
+        answer = (
+            "2020: 35 %, 2025: 25 %. Der Anteil stieg um 10 Prozentpunkte. "
+            "Diese Zahlen beweisen nicht, dass Werbung die Ursache war."
+        )
+        with patch("openai.OpenAI") as client:
+            client.return_value.chat.completions.create.return_value = SimpleNamespace(
+                choices=[SimpleNamespace(message=SimpleNamespace(content=json.dumps(payload)))]
+            )
+            result = _ai_feedback(answer, exercise, {"cefr": "B2"}, "de")
+        self.assertFalse(result["correct"])
+        self.assertIn("numeric_value_and_period", result["missing_task_parts"])
+        self.assertLess(result["dimension_scores"]["task_completion"], 60)
+        self.assertIn("Jahre", result["improvement"])
+
     def test_b2_year_value_guard_rejects_swapped_figures_not_paraphrases(self):
         from app.services.production_feedback import _incorrect_year_value_pair
         exercise = {"data_figures": {
