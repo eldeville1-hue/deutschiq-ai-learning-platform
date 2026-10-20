@@ -192,6 +192,27 @@ def _incorrect_year_value_pair(answer: str, exercise: dict) -> bool:
     return False
 
 
+
+def _unsupported_advertising_causation(answer: str, exercise: dict) -> bool:
+    """Flag only direct affirmative advertising-causation claims in evidence tasks."""
+    if "cautious_interpretation" not in exercise.get("assessment_criteria", []):
+        return False
+    task = str(exercise.get("question", "")).lower()
+    if not re.search(r"werbung|advertis|реклам", task):
+        return False
+    # Match a causal verb within the same clause as advertising. Do not treat
+    # negated, hypothetical, or explicitly unproven statements as assertions.
+    clauses = re.split(r"[.!?;\n]+", answer.lower())
+    for clause in clauses:
+        if not re.search(r"werbung|advertis|реклам", clause):
+            continue
+        if re.search(r"nicht|kein(?:e|en|er|es)?|unbewiesen|unbelegt|beweis(?:t|en)? nicht|cannot|not|не |нельзя|может|könnte|could|möglich|possibly", clause):
+            continue
+        if re.search(r"(?:werbung|advertis\w*|реклам\w*)\s+(?:hat|haben|caused|verursacht|bewirkt|führte|вызыв|привел)", clause) or re.search(r"(?:durch|wegen|aufgrund)\s+(?:der\s+)?werbung", clause):
+            return True
+    return False
+
+
 def _ai_feedback(answer: str, exercise: dict, lesson_content: dict, lang: str) -> dict[str, Any]:
     from openai import OpenAI
     from app.core.config import settings
@@ -236,6 +257,8 @@ def _ai_feedback(answer: str, exercise: dict, lesson_content: dict, lang: str) -
     if (_incorrect_percentage_point_claim(answer, exercise) or _incorrect_year_value_pair(answer, exercise)) and "numeric_value_and_period" in criteria:
         if "numeric_value_and_period" not in missing_criteria:
             missing_criteria.append("numeric_value_and_period")
+    if _unsupported_advertising_causation(answer, exercise) and "cautious_interpretation" not in missing_criteria:
+        missing_criteria.append("cautious_interpretation")
     # Keep reported rubric scores consistent with failed mandatory requirements.
     # An AI may return 95/100 for task completion while marking a required
     # criterion false; the server must not display that contradiction.
