@@ -277,3 +277,15 @@ test('B2 evidence review does not let unrelated negation excuse a causal claim',
   expect(getB2WritingReviewHints('data_description-dialogue', unrelatedNegation, 'en', figures).join(' ')).toContain('advertising effect');
   expect(getB2WritingReviewHints('data_description-dialogue', supportedCaution, 'en', figures).join(' ')).not.toContain('advertising effect');
 });
+
+test('B2 evidence review evaluates each advertising claim separately', () => {
+  const figures = { earlier: { year: 2020, percent: 25 }, later: { year: 2025, percent: 35 } };
+  const base = 'Im Jahr 2020 lag der Anteil bei 25 Prozent und 2025 bei 35 Prozent, ein Anstieg um 10 Prozentpunkte. ';
+  const mixed = base + 'Eine Ursache durch Werbung ist nicht belegt. Durch Werbung wurde der Anstieg verursacht.';
+  const notOnly = base + 'Der Anstieg entstand nicht nur durch Werbung.';
+  const cautious = base + 'Der Anstieg durch Werbung ist nicht belegt.';
+  const review = (answer: string) => getB2WritingReviewHints('data_description-dialogue', answer, 'en', figures).join(' ');
+  expect(review(mixed)).toContain('advertising effect');
+  expect(review(notOnly)).toContain('advertising effect');
+  expect(review(cautious)).not.toContain('advertising effect');
+});
