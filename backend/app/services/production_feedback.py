@@ -159,7 +159,7 @@ def _ai_feedback(answer: str, exercise: dict, lesson_content: dict, lang: str) -
 
     cefr = str(lesson_content.get("cefr", "A2")).upper()
     client = OpenAI(api_key=settings.OPENAI_API_KEY, timeout=8.0, max_retries=0)
-    prompt = {"assessment_criteria": exercise.get("assessment_criteria", []), "cefr": cefr, "pass_mark": PASS_MARKS.get(cefr, 70), "objective": lesson_content.get("objective", ""), "rule": lesson_content.get("rule", ""), "task": exercise.get("question", ""), "target_patterns": exercise.get("target_patterns", []), "assessment_rubric": lesson_content.get("assessment_rubric", []), "model_answer": exercise.get("model_answer") or exercise.get("answer", ""), "learner_answer": answer}
+    prompt = {"assessment_criteria": exercise.get("assessment_criteria", []), "cefr": cefr, "pass_mark": PASS_MARKS.get(cefr, 70), "objective": lesson_content.get("objective", ""), "rule": lesson_content.get("rule", ""), "task": exercise.get("question", ""), "target_patterns": exercise.get("target_patterns", []), "assessment_rubric": lesson_content.get("assessment_rubric", []), "data_figures": exercise.get("data_figures"), "model_answer": exercise.get("model_answer") or exercise.get("answer", ""), "learner_answer": answer}
     response = client.chat.completions.create(
         model=settings.OPENAI_MODEL, temperature=0.1, max_tokens=420, response_format={"type": "json_object"},
         messages=[
