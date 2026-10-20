@@ -164,6 +164,11 @@ def _ai_feedback(answer: str, exercise: dict, lesson_content: dict, lang: str) -
         missing_criteria = [key for key in criteria if not reported[key]]
     else:
         missing_criteria = []
+    # Keep reported rubric scores consistent with failed mandatory requirements.
+    # An AI may return 95/100 for task completion while marking a required
+    # criterion false; the server must not display that contradiction.
+    if missing_criteria:
+        scores["task_completion"] = min(scores["task_completion"], 59)
     score = _overall(scores)
     threshold = PASS_MARKS.get(cefr, 70)
     passed = score >= threshold and scores["task_completion"] >= 60 and scores["grammar"] >= 50
