@@ -690,6 +690,15 @@ const LessonScreen: React.FC = () => {
                       </p>
                     )}
                     {feedback.improvement && <p><b>{tr(lang, 'Следующий шаг:', 'Nächster Schritt:', 'Next step:')}</b> {feedback.improvement}</p>}
+                    {checked === false && Array.isArray(feedback.missing_task_parts) && feedback.missing_task_parts.length > 0 && (
+                      <p className="assessment-revision-prompt">
+                        {tr(lang,
+                          'Перед повторной попыткой перепиши ответ: проверь числа, назови изменение и отдели факт от предположения.',
+                          'Überarbeite vor dem nächsten Versuch deinen Text: Prüfe die Zahlen, beschreibe die Veränderung und trenne Fakten von Vermutungen.',
+                          'Before trying again, revise your answer: check the figures, describe the change, and separate facts from assumptions.')}
+                      </p>
+                    )}
+
                     {!checked && feedback.correct_answer && <small>{tr(lang, 'Возможный вариант:', 'Mögliche Fassung:', 'Possible revision:')} {feedback.correct_answer}</small>}
                   </div>
                 )}
