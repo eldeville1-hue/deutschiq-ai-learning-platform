@@ -8,6 +8,36 @@ from app.services.answer_intelligence import evaluate_structured_answer, normali
 
 
 class ProductionFeedbackTests(unittest.TestCase):
+    def test_b2_causation_guard_overrides_ai_and_gives_localized_advice(self):
+        from app.services.production_feedback import _ai_feedback
+        from types import SimpleNamespace
+        import json
+
+        exercise = {
+            "question": "Belegen die Zahlen, dass Werbung den Anstieg verursacht hat?",
+            "answer": "Der Anteil stieg. Die Zahlen belegen keine Ursache.",
+            "assessment_criteria": ["overall_trend", "cautious_interpretation"],
+        }
+        payload = {
+            "criteria_met": {"overall_trend": True, "cautious_interpretation": True},
+            "dimension_scores": {key: 95 for key in (
+                "task_completion", "grammar", "vocabulary", "coherence", "register"
+            )},
+            "feedback": "Sehr gut.", "improvement": "Weiter so.",
+        }
+        answer = "Die Zahlen zeigen einen Anstieg, aber wegen der Werbung stieg der Anteil."
+        with patch("openai.OpenAI") as client:
+            client.return_value.chat.completions.create.return_value = SimpleNamespace(
+                choices=[SimpleNamespace(message=SimpleNamespace(content=json.dumps(payload)))]
+            )
+            for lang, keyword in (("de", "Werbung"), ("ru", "рекламы"), ("en", "advertising")):
+                with self.subTest(lang=lang):
+                    result = _ai_feedback(answer, exercise, {"cefr": "B2"}, lang)
+                    self.assertFalse(result["correct"])
+                    self.assertIn("cautious_interpretation", result["missing_task_parts"])
+                    self.assertLess(result["dimension_scores"]["task_completion"], 60)
+                    self.assertIn(keyword, result["improvement"])
+
     def test_b2_advertising_guard_scopes_negation_across_contrasts(self):
         from app.services.production_feedback import _unsupported_advertising_causation
         exercise = {
