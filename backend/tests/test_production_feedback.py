@@ -38,6 +38,30 @@ class ProductionFeedbackTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 _ai_feedback("Der Anteil stieg.", exercise, lesson, "de")
 
+    def test_b2_data_rubric_prompt_requires_evidence_not_causation_guess(self):
+        from app.services.production_feedback import _ai_feedback
+        from types import SimpleNamespace
+        import json
+
+        exercise = {
+            "question": "Belegen die Zahlen, dass Werbung den Anstieg verursacht hat?",
+            "answer": "Die Werte belegen keine Ursache.",
+            "assessment_criteria": ["overall_trend", "numeric_value_and_period", "cautious_interpretation"],
+        }
+        response = {
+            "criteria_met": {key: True for key in exercise["assessment_criteria"]},
+            "dimension_scores": {key: 90 for key in ("task_completion", "grammar", "vocabulary", "coherence", "register")},
+            "feedback": "Gut.", "improvement": "Weiter.", "corrected_answer": "Die Werte belegen keine Ursache.",
+        }
+        with patch("openai.OpenAI") as client:
+            create = client.return_value.chat.completions.create
+            create.return_value = SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=json.dumps(response)))])
+            _ai_feedback("Die Zahlen zeigen einen Anstieg, aber keine Ursache.", exercise, {"cefr": "B2"}, "de")
+            system_message = create.call_args.kwargs["messages"][0]["content"]
+            self.assertIn("percentage points", system_message)
+            self.assertIn("mark cautious_interpretation false", system_message)
+            self.assertIn("independently of German grammar", system_message)
+
     def test_b2_complex_rubric_never_receives_unverified_local_pass(self):
         exercise = {
             "answer": "Der Anteil stieg von 36 auf 48 Prozent.",
