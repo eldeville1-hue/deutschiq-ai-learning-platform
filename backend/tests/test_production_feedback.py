@@ -8,6 +8,59 @@ from app.services.answer_intelligence import evaluate_structured_answer, normali
 
 
 class ProductionFeedbackTests(unittest.TestCase):
+    def test_b2_evidence_conclusion_requires_cautious_interpretation(self):
+        from app.services.production_feedback import _ai_feedback
+        from types import SimpleNamespace
+        import json
+
+        exercise = {
+            "question": "Belegen die Zahlen, dass Werbung den Anstieg verursacht hat? Begründe.",
+            "answer": "Der Anteil stieg von 25 auf 35 Prozent. Eine Ursache ist nicht belegt.",
+            "data_figures": {
+                "earlier": {"year": 2020, "percent": 25},
+                "later": {"year": 2025, "percent": 35},
+            },
+            "assessment_criteria": [
+                "overall_trend", "numeric_value_and_period", "cautious_interpretation",
+            ],
+        }
+        responses = (
+            (
+                "2020: 25 %, 2025: 35 %. Der Anteil stieg um 10 Prozentpunkte. "
+                "Die Werbung hat den Anstieg verursacht.",
+                False,
+            ),
+            (
+                "2020: 25 %, 2025: 35 %. Der Anteil stieg um 10 Prozentpunkte. "
+                "Die Zahlen zeigen einen Anstieg, beweisen aber keinen Einfluss der Werbung.",
+                True,
+            ),
+        )
+        with patch("openai.OpenAI") as client:
+            for answer, cautious in responses:
+                with self.subTest(cautious=cautious):
+                    payload = {
+                        "criteria_met": {
+                            "overall_trend": True,
+                            "numeric_value_and_period": True,
+                            "cautious_interpretation": cautious,
+                        },
+                        "dimension_scores": {key: 95 for key in (
+                            "task_completion", "grammar", "vocabulary", "coherence", "register"
+                        )},
+                        "feedback": "Bewertet.", "improvement": "Weiter üben.",
+                    }
+                    client.return_value.chat.completions.create.return_value = SimpleNamespace(
+                        choices=[SimpleNamespace(message=SimpleNamespace(content=json.dumps(payload)))]
+                    )
+                    result = _ai_feedback(answer, exercise, {"cefr": "B2"}, "de")
+                    self.assertEqual(result["correct"], cautious)
+                    if not cautious:
+                        self.assertIn("cautious_interpretation", result["missing_task_parts"])
+                        self.assertLess(result["dimension_scores"]["task_completion"], 60)
+                    else:
+                        self.assertNotIn("cautious_interpretation", result["missing_task_parts"])
+
     def test_b2_arithmetic_guards_cover_decrease_and_stable_scenarios(self):
         from app.services.production_feedback import (
             _incorrect_percentage_point_claim, _incorrect_year_value_pair,
