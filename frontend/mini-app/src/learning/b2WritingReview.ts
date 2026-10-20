@@ -72,6 +72,15 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
         'Отдели наблюдение от причины: рост с 25 % до 35 % подтверждён, но влияние рекламы этими данными не доказано.',
         'Trenne Beobachtung und Ursache: Der Anstieg von 25 % auf 35 % ist belegt, eine Wirkung der Werbung aber nicht.',
         'Separate observation from cause: the rise from 25% to 35% is supported, but these figures do not establish an advertising effect.'));
+    // This task explicitly asks why a causal conclusion is not justified.
+    // A numerically correct trend alone does not answer that question.
+    const acknowledgesEvidenceLimit = /\b(?:nicht|kein(?:e|en|er)?|weder|unklar|unbewiesen|unbelegt|nicht nachweisbar)\b/i.test(answerText)
+      && /\b(?:werbung|ursache|kausal|verursach|beleg|nachweis|schlussfolgerung|daten|zahlen)\w*/i.test(answerText);
+    if (evidenceScenario && !unsupportedAdvertisingCause && !acknowledgesEvidenceLimit)
+      missingElements.push(tr(lang,
+        'Добавь объяснение: два значения показывают рост, но не доказывают, что его вызвала реклама.',
+        'Erkläre auch die Grenze der Aussage: Zwei Werte zeigen den Anstieg, beweisen aber keine Ursache durch Werbung.',
+        'Explain the evidence limit too: two values show an increase but do not prove advertising caused it.'));
     // Recognize local year/value relationships without scanning unrelated prose.
     const reversedPair = ([ [figures.earlier.year, figures.later.percent], [figures.later.year, figures.earlier.percent] ] as const).some(([year, value]) => {
       const yearFirst = new RegExp('\\b' + year + '\\b\\s*(?::|[–—-]|\\s+(?:(?:lag|betrug|waren|war)\\s+(?:(?:der\\s+anteil|die\\s+quote|der\\s+wert)\\s+)?(?:bei\\s+)?|bei\\s+))\\s*' + value + '(?=\\s|%|[.,;!?]|$)', 'i');
