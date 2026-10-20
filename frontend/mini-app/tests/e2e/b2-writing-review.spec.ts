@@ -289,3 +289,17 @@ test('B2 evidence review evaluates each advertising claim separately', () => {
   expect(review(notOnly)).toContain('advertising effect');
   expect(review(cautious)).not.toContain('advertising effect');
 });
+
+test('B2 evidence scenario asks for an evidence limitation even with correct figures', () => {
+  const figures = { earlier: { year: 2020, percent: 25 }, later: { year: 2025, percent: 35 } };
+  const trendOnly = 'Der Anteil stieg von 25 Prozent im Jahr 2020 auf 35 Prozent im Jahr 2025, also um 10 Prozentpunkte.';
+  const reasoned = trendOnly + ' Diese Zahlen belegen nicht, dass Werbung die Ursache war.';
+  for (const [lang, phrase] of [
+    ['ru', 'два значения'],
+    ['de', 'Zwei Werte'],
+    ['en', 'two values'],
+  ] as const) {
+    expect(getB2WritingReviewHints('data_description-dialogue', trendOnly, lang, figures).join(' ')).toContain(phrase);
+    expect(getB2WritingReviewHints('data_description-dialogue', reasoned, lang, figures).join(' ')).not.toContain(phrase);
+  }
+});
