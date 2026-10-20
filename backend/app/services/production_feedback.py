@@ -169,6 +169,29 @@ def _incorrect_percentage_point_claim(answer: str, exercise: dict) -> bool:
     return any(abs(float(value.replace(",", ".")) - expected) > 0.001 for value in claims)
 
 
+
+def _incorrect_year_value_pair(answer: str, exercise: dict) -> bool:
+    """Catch explicitly mismatched year/value statements without requiring a fixed style."""
+    figures = exercise.get("data_figures")
+    if not isinstance(figures, dict):
+        return False
+    try:
+        expected = {
+            int(figures[period]["year"]): float(figures[period]["percent"])
+            for period in ("earlier", "later")
+        }
+    except (KeyError, TypeError, ValueError):
+        return False
+    # Restrict detection to adjacent year and percentage statements, allowing
+    # "2020: 25 %" and "2020 lag der Anteil bei 25 Prozent".
+    pattern = r"\\b(20\\d{2})\\b\\s*(?::|(?:lag|betrug|waren|waren es|bei|mit|der Anteil|der Wert|der Nutzeranteil|\\s){1,12})\\s*(\\d+(?:[.,]\\d+)?)\\s*(?:%|Prozent\\b)"
+    for year_text, value_text in re.findall(pattern, answer, flags=re.IGNORECASE):
+        year = int(year_text)
+        if year in expected and abs(float(value_text.replace(",", ".")) - expected[year]) > 0.001:
+            return True
+    return False
+
+
 def _ai_feedback(answer: str, exercise: dict, lesson_content: dict, lang: str) -> dict[str, Any]:
     from openai import OpenAI
     from app.core.config import settings
@@ -210,7 +233,7 @@ def _ai_feedback(answer: str, exercise: dict, lesson_content: dict, lang: str) -
         missing_criteria = [key for key in criteria if not reported[key]]
     else:
         missing_criteria = []
-    if _incorrect_percentage_point_claim(answer, exercise) and "numeric_value_and_period" in criteria:
+    if (_incorrect_percentage_point_claim(answer, exercise) or _incorrect_year_value_pair(answer, exercise)) and "numeric_value_and_period" in criteria:
         if "numeric_value_and_period" not in missing_criteria:
             missing_criteria.append("numeric_value_and_period")
     # Keep reported rubric scores consistent with failed mandatory requirements.
