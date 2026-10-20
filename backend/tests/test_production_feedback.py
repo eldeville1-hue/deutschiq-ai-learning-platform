@@ -8,6 +8,38 @@ from app.services.answer_intelligence import evaluate_structured_answer, normali
 
 
 class ProductionFeedbackTests(unittest.TestCase):
+    def test_ai_grading_receives_authoritative_variant_data_figures(self):
+        from app.services.production_feedback import _ai_feedback
+        from types import SimpleNamespace
+        import json
+
+        figures = {
+            "earlier": {"year": 2022, "percent": 60},
+            "later": {"year": 2026, "percent": 45},
+        }
+        exercise = {
+            "question": "Beschreibe den Rückgang.",
+            "answer": "Der Anteil sank um 15 Prozentpunkte.",
+            "data_figures": figures,
+            "assessment_criteria": ["overall_trend", "numeric_value_and_period"],
+        }
+        payload = {
+            "criteria_met": {"overall_trend": True, "numeric_value_and_period": True},
+            "dimension_scores": {key: 85 for key in (
+                "task_completion", "grammar", "vocabulary", "coherence", "register"
+            )},
+            "feedback": "Gut.", "improvement": "Weiter so.",
+        }
+        with patch("openai.OpenAI") as client:
+            client.return_value.chat.completions.create.return_value = SimpleNamespace(
+                choices=[SimpleNamespace(message=SimpleNamespace(content=json.dumps(payload)))]
+            )
+            _ai_feedback("Der Anteil sank um 15 Prozentpunkte.", exercise, {"cefr": "B2"}, "de")
+            request = client.return_value.chat.completions.create.call_args.kwargs
+            grading_input = json.loads(request["messages"][1]["content"])
+            self.assertEqual(grading_input["data_figures"], figures)
+            self.assertEqual(grading_input["assessment_criteria"], exercise["assessment_criteria"])
+
     def test_ai_criteria_must_report_each_required_judgment(self):
         from app.services.production_feedback import _ai_feedback
         from types import SimpleNamespace
