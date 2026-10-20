@@ -40,6 +40,36 @@ class ProductionFeedbackTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 _ai_feedback("Der Anteil stieg.", exercise, lesson, "de")
 
+    def test_missing_b2_data_criteria_provide_actionable_multilingual_guidance(self):
+        from app.services.production_feedback import _ai_feedback
+        from types import SimpleNamespace
+        import json
+
+        exercise = {
+            "answer": "Der Anteil stieg von 25 auf 35 Prozent.",
+            "assessment_criteria": ["overall_trend", "numeric_value_and_period", "cautious_interpretation"],
+        }
+        payload = {
+            "criteria_met": {
+                "overall_trend": True, "numeric_value_and_period": True,
+                "cautious_interpretation": False,
+            },
+            "dimension_scores": {name: 95 for name in ("task_completion", "grammar", "vocabulary", "coherence", "register")},
+            "feedback": "Fast richtig.", "improvement": "Weiter üben.",
+            "corrected_answer": "Die Zahlen belegen keine Ursache.",
+        }
+        with patch("openai.OpenAI") as client:
+            client.return_value.chat.completions.create.return_value = SimpleNamespace(
+                choices=[SimpleNamespace(message=SimpleNamespace(content=json.dumps(payload)))]
+            )
+            for language, phrase in (("ru", "рекламы"), ("de", "Werbung"), ("en", "advertising")):
+                with self.subTest(language=language):
+                    result = _ai_feedback("Der Anteil stieg von 25 auf 35 Prozent.", exercise, {"cefr": "B2"}, language)
+                    self.assertFalse(result["correct"])
+                    self.assertIn("cautious_interpretation", result["missing_task_parts"])
+                    self.assertIn(phrase, result["improvement"])
+                    self.assertLess(result["dimension_scores"]["task_completion"], 60)
+
     def test_b2_data_rubric_prompt_requires_evidence_not_causation_guess(self):
         from app.services.production_feedback import _ai_feedback
         from types import SimpleNamespace
