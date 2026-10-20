@@ -8,6 +8,17 @@ from app.services.answer_intelligence import evaluate_structured_answer, normali
 
 
 class ProductionFeedbackTests(unittest.TestCase):
+    def test_percentage_point_guard_only_rejects_explicit_wrong_difference(self):
+        from app.services.production_feedback import _incorrect_percentage_point_claim
+        exercise = {"data_figures": {
+            "earlier": {"year": 2020, "percent": 25},
+            "later": {"year": 2025, "percent": 35},
+        }}
+        self.assertTrue(_incorrect_percentage_point_claim("Der Anstieg beträgt 15 Prozentpunkte.", exercise))
+        self.assertFalse(_incorrect_percentage_point_claim("Der Anstieg beträgt 10 Prozentpunkte.", exercise))
+        self.assertFalse(_incorrect_percentage_point_claim("2020 waren es 25 Prozent, 2025 35 Prozent.", exercise))
+        self.assertFalse(_incorrect_percentage_point_claim("Der Anteil stieg deutlich.", exercise))
+
     def test_ai_grading_receives_authoritative_variant_data_figures(self):
         from app.services.production_feedback import _ai_feedback
         from types import SimpleNamespace
