@@ -8,6 +8,23 @@ from app.services.answer_intelligence import evaluate_structured_answer, normali
 
 
 class ProductionFeedbackTests(unittest.TestCase):
+    def test_b2_advertising_guard_scopes_negation_across_contrasts(self):
+        from app.services.production_feedback import _unsupported_advertising_causation
+        exercise = {
+            "question": "Belegen die Zahlen, dass Werbung den Anstieg verursacht hat?",
+            "assessment_criteria": ["cautious_interpretation"],
+        }
+        cases = (
+            ("Die Zahlen beweisen nichts, aber wegen der Werbung stieg der Anteil.", True),
+            ("Wegen der Werbung stieg der Anteil, jedoch ist die Ursache nicht belegt.", True),
+            ("Die Zahlen beweisen nicht, dass Werbung den Anstieg verursacht hat.", False),
+            ("Werbung könnte eine Ursache sein, aber die Daten beweisen es nicht.", False),
+            ("Die Werbung hat den Anstieg nicht verursacht.", False),
+        )
+        for answer, expected in cases:
+            with self.subTest(answer=answer):
+                self.assertEqual(_unsupported_advertising_causation(answer, exercise), expected)
+
     def test_b2_server_guard_flags_asserted_advertising_cause_not_uncertainty(self):
         from app.services.production_feedback import _unsupported_advertising_causation
         exercise = {
