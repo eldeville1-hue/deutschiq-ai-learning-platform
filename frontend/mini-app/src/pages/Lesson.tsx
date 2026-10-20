@@ -651,17 +651,12 @@ const LessonScreen: React.FC = () => {
                   <small>{tr(lang, 'ИСПРАВЬ ОДНО', 'EIN SCHRITT', 'ONE FIX')}</small>
                   <strong>{feedback.feedback_focus}</strong>
                 </div>}
-                {!checked && feedback?.correct_answer && (retried[exerciseIndex] ? (
+                {!checked && feedback?.correct_answer && Boolean(retried[exerciseIndex]) && (
                   <div className="corrected-model">
                     <small>{tr(lang, 'СРАВНИ С МОДЕЛЬЮ', 'MIT DEM MODELL VERGLEICHEN', 'COMPARE WITH THE MODEL')}</small>
                     <strong>{feedback.correct_answer}</strong>
                   </div>
-                ) : (
-                  <details className="corrected-model model-reveal">
-                    <summary>{tr(lang, 'Показать модель', 'Modell anzeigen', 'Show model')}</summary>
-                    <strong>{feedback.correct_answer}</strong>
-                  </details>
-                ))}
+                )}
                 {!checked && (feedback?.error_type || feedback?.explanation || feedback?.retry_instruction || (Array.isArray(feedback?.repair_steps) && feedback.repair_steps.length > 0)) && <details className="error-diagnosis"><summary>{tr(lang, 'Почему?', 'Warum?', 'Why?')}</summary>
                   {feedback?.explanation && <p>{feedback.explanation}</p>}
                   {Array.isArray(feedback.contrast) && feedback.contrast.map((line: string, index: number) => <p key={index}>{line}</p>)}
@@ -699,7 +694,7 @@ const LessonScreen: React.FC = () => {
                       </p>
                     )}
 
-                    {!checked && feedback.correct_answer && <small>{tr(lang, 'Возможный вариант:', 'Mögliche Fassung:', 'Possible revision:')} {feedback.correct_answer}</small>}
+
                   </div>
                 )}
                 {!checked && !retried[exerciseIndex] && <small>{tr(lang, 'Давай соберём ответ с поддержкой.', 'Bauen wir die Antwort mit Hilfe neu.', "Let's rebuild it with support.")}</small>}
