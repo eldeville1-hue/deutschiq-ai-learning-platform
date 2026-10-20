@@ -8,6 +8,36 @@ from app.services.answer_intelligence import evaluate_structured_answer, normali
 
 
 class ProductionFeedbackTests(unittest.TestCase):
+    def test_b2_arithmetic_guards_cover_decrease_and_stable_scenarios(self):
+        from app.services.production_feedback import (
+            _incorrect_percentage_point_claim, _incorrect_year_value_pair,
+        )
+        scenarios = [
+            (
+                {"earlier": {"year": 2022, "percent": 60},
+                 "later": {"year": 2026, "percent": 45}},
+                "2022: 45 %, 2026: 60 %.",
+                "2022: 60 %, 2026: 45 %.",
+                "Der Anteil sank um 12 Prozentpunkte.",
+                "Der Anteil sank um 15 Prozentpunkte.",
+            ),
+            (
+                {"earlier": {"year": 2021, "percent": 40},
+                 "later": {"year": 2025, "percent": 40}},
+                "2021: 35 %, 2025: 40 %.",
+                "2021: 40 %, 2025: 40 %.",
+                "Der Anteil änderte sich um 5 Prozentpunkte.",
+                "Der Anteil änderte sich um 0 Prozentpunkte.",
+            ),
+        ]
+        for figures, wrong_pair, correct_pair, wrong_delta, correct_delta in scenarios:
+            with self.subTest(figures=figures):
+                exercise = {"data_figures": figures}
+                self.assertTrue(_incorrect_year_value_pair(wrong_pair, exercise))
+                self.assertFalse(_incorrect_year_value_pair(correct_pair, exercise))
+                self.assertTrue(_incorrect_percentage_point_claim(wrong_delta, exercise))
+                self.assertFalse(_incorrect_percentage_point_claim(correct_delta, exercise))
+
     def test_b2_full_answer_cannot_pass_with_swapped_figures_despite_ai_approval(self):
         from app.services.production_feedback import _ai_feedback
         from types import SimpleNamespace
