@@ -184,7 +184,7 @@ def _incorrect_year_value_pair(answer: str, exercise: dict) -> bool:
         return False
     # Restrict detection to adjacent year and percentage statements, allowing
     # "2020: 25 %" and "2020 lag der Anteil bei 25 Prozent".
-    pattern = r"\\b(20\\d{2})\\b\\s*(?::|(?:lag|betrug|waren|waren es|bei|mit|der Anteil|der Wert|der Nutzeranteil|\\s){1,12})\\s*(\\d+(?:[.,]\\d+)?)\\s*(?:%|Prozent\\b)"
+    pattern = r"\b(20\d{2})\b\s*(?::|(?:lag|betrug|waren|waren es|bei|mit|der Anteil|der Wert|der Nutzeranteil|\s){1,12})\s*(\d+(?:[.,]\d+)?)\s*(?:%|Prozent\b)"
     for year_text, value_text in re.findall(pattern, answer, flags=re.IGNORECASE):
         year = int(year_text)
         if year in expected and abs(float(value_text.replace(",", ".")) - expected[year]) > 0.001:
