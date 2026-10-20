@@ -253,3 +253,19 @@ test('B2 review recognizes natural German trend descriptions', () => {
   const stableRight = 'Im Jahr 2021 lag die Quote bei 40 Prozent und im Jahr 2025 ebenfalls bei 40 Prozent. Die Quote blieb auf demselben Niveau.';
   expect(getB2WritingReviewHints('data_description-dialogue', stableRight, 'en', stable).some(h => h.includes('0 percentage points'))).toBe(false);
 });
+
+test('B2 evidence feedback distinguishes unsupported advertising cause from cautious interpretation', () => {
+  const figures = { earlier: { year: 2020, percent: 25 }, later: { year: 2025, percent: 35 } };
+  const unsupported = 'Der Anteil stieg von 25 Prozent im Jahr 2020 auf 35 Prozent im Jahr 2025, also um 10 Prozentpunkte. Durch Werbung wurde der Anstieg verursacht.';
+  const cautious = 'Der Anteil stieg von 25 Prozent im Jahr 2020 auf 35 Prozent im Jahr 2025, also um 10 Prozentpunkte. Der Anstieg ist nicht durch Werbung belegt.';
+  for (const [language, expected] of [
+    ['ru', 'влияние рекламы'],
+    ['de', 'Wirkung der Werbung'],
+    ['en', 'advertising effect'],
+  ] as const) {
+    expect(getB2WritingReviewHints('data_description-dialogue', unsupported, language, figures).join(' ')).toContain(expected);
+    expect(getB2WritingReviewHints('data_description-dialogue', cautious, language, figures).join(' ')).not.toContain(expected);
+  }
+  const unrelated = { earlier: { year: 2022, percent: 60 }, later: { year: 2026, percent: 45 } };
+  expect(getB2WritingReviewHints('data_description-dialogue', unsupported, 'en', unrelated).join(' ')).not.toContain('advertising effect');
+});
