@@ -8,6 +8,18 @@ from app.services.answer_intelligence import evaluate_structured_answer, normali
 
 
 class ProductionFeedbackTests(unittest.TestCase):
+    def test_b2_year_value_guard_rejects_swapped_figures_not_paraphrases(self):
+        from app.services.production_feedback import _incorrect_year_value_pair
+        exercise = {"data_figures": {
+            "earlier": {"year": 2020, "percent": 25},
+            "later": {"year": 2025, "percent": 35},
+        }}
+        self.assertTrue(_incorrect_year_value_pair("2020: 35 %, 2025: 25 %.", exercise))
+        self.assertTrue(_incorrect_year_value_pair("2020 lag der Anteil bei 35 Prozent.", exercise))
+        self.assertFalse(_incorrect_year_value_pair("2020: 25 %, 2025: 35 %.", exercise))
+        self.assertFalse(_incorrect_year_value_pair("2020 lag der Anteil bei 25 Prozent.", exercise))
+        self.assertFalse(_incorrect_year_value_pair("Zwischen 2020 und 2025 stieg der Anteil deutlich.", exercise))
+
     def test_percentage_point_guard_only_rejects_explicit_wrong_difference(self):
         from app.services.production_feedback import _incorrect_percentage_point_claim
         exercise = {"data_figures": {
