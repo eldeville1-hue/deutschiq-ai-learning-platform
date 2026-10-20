@@ -165,7 +165,7 @@ def _incorrect_percentage_point_claim(answer: str, exercise: dict) -> bool:
         return False
     # Only inspect quantities explicitly labelled as percentage points, not
     # years, percentages, or other numbers in the learner's answer.
-    claims = re.findall(r"(?<!\\d)(\\d+(?:[.,]\\d+)?)\\s*Prozentpunkte(?:n)?\\b", answer, flags=re.IGNORECASE)
+    claims = re.findall(r"(?<!\d)(\d+(?:[.,]\d+)?)\s*Prozentpunkte(?:n)?\b", answer, flags=re.IGNORECASE)
     return any(abs(float(value.replace(",", ".")) - expected) > 0.001 for value in claims)
 
 
