@@ -727,3 +727,38 @@ test('mobile B2 draft survives reload in the same server session', async ({ page
   await page.reload();
   await expect(page.getByRole('textbox')).toHaveValue('');
 });
+
+test('mobile B2 assessment displays unmet criterion and actionable feedback', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
+  const exercise = {
+    id: 'data_description-dialogue', type: 'dialogue',
+    question: 'Describe the change and explain whether advertising caused it.',
+    answer: 'The data alone do not prove a cause.',
+  };
+  await page.route('**/api/lesson/77?*', route => route.fulfill({ json: {
+    id: 77, level: 'B2', topic: 'data_description',
+    content: { title: 'Describe data', examples: ['Compare the values.'], exercises: [exercise] },
+  }}));
+  await page.route('**/api/lesson/start', route => route.fulfill({ json: {
+    session_id: 'b2-rubric-visibility-session', resumed: true, next_exercise_index: 0,
+  }}));
+  await page.route('**/api/lesson/check-answer', route => route.fulfill({ json: {
+    correct: false, evaluation_status: 'verified', production: true,
+    production_score: 71, pass_mark: 75, cefr_standard: 'B2',
+    dimension_scores: { task_completion: 59, grammar: 90, vocabulary: 90, coherence: 90, register: 90 },
+    missing_task_parts: ['cautious_interpretation'],
+    improvement: 'These figures alone do not prove an advertising effect.',
+    correct_answer: 'The data alone do not prove a cause.',
+    explanation: 'Explain the limits of the evidence.',
+  }}));
+  await page.route('**/api/events', route => route.fulfill({ status: 204, body: '' }));
+  await page.goto('/lesson/77');
+  await page.getByRole('textbox').fill('Der Anteil stieg von 25 auf 35 Prozent. Das ist ein deutlicher Anstieg.');
+  await page.getByRole('button', { name: 'Check', exact: true }).click();
+  const assessment = page.locator('.production-assessment');
+  await expect(assessment).toBeVisible();
+  await expect(assessment).toContainText('Needs improvement:');
+  await expect(assessment).toContainText('evidence-based interpretation');
+  await expect(assessment).toContainText('These figures alone do not prove an advertising effect.');
+  await expect(assessment).toContainText('59%');
+});
