@@ -8,6 +8,28 @@ from app.services.answer_intelligence import evaluate_structured_answer, normali
 
 
 class ProductionFeedbackTests(unittest.TestCase):
+    def test_b2_server_guard_flags_asserted_advertising_cause_not_uncertainty(self):
+        from app.services.production_feedback import _unsupported_advertising_causation
+        exercise = {
+            "question": "Belegen die Zahlen, dass Werbung den Anstieg verursacht hat?",
+            "assessment_criteria": ["cautious_interpretation"],
+        }
+        self.assertTrue(_unsupported_advertising_causation(
+            "Die Werbung hat den Anstieg verursacht.", exercise
+        ))
+        self.assertTrue(_unsupported_advertising_causation(
+            "Der Anstieg erfolgte wegen der Werbung.", exercise
+        ))
+        self.assertFalse(_unsupported_advertising_causation(
+            "Die Werbung hat den Anstieg nicht verursacht.", exercise
+        ))
+        self.assertFalse(_unsupported_advertising_causation(
+            "Die Zahlen beweisen nicht, dass Werbung den Anstieg verursacht hat.", exercise
+        ))
+        self.assertFalse(_unsupported_advertising_causation(
+            "Werbung könnte eine Ursache sein, aber das ist nicht belegt.", exercise
+        ))
+
     def test_b2_evidence_conclusion_requires_cautious_interpretation(self):
         from app.services.production_feedback import _ai_feedback
         from types import SimpleNamespace
