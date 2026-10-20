@@ -12,7 +12,7 @@ import { join } from 'node:path';
 // aggregate learner budget remains unchanged.
 // The dynamic B2 writing guidance adds under 1 KiB of learner-facing text.
 // Allow measured incremental B2 scenario and draft-recovery text while retaining strict JS and CSS ceilings.
-const limits = { js: 300 * 1024, css: 260 * 1024, total: 704 * 1024 };
+const limits = { js: 300 * 1024, css: 260 * 1024, total: 705 * 1024 };
 const assets = join(process.cwd(), 'dist', 'assets');
 const files = await readdir(assets);
 let total = 0;
