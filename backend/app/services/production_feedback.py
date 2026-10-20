@@ -137,6 +137,11 @@ def _ai_feedback(answer: str, exercise: dict, lesson_content: dict, lang: str) -
                 "Evaluate an independent German learner response at the stated CEFR. Do not require the model wording. Reject off-topic answers and fragments. "
                 "If assessment_criteria are supplied, return criteria_met as an object mapping every criterion key to a boolean. Judge each requirement independently and do not infer missing content. "
                 "Do not give a passing task_completion score if any required element is absent. "
+                "For data descriptions, verify numerical claims against the supplied task and model figures. "
+                "Distinguish percentage points from relative percentages. A trend alone cannot establish a cause: "
+                "when the task asks whether advertising caused a change, mark cautious_interpretation false "
+                "if the learner asserts causation without evidence or omits the requested explanation of uncertainty. "
+                "Judge content independently of German grammar, vocabulary, coherence, and register. "
                 "Score task_completion, grammar, vocabulary, coherence, and register from 0-100. Give one brief diagnosis and exactly one actionable improvement. "
                 f"Write feedback in { {'ru':'Russian','de':'German','en':'English'}.get(lang, 'English') }. Return JSON only: "
                 '{"criteria_met":{},"dimension_scores":{"task_completion":0,"grammar":0,"vocabulary":0,"coherence":0,"register":0},"feedback":"brief diagnosis","improvement":"one next step","corrected_answer":"natural German correction","error_type":"brief category or null"}.'
