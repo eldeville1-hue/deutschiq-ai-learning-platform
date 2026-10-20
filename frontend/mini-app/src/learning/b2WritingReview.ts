@@ -55,15 +55,19 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
     // claims ("nicht durch Werbung") must not trigger this guidance.
     const evidenceScenario = figures.earlier.year === 2020 && figures.earlier.percent === 25
       && figures.later.year === 2025 && figures.later.percent === 35;
-    const assertsAdvertisingCause = /\b(?:wegen|aufgrund|durch)\s+(?:die\s+)?werbung\b|\bwerbung\s+(?:hat|habe)\s+(?:den\s+)?(?:anstieg|zuwachs|wachstum)\s+(?:verursacht|bewirkt)\b|\bdurch\s+(?:die\s+)?werbung\s+(?:wurde|wird)\s+(?:der\s+)?(?:anstieg|zuwachs|wachstum)\s+(?:verursacht|bewirkt)\b/i.test(answerText);
-    // Scope negation to the advertising claim, not an unrelated sentence
-    // (e.g. "nicht unverändert" must not excuse a later causal assertion).
+    // Inspect each claim independently: a cautious sentence must not
+    // cancel a separate unsupported causal claim elsewhere in the draft.
     const advertisingClauses = answerText.split(/[.!?;]+/).filter(clause => /\bwerbung\b/i.test(clause));
-    const qualifiesCause = advertisingClauses.some(clause =>
-      /\b(?:nicht|kein(?:e|en|er)?|unklar|unbewiesen|unbelegt)\b/i.test(clause)
-      && /\b(?:werbung|ursache|verursacht|bewirkt|belegt|nachweisbar)\b/i.test(clause)
-    );
-    if (evidenceScenario && assertsAdvertisingCause && !qualifiesCause)
+    const unsupportedAdvertisingCause = advertisingClauses.some(clause => {
+      const assertsCause = /\b(?:wegen|aufgrund|durch)\s+(?:die\s+)?werbung\b|\bwerbung\s+(?:hat|habe)\s+(?:den\s+)?(?:anstieg|zuwachs|wachstum)\s+(?:verursacht|bewirkt)\b/i.test(clause);
+      if (!assertsCause) return false;
+      const explicitlyUnproven = /\b(?:nicht|kein(?:e|en|er)?|unklar|unbewiesen|unbelegt)\b/i.test(clause);
+      // "nicht nur durch Werbung" still attributes at least part of the
+      // increase to advertising, which the two data points cannot prove.
+      const notOnly = /\bnicht\s+nur\b/i.test(clause);
+      return !explicitlyUnproven || notOnly;
+    });
+    if (evidenceScenario && unsupportedAdvertisingCause)
       missingElements.push(tr(lang,
         'Отдели наблюдение от причины: рост с 25 % до 35 % подтверждён, но влияние рекламы этими данными не доказано.',
         'Trenne Beobachtung und Ursache: Der Anstieg von 25 % auf 35 % ist belegt, eine Wirkung der Werbung aber nicht.',
