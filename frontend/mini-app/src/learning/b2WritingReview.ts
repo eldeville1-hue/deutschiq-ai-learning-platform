@@ -56,7 +56,13 @@ export function getB2WritingReviewHints(exerciseId: string, answer: string, lang
     const evidenceScenario = figures.earlier.year === 2020 && figures.earlier.percent === 25
       && figures.later.year === 2025 && figures.later.percent === 35;
     const assertsAdvertisingCause = /\b(?:wegen|aufgrund|durch)\s+(?:die\s+)?werbung\b|\bwerbung\s+(?:hat|habe)\s+(?:den\s+)?(?:anstieg|zuwachs|wachstum)\s+(?:verursacht|bewirkt)\b|\bdurch\s+(?:die\s+)?werbung\s+(?:wurde|wird)\s+(?:der\s+)?(?:anstieg|zuwachs|wachstum)\s+(?:verursacht|bewirkt)\b/i.test(answerText);
-    const qualifiesCause = /\b(?:nicht|kein(?:e|en|er)?|unbekannt|unklar|unbewiesen|unbelegt|nicht nachweisbar|nicht belegt)\b/i.test(answerText);
+    // Scope negation to the advertising claim, not an unrelated sentence
+    // (e.g. "nicht unverändert" must not excuse a later causal assertion).
+    const advertisingClauses = answerText.split(/[.!?;]+/).filter(clause => /\bwerbung\b/i.test(clause));
+    const qualifiesCause = advertisingClauses.some(clause =>
+      /\b(?:nicht|kein(?:e|en|er)?|unklar|unbewiesen|unbelegt)\b/i.test(clause)
+      && /\b(?:werbung|ursache|verursacht|bewirkt|belegt|nachweisbar)\b/i.test(clause)
+    );
     if (evidenceScenario && assertsAdvertisingCause && !qualifiesCause)
       missingElements.push(tr(lang,
         'Отдели наблюдение от причины: рост с 25 % до 35 % подтверждён, но влияние рекламы этими данными не доказано.',
