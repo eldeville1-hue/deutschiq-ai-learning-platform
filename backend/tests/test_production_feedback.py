@@ -34,6 +34,8 @@ class ProductionFeedbackTests(unittest.TestCase):
             result = _ai_feedback("Der Anteil stieg.", exercise, lesson, "de")
             self.assertFalse(result["correct"])
             self.assertIn("numeric_value_and_period", result["missing_task_parts"])
+            self.assertLess(result["dimension_scores"]["task_completion"], 60)
+            self.assertLess(result["score"], 95)
             client.return_value.chat.completions.create.return_value = fake_response({"overall_trend": True})
             with self.assertRaises(ValueError):
                 _ai_feedback("Der Anteil stieg.", exercise, lesson, "de")
