@@ -200,13 +200,15 @@ def _unsupported_advertising_causation(answer: str, exercise: dict) -> bool:
     task = str(exercise.get("question", "")).lower()
     if not re.search(r"werbung|advertis|реклам", task):
         return False
-    # Match a causal verb within the same clause as advertising. Do not treat
-    # negated, hypothetical, or explicitly unproven statements as assertions.
-    clauses = re.split(r"[.!?;\n]+", answer.lower())
+    # Only suppress a claim when uncertainty or negation belongs to that
+    # claim. An unrelated "nicht" in the same sentence must not hide it.
+    clauses = re.split(r"[.!?;\n]+|\b(?:aber|jedoch|allerdings)\b", answer.lower())
     for clause in clauses:
         if not re.search(r"werbung|advertis|реклам", clause):
             continue
-        if re.search(r"nicht|kein(?:e|en|er|es)?|unbewiesen|unbelegt|beweis(?:t|en)? nicht|cannot|not|не |нельзя|может|könnte|could|möglich|possibly", clause):
+        if re.search(r"\b(?:nicht|kein(?:e|en|er|es)?|unbewiesen|unbelegt|cannot|not|нельзя|может|könnte|could|möglich|possibly)\b", clause):
+            continue
+        if re.search(r"\b(?:ohne beweis|nicht belegt|keine belege|nicht nachgewiesen|nicht bewiesen)\b", clause):
             continue
         if re.search(r"(?:werbung|advertis\w*|реклам\w*)\s+(?:hat|haben|caused|verursacht|bewirkt|führte|вызыв|привел)", clause) or re.search(r"(?:durch|wegen|aufgrund)\s+(?:der\s+)?werbung", clause):
             return True
