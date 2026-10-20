@@ -153,6 +153,22 @@ def _criterion_improvement(missing: list[str], lang: str) -> str | None:
     return None
 
 
+
+def _incorrect_percentage_point_claim(answer: str, exercise: dict) -> bool:
+    """Reject explicit, incorrect percentage-point differences; leave paraphrases to AI."""
+    figures = exercise.get("data_figures")
+    if not isinstance(figures, dict):
+        return False
+    try:
+        expected = abs(float(figures["later"]["percent"]) - float(figures["earlier"]["percent"]))
+    except (KeyError, TypeError, ValueError):
+        return False
+    # Only inspect quantities explicitly labelled as percentage points, not
+    # years, percentages, or other numbers in the learner's answer.
+    claims = re.findall(r"(?<!\\d)(\\d+(?:[.,]\\d+)?)\\s*Prozentpunkte(?:n)?\\b", answer, flags=re.IGNORECASE)
+    return any(abs(float(value.replace(",", ".")) - expected) > 0.001 for value in claims)
+
+
 def _ai_feedback(answer: str, exercise: dict, lesson_content: dict, lang: str) -> dict[str, Any]:
     from openai import OpenAI
     from app.core.config import settings
@@ -194,6 +210,9 @@ def _ai_feedback(answer: str, exercise: dict, lesson_content: dict, lang: str) -
         missing_criteria = [key for key in criteria if not reported[key]]
     else:
         missing_criteria = []
+    if _incorrect_percentage_point_claim(answer, exercise) and "numeric_value_and_period" in criteria:
+        if "numeric_value_and_period" not in missing_criteria:
+            missing_criteria.append("numeric_value_and_period")
     # Keep reported rubric scores consistent with failed mandatory requirements.
     # An AI may return 95/100 for task completion while marking a required
     # criterion false; the server must not display that contradiction.
