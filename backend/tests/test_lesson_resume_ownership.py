@@ -17,8 +17,9 @@ class LessonResumeTests(unittest.TestCase):
         self.db = MagicMock()
         self.db.get_bind.return_value.dialect.name = "sqlite"
         self.db.query.return_value.filter.return_value.first.side_effect = [
-            self.user, self.lesson, self.session,
+            self.user, self.lesson,
         ]
+        self.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = self.session
         self.db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [
             SimpleNamespace(exercise_index=0, correct=True),
             SimpleNamespace(exercise_index=1, correct=False),
