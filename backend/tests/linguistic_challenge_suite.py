@@ -15,7 +15,7 @@ CASES = [
  ("A1","translation","Ich habe einen Hund.","Ich habe keinen Hund.","incorrect","negation"),
  ("A1","choice","Ich trinke Wasser.","Ich trinke Wasser.","correct",None),
  ("A1","choice","Ich trinke Wasser.","Ich trinke Milch.","incorrect","vocabulary"),
- ("A1","reorder","Wir lernen heute Deutsch.","Heute lernen wir Deutsch.","incorrect","word_order"),
+ ("A1","reorder","Wir lernen heute Deutsch.","Heute lernen wir Deutsch.","correct",None),
  ("A1","sentence","Sie wohnt in Berlin.","Sie lebt in Berlin.","correct",None),
  ("A1","sentence","Sie wohnt in Berlin.","Sie wohnt nicht in Berlin.","incorrect","negation"),
  ("A1","error_repair","Er hat einen Stift.","Er hat ein Stift.","incorrect","article"),
@@ -59,6 +59,7 @@ GRAMMAR_TARGETS = {
 }
 
 KNOWN_ALTERNATIVES = {
+    ("A1", "Wir lernen heute Deutsch."): ["Heute lernen wir Deutsch."],
     ("B1", "Er hat gesagt, dass er krank ist."): ["Er sagte, er sei krank."],
     ("B2", "Obwohl erhebliche Zweifel bestanden, wurde die Entscheidung getroffen."): ["Die Entscheidung wurde getroffen, obwohl erhebliche Zweifel bestanden."],
     ("B2", "Anstatt die Ursachen zu untersuchen, wurden nur Symptome behandelt."): ["Es wurden nur Symptome behandelt, statt die Ursachen zu untersuchen."],
