@@ -292,6 +292,7 @@ test('learner completes a mission and sees their own usable German', async ({ pa
 });
 
 test('wrong answer gives one focused repair before revealing the model', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
   await mockApi(page, { completed: true });
   await page.route('**/api/lesson/check-answer', route => route.fulfill({ json: {
     correct: false,
@@ -313,7 +314,7 @@ test('wrong answer gives one focused repair before revealing the model', async (
   await expect(page.getByText('ONE FIX')).toBeVisible();
   await expect(page.getByText('Add: solltest.')).toBeVisible();
   await expect(page.getByText('Du solltest früher schlafen gehen.')).toBeHidden();
-  await page.getByText('Show model').click();
+  await page.locator('details.corrected-model summary').click();
   await expect(page.getByText('Du solltest früher schlafen gehen.')).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
