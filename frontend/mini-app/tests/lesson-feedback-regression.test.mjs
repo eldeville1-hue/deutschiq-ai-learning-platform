@@ -4,13 +4,18 @@ import { test } from 'node:test';
 
 const source = readFileSync(new URL('../src/pages/Lesson.tsx', import.meta.url), 'utf8');
 
-test('wrong-answer model is gated on retry', () => {
-  assert.ok(source.includes('feedback?.correct_answer && Boolean(retried[exerciseIndex])'));
-  assert.ok(!source.includes('model-reveal'));
+test('guided retry keeps the model hidden on first failure', () => {
+  assert.ok(source.includes('feedback?.correct_answer && (retried[exerciseIndex] ? ('));
+  assert.ok(source.includes('!feedback?.retry_exercise ? ('));
+});
+
+test('fallback model is user-revealed, not automatically displayed', () => {
+  assert.ok(source.includes('<details className="corrected-model">'));
+  assert.ok(source.includes('Показать образец'));
   assert.ok(!source.includes('Возможный вариант:'));
 });
 
-test('guidance and correction action remain available', () => {
+test('correction guidance remains available', () => {
   assert.ok(source.includes('feedback?.feedback_focus'));
   assert.ok(source.includes('Исправить по словам'));
 });
