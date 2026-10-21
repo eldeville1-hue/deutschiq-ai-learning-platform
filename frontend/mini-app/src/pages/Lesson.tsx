@@ -706,7 +706,9 @@ const LessonScreen: React.FC = () => {
               </div>
               <button onClick={next}>
                 <span>{!checked && !retried[exerciseIndex]
-                  ? tr(lang, "Исправить по словам", "Mit Wörtern korrigieren", "Fix with word tiles")
+                  ? feedback?.retry_exercise?.type === 'repair'
+                    ? tr(lang, "Исправить по словам", "Mit Wörtern korrigieren", "Fix with word tiles")
+                    : tr(lang, "Попробовать ещё раз", "Noch einmal versuchen", "Try again")
                   : exercise?.mission_role === 'final' && retried[exerciseIndex]
                     ? tr(lang, "Повторить миссию самому", "Mission selbst wiederholen", "Retry the mission independently")
                     : tr(lang, "Дальше", "Weiter", "Next")}</span><FaArrowRight />
