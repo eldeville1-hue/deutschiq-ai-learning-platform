@@ -38,6 +38,42 @@ class ConcurrentLessonStartPostgresTests(unittest.TestCase):
             db.commit()
         self.engine.dispose()
 
+    def test_reopening_with_new_database_connection_restores_saved_answers(self):
+        with Session(self.engine) as db:
+            initial = asyncio.run(start_lesson(
+                StartLessonRequest(user_id=981010, lesson_id=981010),
+                db=db, authenticated_id=981010,
+            ))
+            db.add_all([
+                ExerciseAttempt(user_id=981010, lesson_id=981010,
+                                session_id=initial["session_id"], exercise_index=0,
+                                topic="concurrent-start", answer="wrong", correct=False),
+                ExerciseAttempt(user_id=981010, lesson_id=981010,
+                                session_id=initial["session_id"], exercise_index=0,
+                                topic="concurrent-start", answer="correct", correct=True),
+                ExerciseAttempt(user_id=981010, lesson_id=981010,
+                                session_id=initial["session_id"], exercise_index=1,
+                                topic="concurrent-start", answer="wrong", correct=False),
+            ])
+            db.commit()
+
+        # A separate SQLAlchemy session simulates a later API request after
+        # the app was closed; no in-memory lesson state is reused.
+        with Session(self.engine) as reopened_db:
+            reopened = asyncio.run(start_lesson(
+                StartLessonRequest(user_id=981010, lesson_id=981010),
+                db=reopened_db, authenticated_id=981010,
+            ))
+            self.assertEqual(reopened["session_id"], initial["session_id"])
+            self.assertTrue(reopened["resumed"])
+            self.assertEqual(reopened["next_exercise_index"], 1)
+            self.assertEqual(reopened_db.query(LearningSession).filter_by(
+                user_id=981010, lesson_id=981010, status="active",
+            ).count(), 1)
+            self.assertEqual(reopened_db.query(ExerciseAttempt).filter_by(
+                session_id=initial["session_id"],
+            ).count(), 3)
+
     def test_two_simultaneous_starts_reuse_one_session(self):
         barrier = threading.Barrier(2)
 
