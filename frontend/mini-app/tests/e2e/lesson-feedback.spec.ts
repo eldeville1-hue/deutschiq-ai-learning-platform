@@ -180,4 +180,38 @@ test('duplicate submission restores saved server progress instead of penalizing 
   await expect(page.locator('.dq-lesson-intro')).toHaveCount(0);
   await expect(page.locator('.answer-feedback')).toHaveCount(0);
   expect(starts).toBeGreaterThanOrEqual(2);
+
+  // Simulate closing the Mini App tab and reopening it in the same Telegram
+  // browser session. Reuse the same mocked backend routes on the new page.
+  await page.context().route('**/api/user/state/**', route => route.fulfill({ json: {
+    exists: true, diagnostic_completed: true, language: 'en', level: 'A1',
+    xp: 0, streak: 0, beta_access: true, beta_onboarding_completed: true,
+  } }));
+  await page.context().route('**/api/lesson/1?lang=*', route => route.fulfill({ json: {
+    id: 1, topic: 'Practice', level: 'A1',
+    content: {
+      title: 'Practice', scenario: 'Practice German.', examples: ['Ich lerne Deutsch.'],
+      can_do: 'Write a short sentence.', rule: 'The verb is second.',
+      exercises: [
+        { id: 'practice-1', type: 'write', question: 'Write a German sentence.', answer: 'Ich lerne Deutsch.' },
+        { id: 'practice-2', type: 'write', question: 'Write another sentence.', answer: 'Heute lerne ich.' },
+      ],
+    },
+  } }));
+  await page.context().route('**/api/lesson/start', route => {
+    starts += 1;
+    return route.fulfill({ json: {
+      session_id: 'recovered-session', resumed: true, next_exercise_index: 1,
+    } });
+  });
+  await page.context().route('**/api/events', route => route.fulfill({ json: {} }));
+  const context = page.context();
+  await page.close();
+  const reopened = await context.newPage();
+  await reopened.goto('/lesson/1');
+  await expect(reopened.getByText('Write another sentence.')).toBeVisible();
+  await expect(reopened.locator('.exercise-text-answer textarea')).toBeVisible();
+  await expect(reopened.locator('.dq-lesson-intro')).toHaveCount(0);
+  await expect(reopened.locator('.answer-feedback')).toHaveCount(0);
+  expect(starts).toBeGreaterThanOrEqual(3);
 });
