@@ -314,14 +314,10 @@ test('wrong answer gives one focused repair before revealing the model', async (
   await expect(page.getByText('ONE FIX')).toBeVisible();
   await expect(page.getByText('Add: solltest.')).toBeVisible();
   await expect(page.getByText('Du solltest früher schlafen gehen.')).toBeHidden();
-  const modelReveal = page.locator('details.corrected-model summary');
-  try {
-    await modelReveal.waitFor({ state: 'visible', timeout: 10000 });
-  } catch {
-    throw new Error(`Model reveal unavailable at ${page.url()}. Screen: ${(await page.locator('body').innerText()).slice(0, 1600)}`);
-  }
-  await modelReveal.click();
-  await expect(page.getByText('Du solltest früher schlafen gehen.')).toBeVisible();
+  // An independent mission must guide a retry rather than reveal the answer.
+  await expect(page.getByText('Try again')).toBeVisible();
+  await expect(page.locator('details.corrected-model')).toHaveCount(0);
+  await expect(page.getByText('Du solltest früher schlafen gehen.')).toBeHidden();
   await expectNoHorizontalOverflow(page);
 });
 
