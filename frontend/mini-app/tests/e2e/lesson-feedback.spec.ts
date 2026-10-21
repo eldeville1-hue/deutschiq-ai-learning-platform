@@ -132,3 +132,39 @@ test('uncertain evaluation does not mark a learner wrong or reveal the answer', 
   await expect(page.locator('.exercise-text-answer textarea')).toHaveValue('Ich Deutsch lerne.');
   expect(checks).toBe(1);
 });
+
+test('duplicate submission restores saved server progress instead of penalizing learner', async ({ page }) => {
+  let starts = 0;
+  await page.route('**/api/lesson/1?lang=*', route => route.fulfill({ json: {
+    id: 1, topic: 'Practice', level: 'A1',
+    content: {
+      title: 'Practice', scenario: 'Practice German.', examples: ['Ich lerne Deutsch.'],
+      can_do: 'Write a short sentence.', rule: 'The verb is second.',
+      exercises: [
+        { id: 'practice-1', type: 'write', question: 'Write a German sentence.', answer: 'Ich lerne Deutsch.' },
+        { id: 'practice-2', type: 'write', question: 'Write another sentence.', answer: 'Heute lerne ich.' },
+      ],
+    },
+  } }));
+  await page.route('**/api/lesson/start', route => {
+    starts += 1;
+    return route.fulfill({ json: {
+      session_id: 'recovered-session', resumed: starts > 1,
+      next_exercise_index: starts > 1 ? 1 : 0,
+    } });
+  });
+  await page.route('**/api/lesson/check-answer', route => route.fulfill({
+    status: 409,
+    json: { detail: 'Exercise already completed' },
+  }));
+  await page.route('**/api/events', route => route.fulfill({ json: {} }));
+  await page.goto('/lesson/1');
+  await page.locator('.dq-lesson-intro .dq-lesson-action').click();
+  await page.locator('.dq-lesson-model .dq-lesson-action').click();
+  await page.locator('.exercise-text-answer textarea').fill('Ich lerne Deutsch.');
+  await page.locator('.lesson-action-dock .primary-action').click();
+
+  await expect(page.getByText('Write another sentence.')).toBeVisible();
+  await expect(page.locator('.answer-feedback')).toHaveCount(0);
+  expect(starts).toBe(2);
+});
