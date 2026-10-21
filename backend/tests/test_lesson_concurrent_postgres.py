@@ -9,7 +9,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 from app.api.endpoints.lesson import StartLessonRequest, start_lesson
-from app.models.learning import LearningSession
+from app.models.learning import ExerciseAttempt, LearningSession
 from app.models.lesson import Lesson
 from app.models.user import User
 
@@ -18,9 +18,10 @@ from app.models.user import User
 class ConcurrentLessonStartPostgresTests(unittest.TestCase):
     def setUp(self):
         self.engine = create_engine(os.environ["TEST_POSTGRES_URL"], pool_size=5)
-        for model in (User, Lesson, LearningSession):
+        for model in (User, Lesson, LearningSession, ExerciseAttempt):
             model.__table__.create(self.engine, checkfirst=True)
         with Session(self.engine) as db:
+            db.query(ExerciseAttempt).filter_by(lesson_id=981010).delete()
             db.query(LearningSession).filter_by(lesson_id=981010).delete()
             db.query(Lesson).filter_by(id=981010).delete()
             db.query(User).filter_by(telegram_id=981010).delete()
