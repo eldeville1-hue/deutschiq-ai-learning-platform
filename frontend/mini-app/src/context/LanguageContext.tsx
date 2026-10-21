@@ -34,8 +34,12 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return normalizeLanguage(getTelegramUser()?.language_code);
   });
   const initialLanguage = useRef(lang);
+  // A user choice made while profile data is loading must win over the
+  // older language returned by that in-flight request.
+  const userChangedLanguage = useRef(false);
 
   const setLanguage = useCallback((language: AppLanguage, persist = true) => {
+    if (persist) userChangedLanguage.current = true;
     setLang(language);
     localStorage.setItem('deutschiq_lang', language);
     if (persist) api.updateLanguage(getUserId(), language).catch(() => undefined);
@@ -45,6 +49,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const userId = getUserId();
     if (!userId) return;
     api.getUserState(userId).then(state => {
+      if (userChangedLanguage.current) return;
       if (state.exists) setLanguage(normalizeLanguage(state.language), false);
       else setLanguage(initialLanguage.current, true);
     }).catch(() => undefined);
