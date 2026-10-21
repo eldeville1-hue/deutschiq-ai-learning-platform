@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test('guided correction hides the model until the learner retries', async ({ page }) => {
   let checks = 0;
+  const requests: boolean[] = [];
   await page.route('**/api/lesson/1?lang=*', route => route.fulfill({ json: {
     id: 1, topic: 'Practice', level: 'A1',
     content: {
@@ -16,7 +17,7 @@ test('guided correction hides the model until the learner retries', async ({ pag
   await page.route('**/api/lesson/check-answer', async route => {
     checks += 1;
     const body = route.request().postDataJSON();
-    expect(Boolean(body.retry)).toBe(checks > 1);
+    requests.push(Boolean(body.retry));
     await route.fulfill({ json: {
       correct: false,
       explanation: 'Check the verb position.',
@@ -46,4 +47,5 @@ test('guided correction hides the model until the learner retries', async ({ pag
   await expect(page.locator('.corrected-model')).toBeVisible();
   await expect(page.locator('.corrected-model')).toContainText('Ich lerne Deutsch.');
   expect(checks).toBe(2);
+  expect(requests).toEqual([false, true]);
 });
