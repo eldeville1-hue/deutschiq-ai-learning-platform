@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Dict
@@ -147,9 +147,11 @@ async def submit_diagnostic(data: SubmitAnswers, db: Session = Depends(get_db), 
         db.add(ProductEvent(user_id=user.id, event_name="diagnostic_completed", properties={"level": result["level"], "score": result["overall_score"], "language": data.language}))
         db.commit()
         persisted = True
-    except SQLAlchemyError:
-        # Результат всё равно показываем; после запуска БД следующая попытка сохранится.
+    except SQLAlchemyError as exc:
         db.rollback()
+        # Never report a completed diagnostic if its level and progress were not saved.
+        # The client can retry instead of silently losing the result on refresh.
+        raise HTTPException(status_code=503, detail="Diagnostic could not be saved. Please try again.") from exc
     return {
         "level": result["level"],
         "overall_score": result["overall_score"],
