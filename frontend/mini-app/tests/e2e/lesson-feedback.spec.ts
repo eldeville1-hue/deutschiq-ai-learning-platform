@@ -83,7 +83,7 @@ test('fallback correction keeps the answer behind an explicit reveal', async ({ 
   const model = page.locator('details.corrected-model');
   await expect(model).toBeVisible();
   await expect(model).not.toHaveAttribute('open', '');
-  await expect(model.locator('summary')).toHaveText('Show model');
+  await expect(model.locator('summary')).toHaveText(/Show model|Muster anzeigen|Показать образец/);
   await model.locator('summary').click();
   await expect(model).toHaveAttribute('open', '');
   await expect(model.locator('strong')).toHaveText('Ich lerne Deutsch.');
@@ -129,5 +129,6 @@ test('uncertain evaluation does not mark a learner wrong or reveal the answer', 
   await expect(page.locator('.corrected-model')).toHaveCount(0);
   await expect(page.locator('.exercise-text-answer textarea')).toBeVisible();
   await expect(page.locator('.lesson-action-dock .primary-action')).toBeEnabled();
+  await expect(page.locator('.exercise-text-answer textarea')).toHaveValue('Ich Deutsch lerne.');
   expect(checks).toBe(1);
 });
