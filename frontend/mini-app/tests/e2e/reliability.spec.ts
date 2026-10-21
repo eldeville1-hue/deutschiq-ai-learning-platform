@@ -314,7 +314,13 @@ test('wrong answer gives one focused repair before revealing the model', async (
   await expect(page.getByText('ONE FIX')).toBeVisible();
   await expect(page.getByText('Add: solltest.')).toBeVisible();
   await expect(page.getByText('Du solltest früher schlafen gehen.')).toBeHidden();
-  await page.locator('details.corrected-model summary').click();
+  const modelReveal = page.locator('details.corrected-model summary');
+  try {
+    await modelReveal.waitFor({ state: 'visible', timeout: 10000 });
+  } catch {
+    throw new Error(`Model reveal unavailable at ${page.url()}. Screen: ${(await page.locator('body').innerText()).slice(0, 1600)}`);
+  }
+  await modelReveal.click();
   await expect(page.getByText('Du solltest früher schlafen gehen.')).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
