@@ -11,7 +11,7 @@ test('guided correction hides the model until the learner retries', async ({ pag
     },
   } }));
   await page.route('**/api/lesson/start', route => route.fulfill({ json: {
-    session_id: 'test-session', resumed: true, next_exercise_index: 0,
+    session_id: 'test-session', resumed: false, next_exercise_index: 0,
   } }));
   await page.route('**/api/lesson/check-answer', async route => {
     checks += 1;
@@ -26,6 +26,7 @@ test('guided correction hides the model until the learner retries', async ({ pag
     } });
   });
   await page.route('**/api/events', route => route.fulfill({ json: {} }));
+  await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
   await page.goto('/lesson/1');
 
   await page.locator('.dq-lesson-intro .dq-lesson-action').click();
@@ -36,7 +37,7 @@ test('guided correction hides the model until the learner retries', async ({ pag
 
   await expect(page.getByText('Put the verb in second position.')).toBeVisible();
   await expect(page.locator('.corrected-model')).toHaveCount(0);
-  await page.locator('.answer-feedback button').filter({ hasText: /Исправить|korrigieren|Fix with|Попробовать|versuchen|Try again/i }).first().click();
+  await page.locator('.answer-feedback > button').first().click();
 
   await expect(page.getByText('Correct the sentence.')).toBeVisible();
   await page.locator('.exercise-text-answer textarea').fill('Ich Deutsch lerne.');
