@@ -93,6 +93,8 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm run lint
+      - name: Lesson feedback regression checks
+        run: node --test tests/lesson-feedback-regression.test.mjs
       - run: npm run check:bundle
 
   e2e-mobile:
