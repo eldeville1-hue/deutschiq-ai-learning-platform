@@ -651,7 +651,8 @@ const LessonScreen: React.FC = () => {
                   <small>{tr(lang, 'ИСПРАВЬ ОДНО', 'EIN SCHRITT', 'ONE FIX')}</small>
                   <strong>{feedback.feedback_focus}</strong>
                 </div>}
-                {!checked && feedback?.correct_answer && Boolean(retried[exerciseIndex]) && (
+                {/* Without a server-provided retry task, the model remains available after feedback. */}
+                {!checked && feedback?.correct_answer && (Boolean(retried[exerciseIndex]) || !feedback?.retry_exercise) && (
                   <div className="corrected-model">
                     <small>{tr(lang, 'СРАВНИ С МОДЕЛЬЮ', 'MIT DEM MODELL VERGLEICHEN', 'COMPARE WITH THE MODEL')}</small>
                     <strong>{feedback.correct_answer}</strong>
