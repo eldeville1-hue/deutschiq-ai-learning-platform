@@ -17,12 +17,18 @@ test('a late profile response cannot override a newer language selection', async
   await page.route('**/api/events', route => route.fulfill({ json: {} }));
   await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
 
-  await page.goto('/profile');
-  await requestStarted;
-  const picker = page.getByRole('group', { name: 'Language · Sprache · Язык' });
-  await picker.getByRole('button', { name: 'Deutsch' }).click();
-  await expect(page.locator('html')).toHaveAttribute('lang', 'de');
-  releaseProfile();
-  await expect(page.locator('html')).toHaveAttribute('lang', 'de');
-  await expect(picker.getByRole('button', { name: 'Deutsch' })).toHaveAttribute('aria-pressed', 'true');
+  try {
+    await page.goto('/profile');
+    await requestStarted;
+    const picker = page.getByRole('group', { name: 'Language · Sprache · Язык' });
+    await picker.getByRole('button', { name: 'Deutsch' }).click();
+    await expect(page.locator('html')).toHaveAttribute('lang', 'de');
+    const stateResponse = page.waitForResponse(response => response.url().includes('/api/user/state/') && response.status() === 200);
+    releaseProfile();
+    await stateResponse;
+    await expect(page.locator('html')).toHaveAttribute('lang', 'de');
+    await expect(picker.getByRole('button', { name: 'Deutsch' })).toHaveAttribute('aria-pressed', 'true');
+  } finally {
+    releaseProfile();
+  }
 });
