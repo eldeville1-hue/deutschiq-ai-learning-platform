@@ -97,3 +97,37 @@ test('fallback correction keeps the answer behind an explicit reveal', async ({ 
   await expect(page.locator('details.corrected-model')).toBeVisible();
   expect(retryFlags).toEqual([false, false]);
 });
+
+test('uncertain evaluation does not mark a learner wrong or reveal the answer', async ({ page }) => {
+  let checks = 0;
+  await page.route('**/api/lesson/1?lang=*', route => route.fulfill({ json: {
+    id: 1, topic: 'Practice', level: 'A1',
+    content: {
+      title: 'Practice', scenario: 'Practice German.', examples: ['Ich lerne Deutsch.'],
+      can_do: 'Write a short sentence.', rule: 'The verb is second.',
+      exercises: [{ id: 'practice-1', type: 'write', question: 'Write a German sentence.', answer: 'Ich lerne Deutsch.' }],
+    },
+  } }));
+  await page.route('**/api/lesson/start', route => route.fulfill({ json: {
+    session_id: 'uncertain-session', resumed: false, next_exercise_index: 0,
+  } }));
+  await page.route('**/api/lesson/check-answer', route => {
+    checks += 1;
+    return route.fulfill({ json: {
+      evaluation_status: 'uncertain', correct: false,
+      correct_answer: 'Ich lerne Deutsch.',
+    } });
+  });
+  await page.route('**/api/events', route => route.fulfill({ json: {} }));
+  await page.goto('/lesson/1');
+  await page.locator('.dq-lesson-intro .dq-lesson-action').click();
+  await page.locator('.dq-lesson-model .dq-lesson-action').click();
+  await page.locator('.exercise-text-answer textarea').fill('Ich Deutsch lerne.');
+  await page.locator('.lesson-action-dock .primary-action').click();
+
+  await expect(page.locator('.answer-feedback')).toHaveCount(0);
+  await expect(page.locator('.corrected-model')).toHaveCount(0);
+  await expect(page.locator('.exercise-text-answer textarea')).toBeVisible();
+  await expect(page.locator('.lesson-action-dock .primary-action')).toBeEnabled();
+  expect(checks).toBe(1);
+});
