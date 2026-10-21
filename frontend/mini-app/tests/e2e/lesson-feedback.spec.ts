@@ -36,7 +36,7 @@ test('guided correction hides the model until the learner retries', async ({ pag
 
   await expect(page.getByText('Put the verb in second position.')).toBeVisible();
   await expect(page.locator('.corrected-model')).toHaveCount(0);
-  await page.locator('.answer-feedback button').filter({ hasText: /Исправить|korrigieren|Fix with/i }).first().click();
+  await page.locator('.answer-feedback button').filter({ hasText: /Исправить|korrigieren|Fix with|Попробовать|versuchen|Try again/i }).first().click();
 
   await expect(page.getByText('Correct the sentence.')).toBeVisible();
   await page.locator('.exercise-text-answer textarea').fill('Ich Deutsch lerne.');
