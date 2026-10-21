@@ -171,4 +171,13 @@ test('duplicate submission restores saved server progress instead of penalizing 
   await expect(page.getByText('Write another sentence.')).toBeVisible();
   await expect(page.locator('.answer-feedback')).toHaveCount(0);
   expect(starts).toBeGreaterThanOrEqual(1);
+
+  // A real app restart reloads the route. The saved server exercise should
+  // remain visible and must not send the learner back through onboarding.
+  await page.reload();
+  await expect(page.getByText('Write another sentence.')).toBeVisible();
+  await expect(page.locator('.exercise-text-answer textarea')).toBeVisible();
+  await expect(page.locator('.dq-lesson-intro')).toHaveCount(0);
+  await expect(page.locator('.answer-feedback')).toHaveCount(0);
+  expect(starts).toBeGreaterThanOrEqual(2);
 });
