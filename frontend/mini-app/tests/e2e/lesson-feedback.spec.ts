@@ -136,6 +136,10 @@ test('uncertain evaluation does not mark a learner wrong or reveal the answer', 
 test('duplicate submission restores saved server progress instead of penalizing learner', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
   let starts = 0;
+  await page.route('**/api/user/state/**', route => route.fulfill({ json: {
+    exists: true, diagnostic_completed: true, language: 'en', level: 'A1',
+    xp: 0, streak: 0, beta_access: true, beta_onboarding_completed: true,
+  } }));
   await page.route('**/api/lesson/1?lang=*', route => route.fulfill({ json: {
     id: 1, topic: 'Practice', level: 'A1',
     content: {
