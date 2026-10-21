@@ -51,6 +51,7 @@ test('guided correction hides the model until the learner retries', async ({ pag
 });
 
 test('fallback correction keeps the answer behind an explicit reveal', async ({ page }) => {
+  const retryFlags: boolean[] = [];
   await page.route('**/api/lesson/1?lang=*', route => route.fulfill({ json: {
     id: 1, topic: 'Practice', level: 'A1',
     content: {
@@ -62,12 +63,15 @@ test('fallback correction keeps the answer behind an explicit reveal', async ({ 
   await page.route('**/api/lesson/start', route => route.fulfill({ json: {
     session_id: 'fallback-session', resumed: false, next_exercise_index: 0,
   } }));
-  await page.route('**/api/lesson/check-answer', route => route.fulfill({ json: {
+  await page.route('**/api/lesson/check-answer', route => {
+    retryFlags.push(Boolean(route.request().postDataJSON().retry));
+    return route.fulfill({ json: {
     correct: false,
     feedback_focus: 'Put the verb in second position.',
     correct_answer: 'Ich lerne Deutsch.',
     retry_exercise: null,
-  } }));
+  } });
+  });
   await page.route('**/api/events', route => route.fulfill({ json: {} }));
   await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
   await page.goto('/lesson/1');
@@ -83,4 +87,13 @@ test('fallback correction keeps the answer behind an explicit reveal', async ({ 
   await model.locator('summary').click();
   await expect(model).toHaveAttribute('open', '');
   await expect(model.locator('strong')).toHaveText('Ich lerne Deutsch.');
+
+  // A fallback has no server-issued retry task. The original exercise must be
+  // submitted again without retry=true, avoiding a backend 409 conflict.
+  await page.locator('.answer-feedback > button').first().click();
+  await expect(page.getByText('Write a German sentence.')).toBeVisible();
+  await page.locator('.exercise-text-answer textarea').fill('Ich Deutsch lerne.');
+  await page.locator('.lesson-action-dock .primary-action').click();
+  await expect(page.locator('details.corrected-model')).toBeVisible();
+  expect(retryFlags).toEqual([false, false]);
 });
