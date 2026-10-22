@@ -275,6 +275,34 @@ def repair_plan(error_type: str | None, missing_words: list[str], extra_words: l
         "de": ("Prüfe die Bedeutung der Präposition.", "Bestimme den Kasus danach."),
         "en": ("Check the meaning of the preposition.", "Determine the case after it."),
     }[language]
+    # More specific B1–B2 feedback: avoid falling back to generic word diffs.
+    advanced = {
+        "ru": {
+            "verb_not_final": ("Найди придаточное предложение и его союз.", "Поставь спрягаемый глагол в конец придаточного."),
+            "wrong_connector": ("Определи связь между частями: причина, время, условие или контраст.", "Выбери союз, который передаёт именно эту связь."),
+            "relative_case": ("Найди существительное, к которому относится Relativsatz.", "Определи падеж местоимения по его роли внутри придаточного."),
+            "passive_auxiliary": ("Определи время и лицо пассивной конструкции.", "Спрягай werden и поставь Partizip II в конец."),
+            "modal_form": ("Определи подлежащее и нужный модальный глагол.", "Спрягай модальный глагол; смысловой глагол оставь в инфинитиве."),
+            "infinitive": ("Проверь, требуется ли конструкция с zu.", "Если zu нужно, поставь его перед инфинитивом."),
+        },
+        "de": {
+            "verb_not_final": ("Finde den Nebensatz und seine Konjunktion.", "Setze das finite Verb ans Ende des Nebensatzes."),
+            "wrong_connector": ("Bestimme die Beziehung: Grund, Zeit, Bedingung oder Gegensatz.", "Wähle die Konjunktion, die genau diese Beziehung ausdrückt."),
+            "relative_case": ("Finde das Bezugswort des Relativsatzes.", "Bestimme den Kasus des Pronomens nach seiner Rolle im Nebensatz."),
+            "passive_auxiliary": ("Bestimme Zeitform und Person im Passiv.", "Konjugiere werden und setze Partizip II ans Ende."),
+            "modal_form": ("Bestimme das Subjekt und das passende Modalverb.", "Konjugiere das Modalverb und lass das Vollverb im Infinitiv."),
+            "infinitive": ("Prüfe, ob die Konstruktion zu verlangt.", "Falls nötig, setze zu vor den Infinitiv."),
+        },
+        "en": {
+            "verb_not_final": ("Find the subordinate clause and its conjunction.", "Move the finite verb to the end of that clause."),
+            "wrong_connector": ("Identify the relationship: cause, time, condition or contrast.", "Choose the conjunction that expresses that relationship."),
+            "relative_case": ("Find the noun the relative clause refers to.", "Choose the pronoun case from its role inside the relative clause."),
+            "passive_auxiliary": ("Identify the tense and person of the passive construction.", "Conjugate werden and put the past participle at the end."),
+            "modal_form": ("Identify the subject and the modal verb you need.", "Conjugate the modal and leave the main verb in the infinitive."),
+            "infinitive": ("Check whether the construction requires zu.", "If needed, place zu before the infinitive."),
+        },
+    }
+    targeted[language].update(advanced[language])
     if error_type in targeted[language]:
         first, practice = targeted[language][error_type]
         return [first, practice]
