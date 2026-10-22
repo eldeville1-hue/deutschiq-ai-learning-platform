@@ -16,9 +16,13 @@ class IncorrectFeedbackCopyTests(unittest.TestCase):
                         content={"exercises": [{"type": "multiple_choice", "question": "Choose",
                                                  "options": ["ist", "sind"], "answer": "ist"}]})
         session = LearningSession(id="session", user_id=1, lesson_id=1, status="active")
+        from app.models.learning import TopicMastery
+        mastery = TopicMastery(user_id=1, topic="articles", mastery=0, attempts=0,
+                               correct_streak=0, correct_total=0, lapse_count=0,
+                               stability_days=1.0)
         db = MagicMock()
         db.query.return_value.filter.return_value.first.side_effect = [
-            lesson, user, session, None, None, None, None,
+            lesson, user, session, None, None, None, mastery,
         ]
         db.query.return_value.filter.return_value.count.return_value = 0
         db.get_bind.return_value.dialect.name = "sqlite"
