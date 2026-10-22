@@ -144,8 +144,10 @@ class GrammarRuleFirstFeedbackTests(unittest.TestCase):
         result = feedback_focus("conjugation", ["geht"], ["gehen"], "en")
         self.assertIn("subject", result)
 
-    def test_unknown_error_preserves_word_level_guidance(self):
-        self.assertIn("Add: bitte", feedback_focus("unknown_error", ["bitte"], [], "en"))
+    def test_unknown_error_guides_without_revealing_missing_word(self):
+        hint = feedback_focus("unknown_error", ["bitte"], [], "en")
+        self.assertIn("missing", hint)
+        self.assertNotIn("bitte", hint)
 
 
 class WordOrderFeedbackTests(unittest.TestCase):
@@ -162,8 +164,10 @@ class WordOrderFeedbackTests(unittest.TestCase):
     def test_verb_final_error_prioritizes_sentence_structure(self):
         self.assertIn("Ende des Nebensatzes", feedback_focus("verb_not_final", ["geht"], [], "de"))
 
-    def test_missing_word_still_gets_specific_guidance(self):
-        self.assertIn("Add: bitte", feedback_focus("missing_word", ["bitte"], [], "en"))
+    def test_missing_word_gives_actionable_hint_without_answer(self):
+        hint = feedback_focus("missing_word", ["bitte"], [], "en")
+        self.assertIn("Check the lesson pattern", hint)
+        self.assertNotIn("bitte", hint)
 
 
 class AuthoredRetryTargetSafetyTests(unittest.TestCase):
@@ -363,8 +367,12 @@ class LessonCoachingTests(unittest.TestCase):
         self.assertIn("Wortstellung", steps[2])
 
     def test_feedback_focus_names_the_smallest_action_without_revealing_model(self):
-        self.assertEqual("Ergänze: habe, gearbeitet.", feedback_focus("missing_words", ["habe", "gearbeitet"], [], "de"))
-        self.assertEqual("Remove or replace: is.", feedback_focus("answer_mismatch", [], ["is"], "en"))
+        missing_hint = feedback_focus("missing_words", ["habe", "gearbeitet"], [], "de")
+        self.assertIn("fehlen Wörter", missing_hint)
+        self.assertNotIn("gearbeitet", missing_hint)
+        extra_hint = feedback_focus("answer_mismatch", [], ["is"], "en")
+        self.assertIn("extra words", extra_hint)
+        self.assertNotIn(" is.", extra_hint)
         self.assertIn("порядок", feedback_focus("answer_mismatch", [], [], "ru"))
 
     def test_success_feedback_has_localized_fallback(self):

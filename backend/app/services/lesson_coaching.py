@@ -319,10 +319,20 @@ def feedback_focus(error_type: str | None, missing_words: list[str], extra_words
                       "preposition", "conjugation", "auxiliary", "modal_form",
                       "passive_auxiliary", "infinitive", "negation"}:
         return misconception_feedback(error_type, lang)
+    # Missing/extra tokens often contain the answer itself. Give a
+    # strategy first, so the learner can make a genuine second attempt.
     if missing_words:
-        return copy["missing"].format(words=", ".join(missing_words[:4]))
+        return {
+            "ru": "В ответе не хватает слов. Сверь структуру с правилом урока и попробуй ещё раз.",
+            "de": "In deiner Antwort fehlen Wörter. Prüfe das Satzmuster und versuche es erneut.",
+            "en": "Some words are missing. Check the lesson pattern and try again.",
+        }[lang]
     if extra_words:
-        return copy["extra"].format(words=", ".join(extra_words[:4]))
+        return {
+            "ru": "В ответе есть лишние слова. Проверь, какие части нужны для этой конструкции.",
+            "de": "Deine Antwort enthält zusätzliche Wörter. Prüfe, welche Satzteile nötig sind.",
+            "en": "Your answer contains extra words. Check which parts this structure needs.",
+        }[lang]
     if error_type in {"answer_mismatch", "verb_not_final", "word_order"}:
         return copy["order"]
     return misconception_feedback(error_type, lang)
