@@ -41,8 +41,9 @@ class ConcurrentAnswerPostgresTests(unittest.TestCase):
                            {"type": "multiple_choice", "question": "Choose",
                             "options": ["ist", "sind"], "answer": "ist"}
                        ]}),
-                LearningSession(id="concurrent-answer", user_id=1, lesson_id=12, status="active"),
             ])
+            db.flush()
+            db.add(LearningSession(id="concurrent-answer", user_id=1, lesson_id=12, status="active"))
             db.commit()
 
     def tearDown(self):
