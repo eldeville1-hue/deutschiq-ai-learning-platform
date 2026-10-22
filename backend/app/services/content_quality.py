@@ -296,4 +296,10 @@ def exercise_answer_audit(content: dict) -> list[str]:
                 issues.append(f"exercise:{index}:duplicate_options")
             if valid_answers and not any(value in normalized_options for value in valid_answers):
                 issues.append(f"exercise:{index}:answer_not_in_options")
+            # A choice question with every option accepted has no incorrect
+            # distractor and cannot measure whether the learner knows the rule.
+            if normalized_options and valid_answers and all(
+                option in valid_answers for option in normalized_options
+            ):
+                issues.append(f"exercise:{index}:no_incorrect_distractor")
     return issues
