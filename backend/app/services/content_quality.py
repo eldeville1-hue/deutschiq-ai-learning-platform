@@ -125,6 +125,21 @@ def validate_lesson_content(content: dict) -> list[str]:
             errors.append(f"exercise:{index}:missing_answer")
         if not isinstance(exercise.get("explanation"), str) or not exercise["explanation"].strip():
             errors.append(f"exercise:{index}:missing_explanation")
+        # A multiple-choice task must contain a selectable correct answer and
+        # genuinely distinct distractors. Otherwise learners are tested on a
+        # broken interface rather than on German.
+        if kind in {"choose", "context_choice", "analogy_choice", "listening_choice"} and "options" in exercise:
+            options = exercise.get("options")
+            if not isinstance(options, list) or len(options) < 2:
+                errors.append(f"exercise:{index}:insufficient_options")
+            else:
+                normalized_options = [" ".join(str(option).split()).casefold() for option in options]
+                if any(not option for option in normalized_options) or len(set(normalized_options)) != len(normalized_options):
+                    errors.append(f"exercise:{index}:duplicate_or_empty_options")
+                accepted = exercise.get("accepted_answers") or [exercise.get("answer", "")]
+                accepted_keys = {" ".join(str(answer).split()).casefold() for answer in accepted if answer is not None}
+                if not accepted_keys.intersection(normalized_options):
+                    errors.append(f"exercise:{index}:correct_answer_not_in_options")
     # Skill-tagged retries must have a real, different authored answer.
     skill_ids = {item.get("skill_id") for item in content.get("exercises") or []
                  if isinstance(item, dict) and isinstance(item.get("skill_id"), str)
