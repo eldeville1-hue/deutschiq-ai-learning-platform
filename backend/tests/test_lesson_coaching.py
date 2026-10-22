@@ -367,8 +367,12 @@ class LessonCoachingTests(unittest.TestCase):
         self.assertIn("Wortstellung", steps[2])
 
     def test_feedback_focus_names_the_smallest_action_without_revealing_model(self):
-        self.assertEqual("Ergänze: habe, gearbeitet.", feedback_focus("missing_words", ["habe", "gearbeitet"], [], "de"))
-        self.assertEqual("Remove or replace: is.", feedback_focus("answer_mismatch", [], ["is"], "en"))
+        missing_hint = feedback_focus("missing_words", ["habe", "gearbeitet"], [], "de")
+        self.assertIn("fehlen Wörter", missing_hint)
+        self.assertNotIn("gearbeitet", missing_hint)
+        extra_hint = feedback_focus("answer_mismatch", [], ["is"], "en")
+        self.assertIn("extra words", extra_hint)
+        self.assertNotIn(" is.", extra_hint)
         self.assertIn("порядок", feedback_focus("answer_mismatch", [], [], "ru"))
 
     def test_success_feedback_has_localized_fallback(self):
