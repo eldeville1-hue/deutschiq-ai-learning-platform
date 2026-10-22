@@ -442,6 +442,13 @@ async def complete_lesson(data: CompleteLessonRequest, db: Session = Depends(get
     if not lesson:
         raise HTTPException(status_code=404, detail="Урок не найден")
     
+    # Serialize completions for the same learner before checking session status
+    # or first-completion XP. PostgreSQL READ COMMITTED re-reads committed
+    # state after the lock is released, so a duplicate request recovers the
+    # completed result instead of awarding XP twice.
+    if db.get_bind().dialect.name == "postgresql":
+        db.query(User.id).filter(User.id == user.id).with_for_update().one()
+
     session = db.query(LearningSession).filter(
         LearningSession.id == data.session_id,
         LearningSession.user_id == user.id,
