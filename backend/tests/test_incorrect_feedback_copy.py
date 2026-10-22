@@ -34,6 +34,7 @@ class IncorrectFeedbackCopyTests(unittest.TestCase):
              patch("app.api.endpoints.lesson.localize_lesson_content",
                    side_effect=lambda value, language: value), \
              patch("app.api.endpoints.lesson.skill_for") as skill, \
+             patch("app.api.endpoints.lesson.retention_score", return_value=0), \
              patch("app.api.endpoints.lesson.misconception_feedback", return_value="Check the verb form."), \
              patch("app.api.endpoints.lesson.supported_retry_exercise", return_value=None):
             skill.return_value.pillar = "grammar"
