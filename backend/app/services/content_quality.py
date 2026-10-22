@@ -242,6 +242,11 @@ def validate_roadmap_content(content: dict) -> list[str]:
         elif len(final_missions[0].get("conversation_turns") or []) < 2:
             errors.append("mission:conversation_too_short")
     if content.get("quality_version", 0) >= 8:
+        # Publication-ready choice tasks must actually provide answer buttons.
+        # Legacy lessons retain the separate non-blocking answer audit.
+        for index, item in enumerate(content.get("exercises") or []):
+            if item.get("type") in {"choose", "context_choice", "analogy_choice", "listening_choice"} and "options" not in item:
+                errors.append(f"publish:exercise:{index}:missing_options")
         errors.extend(f"publish:{blocker}" for blocker in publication_blockers(content))
     return errors
 
