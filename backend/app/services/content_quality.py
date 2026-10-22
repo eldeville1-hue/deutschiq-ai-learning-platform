@@ -105,6 +105,11 @@ def normalize_lesson_content(content: dict, topic: str, level: str) -> dict:
             "question": "Произнеси пример вслух. Система проверит распознанные слова.",
             "answer": example, "accepted_answers": [example],
             "explanation": "Повтори фразу ещё раз, сохраняя порядок слов и окончания.",
+            "i18n": {
+                "ru": {"question": "Произнеси пример вслух. Система проверит распознанные слова.", "explanation": "Повтори фразу ещё раз, сохраняя порядок слов и окончания."},
+                "de": {"question": "Sprich den Beispielsatz laut. Das System prüft die erkannten Wörter.", "explanation": "Wiederhole den Satz und achte auf Wortstellung und Endungen."},
+                "en": {"question": "Say the example aloud. The system checks the recognized words.", "explanation": "Repeat the sentence, keeping the word order and endings."},
+            },
         })
     value["exercises"] = exercises
     return value
