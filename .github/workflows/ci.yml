@@ -99,7 +99,9 @@ jobs:
 
   e2e-mobile:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # Installing both browser engines and OS dependencies can exceed 20 minutes
+    # on a cold GitHub runner before Playwright tests even begin.
+    timeout-minutes: 40
     defaults:
       run:
         working-directory: frontend/mini-app
