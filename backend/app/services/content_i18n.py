@@ -105,21 +105,39 @@ def localize_lesson_content(content: dict, language: str) -> dict:
             exercise.pop("i18n", None)
         value.pop("i18n", None)
         return value
+    # Exercise translations are independent of lesson-level metadata.
+    # Apply them even when a legacy/generated lesson has no top-level i18n.
+    # Do this before the old day-based fallback, which supplies copy only
+    # for exercises that have not authored their own translation.
+    for exercise in value.get("exercises") or []:
+        translations = exercise.get("i18n") or {}
+        authored = translations.get(lang)
+        if authored:
+            exercise.update(authored)
+        exercise.pop("i18n", None)
+        if authored:
+            exercise["_authored_localization"] = True
     if lang == "ru":
+        for exercise in value.get("exercises") or []:
+            exercise.pop("_authored_localization", None)
         return value
     day = int(value.get("day") or 0)
     if not 1 <= day <= 30:
+        for exercise in value.get("exercises") or []:
+            exercise.pop("_authored_localization", None)
         return value
     title, rule, question, goal = LESSON_COPY[lang][day - 1]
     value.update({"title": title, "rule": rule, "objective": goal, "communication_goal": goal})
     value["recall_prompt"] = "Close the example, explain the rule in your own words, then make one new sentence." if lang == "en" else "Schließe das Beispiel, erkläre die Regel mit eigenen Worten und bilde einen neuen Satz."
     exercises = value.get("exercises") or []
-    if exercises:
+    if exercises and not exercises[0].get("_authored_localization"):
         exercises[0].update({"question": question, "hint": rule, "explanation": ("Rule: " if lang == "en" else "Regel: ") + rule})
-    if len(exercises) > 1:
+    if len(exercises) > 1 and not exercises[1].get("_authored_localization"):
         exercises[1].update({"question": "Listen and write the sentence in German." if lang == "en" else "Höre zu und schreibe den Satz auf Deutsch.", "hint": "Identify the verb first, then reconstruct the remaining words." if lang == "en" else "Erkenne zuerst das Verb und ergänze dann den Rest.", "explanation": ("You heard: " if lang == "en" else "Du hast gehört: ") + str(exercises[1].get("answer", ""))})
-    if len(exercises) > 2:
+    if len(exercises) > 2 and not exercises[2].get("_authored_localization"):
         exercises[2].update({"question": goal, "hint": "Use today's structure with your own details." if lang == "en" else "Nutze die Struktur mit eigenen Details.", "explanation": "Check the goal, then compare your grammar with the model." if lang == "en" else "Prüfe das Ziel und vergleiche deine Grammatik mit dem Modell."})
-    if len(exercises) > 3:
+    if len(exercises) > 3 and not exercises[3].get("_authored_localization"):
         exercises[3].update({"question": "Say the model aloud. Keep the word order and endings." if lang == "en" else "Sprich das Modell laut. Achte auf Wortstellung und Endungen.", "explanation": "Repeat once calmly and clearly." if lang == "en" else "Wiederhole den Satz einmal ruhig und deutlich."})
+    for exercise in exercises:
+        exercise.pop("_authored_localization", None)
     return value
