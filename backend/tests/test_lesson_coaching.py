@@ -144,8 +144,10 @@ class GrammarRuleFirstFeedbackTests(unittest.TestCase):
         result = feedback_focus("conjugation", ["geht"], ["gehen"], "en")
         self.assertIn("subject", result)
 
-    def test_unknown_error_preserves_word_level_guidance(self):
-        self.assertIn("Add: bitte", feedback_focus("unknown_error", ["bitte"], [], "en"))
+    def test_unknown_error_guides_without_revealing_missing_word(self):
+        hint = feedback_focus("unknown_error", ["bitte"], [], "en")
+        self.assertIn("missing", hint)
+        self.assertNotIn("bitte", hint)
 
 
 class WordOrderFeedbackTests(unittest.TestCase):
@@ -162,8 +164,10 @@ class WordOrderFeedbackTests(unittest.TestCase):
     def test_verb_final_error_prioritizes_sentence_structure(self):
         self.assertIn("Ende des Nebensatzes", feedback_focus("verb_not_final", ["geht"], [], "de"))
 
-    def test_missing_word_still_gets_specific_guidance(self):
-        self.assertIn("Add: bitte", feedback_focus("missing_word", ["bitte"], [], "en"))
+    def test_missing_word_gives_actionable_hint_without_answer(self):
+        hint = feedback_focus("missing_word", ["bitte"], [], "en")
+        self.assertIn("Check the lesson pattern", hint)
+        self.assertNotIn("bitte", hint)
 
 
 class AuthoredRetryTargetSafetyTests(unittest.TestCase):
