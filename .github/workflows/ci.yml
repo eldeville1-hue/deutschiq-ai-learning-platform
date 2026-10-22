@@ -102,7 +102,7 @@ jobs:
     # This avoids slow, unreliable Ubuntu apt mirror downloads on hosted runners.
     runs-on: ubuntu-24.04
     container:
-      image: mcr.microsoft.com/playwright:v1.58.2-noble
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
     timeout-minutes: 30
     defaults:
       run:
