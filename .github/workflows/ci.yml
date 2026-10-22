@@ -98,8 +98,11 @@ jobs:
       - run: npm run check:bundle
 
   e2e-mobile:
+    # The official Playwright image includes browser binaries and system libraries.
+    # This avoids slow, unreliable Ubuntu apt mirror downloads on hosted runners.
     runs-on: ubuntu-24.04
-    # Avoid hanging the full CI run on a cold browser dependency install.
+    container:
+      image: mcr.microsoft.com/playwright:v1.58.2-noble
     timeout-minutes: 30
     defaults:
       run:
@@ -112,12 +115,6 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/mini-app/package-lock.json
       - run: npm ci
-      - name: Install Playwright system libraries
-        run: sudo npx playwright install-deps chromium webkit
-        timeout-minutes: 12
-      - name: Install Playwright browsers
-        run: npx playwright install chromium webkit
-        timeout-minutes: 12
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v4
         if: always()
