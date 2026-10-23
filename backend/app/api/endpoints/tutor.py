@@ -158,7 +158,7 @@ Rules:
     active_session = db.query(TutorPracticeSession).filter(
         TutorPracticeSession.user_id == user.id,
         TutorPracticeSession.language == lang,
-        TutorPracticeSession.state == "awaiting_attempt",
+        TutorPracticeSession.state.in_(("awaiting_attempt", "feedback_given")),
     ).first()
     previous_exercise = active_session.exercise_text if active_session else last_assistant
     turn_state = classify_tutor_turn(previous_exercise, data.question)
