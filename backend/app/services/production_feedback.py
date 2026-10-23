@@ -245,6 +245,12 @@ def _ai_feedback(answer: str, exercise: dict, lesson_content: dict, lang: str) -
     raw_scores = result.get("dimension_scores") or {}
     if not all(name in raw_scores for name in DIMENSIONS):
         raise ValueError("AI assessment omitted rubric dimensions")
+    # An incomplete or malformed model rubric is not a verified assessment.
+    # Never silently coerce invalid values to zero (or clip 150 to 100).
+    for name in DIMENSIONS:
+        value = raw_scores[name]
+        if type(value) not in (int, float) or not 0 <= value <= 100:
+            raise ValueError(f"AI assessment has invalid {name} score")
     scores = {name: _clamp(raw_scores[name]) for name in DIMENSIONS}
     criteria = [str(item) for item in exercise.get("assessment_criteria", []) if str(item).strip()]
     if criteria:
