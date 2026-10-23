@@ -153,6 +153,32 @@ Rules:
             max_tokens=400
         )
         answer = response.choices[0].message.content
+        # A second copy of an earlier drill is not a useful next turn.
+        # Ask for one fresh task while preserving the learner's context.
+        if answer and any(
+            answer.strip().casefold() == previous.strip().casefold()
+            for previous in recent_tutor_answers[:6]
+        ):
+            retry_messages = messages + [
+                {"role": "assistant", "content": answer},
+                {"role": "user", "content": (
+                    "This repeats an earlier reply. Give a different example or "
+                    "exercise on the same topic, with one clear next action. "
+                    "Do not repeat the previous text."
+                )},
+            ]
+            retry = client.chat.completions.create(
+                model=settings.OPENAI_MODEL or "gpt-4o-mini",
+                messages=retry_messages,
+                temperature=0.7,
+                max_tokens=400,
+            )
+            alternative = retry.choices[0].message.content
+            if alternative and not any(
+                alternative.strip().casefold() == previous.strip().casefold()
+                for previous in recent_tutor_answers[:6]
+            ):
+                answer = alternative
         return save_exchange(db, user.id, data.question, answer, usage, daily_limit, "ai", lang)
         
     except RateLimitError as exc:
