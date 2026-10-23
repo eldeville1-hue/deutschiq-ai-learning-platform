@@ -47,7 +47,7 @@ class ReviewedWordOrderTests(unittest.TestCase):
             "Exercise: ich / helfe / dem Mann",
             "Dem Mann helfe ich.",
         )
-        self.assertFalse(result["correct"])
+        self.assertIsNone(result["correct"])
 
     def test_wrong_answer_does_not_claim_success(self):
         result = grade_reviewed_word_order(
@@ -55,6 +55,20 @@ class ReviewedWordOrderTests(unittest.TestCase):
             "Ich heute lerne Deutsch.",
         )
         self.assertFalse(result["correct"])
+        self.assertEqual(result["reason"], "verb_position")
+
+    def test_unreviewed_haben_variant_is_not_called_wrong(self):
+        result = grade_reviewed_word_order(
+            "Exercise: du / hast / heute Zeit", "Zeit hast du heute."
+        )
+        self.assertIsNone(result["correct"])
+
+    def test_confident_haben_v2_error(self):
+        result = grade_reviewed_word_order(
+            "Exercise: du / hast / heute Zeit", "Du heute hast Zeit."
+        )
+        self.assertFalse(result["correct"])
+        self.assertEqual(result["reason"], "verb_position")
 
     def test_unreviewed_or_ambiguous_tasks_not_graded(self):
         self.assertIsNone(grade_reviewed_word_order("Exercise: translate this poem.", "Hallo"))

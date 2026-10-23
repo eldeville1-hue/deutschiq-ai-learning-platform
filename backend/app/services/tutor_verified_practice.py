@@ -34,8 +34,21 @@ def grade_reviewed_word_order(exercise_text: str, learner_answer: str) -> Option
     topic, expected = matched[0]
     normalized = _normalize_sentence(learner_answer)
     accepted = (expected, *REVIEWED_ALTERNATIVES.get(topic, ()))
-    correct = any(normalized == _normalize_sentence(candidate) for candidate in accepted)
-    return {"topic": topic, "correct": correct, "expected": expected}
+    if any(normalized == _normalize_sentence(candidate) for candidate in accepted):
+        return {"topic": topic, "correct": True, "expected": expected}
+
+    # A valid topicalization can differ from every reviewed sample. In the
+    # simple V2 drills, flag only demonstrably misplaced finite verbs when
+    # the answer uses exactly the supplied words. Otherwise remain unsure.
+    finite_verbs = {"word_order": "lerne", "haben_conjugation": "hast"}
+    finite = finite_verbs.get(topic)
+    if finite:
+        tokens = normalized.split()
+        expected_tokens = _normalize_sentence(expected).split()
+        if sorted(tokens) == sorted(expected_tokens) and tokens.count(finite) == 1:
+            if tokens.index(finite) != 1:
+                return {"topic": topic, "correct": False, "expected": expected, "reason": "verb_position"}
+    return {"topic": topic, "correct": None, "expected": expected}
 
 # Topic-specific reminders are safe even when we cannot determine the precise
 # mistake. Never present them as a diagnosis of a particular learner answer.
@@ -87,3 +100,12 @@ def verified_retry_feedback(topic: str, language: str) -> str:
         "en": "Try again.",
     }[lang]
     return f"{intro} {TOPIC_HINTS[topic][lang]} {outro}"
+
+
+def unverified_answer_feedback(language: str) -> str:
+    """Do not mark unreviewed grammatical alternatives as incorrect."""
+    return {
+        "ru": "Этот вариант не входит в проверенные ответы. Я не могу надёжно определить, правильный ли он. Попробуй другую формулировку или запроси подсказку.",
+        "de": "Diese Variante ist nicht unter den geprüften Antworten. Ich kann sie nicht zuverlässig bewerten. Versuche eine andere Formulierung oder fordere einen Tipp an.",
+        "en": "This variant is not among the reviewed answers. I cannot reliably grade it. Try another wording or request a hint.",
+    }[language if language in ("ru", "de", "en") else "en"]
