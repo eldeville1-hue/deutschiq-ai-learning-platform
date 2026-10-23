@@ -10,16 +10,16 @@ class UnverifiedErrorEvidenceTests(unittest.TestCase):
         result = evaluate_structured_answer("Ich sehe dem Mann.", exercise)
         self.assertEqual("uncertain", result["evaluation_status"])
         self.assertFalse(result["correct"])
-        self.assertEqual([], result["errors"])
-        self.assertIsNone(result["error_type"])
-        self.assertIn("case", result["candidate_error_types"])
+        self.assertEqual([], result["confirmed_errors"])
+        self.assertIsNone(result["grammar_correct"])
+        self.assertIn("case", [item["type"] for item in result["errors"]])
 
     def test_objective_task_still_returns_verified_errors(self):
         exercise = {"type": "fill", "answer": "den", "target_feature": "case"}
         result = evaluate_structured_answer("dem", exercise)
         self.assertEqual("verified", result["evaluation_status"])
         self.assertFalse(result["correct"])
-        self.assertTrue(result["errors"])
+        self.assertTrue(result["confirmed_errors"])
 
 
 if __name__ == "__main__":
