@@ -38,10 +38,17 @@ def _detect_topic(question: str, topics: Sequence[str]) -> str:
     return next((topic for topic in topics if topic in TOPIC_LESSONS), "word_order")
 
 
-def fallback_answer(question: str, lang: str, level: str, topics: Sequence[str]) -> str:
+def fallback_answer(question: str, lang: str, level: str, topics: Sequence[str], recent_answers: Sequence[str] = ()) -> str:
     """Return a small, actionable lesson when the external AI is unavailable."""
     lowered = question.casefold()
     topic_key = _detect_topic(question, topics)
+    wants_practice = any(word in lowered for word in ('упраж', 'задани', 'übung', 'aufgabe', 'exercise', 'practice', 'quiz'))
+    if wants_practice and not any(word in lowered for word in ('genitiv', 'genitive', 'dativ', 'dative', 'artikel', 'article', 'артикл', 'wortstellung', 'word order', 'порядок слов', 'perfekt', 'haben')):
+        candidates = list(dict.fromkeys([topic for topic in topics if topic in TOPIC_LESSONS] + list(TOPIC_LESSONS)))
+        for candidate in candidates:
+            if not any(TOPIC_LESSONS[candidate][1] in previous for previous in recent_answers[-12:]):
+                topic_key = candidate
+                break
     example, words, rule_en, rule_de, rule_ru = TOPIC_LESSONS[topic_key]
     language = lang if lang in ("ru", "de", "en") else "en"
     names = TOPIC_NAMES.get(topic_key, {"ru": topic_key.replace("_", " "), "de": topic_key.replace("_", " "), "en": topic_key.replace("_", " ")})
