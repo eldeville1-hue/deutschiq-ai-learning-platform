@@ -86,7 +86,7 @@ def local_feedback(answer: str, exercise: dict, rule: str, lang: str = "en", cef
     cefr = str(cefr or "A1").upper()
     scores, blocking_error = _local_scores(answer, exercise, cefr)
     model = exercise.get("model_answer") or exercise.get("answer", "")
-    if cefr in {"A1", "A2", "B1"} and model and normalize_text(answer) == normalize_text(str(model)):
+    if model and normalize_text(answer) == normalize_text(str(model)):
         scores = {name: 100 for name in DIMENSIONS}
         blocking_error = None
     score = _overall(scores)
