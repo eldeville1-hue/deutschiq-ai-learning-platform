@@ -1,9 +1,17 @@
 import unittest
 
-from app.services.tutor_verified_practice import grade_reviewed_word_order
+from app.services.tutor_verified_practice import grade_reviewed_word_order, verified_retry_feedback
 
 
 class ReviewedWordOrderTests(unittest.TestCase):
+    def test_topic_hints_are_localized_and_do_not_diagnose_error(self):
+        for lang in ("ru", "de", "en"):
+            feedback = verified_retry_feedback("dative_case", lang)
+            self.assertTrue(feedback)
+            self.assertNotIn("word order", feedback.casefold())
+        self.assertIn("Dativ", verified_retry_feedback("dative_case", "de"))
+        self.assertIn("sein", verified_retry_feedback("perfekt_auxiliary", "en"))
+
     def test_exact_answer_is_verified(self):
         result = grade_reviewed_word_order(
             "Exercise: Put these words in order: “heute / ich / Deutsch / lerne”.",

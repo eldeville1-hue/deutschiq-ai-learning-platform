@@ -36,3 +36,54 @@ def grade_reviewed_word_order(exercise_text: str, learner_answer: str) -> Option
     accepted = (expected, *REVIEWED_ALTERNATIVES.get(topic, ()))
     correct = any(normalized == _normalize_sentence(candidate) for candidate in accepted)
     return {"topic": topic, "correct": correct, "expected": expected}
+
+# Topic-specific reminders are safe even when we cannot determine the precise
+# mistake. Never present them as a diagnosis of a particular learner answer.
+TOPIC_HINTS = {
+    "word_order": {
+        "ru": "Подсказка: в главном предложении спрягаемый глагол обычно стоит на второй позиции.",
+        "de": "Tipp: Im Hauptsatz steht das konjugierte Verb normalerweise an zweiter Position.",
+        "en": "Hint: In a main clause, the conjugated verb usually takes second position.",
+    },
+    "articles": {
+        "ru": "Подсказка: проверь артикль и род существительного.",
+        "de": "Tipp: Prüfe den Artikel und das Genus des Nomens.",
+        "en": "Hint: Check the article and the noun's grammatical gender.",
+    },
+    "dative_case": {
+        "ru": "Подсказка: helfen требует Dativ — проверь форму артикля.",
+        "de": "Tipp: Helfen verlangt den Dativ. Prüfe die Artikelform.",
+        "en": "Hint: Helfen takes the dative case. Check the article form.",
+    },
+    "genitive_prepositions": {
+        "ru": "Подсказка: после wegen в нормативном немецком часто используется Genitiv.",
+        "de": "Tipp: Nach wegen steht in der Standardsprache häufig der Genitiv.",
+        "en": "Hint: In standard German, wegen is often followed by the genitive.",
+    },
+    "perfekt_auxiliary": {
+        "ru": "Подсказка: многие глаголы движения образуют Perfekt с sein.",
+        "de": "Tipp: Viele Bewegungsverben bilden das Perfekt mit sein.",
+        "en": "Hint: Many movement verbs use sein in the Perfekt.",
+    },
+    "haben_conjugation": {
+        "ru": "Подсказка: с du глагол haben принимает форму hast.",
+        "de": "Tipp: Bei du lautet die Form von haben: hast.",
+        "en": "Hint: With du, haben becomes hast.",
+    },
+}
+
+
+def verified_retry_feedback(topic: str, language: str) -> str:
+    """Give a reviewed topic hint without claiming to locate the exact error."""
+    lang = language if language in ("ru", "de", "en") else "en"
+    intro = {
+        "ru": "Пока не совпадает с проверенными вариантами.",
+        "de": "Das entspricht noch keiner geprüften Lösung.",
+        "en": "This does not match a reviewed answer yet.",
+    }[lang]
+    outro = {
+        "ru": "Попробуй ещё раз.",
+        "de": "Versuche es noch einmal.",
+        "en": "Try again.",
+    }[lang]
+    return f"{intro} {TOPIC_HINTS[topic][lang]} {outro}"
