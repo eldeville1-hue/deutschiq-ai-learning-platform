@@ -67,11 +67,11 @@ class ReviewedWordOrderTests(unittest.TestCase):
         for prompt, answer in cases:
             self.assertTrue(grade_reviewed_word_order("Exercise: " + prompt, answer)["correct"])
 
-    def test_unreviewed_haben_variant_is_not_called_wrong(self):
+    def test_reviewed_haben_variant_is_accepted(self):
         result = grade_reviewed_word_order(
             "Exercise: du / hast / heute Zeit", "Zeit hast du heute."
         )
-        self.assertIsNone(result["correct"])
+        self.assertTrue(result["correct"])
 
     def test_confident_haben_v2_error(self):
         result = grade_reviewed_word_order(
