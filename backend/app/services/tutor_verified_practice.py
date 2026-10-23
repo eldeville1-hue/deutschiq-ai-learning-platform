@@ -9,10 +9,10 @@ from app.services.tutor_fallback import TOPIC_LESSONS
 
 # Explicitly reviewed alternatives only; never infer grammatical equivalence.
 REVIEWED_ALTERNATIVES = {
-    "word_order": ("Ich lerne heute Deutsch.",),
-    "genitive_prepositions": ("Wir bleiben wegen des Regens zu Hause.",),
-    "perfekt_auxiliary": ("Nach Berlin bin ich gefahren.",),
-    "haben_conjugation": ("Heute hast du Zeit.",),
+    "word_order": ("Ich lerne heute Deutsch.", "Deutsch lerne ich heute."),
+    "genitive_prepositions": ("Wir bleiben wegen des Regens zu Hause.", "Zu Hause bleiben wir wegen des Regens."),
+    "perfekt_auxiliary": ("Nach Berlin bin ich gefahren.", "Gefahren bin ich nach Berlin."),
+    "haben_conjugation": ("Heute hast du Zeit.", "Zeit hast du heute."),
 }
 
 
