@@ -256,6 +256,8 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
     accepted = _accepted_models(exercise)
     # Only explicitly authored alternatives are verified as equivalent.
     accepted_normalized = {normalize_text(item) for item in accepted}
+    # Duplicate punctuation/case variants are not separate linguistic
+    # alternatives; retain one normalized key for ambiguity decisions.
     exact = bool(normalize_text(answer)) and any(
         normalize_text(answer) == normalize_text(model) and not _semantic_punctuation_conflict(answer, model)
         for model in accepted
@@ -268,6 +270,17 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
         legacy["error_type"] = "answer_mismatch"
     open_ended = exercise.get("type") in {"translation", "translate", "free_text", "sentence", "writing", "dialogue"}
     empty_submission = not normalize_text(answer)
+    # An authored exact alternative must be scored against its own model.
+    # Otherwise a near-matching canonical answer can incorrectly lower the
+    # score or produce a spurious mismatch in the legacy diagnostics.
+    if exact:
+        legacy["correct"] = True
+        legacy["score"] = 100
+        legacy["similarity"] = 100
+        legacy["missing_words"] = []
+        legacy["extra_words"] = []
+        legacy["error_type"] = None
+        legacy["model"] = next(model for model in accepted if normalize_text(answer) == normalize_text(model) and not _semantic_punctuation_conflict(answer, model))
     # An empty response cannot satisfy a non-empty reference, even for open tasks.
     # This is a task-completion judgment, not a grammatical diagnosis.
     # An unlisted near-match in open writing may change meaning despite high similarity.
