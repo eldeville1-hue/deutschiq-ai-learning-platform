@@ -6,6 +6,7 @@ import re
 from typing import Optional
 
 from app.services.tutor_fallback import TOPIC_LESSONS
+from app.services.tutor_exercise_bank import DRILLS
 
 # Explicitly reviewed alternatives only; never infer grammatical equivalence.
 REVIEWED_ALTERNATIVES = {
@@ -29,11 +30,19 @@ def grade_reviewed_word_order(exercise_text: str, learner_answer: str) -> Option
         for topic, (expected, words, *_rules) in TOPIC_LESSONS.items()
         if words.casefold() in exercise_text.casefold()
     ]
-    if len(matched) != 1:
+    bank_matches = [
+        (topic, expected, alternatives)
+        for _id, _level, topic, expected, words, alternatives in DRILLS
+        if words.casefold() in exercise_text.casefold()
+    ]
+    if len(matched) + len(bank_matches) != 1:
         return None
+    alternatives = bank_matches[0][2] if bank_matches else ()
+    if bank_matches:
+        matched = [(bank_matches[0][0], bank_matches[0][1])]
     topic, expected = matched[0]
     normalized = _normalize_sentence(learner_answer)
-    accepted = (expected, *REVIEWED_ALTERNATIVES.get(topic, ()))
+    accepted = (expected, *alternatives, *REVIEWED_ALTERNATIVES.get(topic, ()))
     if any(normalized == _normalize_sentence(candidate) for candidate in accepted):
         return {"topic": topic, "correct": True, "expected": expected}
 
