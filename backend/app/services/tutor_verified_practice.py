@@ -7,6 +7,14 @@ from typing import Optional
 
 from app.services.tutor_fallback import TOPIC_LESSONS
 
+# Explicitly reviewed alternatives only; never infer grammatical equivalence.
+REVIEWED_ALTERNATIVES = {
+    "word_order": ("Ich lerne heute Deutsch.",),
+    "genitive_prepositions": ("Wir bleiben wegen des Regens zu Hause.",),
+    "perfekt_auxiliary": ("Nach Berlin bin ich gefahren.",),
+    "haben_conjugation": ("Heute hast du Zeit.",),
+}
+
 
 def _normalize_sentence(text: str) -> str:
     return re.sub(r"[.!?]+$", "", " ".join(text.strip().split())).casefold()
@@ -25,5 +33,6 @@ def grade_reviewed_word_order(exercise_text: str, learner_answer: str) -> Option
         return None
     topic, expected = matched[0]
     normalized = _normalize_sentence(learner_answer)
-    correct = normalized == _normalize_sentence(expected)
+    accepted = (expected, *REVIEWED_ALTERNATIVES.get(topic, ()))
+    correct = any(normalized == _normalize_sentence(candidate) for candidate in accepted)
     return {"topic": topic, "correct": correct, "expected": expected}
