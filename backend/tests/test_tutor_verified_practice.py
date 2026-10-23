@@ -20,6 +20,27 @@ class ReviewedWordOrderTests(unittest.TestCase):
         )
         self.assertTrue(result["correct"])
 
+    def test_reviewed_alternative_word_order_is_accepted(self):
+        result = grade_reviewed_word_order(
+            "Exercise: heute / ich / Deutsch / lerne",
+            "Ich lerne heute Deutsch.",
+        )
+        self.assertTrue(result["correct"])
+
+    def test_reviewed_genitive_alternative_is_accepted(self):
+        result = grade_reviewed_word_order(
+            "Übung: wegen / des Regens / bleiben wir zu Hause",
+            "Wir bleiben wegen des Regens zu Hause.",
+        )
+        self.assertTrue(result["correct"])
+
+    def test_unreviewed_reordering_is_not_assumed_correct(self):
+        result = grade_reviewed_word_order(
+            "Exercise: ich / helfe / dem Mann",
+            "Dem Mann helfe ich.",
+        )
+        self.assertFalse(result["correct"])
+
     def test_wrong_answer_does_not_claim_success(self):
         result = grade_reviewed_word_order(
             "Exercise: Put these words in order: “heute / ich / Deutsch / lerne”.",
