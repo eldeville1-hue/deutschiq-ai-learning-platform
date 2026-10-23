@@ -7,6 +7,7 @@ from typing import Optional
 
 from app.services.tutor_fallback import TOPIC_LESSONS
 from app.services.tutor_exercise_bank import DRILLS
+from app.services.tutor_clause_bank import CLAUSE_DRILLS
 
 # Explicitly reviewed alternatives only; never infer grammatical equivalence.
 REVIEWED_ALTERNATIVES = {
@@ -35,11 +36,17 @@ def grade_reviewed_word_order(exercise_text: str, learner_answer: str) -> Option
         for _id, _level, topic, expected, words, alternatives in DRILLS
         if words.casefold() in exercise_text.casefold()
     ]
-    if len(matched) + len(bank_matches) != 1:
+    clause_matches = [
+        (topic, expected, alternatives)
+        for _id, _level, topic, expected, words, alternatives in CLAUSE_DRILLS
+        if words.casefold() in exercise_text.casefold()
+    ]
+    if len(matched) + len(bank_matches) + len(clause_matches) != 1:
         return None
-    alternatives = bank_matches[0][2] if bank_matches else ()
-    if bank_matches:
-        matched = [(bank_matches[0][0], bank_matches[0][1])]
+    alternatives = (bank_matches or clause_matches)[0][2] if bank_matches or clause_matches else ()
+    if bank_matches or clause_matches:
+        selected = (bank_matches or clause_matches)[0]
+        matched = [(selected[0], selected[1])]
     topic, expected = matched[0]
     normalized = _normalize_sentence(learner_answer)
     accepted = (expected, *alternatives, *REVIEWED_ALTERNATIVES.get(topic, ()))
@@ -108,7 +115,7 @@ def verified_retry_feedback(topic: str, language: str) -> str:
         "de": "Versuche es noch einmal.",
         "en": "Try again.",
     }[lang]
-    return f"{intro} {TOPIC_HINTS[topic][lang]} {outro}"
+    return f"{intro} {TOPIC_HINTS.get(topic, TOPIC_HINTS['word_order'])[lang]} {outro}"
 
 
 def unverified_answer_feedback(language: str) -> str:
