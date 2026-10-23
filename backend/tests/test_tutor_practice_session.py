@@ -54,6 +54,25 @@ class PracticeSessionTests(unittest.TestCase):
         self.assertEqual(session.state, "feedback_given")
         self.assertEqual(session.attempts, 2)
 
+    def test_hint_and_retry_keep_task_and_attempts_even_with_exercise_marker(self):
+        for command in ("Hint", "Retry", "Подсказка", "Nochmal"):
+            with self.subTest(command=command):
+                db = MagicMock()
+                original = "Exercise: Put these words in order."
+                session = TutorPracticeSession(
+                    user_id=7, language="en", exercise_text=original,
+                    state="feedback_given", attempts=2,
+                )
+                db.query.return_value.filter.return_value.first.return_value = session
+                update_practice_session(
+                    db, 7, "en", command,
+                    "Exercise: Look at the verb placement in the original task.",
+                )
+                self.assertEqual(session.exercise_text, original)
+                self.assertEqual(session.state, "feedback_given")
+                self.assertEqual(session.attempts, 2)
+                db.add.assert_not_called()
+
     def test_new_exercise_resets_attempt_count(self):
         db = MagicMock()
         session = TutorPracticeSession(user_id=7, language="en", exercise_text="Exercise: old task.", state="feedback_given", attempts=2)
