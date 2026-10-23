@@ -3,3 +3,5 @@ from .diagnostic import DiagnosticMistake
 from .learning import ExerciseAttempt, TopicMastery, LearningSession, SpeechUsage, SpeechAttempt
 from .event import ProductEvent
 from .beta import BetaAcceptanceCheck, BetaInvite, BetaEnrollment
+
+from .tutor_practice import TutorPracticeSession
