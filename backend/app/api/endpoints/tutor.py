@@ -11,6 +11,7 @@ import logging
 from app.core.config import settings
 from app.core.telegram_auth import telegram_user_id, assert_owner
 from app.models.tutor import TutorMessage, TutorUsage
+from app.models.tutor_practice import TutorPracticeSession
 from app.models.event import ProductEvent
 from app.models.learning import ExerciseAttempt, TopicMastery
 from app.models.lesson import Lesson
@@ -154,8 +155,26 @@ Rules:
     # Persisted dialogue, not a client-supplied transcript, determines whether
     # the learner is answering the last exercise or requesting a new one.
     last_assistant = next((item.content for item in stored_history if item.role == "assistant"), "")
-    turn_state = classify_tutor_turn(last_assistant, data.question)
+    active_session = db.query(TutorPracticeSession).filter(
+        TutorPracticeSession.user_id == user.id,
+        TutorPracticeSession.language == lang,
+        TutorPracticeSession.state == "awaiting_attempt",
+    ).first()
+    previous_exercise = active_session.exercise_text if active_session else last_assistant
+    turn_state = classify_tutor_turn(previous_exercise, data.question)
     turn_instruction = practice_turn_instruction(turn_state)
+    if active_session and turn_state == "attempt":
+        messages.append({
+            "role": "system",
+            "content": (
+                "Active saved practice exercise (not a verified graded item): "
+                + active_session.exercise_text[:1200]
+                + "\\nPrevious learner attempts recorded: "
+                + str(active_session.attempts)
+                + ". Give feedback on the learner's current attempt to THIS exercise; "
+                "do not silently switch tasks. Do not claim validated mastery."
+            ),
+        })
     if turn_instruction:
         messages.append({"role": "system", "content": turn_instruction})
     messages.append({"role": "user", "content": data.question})
