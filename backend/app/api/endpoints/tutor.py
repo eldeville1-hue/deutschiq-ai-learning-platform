@@ -148,6 +148,23 @@ Rules:
         stored_history_query = stored_history_query.filter(TutorMessage.created_at >= diagnostic.created_at)
     stored_history = stored_history_query.order_by(TutorMessage.created_at.desc()).limit(12).all()
     messages.extend({"role": item.role, "content": item.content} for item in reversed(stored_history))
+    # Persisted dialogue, not a client-supplied transcript, determines whether
+    # the learner is answering the last exercise or requesting a new one.
+    last_assistant = next((item.content for item in stored_history if item.role == "assistant"), "")
+    last_user = next((item.content for item in stored_history if item.role == "user"), "")
+    if last_assistant and last_user and any(
+        marker in last_assistant.casefold()
+        for marker in ("übung", "aufgabe", "exercise", "practice", "упражнен", "задани", "ordne", "put these words", "собери предложение")
+    ):
+        messages.append({
+            "role": "system",
+            "content": (
+                "Practice-turn reminder: the latest assistant turn may contain an exercise. "
+                "Compare the learner's current message to that exercise before proposing a new one. "
+                "If it is a plausible attempt, give feedback first; if it is a new request, honor the request. "
+                "Do not automatically mark the answer correct or change course mastery."
+            ),
+        })
     messages.append({"role": "user", "content": data.question})
     
     # 6. Запрос к OpenAI
