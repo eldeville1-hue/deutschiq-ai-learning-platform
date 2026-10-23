@@ -52,7 +52,15 @@ def fallback_answer(question: str, lang: str, level: str, topics: Sequence[str],
                 topic_key = candidate
                 break
     example, words, rule_en, rule_de, rule_ru = TOPIC_LESSONS[topic_key]
-    if wants_practice and level.upper()[:2] in ("B1", "B2"):
+    explicit_clause = any(term in lowered for term in (
+        "weil", "obwohl", "damit", "konjunktiv", "subordinate", "nebensatz", "придаточ"
+    ))
+    explicit_existing_topic = any(term in lowered for term in (
+        "genitiv", "genitive", "dativ", "dative", "artikel", "article",
+        "wortstellung", "word order", "порядок слов", "perfekt", "haben"
+    ))
+    use_clause = explicit_clause or (bool(recent_answers) and not explicit_existing_topic)
+    if wants_practice and use_clause and level.upper()[:2] in ("B1", "B2"):
         recent_text = " ".join(recent_answers[-24:])
         clause_candidates = [row for row in CLAUSE_DRILLS if row[1] == level.upper()[:2]]
         selected_clause = next(
