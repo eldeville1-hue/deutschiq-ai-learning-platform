@@ -320,7 +320,8 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
         # These are hypotheses, not verified learner mistakes. Keep their
         # categories for review, but never present model-relative corrections
         # as confirmed errors in an unverified open response.
-        errors = [item for item in candidates if item.type in {"article", "negation", "auxiliary", "preposition", "conjugation", "infinitive"}]\n        candidate_error_types = [item.type for item in errors]
+        errors = [item for item in candidates if item.type in {"article", "negation", "auxiliary", "preposition", "conjugation", "infinitive"}]
+        candidate_error_types = [item.type for item in errors]
     else:
         candidate_error_types = []
     result = EvaluationResult(
