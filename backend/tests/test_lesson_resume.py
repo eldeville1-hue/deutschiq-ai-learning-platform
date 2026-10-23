@@ -292,6 +292,33 @@ class LessonResumeTests(unittest.TestCase):
         self.assertEqual(0, self.start(first['session_id'])['next_exercise_index'])
         self.assertEqual(1, self.db.query(ExerciseAttempt).count())
 
+    def test_uncertain_translation_does_not_mutate_progress_and_can_retry(self):
+        first = self.start()
+        lesson = self.db.get(Lesson, 77)
+        lesson.content = {"exercises": [{
+            "type": "translation",
+            "question": "Translate: I buy a coffee.",
+            "answer": "Ich kaufe einen Kaffee.",
+        }]}
+        user = self.db.get(User, 1)
+        initial_xp = user.xp
+        self.db.commit()
+        request = CheckAnswerRequest(
+            user_id=9001, lesson_id=77, exercise_index=0,
+            answer="Ich besorge einen Kaffee.", session_id=first["session_id"],
+        )
+        for _ in range(2):
+            response = asyncio.run(check_answer(request, self.db, authenticated_id=9001))
+            self.assertEqual("uncertain", response["evaluation_status"])
+            self.assertFalse(response["correct"])
+            self.assertEqual([], response["errors"])
+            self.assertEqual("clarify", response["next_action"])
+            self.assertEqual(0, self.db.query(ExerciseAttempt).count())
+            self.assertEqual(0, self.db.query(TopicMastery).count())
+            self.db.refresh(user)
+            self.assertEqual(initial_xp, user.xp)
+            self.assertEqual(0, self.start(first["session_id"])["next_exercise_index"])
+
     def test_duplicate_correct_answer_preserves_attempt_count(self):
         first = self.start()
         self.db.add(ExerciseAttempt(user_id=1, lesson_id=77,
