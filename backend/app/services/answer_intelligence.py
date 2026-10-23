@@ -317,7 +317,12 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
         # the closest of several valid phrasings is not grammatical evidence.
         candidates = (_classify_aligned_errors(answer, legacy["model"], exercise.get("target_feature", ""), exercise.get("type", ""))
                       if len(accepted_normalized) == 1 else [])
-        errors = [item for item in candidates if item.type in {"article", "negation", "auxiliary", "preposition", "conjugation", "infinitive"}]
+        # These are hypotheses, not verified learner mistakes. Keep their
+        # categories for review, but never present model-relative corrections
+        # as confirmed errors in an unverified open response.
+        candidate_error_types = [item.type for item in candidates if item.type in {"article", "negation", "auxiliary", "preposition", "conjugation", "infinitive"}]
+    else:
+        candidate_error_types = []
     result = EvaluationResult(
         grammar_correct=True if exact else None,
         meaning_correct=True if exact else None,
@@ -334,7 +339,7 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
         "legacy_error_type": legacy["error_type"],
         "review_reason": ("open_answer_not_proven_equivalent_or_incorrect" if status == "uncertain" else
                           "missing_reference_answer" if status == "needs_review" else None),
-        "candidate_error_types": ([item.type for item in errors] if status == "uncertain" else []),
+        "candidate_error_types": (candidate_error_types if status == "uncertain" else []),
         "learner_feedback": (
             "Your answer needs further review. The model is one possible response; do not treat differences as confirmed errors."
             if status == "uncertain" else
