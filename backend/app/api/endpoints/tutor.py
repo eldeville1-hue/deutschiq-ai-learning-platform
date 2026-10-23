@@ -19,6 +19,7 @@ from app.services.plan import generate_plan
 from app.services.tutor_context import build_tutor_learning_context, tutor_context_prompt
 from app.services.tutor_fallback import fallback_answer
 from app.services.tutor_turn_state import classify_tutor_turn, practice_turn_instruction
+from app.services.tutor_practice_session import update_practice_session
 from datetime import date, datetime, timezone
 from app.services.subscription import has_active_pro
 from app.services.content_i18n import normalize_language
@@ -31,6 +32,7 @@ _provider_quota_exhausted = False
 def save_exchange(db: Session, user_id: int, question: str, answer: str, usage: "TutorUsage", daily_limit: int, mode: str, language: str):
     db.add(TutorMessage(user_id=user_id, role="user", content=question, language=language))
     db.add(TutorMessage(user_id=user_id, role="assistant", content=answer, language=language))
+    update_practice_session(db, user_id, language, question, answer)
     usage.questions_used += 1
     db.add(ProductEvent(user_id=user_id, event_name="tutor_answered", properties={"mode": mode, "language": language}))
     db.commit()
