@@ -215,22 +215,22 @@ def repair_plan(error_type: str | None, missing_words: list[str], extra_words: l
             "rule": "Назови правило урока одним коротким предложением.",
             "build": "Собери фразу заново: сначала основа, затем детали.",
             "check": "Прочитай ответ вслух и проверь порядок слов.",
-            "missing": "Добавь пропущенные элементы: {words}.",
-            "extra": "Проверь лишние элементы: {words}.",
+            "missing": "Проверь, какие обязательные элементы конструкции отсутствуют.",
+            "extra": "Проверь, какие слова не нужны для этой конструкции.",
         },
         "de": {
             "rule": "Nenne die Regel der Lektion in einem kurzen Satz.",
             "build": "Baue den Satz neu: zuerst das Grundgerüst, dann die Details.",
             "check": "Lies die Antwort laut und prüfe die Wortstellung.",
-            "missing": "Ergänze die fehlenden Elemente: {words}.",
-            "extra": "Prüfe die zusätzlichen Elemente: {words}.",
+            "missing": "Prüfe, welche notwendigen Satzteile fehlen.",
+            "extra": "Prüfe, welche Wörter für diese Konstruktion unnötig sind.",
         },
         "en": {
             "rule": "State the lesson rule in one short sentence.",
             "build": "Rebuild the sentence: core structure first, then details.",
             "check": "Read the answer aloud and check the word order.",
-            "missing": "Add the missing elements: {words}.",
-            "extra": "Check the extra elements: {words}.",
+            "missing": "Check which required parts of the sentence are missing.",
+            "extra": "Check which words this structure does not need.",
         },
     }[language]
     # Repair steps must address the detected grammar error rather than always
@@ -308,9 +308,9 @@ def repair_plan(error_type: str | None, missing_words: list[str], extra_words: l
         return [first, practice]
     steps = [copy["rule"]]
     if missing_words:
-        steps.append(copy["missing"].format(words=", ".join(missing_words[:4])))
+        steps.append(copy["missing"])
     elif extra_words:
-        steps.append(copy["extra"].format(words=", ".join(extra_words[:4])))
+        steps.append(copy["extra"])
     else:
         steps.append(copy["build"])
     steps.append(copy["check"])
