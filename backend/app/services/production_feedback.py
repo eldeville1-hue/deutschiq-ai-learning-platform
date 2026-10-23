@@ -278,6 +278,16 @@ def _ai_feedback(answer: str, exercise: dict, lesson_content: dict, lang: str) -
     missing_parts = _formal_message_missing_parts(answer, exercise)
     if missing_parts or missing_criteria:
         passed = False
+    # Do not present a generic fallback as if it were specific, verified
+    # teaching feedback. Require an actual diagnosis and actionable next step
+    # before accepting an AI assessment of an incorrect free response.
+    if not passed and (
+        not isinstance(result.get("feedback"), str)
+        or not result["feedback"].strip()
+        or not isinstance(result.get("improvement"), str)
+        or not result["improvement"].strip()
+    ):
+        raise ValueError("AI assessment omitted actionable learner feedback")
     corrected = str(result.get("corrected_answer") or exercise.get("answer", ""))
     return {
         "correct": passed, "score": score, "dimension_scores": scores,
