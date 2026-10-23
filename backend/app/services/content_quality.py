@@ -115,12 +115,42 @@ def normalize_lesson_content(content: dict, topic: str, level: str) -> dict:
     return value
 
 
+def accepted_answer_issues(exercise: dict) -> list[str]:
+    """Audit authored alternatives without pretending to judge German grammar.
+
+    Whitespace and terminal punctuation do not create distinct answers, but
+    changing word order, case, or inflection remains meaningful.
+    """
+    if "accepted_answers" not in exercise:
+        return []
+    answers = exercise["accepted_answers"]
+    if not isinstance(answers, list) or not answers:
+        return ["invalid_accepted_answers"]
+    if any(not isinstance(answer, str) or not answer.strip() for answer in answers):
+        return ["invalid_accepted_answers"]
+    import re
+
+    def key(value: str) -> str:
+        return re.sub(r"[.!?]+$", "", " ".join(value.split())).casefold()
+
+    keys = [key(answer) for answer in answers]
+    issues = []
+    if len(keys) != len(set(keys)):
+        issues.append("duplicate_accepted_answers")
+    model = exercise.get("answer")
+    if isinstance(model, str) and model.strip() and key(model) not in keys:
+        issues.append("model_answer_not_accepted")
+    return issues
+
+
 def validate_lesson_content(content: dict) -> list[str]:
     errors = []
     for field in ("objective", "rule", "examples", "audio_text", "common_mistakes", "exercises"):
         if not content.get(field):
             errors.append(f"missing:{field}")
     for index, exercise in enumerate(content.get("exercises") or []):
+        for issue in accepted_answer_issues(exercise):
+            errors.append(f"exercise:{index}:{issue}")
         kind = exercise.get("type")
         if kind not in ALLOWED_EXERCISE_TYPES:
             errors.append(f"exercise:{index}:invalid_type")
