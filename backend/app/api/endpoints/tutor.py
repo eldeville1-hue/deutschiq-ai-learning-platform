@@ -22,6 +22,7 @@ from app.services.tutor_fallback import fallback_answer
 from app.services.tutor_turn_state import classify_tutor_turn, practice_turn_instruction
 from app.services.tutor_practice_session import update_practice_session
 from app.services.tutor_verified_practice import grade_reviewed_word_order, verified_retry_feedback
+from app.services.tutor_verified_review import prioritize_verified_topics
 from datetime import date, datetime, timezone
 from app.services.subscription import has_active_pro
 from app.services.content_i18n import normalize_language
@@ -119,8 +120,14 @@ async def ask_tutor(data: TutorRequest, db: Session = Depends(get_db), authentic
         weak_points=diagnostic.weak_points if diagnostic and diagnostic.weak_points else {},
         now=datetime.now(timezone.utc),
     )
+    verified_events = db.query(ProductEvent).filter(
+        ProductEvent.user_id == user.id,
+        ProductEvent.event_name == "tutor_verified_attempt",
+    ).order_by(ProductEvent.created_at.desc()).limit(100).all()
+    verified_review_topics = prioritize_verified_topics(verified_events)
     fallback_topics = (
-        [item["topic"] for item in learner_context["recurring_errors"]]
+        verified_review_topics
+        + [item["topic"] for item in learner_context["recurring_errors"]]
         + learner_context["due_reviews"]
         + weak_points
         + [item["topic"] for item in learner_context["weak_skills"]]
