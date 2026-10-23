@@ -20,6 +20,10 @@ def update_practice_session(db, user_id: int, language: str, learner_message: st
         # cannot reliably certify a correct answer or completed exercise.
         session.state = "feedback_given"
         return
+    # Hints and repeats are guidance, never a new exercise or graded attempt.
+    # The tutor may repeat the word "exercise" in either response.
+    if session and turn in ("hint", "retry"):
+        return
     if is_new_exercise:
         if session is None:
             session = TutorPracticeSession(
