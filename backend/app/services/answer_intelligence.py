@@ -340,7 +340,8 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
         "legacy_error_type": legacy["error_type"],
         "review_reason": ("open_answer_not_proven_equivalent_or_incorrect" if status == "uncertain" else
                           "missing_reference_answer" if status == "needs_review" else None),
-        "candidate_error_types": (candidate_error_types if status == "uncertain" else []),\n        "confirmed_errors": (result.to_dict()["errors"] if status == "verified" else []),
+        "candidate_error_types": (candidate_error_types if status == "uncertain" else []),
+        "confirmed_errors": (result.to_dict()["errors"] if status == "verified" else []),
         "learner_feedback": (
             "Your answer needs further review. The model is one possible response; do not treat differences as confirmed errors."
             if status == "uncertain" else
