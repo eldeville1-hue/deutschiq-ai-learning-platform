@@ -1,5 +1,6 @@
 from typing import Sequence
 from app.services.tutor_exercise_bank import DRILLS
+from app.services.tutor_clause_bank import CLAUSE_DRILLS
 
 
 TOPIC_NAMES = {
@@ -51,18 +52,29 @@ def fallback_answer(question: str, lang: str, level: str, topics: Sequence[str],
                 topic_key = candidate
                 break
     example, words, rule_en, rule_de, rule_ru = TOPIC_LESSONS[topic_key]
+    if wants_practice and level.upper()[:2] in ("B1", "B2"):
+        recent_text = " ".join(recent_answers[-24:])
+        clause_candidates = [row for row in CLAUSE_DRILLS if row[1] == level.upper()[:2]]
+        selected_clause = next(
+            (row for row in clause_candidates if row[4] not in recent_text),
+            clause_candidates[0],
+        )
+        if selected_clause[4] not in recent_text:
+            words = selected_clause[4]
+            topic_key = selected_clause[2]
+            example = selected_clause[3]
     if wants_practice:
         level_key = level.upper()[:2]
         eligible = [row for row in DRILLS if row[1] == level_key and row[2] == topic_key]
         if not eligible:
             eligible = [row for row in DRILLS if row[1] == level_key]
-        if eligible:
+        if eligible and topic_key not in ('weil_clause', 'obwohl_clause', 'damit_clause', 'konjunktiv_ii'):
             recent_text = " ".join(recent_answers[-24:])
             chosen = next((row for row in eligible if row[4] not in recent_text), eligible[0])
             example, words = chosen[3], chosen[4]
     language = lang if lang in ("ru", "de", "en") else "en"
     names = TOPIC_NAMES.get(topic_key, {"ru": topic_key.replace("_", " "), "de": topic_key.replace("_", " "), "en": topic_key.replace("_", " ")})
-    topic = names[language]
+    topic = names[language] if topic_key in TOPIC_NAMES else {"ru": "придаточные предложения / Konjunktiv II", "de": "Nebensätze / Konjunktiv II", "en": "subordinate clauses / Konjunktiv II"}[language]
     wants_exercise = any(word in lowered for word in ("упраж", "задани", "übung", "aufgabe", "exercise", "practice", "quiz"))
     wants_error = any(word in lowered for word in ("ошиб", "fehler", "korrig", "error", "mistake", "correct"))
 
