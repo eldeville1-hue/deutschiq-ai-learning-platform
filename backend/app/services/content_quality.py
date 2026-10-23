@@ -336,3 +336,30 @@ def exercise_answer_audit(content: dict) -> list[str]:
             ):
                 issues.append(f"exercise:{index}:no_incorrect_distractor")
     return issues
+
+
+def exercise_instruction_audit(content: dict) -> list[str]:
+    """Non-blocking editorial audit of exercise instructions and explanations.
+
+    These checks flag missing learner guidance; they do not attempt to judge
+    linguistic correctness or automatically rewrite authored content.
+    """
+    issues: list[str] = []
+    for index, item in enumerate(content.get("exercises") or []):
+        if not isinstance(item, dict):
+            issues.append(f"exercise:{index}:not_object")
+            continue
+        for field in ("question", "explanation"):
+            value = item.get(field)
+            if not isinstance(value, str) or not value.strip():
+                issues.append(f"exercise:{index}:missing_{field}")
+        if item.get("type") in {"listening", "listening_choice"}:
+            # Without source audio/text, a listening task cannot be completed.
+            if not any(
+                isinstance(item.get(field), str) and item[field].strip()
+                for field in ("audio_text", "transcript", "audio_url")
+            ) and not (
+                isinstance(content.get("audio_text"), str) and content["audio_text"].strip()
+            ):
+                issues.append(f"exercise:{index}:missing_listening_source")
+    return issues
