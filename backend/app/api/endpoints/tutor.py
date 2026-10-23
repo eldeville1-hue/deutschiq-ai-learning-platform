@@ -37,7 +37,12 @@ def save_exchange(db: Session, user_id: int, question: str, answer: str, usage: 
     usage.questions_used += 1
     db.add(ProductEvent(user_id=user_id, event_name="tutor_answered", properties={"mode": mode, "language": language}))
     db.commit()
-    return {"answer": answer, "remaining": max(0, daily_limit - usage.questions_used), "mode": mode}
+    active_practice = db.query(TutorPracticeSession).filter(
+        TutorPracticeSession.user_id == user_id,
+        TutorPracticeSession.language == language,
+        TutorPracticeSession.state.in_(("awaiting_attempt", "feedback_given")),
+    ).first() is not None
+    return {"answer": answer, "remaining": max(0, daily_limit - usage.questions_used), "mode": mode, "active_practice": active_practice}
 
 # Инициализация OpenAI
 client = None
@@ -244,4 +249,9 @@ async def tutor_state(user_id: int, lang: str = "en", db: Session = Depends(get_
     if diagnostic:
         history_query = history_query.filter(TutorMessage.created_at >= diagnostic.created_at)
     history = history_query.order_by(TutorMessage.created_at.desc()).limit(30).all()
-    return {"remaining": max(0, limit - (usage.questions_used if usage else 0)), "limit": limit, "is_pro": pro, "beta_free": settings.BETA_FREE_ACCESS, "messages": [{"role": item.role, "content": item.content} for item in reversed(history)]}
+    active_practice = db.query(TutorPracticeSession).filter(
+        TutorPracticeSession.user_id == user.id,
+        TutorPracticeSession.language == language,
+        TutorPracticeSession.state.in_(("awaiting_attempt", "feedback_given")),
+    ).first() is not None
+    return {"active_practice": active_practice, "remaining": max(0, limit - (usage.questions_used if usage else 0)), "limit": limit, "is_pro": pro, "beta_free": settings.BETA_FREE_ACCESS, "messages": [{"role": item.role, "content": item.content} for item in reversed(history)]}
