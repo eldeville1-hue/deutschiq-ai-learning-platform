@@ -1,0 +1,28 @@
+"""Additional reviewed word-order drills; explicit answers only."""
+# (id, CEFR level, topic, expected, scrambled words, reviewed alternatives)
+DRILLS = (
+    ("a1-01", "A1", "word_order", "Morgen lerne ich Deutsch.", "morgen / ich / Deutsch / lerne", ("Ich lerne morgen Deutsch.",)),
+    ("a1-02", "A1", "haben_conjugation", "Heute habe ich Zeit.", "heute / habe / ich / Zeit", ("Ich habe heute Zeit.",)),
+    ("a1-03", "A1", "articles", "Die Katze schläft.", "die / Katze / schläft", ()),
+    ("a1-04", "A1", "word_order", "Am Montag arbeite ich.", "am Montag / ich / arbeite", ("Ich arbeite am Montag.",)),
+    ("a1-05", "A1", "articles", "Das Kind spielt.", "das / Kind / spielt", ()),
+    ("a1-06", "A1", "haben_conjugation", "Du hast einen Hund.", "du / hast / einen Hund", ()),
+    ("a2-01", "A2", "perfekt_auxiliary", "Gestern bin ich nach Hause gegangen.", "gestern / bin / ich / nach Hause / gegangen", ("Ich bin gestern nach Hause gegangen.",)),
+    ("a2-02", "A2", "dative_case", "Ich helfe meiner Mutter.", "ich / helfe / meiner Mutter", ("Meiner Mutter helfe ich.",)),
+    ("a2-03", "A2", "word_order", "Nach der Schule gehe ich einkaufen.", "nach der Schule / gehe / ich / einkaufen", ("Ich gehe nach der Schule einkaufen.",)),
+    ("a2-04", "A2", "perfekt_auxiliary", "Wir sind nach Hamburg gefahren.", "wir / sind / nach Hamburg / gefahren", ("Nach Hamburg sind wir gefahren.",)),
+    ("a2-05", "A2", "dative_case", "Dem Kind gebe ich das Buch.", "dem Kind / gebe / ich / das Buch", ("Ich gebe dem Kind das Buch.",)),
+    ("a2-06", "A2", "word_order", "Heute muss ich früh aufstehen.", "heute / muss / ich / früh / aufstehen", ("Ich muss heute früh aufstehen.",)),
+    ("b1-01", "B1", "word_order", "Trotzdem gehe ich zur Arbeit.", "trotzdem / gehe / ich / zur Arbeit", ("Ich gehe trotzdem zur Arbeit.",)),
+    ("b1-02", "B1", "genitive_prepositions", "Wegen des Wetters bleiben wir drinnen.", "wegen des Wetters / bleiben / wir / drinnen", ("Wir bleiben wegen des Wetters drinnen.",)),
+    ("b1-03", "B1", "perfekt_auxiliary", "Letzte Woche bin ich umgezogen.", "letzte Woche / bin / ich / umgezogen", ("Ich bin letzte Woche umgezogen.",)),
+    ("b1-04", "B1", "dative_case", "Ich vertraue meiner Freundin.", "ich / vertraue / meiner Freundin", ("Meiner Freundin vertraue ich.",)),
+    ("b1-05", "B1", "word_order", "Deshalb lernt sie jeden Tag.", "deshalb / lernt / sie / jeden Tag", ("Sie lernt deshalb jeden Tag.",)),
+    ("b1-06", "B1", "genitive_prepositions", "Während des Unterrichts bleiben die Handys aus.", "während des Unterrichts / bleiben / die Handys / aus", ("Die Handys bleiben während des Unterrichts aus.",)),
+    ("b2-01", "B2", "genitive_prepositions", "Angesichts der Lage müssen wir handeln.", "angesichts der Lage / müssen / wir / handeln", ("Wir müssen angesichts der Lage handeln.",)),
+    ("b2-02", "B2", "word_order", "Dennoch hat sie die Prüfung bestanden.", "dennoch / hat / sie / die Prüfung / bestanden", ("Sie hat dennoch die Prüfung bestanden.",)),
+    ("b2-03", "B2", "genitive_prepositions", "Trotz der Schwierigkeiten setzen wir das Projekt fort.", "trotz der Schwierigkeiten / setzen / wir / das Projekt / fort", ("Wir setzen das Projekt trotz der Schwierigkeiten fort.",)),
+    ("b2-04", "B2", "dative_case", "Dem Vorschlag stimme ich grundsätzlich zu.", "dem Vorschlag / stimme / ich / grundsätzlich / zu", ("Ich stimme dem Vorschlag grundsätzlich zu.",)),
+    ("b2-05", "B2", "word_order", "Allerdings sollte man die Folgen bedenken.", "allerdings / sollte / man / die Folgen / bedenken", ("Man sollte allerdings die Folgen bedenken.",)),
+    ("b2-06", "B2", "genitive_prepositions", "Aufgrund der Nachfrage erweitern wir das Angebot.", "aufgrund der Nachfrage / erweitern / wir / das Angebot", ("Wir erweitern aufgrund der Nachfrage das Angebot.",)),
+)
