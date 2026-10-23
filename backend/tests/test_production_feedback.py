@@ -398,7 +398,10 @@ class ProductionFeedbackTests(unittest.TestCase):
     def test_same_short_answer_is_judged_more_strictly_at_b2(self):
         exercise = {"target_patterns": ["weil"], "model_answer": "Ich stimme zu, weil der Vorschlag sinnvoll ist."}
         self.assertTrue(local_feedback("Ich stimme zu, weil der Vorschlag sinnvoll ist.", exercise, "x", "de", "A2")["correct"])
-        self.assertFalse(local_feedback("Ich stimme zu, weil der Vorschlag sinnvoll ist.", exercise, "x", "de", "B2")["correct"])
+        # An authored exact model is valid at every CEFR; test stricter B2
+        # expectations using an unlisted response instead.
+        self.assertTrue(local_feedback("Ich stimme zu, weil der Vorschlag sinnvoll ist.", exercise, "x", "de", "B2")["correct"])
+        self.assertFalse(local_feedback("Ich stimme zu, weil das gut ist.", exercise, "x", "de", "B2")["correct"])
 
     def test_off_topic_english_answer_does_not_pass(self):
         result = local_feedback("This is a long but unrelated English answer for the task.", {"target_patterns": ["obwohl"], "model_answer": "Obwohl es regnet, gehe ich."}, "x", "en", "B1")
