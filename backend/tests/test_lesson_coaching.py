@@ -360,10 +360,12 @@ class LessonCoachingTests(unittest.TestCase):
         self.assertEqual("challenge", profile["mode"])
         self.assertFalse(profile["show_guided_hint"])
 
-    def test_repair_plan_uses_actual_missing_words_and_language(self):
+    def test_repair_plan_guides_without_revealing_missing_words(self):
         steps = repair_plan("missing_words", ["habe", "gearbeitet"], [], "de")
         self.assertEqual(3, len(steps))
-        self.assertIn("habe", steps[1])
+        self.assertIn("fehlen", steps[1])
+        self.assertNotIn("habe", " ".join(steps))
+        self.assertNotIn("gearbeitet", " ".join(steps))
         self.assertIn("Wortstellung", steps[2])
 
     def test_feedback_focus_names_the_smallest_action_without_revealing_model(self):
