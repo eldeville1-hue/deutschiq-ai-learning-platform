@@ -57,6 +57,16 @@ class ReviewedWordOrderTests(unittest.TestCase):
         self.assertFalse(result["correct"])
         self.assertEqual(result["reason"], "verb_position")
 
+    def test_additional_reviewed_answers(self):
+        cases = [
+            ("heute / ich / Deutsch / lerne", "Deutsch lerne ich heute."),
+            ("du / hast / heute Zeit", "Zeit hast du heute."),
+            ("ich / bin / nach Berlin / gefahren", "Gefahren bin ich nach Berlin."),
+            ("wegen / des Regens / bleiben wir zu Hause", "Zu Hause bleiben wir wegen des Regens."),
+        ]
+        for prompt, answer in cases:
+            self.assertTrue(grade_reviewed_word_order("Exercise: " + prompt, answer)["correct"])
+
     def test_unreviewed_haben_variant_is_not_called_wrong(self):
         result = grade_reviewed_word_order(
             "Exercise: du / hast / heute Zeit", "Zeit hast du heute."
