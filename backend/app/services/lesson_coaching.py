@@ -209,7 +209,7 @@ def learning_profile(mastery: float, recent_correct: list[bool], correct_streak:
 
 
 def repair_plan(error_type: str | None, missing_words: list[str], extra_words: list[str], language: str) -> list[str]:
-    language = language if language in {"ru", "de", "en"} else "en"
+    language = normalize_language(language)
     copy = {
         "ru": {
             "rule": "Назови правило урока одним коротким предложением.",
