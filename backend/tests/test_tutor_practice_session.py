@@ -38,6 +38,22 @@ class PracticeSessionTests(unittest.TestCase):
         self.assertEqual(session.state, "feedback_given")
         self.assertEqual(session.attempts, 1)
 
+    def test_correction_retry_preserves_exercise_and_counts_second_attempt(self):
+        db = MagicMock()
+        original = "Exercise: Put these words in order."
+        session = TutorPracticeSession(
+            user_id=7, language="en", exercise_text=original,
+            state="feedback_given", attempts=1,
+        )
+        db.query.return_value.filter.return_value.first.return_value = session
+        update_practice_session(
+            db, 7, "en", "Heute lerne ich Deutsch.",
+            "Good revision. Here is feedback on your exercise.",
+        )
+        self.assertEqual(session.exercise_text, original)
+        self.assertEqual(session.state, "feedback_given")
+        self.assertEqual(session.attempts, 2)
+
     def test_new_exercise_resets_attempt_count(self):
         db = MagicMock()
         session = TutorPracticeSession(user_id=7, language="en", exercise_text="Exercise: old task.", state="feedback_given", attempts=2)
