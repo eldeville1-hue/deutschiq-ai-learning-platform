@@ -9,6 +9,9 @@ class TutorTurnStateTests(unittest.TestCase):
     def test_explicit_request_is_not_graded(self):
         self.assertEqual(classify_tutor_turn("Übung: Ordne die Wörter.", "Объясни Genitiv"), "new_request")
 
+    def test_next_command_is_new_request(self):
+        self.assertEqual(classify_tutor_turn("Exercise: Put words in order.", "Next"), "new_request")
+
     def test_non_exercise_turn_is_conversation(self):
         self.assertEqual(classify_tutor_turn("Genitiv follows wegen in formal German.", "Danke!"), "conversation")
 

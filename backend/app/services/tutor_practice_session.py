@@ -10,13 +10,13 @@ def update_practice_session(db, user_id: int, language: str, learner_message: st
         TutorPracticeSession.user_id == user_id,
         TutorPracticeSession.language == language,
     ).first()
-    turn = classify_tutor_turn(session.exercise_text, learner_message) if session and session.state == "awaiting_attempt" else "conversation"
+    turn = classify_tutor_turn(session.exercise_text, learner_message) if session and session.state in ("awaiting_attempt", "feedback_given") else "conversation"
     is_new_exercise = any(marker in tutor_answer.casefold() for marker in EXERCISE_MARKERS)
     # Every plausible answer counts as an attempt, even if the tutor's
     # feedback happens to include the word "exercise" or another task marker.
     if session and turn == "attempt":
         session.attempts += 1
-        # Do not overwrite the task while feedback is being given. The model
+        # Keep the task for a correction attempt after feedback as well. The model
         # cannot reliably certify a correct answer or completed exercise.
         session.state = "feedback_given"
         return
