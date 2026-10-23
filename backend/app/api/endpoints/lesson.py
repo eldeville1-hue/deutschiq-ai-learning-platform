@@ -289,9 +289,9 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
             "needs_support": True,
             "next_action": "clarify",
             "retry_instruction": {
-                "ru": "Ответ не удалось надёжно оценить. Попробуй переформулировать.",
-                "de": "Die Antwort konnte nicht sicher bewertet werden. Formuliere sie bitte anders.",
-                "en": "We couldn't assess that answer reliably. Please rephrase it.",
+                "ru": "Твой ответ может быть правильным, но система не может это подтвердить. Попробуй другой вариант или используй структуру из примера. Это не ошибка.",
+                "de": "Deine Antwort könnte richtig sein, aber das System kann sie nicht bestätigen. Versuche eine andere Formulierung oder orientiere dich am Beispiel. Das zählt nicht als Fehler.",
+                "en": "Your answer may be correct, but the system cannot verify it. Try another phrasing or follow the example. This is not counted as a mistake.",
             }[normalize_language(data.language)],
         }
     # Re-check after evaluation: production feedback may await an external model,
