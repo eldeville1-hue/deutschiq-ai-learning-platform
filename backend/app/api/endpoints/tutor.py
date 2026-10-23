@@ -31,10 +31,24 @@ logger = logging.getLogger(__name__)
 # Avoid repeating requests when the provider explicitly reports exhausted credits.
 _provider_quota_exhausted = False
 
-def save_exchange(db: Session, user_id: int, question: str, answer: str, usage: "TutorUsage", daily_limit: int, mode: str, language: str):
+def save_exchange(db: Session, user_id: int, question: str, answer: str, usage: "TutorUsage", daily_limit: int, mode: str, language: str, verified_result: Optional[dict] = None):
     db.add(TutorMessage(user_id=user_id, role="user", content=question, language=language))
     db.add(TutorMessage(user_id=user_id, role="assistant", content=answer, language=language))
     update_practice_session(db, user_id, language, question, answer)
+    if verified_result is not None:
+        # Verified drill events are separate from course mastery and XP.
+        # No learner text or reference answer is copied into analytics.
+        db.add(ProductEvent(
+            user_id=user_id,
+            event_name="tutor_verified_attempt",
+            properties={
+                "topic": verified_result["topic"],
+                "correct": verified_result["correct"],
+                "attempt_number": verified_result["attempt_number"],
+                "language": language,
+                "source": "reviewed_word_order",
+            },
+        ))
     usage.questions_used += 1
     db.add(ProductEvent(user_id=user_id, event_name="tutor_answered", properties={"mode": mode, "language": language}))
     db.commit()
@@ -132,7 +146,14 @@ async def ask_tutor(data: TutorRequest, db: Session = Depends(get_db), authentic
                 }[lang]
             else:
                 answer = verified_retry_feedback(verified["topic"], lang)
-            return save_exchange(db, user.id, data.question, answer, usage, daily_limit, "verified_drill", lang)
+            return save_exchange(
+                db, user.id, data.question, answer, usage, daily_limit,
+                "verified_drill", lang,
+                verified_result={
+                    **verified,
+                    "attempt_number": saved_practice.attempts + 1,
+                },
+            )
     # A provider outage or exhausted credit must not turn the tutor into a dead button.
     if not client or _provider_quota_exhausted:
         answer = fallback_answer(data.question, lang, level, fallback_topics, recent_tutor_answers)
