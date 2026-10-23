@@ -285,7 +285,9 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
             "grammar_correct": evaluation.get("grammar_correct"),
             "meaning_correct": evaluation.get("meaning_correct"),
             "task_satisfied": evaluation.get("task_satisfied"),
-            "errors": evaluation.get("errors", []),
+            # Candidate diagnostics are not confirmed learner mistakes.
+            # Keep them out of the learner-facing response until verified.
+            "errors": evaluation.get("confirmed_errors", []),
             "needs_support": True,
             "next_action": "clarify",
             "retry_instruction": {
