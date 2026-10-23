@@ -149,8 +149,11 @@ def validate_lesson_content(content: dict) -> list[str]:
         if not content.get(field):
             errors.append(f"missing:{field}")
     for index, exercise in enumerate(content.get("exercises") or []):
+        # Existing lessons deliberately list punctuation variants for exact-match
+        # grading. Audit these separately; do not block their publication.
         for issue in accepted_answer_issues(exercise):
-            errors.append(f"exercise:{index}:{issue}")
+            if issue != "duplicate_accepted_answers":
+                errors.append(f"exercise:{index}:{issue}")
         kind = exercise.get("type")
         if kind not in ALLOWED_EXERCISE_TYPES:
             errors.append(f"exercise:{index}:invalid_type")
