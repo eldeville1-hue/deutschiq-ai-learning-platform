@@ -27,12 +27,12 @@ class ClauseDrillTests(unittest.TestCase):
 
     def test_b1_and_b2_practice_use_clause_prompts(self):
         for level in ("B1", "B2"):
-            response = fallback_answer("Give me an exercise", "en", level, ["word_order"])
+            response = fallback_answer("Give me a subordinate clause exercise", "en", level, ["word_order"])
             self.assertTrue(any(row[4] in response for row in CLAUSE_DRILLS if row[1] == level))
 
     def test_next_prompt_changes(self):
-        first = fallback_answer("Give me an exercise", "en", "B1", ["word_order"])
-        second = fallback_answer("Give me an exercise", "en", "B1", ["word_order"], [first])
+        first = fallback_answer("Give me a subordinate clause exercise", "en", "B1", ["word_order"])
+        second = fallback_answer("Give me a subordinate clause exercise", "en", "B1", ["word_order"], [first])
         self.assertNotEqual(first, second)
 
 
