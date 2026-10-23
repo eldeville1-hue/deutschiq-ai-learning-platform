@@ -25,7 +25,7 @@ export const Tutor: React.FC = () => {
       .then((tutor) => {
         setMessages(Array.isArray(tutor.messages) ? tutor.messages : []);
         setRemaining(Number(tutor.remaining || 0));
-        setActivePractice(!!tutor.active_practice);
+        setActivePractice(tutor.active_practice);
         setLoadError(false);
       })
       .catch(() => setLoadError(true))
@@ -37,7 +37,7 @@ export const Tutor: React.FC = () => {
     if (!text.trim() || loading) return;
     const next = [...messages, { role: 'user' as const, content: text.trim() }];
     setMessages(next); setQuestion(''); setLoading(true); setSendError('');
-    try { const result = await api.askTutor({ user_id: userId, question: text.trim(), language: lang, history: messages.slice(-10) }); setMessages([...next, { role: 'assistant', content: result.answer || result.response || String(result) }]); setRemaining(Number(result.remaining ?? Math.max(0, remaining - 1))); setActivePractice(!!result.active_practice); }
+    try { const result = await api.askTutor({ user_id: userId, question: text.trim(), language: lang, history: messages.slice(-10) }); setMessages([...next, { role: 'assistant', content: result.answer || result.response || String(result) }]); setRemaining(Number(result.remaining ?? Math.max(0, remaining - 1))); setActivePractice(result.active_practice); }
     catch (error: any) {
       const limited = error?.response?.status === 429;
       const message = limited
