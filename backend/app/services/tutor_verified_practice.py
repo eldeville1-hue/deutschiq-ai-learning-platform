@@ -102,6 +102,31 @@ TOPIC_HINTS = {
 }
 
 
+CLAUSE_HINTS = {
+    "weil_clause": {
+        "ru": "После weil спрягаемый глагол стоит в конце придаточного предложения.",
+        "de": "Nach weil steht das konjugierte Verb am Ende des Nebensatzes.",
+        "en": "After weil, the finite verb goes at the end of the subordinate clause.",
+    },
+    "obwohl_clause": {
+        "ru": "После obwohl глагол стоит в конце придаточного; если придаточное первое, главное начинается с глагола.",
+        "de": "Nach obwohl steht das Verb am Ende des Nebensatzes. Steht er zuerst, folgt das Hauptsatzverb direkt danach.",
+        "en": "After obwohl, the verb goes last in the subordinate clause. If that clause comes first, the main-clause verb follows immediately.",
+    },
+    "damit_clause": {
+        "ru": "Damit вводит цель: спрягаемый глагол в придаточном стоит в конце.",
+        "de": "Damit leitet einen Zwecksatz ein; das konjugierte Verb steht am Ende.",
+        "en": "Damit introduces a purpose clause; its finite verb comes last.",
+    },
+    "konjunktiv_ii": {
+        "ru": "Для нереальной ситуации используй hätte/wäre или würde + Infinitiv; после wenn глагол стоит в конце.",
+        "de": "Für hypothetische Situationen nutze hätte/wäre oder würde + Infinitiv; nach wenn steht das Verb am Ende.",
+        "en": "For hypothetical situations, use hätte/wäre or würde + infinitive; after wenn, the verb goes last.",
+    },
+}
+TOPIC_HINTS.update(CLAUSE_HINTS)
+
+
 def verified_retry_feedback(topic: str, language: str) -> str:
     """Give a reviewed topic hint without claiming to locate the exact error."""
     lang = language if language in ("ru", "de", "en") else "en"
@@ -115,7 +140,7 @@ def verified_retry_feedback(topic: str, language: str) -> str:
         "de": "Versuche es noch einmal.",
         "en": "Try again.",
     }[lang]
-    return f"{intro} {TOPIC_HINTS.get(topic, TOPIC_HINTS['word_order'])[lang]} {outro}"
+    return f"{intro} {TOPIC_HINTS[topic][lang]} {outro}"
 
 
 def unverified_answer_feedback(language: str) -> str:
