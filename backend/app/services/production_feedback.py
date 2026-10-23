@@ -315,9 +315,12 @@ async def evaluate_production(answer: str, exercise: dict, lesson_content: dict,
     model = exercise.get("model_answer") or exercise.get("answer", "")
     if model and normalize_text(answer) == normalize_text(str(model)):
         return fallback
+    # Surface heuristics cannot verify B1+ grammar, meaning, or task fulfilment.
+    # Never award a pass to an unverified advanced free response.
+    requires_review = _requires_ai_task_review(exercise) or str(lesson_content.get("cefr", "A2")).upper() in {"B1", "B2", "C1", "C2"}
     if not settings.OPENAI_API_KEY:
-        return _mark_review_pending(fallback, lang) if _requires_ai_task_review(exercise) else fallback
+        return _mark_review_pending(fallback, lang) if requires_review else fallback
     try:
         return await asyncio.wait_for(asyncio.to_thread(_ai_feedback, answer, exercise, lesson_content, lang), timeout=10)
     except Exception:
-        return _mark_review_pending(fallback, lang) if _requires_ai_task_review(exercise) else fallback
+        return _mark_review_pending(fallback, lang) if requires_review else fallback
