@@ -21,7 +21,7 @@ from app.services.tutor_context import build_tutor_learning_context, tutor_conte
 from app.services.tutor_fallback import fallback_answer
 from app.services.tutor_turn_state import classify_tutor_turn, practice_turn_instruction
 from app.services.tutor_practice_session import update_practice_session
-from app.services.tutor_verified_practice import grade_reviewed_word_order, verified_retry_feedback
+from app.services.tutor_verified_practice import grade_reviewed_word_order, verified_retry_feedback, unverified_answer_feedback
 from app.services.tutor_verified_review import prioritize_verified_topics
 from datetime import date, datetime, timezone
 from app.services.subscription import has_active_pro
@@ -145,21 +145,23 @@ async def ask_tutor(data: TutorRequest, db: Session = Depends(get_db), authentic
     if saved_practice and classify_tutor_turn(saved_practice.exercise_text, data.question) == "attempt":
         verified = grade_reviewed_word_order(saved_practice.exercise_text, data.question)
         if verified is not None:
-            if verified["correct"]:
+            if verified["correct"] is True:
                 answer = {
                     "ru": "Верно! Предложение составлено правильно. Нажми «Дальше», чтобы получить новое упражнение.",
                     "de": "Richtig! Der Satz ist korrekt. Tippe auf „Weiter“ für die nächste Übung.",
                     "en": "Correct! The sentence is in the right order. Tap Next for another exercise.",
                 }[lang]
-            else:
+            elif verified["correct"] is False:
                 answer = verified_retry_feedback(verified["topic"], lang)
+            else:
+                answer = unverified_answer_feedback(lang)
             return save_exchange(
                 db, user.id, data.question, answer, usage, daily_limit,
                 "verified_drill", lang,
-                verified_result={
+                verified_result=({
                     **verified,
                     "attempt_number": saved_practice.attempts + 1,
-                },
+                } if verified["correct"] is not None else None),
             )
     # A provider outage or exhausted credit must not turn the tutor into a dead button.
     if not client or _provider_quota_exhausted:
