@@ -102,9 +102,11 @@ async def ask_tutor(data: TutorRequest, db: Session = Depends(get_db), authentic
         + [item["topic"] for item in learner_context["weak_skills"]]
     )
 
+    recent_tutor_answers = [row.content for row in db.query(TutorMessage).filter(TutorMessage.user_id == user.id, TutorMessage.language == lang, TutorMessage.role == "assistant").order_by(TutorMessage.created_at.desc()).limit(12).all()]
+
     # A provider outage or exhausted credit must not turn the tutor into a dead button.
     if not client or _provider_quota_exhausted:
-        answer = fallback_answer(data.question, lang, level, fallback_topics)
+        answer = fallback_answer(data.question, lang, level, fallback_topics, recent_tutor_answers)
         return save_exchange(db, user.id, data.question, answer, usage, daily_limit, "local", lang)
     
     # 4. Системный промпт
@@ -159,11 +161,11 @@ Rules:
             logger.warning("Tutor provider credits exhausted; switching to local tutor")
         else:
             logger.warning("Tutor provider rate limited; switching to local tutor")
-        answer = fallback_answer(data.question, lang, level, fallback_topics)
+        answer = fallback_answer(data.question, lang, level, fallback_topics, recent_tutor_answers)
         return save_exchange(db, user.id, data.question, answer, usage, daily_limit, "local", lang)
     except Exception:
         logger.exception("Tutor provider unavailable; switching to local tutor")
-        answer = fallback_answer(data.question, lang, level, fallback_topics)
+        answer = fallback_answer(data.question, lang, level, fallback_topics, recent_tutor_answers)
         return save_exchange(db, user.id, data.question, answer, usage, daily_limit, "local", lang)
 
 @router.get("/state/{user_id}")
