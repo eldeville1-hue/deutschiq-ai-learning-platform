@@ -14,6 +14,7 @@ export const Tutor: React.FC = () => {
   const [question, setQuestion] = useState('');
   const [loading, setLoading] = useState(false);
   const [remaining, setRemaining] = useState(0);
+  const [activePractice, setActivePractice] = useState(false);
   const [ready, setReady] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [sendError, setSendError] = useState('');
@@ -24,6 +25,7 @@ export const Tutor: React.FC = () => {
       .then((tutor) => {
         setMessages(Array.isArray(tutor.messages) ? tutor.messages : []);
         setRemaining(Number(tutor.remaining || 0));
+        setActivePractice(tutor.active_practice === true);
         setLoadError(false);
       })
       .catch(() => setLoadError(true))
@@ -35,7 +37,7 @@ export const Tutor: React.FC = () => {
     if (!text.trim() || loading) return;
     const next = [...messages, { role: 'user' as const, content: text.trim() }];
     setMessages(next); setQuestion(''); setLoading(true); setSendError('');
-    try { const result = await api.askTutor({ user_id: userId, question: text.trim(), language: lang, history: messages.slice(-10) }); setMessages([...next, { role: 'assistant', content: result.answer || result.response || String(result) }]); setRemaining(Number(result.remaining ?? Math.max(0, remaining - 1))); }
+    try { const result = await api.askTutor({ user_id: userId, question: text.trim(), language: lang, history: messages.slice(-10) }); setMessages([...next, { role: 'assistant', content: result.answer || result.response || String(result) }]); setRemaining(Number(result.remaining ?? Math.max(0, remaining - 1))); setActivePractice(result.active_practice === true); }
     catch (error: any) {
       const limited = error?.response?.status === 429;
       const message = limited
@@ -71,7 +73,7 @@ export const Tutor: React.FC = () => {
       <section className={`tutor-workspace${messages.length ? ' has-messages' : ''}`}>
         {messages.length > 0 && <header className="tutor-thread-head"><span><FaRobot /></span><div><small>{tr(lang, 'ТЕКУЩАЯ ПРАКТИКА', 'AKTUELLE ÜBUNG', 'CURRENT PRACTICE')}</small><strong>{tr(lang, 'Один понятный ответ за раз', 'Eine klare Antwort nach der anderen', 'One clear answer at a time')}</strong></div></header>}
         {!messages.length && <div className="chat-empty"><span className="feature-icon"><FaRobot /></span><h2>{tr(lang, 'Что потренируем?', 'Was üben wir?', 'What shall we practise?')}</h2><p>{tr(lang, 'Выбери вариант или задай свой вопрос.', 'Wähle einen Einstieg oder stelle deine Frage.', 'Choose an option or ask your own question.')}</p><div className="quick-actions">{quick.map(item => <button type="button" key={item.title} disabled={!ready || loading} onClick={() => send(item.prompt)}>{item.title}</button>)}</div></div>}
-        <div className="chat-messages" aria-live="polite">{messages.map((m, i) => <div key={i} className={`message ${m.role}`}>{m.content}{m.role === 'assistant' && <button type="button" className="message-audio" onClick={() => speak(m.content)} aria-label={tr(lang, 'Прослушать ответ', 'Antwort anhören', 'Listen to answer')}><FaVolumeUp /></button>}</div>)}{loading && <div className="message assistant typing">•••</div>}{!loading && messages.at(-1)?.role === 'assistant' && <div>
+        <div className="chat-messages" aria-live="polite">{messages.map((m, i) => <div key={i} className={`message ${m.role}`}>{m.content}{m.role === 'assistant' && <button type="button" className="message-audio" onClick={() => speak(m.content)} aria-label={tr(lang, 'Прослушать ответ', 'Antwort anhören', 'Listen to answer')}><FaVolumeUp /></button>}</div>)}{loading && <div className="message assistant typing">•••</div>}{activePractice && !loading && messages.at(-1)?.role === 'assistant' && <div>
           <button onClick={() => send('Hint')}>{tr(lang, 'Подсказка', 'Hinweis', 'Hint')}</button>
           <button onClick={() => send('Retry')}>{tr(lang, 'Ещё раз', 'Nochmal', 'Retry')}</button>
           <button onClick={() => send('Next')}>{tr(lang, 'Дальше', 'Weiter', 'Next')}</button>
