@@ -12,6 +12,14 @@ class TutorTurnStateTests(unittest.TestCase):
     def test_next_command_is_new_request(self):
         self.assertEqual(classify_tutor_turn("Exercise: Put words in order.", "Next"), "new_request")
 
+    def test_hint_command(self):
+        self.assertEqual(classify_tutor_turn("Exercise: put words in order.", "Hint"), "hint")
+        self.assertIn("one small hint", practice_turn_instruction("hint"))
+
+    def test_retry_command(self):
+        self.assertEqual(classify_tutor_turn("Exercise: put words in order.", "Retry"), "retry")
+        self.assertIn("same task", practice_turn_instruction("retry"))
+
     def test_non_exercise_turn_is_conversation(self):
         self.assertEqual(classify_tutor_turn("Genitiv follows wegen in formal German.", "Danke!"), "conversation")
 

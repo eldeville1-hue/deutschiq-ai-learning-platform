@@ -163,7 +163,7 @@ Rules:
     previous_exercise = active_session.exercise_text if active_session else last_assistant
     turn_state = classify_tutor_turn(previous_exercise, data.question)
     turn_instruction = practice_turn_instruction(turn_state)
-    if active_session and turn_state == "attempt":
+    if active_session and turn_state in ("attempt", "hint", "retry"):
         messages.append({
             "role": "system",
             "content": (
