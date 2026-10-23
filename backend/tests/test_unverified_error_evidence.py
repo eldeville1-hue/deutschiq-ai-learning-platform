@@ -12,7 +12,8 @@ class UnverifiedErrorEvidenceTests(unittest.TestCase):
         self.assertFalse(result["correct"])
         self.assertEqual([], result["confirmed_errors"])
         self.assertIsNone(result["grammar_correct"])
-        self.assertIn("case", [item["type"] for item in result["errors"]])
+        self.assertEqual([], result["errors"])
+        self.assertEqual([], result["candidate_error_types"])
 
     def test_objective_task_still_returns_verified_errors(self):
         exercise = {"type": "fill", "answer": "den", "target_feature": "case"}
