@@ -18,7 +18,7 @@ def classify_tutor_turn(previous_assistant: str, learner_message: str) -> str:
     message = learner_message.strip().casefold()
     if not message:
         return "conversation"
-    if any(marker in message for marker in NEW_REQUEST_MARKERS):
+    if message in ("next", "weiter", "дальше", "следующее", "следующий", "skip", "пропустить") or any(marker in message for marker in NEW_REQUEST_MARKERS):
         return "new_request"
     if not any(marker in previous_assistant.casefold() for marker in TASK_MARKERS):
         return "conversation"
