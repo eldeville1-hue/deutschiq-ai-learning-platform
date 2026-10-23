@@ -1,4 +1,5 @@
 from typing import Sequence
+from app.services.tutor_exercise_bank import DRILLS
 
 
 TOPIC_NAMES = {
@@ -50,6 +51,15 @@ def fallback_answer(question: str, lang: str, level: str, topics: Sequence[str],
                 topic_key = candidate
                 break
     example, words, rule_en, rule_de, rule_ru = TOPIC_LESSONS[topic_key]
+    if wants_practice:
+        level_key = level.upper()[:2]
+        eligible = [row for row in DRILLS if row[1] == level_key and row[2] == topic_key]
+        if not eligible:
+            eligible = [row for row in DRILLS if row[1] == level_key]
+        if eligible:
+            recent_text = " ".join(recent_answers[-24:])
+            chosen = next((row for row in eligible if row[4] not in recent_text), eligible[0])
+            example, words = chosen[3], chosen[4]
     language = lang if lang in ("ru", "de", "en") else "en"
     names = TOPIC_NAMES.get(topic_key, {"ru": topic_key.replace("_", " "), "de": topic_key.replace("_", " "), "en": topic_key.replace("_", " ")})
     topic = names[language]
