@@ -19,6 +19,7 @@ from app.models.progress import UserProgress
 from app.services.plan import generate_plan
 from app.services.tutor_context import build_tutor_learning_context, tutor_context_prompt
 from app.services.tutor_fallback import fallback_answer
+from app.services.tutor_writing_feedback import writing_length_feedback
 from app.services.tutor_turn_state import classify_tutor_turn, practice_turn_instruction
 from app.services.tutor_practice_session import update_practice_session
 from app.services.tutor_verified_practice import grade_reviewed_word_order, verified_retry_feedback, verified_specific_feedback, unverified_answer_feedback
@@ -143,6 +144,12 @@ async def ask_tutor(data: TutorRequest, db: Session = Depends(get_db), authentic
         TutorPracticeSession.state.in_(("awaiting_attempt", "feedback_given")),
     ).first()
     if saved_practice and classify_tutor_turn(saved_practice.exercise_text, data.question) == "attempt":
+        length_feedback = writing_length_feedback(saved_practice.exercise_text, data.question, lang)
+        if length_feedback is not None:
+            return save_exchange(
+                db, user.id, data.question, length_feedback, usage, daily_limit,
+                "writing_length", lang,
+            )
         verified = grade_reviewed_word_order(saved_practice.exercise_text, data.question)
         if verified is not None:
             if verified["correct"] is True:
