@@ -3,6 +3,7 @@ from app.services.tutor_exercise_bank import DRILLS
 from app.services.tutor_clause_bank import CLAUSE_DRILLS
 from app.services.tutor_transformation_bank import TRANSFORMATIONS
 from app.services.tutor_writing_bank import WRITING_PROMPTS, WRITING_CRITERIA
+from app.services.tutor_writing_scaffold import SCAFFOLDS
 
 
 TOPIC_NAMES = {
@@ -67,7 +68,7 @@ def fallback_answer(question: str, lang: str, level: str, topics: Sequence[str],
         count = {"ru": "слов", "de": "Wörter", "en": "words"}[language]
         return (
             f"{heading} {level}: {selected[2]} {selected[3]} "
-            f"({selected[4]} {count}). {WRITING_CRITERIA[language]}"
+            f"({selected[4]} {count}). {SCAFFOLDS[level.upper()[:2]][language]} {WRITING_CRITERIA[language]}"
         )
     wants_transformation = wants_practice and level.upper()[:2] == "B2" and any(
         term in lowered for term in ("transform", "umform", "перефраз", "преобраз", "rewrite")
