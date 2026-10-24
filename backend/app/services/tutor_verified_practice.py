@@ -8,6 +8,7 @@ from typing import Optional
 from app.services.tutor_fallback import TOPIC_LESSONS
 from app.services.tutor_exercise_bank import DRILLS
 from app.services.tutor_clause_bank import CLAUSE_DRILLS
+from app.services.tutor_transformation_bank import TRANSFORMATIONS
 
 # Explicitly reviewed alternatives only; never infer grammatical equivalence.
 REVIEWED_ALTERNATIVES = {
@@ -41,11 +42,17 @@ def grade_reviewed_word_order(exercise_text: str, learner_answer: str) -> Option
         for _id, _level, topic, expected, words, alternatives in CLAUSE_DRILLS
         if words.casefold() in exercise_text.casefold()
     ]
-    if len(matched) + len(bank_matches) + len(clause_matches) != 1:
+    transformation_matches = [
+        (topic, expected, alternatives)
+        for _id, _level, topic, _instruction, source, expected, alternatives in TRANSFORMATIONS
+        if source.casefold() in exercise_text.casefold()
+    ]
+    if len(matched) + len(bank_matches) + len(clause_matches) + len(transformation_matches) != 1:
         return None
-    alternatives = (bank_matches or clause_matches)[0][2] if bank_matches or clause_matches else ()
-    if bank_matches or clause_matches:
-        selected = (bank_matches or clause_matches)[0]
+    selected_bank = bank_matches or clause_matches or transformation_matches
+    alternatives = selected_bank[0][2] if selected_bank else ()
+    if selected_bank:
+        selected = selected_bank[0]
         matched = [(selected[0], selected[1])]
     topic, expected = matched[0]
     normalized = _normalize_sentence(learner_answer)
