@@ -33,4 +33,13 @@ def writing_length_feedback(exercise_text: str, answer: str, language: str):
         },
     }
     localized = templates[lang]
-    return f"{count} / {low}-{high} words. {localized[status]} {localized['note']}"
+    paragraphs = [part.strip() for part in re.split(r"\n\s*\n", answer.strip()) if part.strip()]
+    paragraph_count = len(paragraphs)
+    is_argumentative = matches[0][0] in ("b1-w02", "b2-w01", "b2-w02")
+    structure = {
+        "ru": ("Раздели аргументативный текст на вступление, аргументы и вывод.", "Абзацы выделены; их связность не проверяется."),
+        "de": ("Gliedere den argumentativen Text in Einleitung, Argumente und Fazit.", "Absaetze vorhanden; Kohaerenz wird nicht bewertet."),
+        "en": ("Consider separate paragraphs for introduction, arguments and conclusion.", "Paragraph breaks found; coherence is not assessed."),
+    }[lang]
+    paragraph_note = structure[0] if is_argumentative and paragraph_count == 1 else structure[1] if paragraph_count > 1 else ""
+    return f"{count} / {low}-{high} words. {localized[status]} {paragraph_note} {localized['note']}".strip()
