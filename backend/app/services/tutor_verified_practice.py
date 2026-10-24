@@ -97,6 +97,26 @@ def grade_reviewed_word_order(exercise_text: str, learner_answer: str) -> Option
                     "topic": topic, "correct": False, "expected": expected,
                     "reason": "subordinate_verb_position",
                 }
+    # When a subordinate clause leads, the main clause must begin with
+    # the finite verb. Detect only an exact swap of the first two words
+    # in the reviewed main clause; never infer correctness from arbitrary text.
+    if topic in ("weil_clause", "obwohl_clause", "damit_clause", "konjunktiv_ii"):
+        for candidate in accepted:
+            if candidate.count(",") != 1:
+                continue
+            first, second = [part.strip() for part in candidate.rstrip(".").split(",")]
+            if not first.casefold().startswith(("weil ", "obwohl ", "damit ", "wenn ")):
+                continue
+            main_tokens = second.split()
+            if len(main_tokens) < 3:
+                continue
+            malformed_main = " ".join((main_tokens[1], main_tokens[0], *main_tokens[2:]))
+            malformed = candidate.replace(second, malformed_main)
+            if normalized == _normalize_sentence(malformed):
+                return {
+                    "topic": topic, "correct": False, "expected": expected,
+                    "reason": "main_clause_inversion",
+                }
     return {"topic": topic, "correct": None, "expected": expected}
 
 # Topic-specific reminders are safe even when we cannot determine the precise
@@ -170,6 +190,12 @@ CLAUSE_PUNCTUATION_HINTS = {
 def verified_specific_feedback(topic: str, reason: str, language: str) -> str:
     """Use an error-specific explanation only for a provably detected error."""
     lang = language if language in ("ru", "de", "en") else "en"
+    if reason == "main_clause_inversion":
+        return {
+            "ru": "Если придаточное предложение стоит первым, главное начинается со спрягаемого глагола: «..., bleibe ich ...», а не «..., ich bleibe ...».",
+            "de": "Steht der Nebensatz zuerst, beginnt der Hauptsatz mit dem konjugierten Verb: „..., bleibe ich ...“ statt „..., ich bleibe ...“.",
+            "en": "When a subordinate clause comes first, the main clause starts with its finite verb: '..., bleibe ich ...', not '..., ich bleibe ...'.",
+        }[lang]
     if reason == "subordinate_verb_position":
         return {
             "ru": "В придаточном предложении после weil, obwohl или damit спрягаемый глагол должен стоять в конце. Переставь глагол и попробуй снова.",
