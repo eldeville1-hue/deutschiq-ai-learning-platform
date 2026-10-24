@@ -64,6 +64,15 @@ def grade_reviewed_word_order(exercise_text: str, learner_answer: str) -> Option
         if sorted(tokens) == sorted(expected_tokens) and tokens.count(finite) == 1:
             if tokens.index(finite) != 1:
                 return {"topic": topic, "correct": False, "expected": expected, "reason": "verb_position"}
+    # Diagnose only a narrow, provable punctuation omission: the exact
+    # reviewed sentence with its sole clause-boundary comma removed.
+    if topic in ("weil_clause", "obwohl_clause", "damit_clause", "konjunktiv_ii"):
+        for candidate in accepted:
+            if candidate.count(",") == 1 and normalized == _normalize_sentence(candidate.replace(",", "")):
+                return {
+                    "topic": topic, "correct": False, "expected": expected,
+                    "reason": "missing_clause_comma",
+                }
     return {"topic": topic, "correct": None, "expected": expected}
 
 # Topic-specific reminders are safe even when we cannot determine the precise
@@ -125,6 +134,25 @@ CLAUSE_HINTS = {
     },
 }
 TOPIC_HINTS.update(CLAUSE_HINTS)
+
+
+CLAUSE_PUNCTUATION_HINTS = {
+    "ru": "Между главным и придаточным предложениями нужна запятая.",
+    "de": "Zwischen Hauptsatz und Nebensatz muss ein Komma stehen.",
+    "en": "A comma is required between the main clause and the subordinate clause.",
+}
+
+
+def verified_specific_feedback(topic: str, reason: str, language: str) -> str:
+    """Use an error-specific explanation only for a provably detected error."""
+    lang = language if language in ("ru", "de", "en") else "en"
+    if reason == "missing_clause_comma":
+        return CLAUSE_PUNCTUATION_HINTS[lang] + " " + {
+            "ru": "Добавь запятую и попробуй ещё раз.",
+            "de": "Setze das Komma und versuche es erneut.",
+            "en": "Add the comma and try again.",
+        }[lang]
+    return verified_retry_feedback(topic, lang)
 
 
 def verified_retry_feedback(topic: str, language: str) -> str:
