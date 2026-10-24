@@ -2,6 +2,7 @@ from typing import Sequence
 from app.services.tutor_exercise_bank import DRILLS
 from app.services.tutor_clause_bank import CLAUSE_DRILLS
 from app.services.tutor_transformation_bank import TRANSFORMATIONS
+from app.services.tutor_writing_bank import WRITING_PROMPTS, WRITING_CRITERIA
 
 
 TOPIC_NAMES = {
@@ -53,6 +54,21 @@ def fallback_answer(question: str, lang: str, level: str, topics: Sequence[str],
                 topic_key = candidate
                 break
     example, words, rule_en, rule_de, rule_ru = TOPIC_LESSONS[topic_key]
+    wants_writing = any(term in lowered for term in (
+        "writing task", "writing exercise", "schreibaufgabe", "schreibübung",
+        "письменное задание", "письменное упражнение", "сочинение", "essay"
+    ))
+    if wants_writing and level.upper()[:2] in ("B1", "B2"):
+        recent_text = " ".join(recent_answers[-24:])
+        options = [row for row in WRITING_PROMPTS if row[1] == level.upper()[:2]]
+        selected = next((row for row in options if row[2] not in recent_text), options[0])
+        language = lang if lang in ("ru", "de", "en") else "en"
+        heading = {"ru": "Письменное задание", "de": "Schreibaufgabe", "en": "Writing task"}[language]
+        count = {"ru": "слов", "de": "Wörter", "en": "words"}[language]
+        return (
+            f"{heading} {level}: {selected[2]} {selected[3]} "
+            f"({selected[4]} {count}). {WRITING_CRITERIA[language]}"
+        )
     wants_transformation = wants_practice and level.upper()[:2] == "B2" and any(
         term in lowered for term in ("transform", "umform", "перефраз", "преобраз", "rewrite")
     )
