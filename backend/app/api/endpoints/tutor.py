@@ -21,7 +21,7 @@ from app.services.tutor_context import build_tutor_learning_context, tutor_conte
 from app.services.tutor_fallback import fallback_answer
 from app.services.tutor_turn_state import classify_tutor_turn, practice_turn_instruction
 from app.services.tutor_practice_session import update_practice_session
-from app.services.tutor_verified_practice import grade_reviewed_word_order, verified_retry_feedback, unverified_answer_feedback
+from app.services.tutor_verified_practice import grade_reviewed_word_order, verified_retry_feedback, verified_specific_feedback, unverified_answer_feedback
 from app.services.tutor_verified_review import prioritize_verified_topics
 from datetime import date, datetime, timezone
 from app.services.subscription import has_active_pro
@@ -152,7 +152,7 @@ async def ask_tutor(data: TutorRequest, db: Session = Depends(get_db), authentic
                     "en": "Correct! The sentence is in the right order. Tap Next for another exercise.",
                 }[lang]
             elif verified["correct"] is False:
-                answer = verified_retry_feedback(verified["topic"], lang)
+                answer = verified_specific_feedback(verified["topic"], verified.get("reason", ""), lang)
             else:
                 answer = unverified_answer_feedback(lang)
             return save_exchange(
