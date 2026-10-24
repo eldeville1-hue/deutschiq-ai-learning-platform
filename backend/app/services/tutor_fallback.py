@@ -1,6 +1,7 @@
 from typing import Sequence
 from app.services.tutor_exercise_bank import DRILLS
 from app.services.tutor_clause_bank import CLAUSE_DRILLS
+from app.services.tutor_transformation_bank import TRANSFORMATIONS
 
 
 TOPIC_NAMES = {
@@ -52,6 +53,26 @@ def fallback_answer(question: str, lang: str, level: str, topics: Sequence[str],
                 topic_key = candidate
                 break
     example, words, rule_en, rule_de, rule_ru = TOPIC_LESSONS[topic_key]
+    wants_transformation = wants_practice and level.upper()[:2] == "B2" and any(
+        term in lowered for term in ("transform", "umform", "перефраз", "преобраз", "rewrite")
+    )
+    if wants_transformation:
+        recent_text = " ".join(recent_answers[-24:])
+        selected = next(
+            (row for row in TRANSFORMATIONS if row[4] not in recent_text),
+            TRANSFORMATIONS[0],
+        )
+        instruction, source = selected[3], selected[4]
+        language = lang if lang in ("ru", "de", "en") else "en"
+        intro = {
+            "ru": "Преобразуй предложения в одно, используя указанную конструкцию.",
+            "de": "Forme die Sätze zu einem Satz um.",
+            "en": "Combine the sentences into one using the requested structure.",
+        }[language]
+        return f"{intro} {instruction} {source} Напиши полный ответ." if language == "ru" else (
+            f"{intro} {instruction} {source} Schreibe den ganzen Satz." if language == "de"
+            else f"{intro} {instruction} {source} Write the complete sentence."
+        )
     explicit_clause = any(term in lowered for term in (
         "weil", "obwohl", "damit", "konjunktiv", "subordinate", "nebensatz", "придаточ"
     ))
