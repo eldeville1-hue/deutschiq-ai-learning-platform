@@ -73,6 +73,30 @@ def grade_reviewed_word_order(exercise_text: str, learner_answer: str) -> Option
                     "topic": topic, "correct": False, "expected": expected,
                     "reason": "missing_clause_comma",
                 }
+    # A narrowly verified verb-final error: the learner used exactly the
+    # reviewed tokens, but placed the finite verb immediately after the
+    # subordinator instead of at the end of that subordinate clause.
+    if topic in ("weil_clause", "obwohl_clause", "damit_clause"):
+        for candidate in accepted:
+            if candidate.count(",") != 1:
+                continue
+            parts = [part.strip() for part in candidate.rstrip(".").split(",")]
+            subordinate = next(
+                (part for part in parts if part.casefold().startswith(("weil ", "obwohl ", "damit "))),
+                None,
+            )
+            if subordinate is None:
+                continue
+            tokens = subordinate.split()
+            if len(tokens) < 4:
+                continue
+            wrong_clause = " ".join((tokens[0], tokens[-1], *tokens[1:-1]))
+            proposed = candidate.replace(subordinate, wrong_clause)
+            if normalized == _normalize_sentence(proposed):
+                return {
+                    "topic": topic, "correct": False, "expected": expected,
+                    "reason": "subordinate_verb_position",
+                }
     return {"topic": topic, "correct": None, "expected": expected}
 
 # Topic-specific reminders are safe even when we cannot determine the precise
@@ -146,6 +170,12 @@ CLAUSE_PUNCTUATION_HINTS = {
 def verified_specific_feedback(topic: str, reason: str, language: str) -> str:
     """Use an error-specific explanation only for a provably detected error."""
     lang = language if language in ("ru", "de", "en") else "en"
+    if reason == "subordinate_verb_position":
+        return {
+            "ru": "В придаточном предложении после weil, obwohl или damit спрягаемый глагол должен стоять в конце. Переставь глагол и попробуй снова.",
+            "de": "Im Nebensatz mit weil, obwohl oder damit steht das konjugierte Verb am Ende. Verschiebe das Verb und versuche es erneut.",
+            "en": "In a clause introduced by weil, obwohl or damit, the finite verb goes last. Move the verb and try again.",
+        }[lang]
     if reason == "missing_clause_comma":
         return CLAUSE_PUNCTUATION_HINTS[lang] + " " + {
             "ru": "Добавь запятую и попробуй ещё раз.",
