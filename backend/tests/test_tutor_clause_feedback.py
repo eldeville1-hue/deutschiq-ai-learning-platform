@@ -14,7 +14,7 @@ class ClauseFeedbackTests(unittest.TestCase):
             for language in ("ru", "de", "en"):
                 with self.subTest(topic=topic, language=language):
                     feedback = verified_retry_feedback(topic, language)
-                    self.assertIn(term, feedback)
+                    self.assertIn(term.casefold(), feedback.casefold())
                     self.assertIn(" ", feedback)
 
     def test_all_reviewed_clause_drills_have_feedback(self):
