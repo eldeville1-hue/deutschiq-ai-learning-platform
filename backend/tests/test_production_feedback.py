@@ -352,6 +352,29 @@ class ProductionFeedbackTests(unittest.TestCase):
         self.assertFalse(result["correct"])
         self.assertTrue(result["assessment_pending"])
 
+    def test_a1_a2_free_answers_wait_for_review_without_ai(self):
+        exercise = {"answer": "Ich gehe heute nach Hause.", "type": "production"}
+        for level in ("A1", "A2"):
+            with self.subTest(level=level), patch("app.core.config.settings.OPENAI_API_KEY", ""):
+                result = asyncio.run(evaluate_production(
+                    "Ich bin heute im Park und spiele mit Freunden.",
+                    exercise, {"cefr": level}, "de",
+                ))
+                self.assertTrue(result["assessment_pending"])
+                self.assertFalse(result["correct"])
+
+    def test_a1_a2_ai_failure_does_not_fall_back_to_heuristic_grade(self):
+        exercise = {"answer": "Ich gehe heute nach Hause.", "type": "production"}
+        with patch("app.core.config.settings.OPENAI_API_KEY", "test-key"), patch(
+            "app.services.production_feedback._ai_feedback", side_effect=RuntimeError("unavailable")
+        ):
+            result = asyncio.run(evaluate_production(
+                "Ich bin heute im Park und spiele mit Freunden.",
+                exercise, {"cefr": "A2"}, "en",
+            ))
+        self.assertTrue(result["assessment_pending"])
+        self.assertFalse(result["correct"])
+
     def test_exact_model_still_passes_without_ai_for_b2_rubric(self):
         model = "Der Anteil stieg von 36 auf 48 Prozent, also um zwölf Prozentpunkte."
         exercise = {
