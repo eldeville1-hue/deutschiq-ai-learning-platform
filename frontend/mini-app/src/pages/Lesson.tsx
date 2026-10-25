@@ -291,7 +291,8 @@ const LessonScreen: React.FC = () => {
         // the same task without activating the guided-retry/penalty flow.
         setChecked(null);
         setFeedback(null);
-        setReviewPending(result.evaluation_status === 'needs_review');
+        // Both uncertain and needs_review answers may be rechecked without penalty.
+        setReviewPending(true);
         setWritingSelfCheck(lesson?.level === 'B2' && activeExercise?.type === 'dialogue');
         const isB2Writing = lesson?.level === 'B2' && activeExercise?.type === 'dialogue';
         const writingCriteria: Record<string, [string, string, string]> = {
