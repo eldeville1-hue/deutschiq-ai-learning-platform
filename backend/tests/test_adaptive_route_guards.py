@@ -26,7 +26,7 @@ class AdaptiveRouteGuardTests(unittest.TestCase):
         history = [{"skill_id": "articles", "correct": False}] * 2
         focus = repeated_error_focus(history, {item.topic for item in self.lessons})
         selected = select_recommended_lesson(
-            self.lessons, set(), {}, {}, focus_skill=focus
+            self.lessons, set(), {"word_order": 85}, {}, focus_skill=focus
         )
         self.assertEqual(selected.id, self.articles.id)
 
