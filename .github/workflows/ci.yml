@@ -42,6 +42,8 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Lesson recovery and duplicate submission regressions
         run: python -m unittest discover -s tests -p 'test_lesson_resume.py' -v
+      - name: Production smoke migration contract regressions
+        run: python -m unittest discover -s tests -p 'test_production_smoke_migration.py' -v
       - name: PostgreSQL migration safety regressions
         run: |
           test -n "$TEST_POSTGRES_URL"
