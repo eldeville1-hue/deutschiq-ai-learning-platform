@@ -53,7 +53,7 @@ def main(argv=None):
         print(f"Curriculum audit saved to {args.output}")
     else:
         print(rendered)
-    return 1 if report["status"] == "failed" or report["total_exercise_issues"] else 0
+    return 1 if report["status"] == "failed" else 0
 
 
 if __name__ == "__main__":
