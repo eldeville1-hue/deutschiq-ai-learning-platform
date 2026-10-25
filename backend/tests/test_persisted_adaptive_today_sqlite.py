@@ -83,6 +83,10 @@ class PersistedAdaptiveTodayTests(unittest.TestCase):
         self.assertFalse(self.answer("die")["correct"])
         self.assertEqual(11, self.recommendation()["next_lesson"]["id"])
         self.assertTrue(self.answer("der")["correct"])
+        # A correct answer completes this exercise; a new independent attempt
+        # must use a new session rather than resubmit a completed exercise.
+        self.db.query(LearningSession).filter_by(user_id=1, lesson_id=11).update({"status": "completed"})
+        self.db.commit()
         self.assertTrue(self.answer("der")["correct"])
         self.assertEqual(4, self.db.query(ExerciseAttempt).filter_by(user_id=1).count())
         self.assertEqual(10, self.recommendation()["next_lesson"]["id"])
