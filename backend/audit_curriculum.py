@@ -3,16 +3,41 @@ import argparse
 import json
 from pathlib import Path
 
-from seed_30_day_plan import curriculum_audit_report
+from seed_30_day_plan import curriculum_audit_report, CURRICULUM, B1_CURRICULUM, A1_CURRICULUM, A2_CURRICULUM, B2_CURRICULUM, build_content, build_b1_content, build_b2_content, build_foundation_content
+from app.services.content_quality import exercise_answer_audit, exercise_instruction_audit
 
 
 def build_report():
     tracks = curriculum_audit_report()
+    sources = [
+        ("30-day roadmap", CURRICULUM, lambda row: build_content(row[0], row[1], row[2], row[4], row[5], row[6])),
+        ("A1", A1_CURRICULUM, lambda row: build_foundation_content(row, "A1")),
+        ("A2", A2_CURRICULUM, lambda row: build_foundation_content(row, "A2")),
+        ("B1", B1_CURRICULUM, build_b1_content),
+        ("B2", B2_CURRICULUM, build_b2_content),
+    ]
+    exercise_issues = {}
+    for track, rows, builder in sources:
+        findings = []
+        for row in rows:
+            try:
+                content = builder(row)
+                for category, issues in (
+                    ("answer", exercise_answer_audit(content)),
+                    ("instruction", exercise_instruction_audit(content)),
+                ):
+                    for issue in issues:
+                        findings.append({"day": row[0], "category": category, "issue": issue})
+            except Exception as exc:
+                findings.append({"day": row[0], "category": "build", "issue": f"{type(exc).__name__}:{exc}"})
+        exercise_issues[track] = findings
     return {
         "status": "failed" if any(tracks.values()) else "passed",
         "total_issues": sum(len(item["issues"]) for lessons in tracks.values() for item in lessons),
         "affected_lessons": sum(len(lessons) for lessons in tracks.values()),
         "tracks": tracks,
+        "exercise_issues": exercise_issues,
+        "total_exercise_issues": sum(len(items) for items in exercise_issues.values()),
     }
 
 
@@ -28,7 +53,7 @@ def main(argv=None):
         print(f"Curriculum audit saved to {args.output}")
     else:
         print(rendered)
-    return 1 if report["status"] == "failed" else 0
+    return 1 if report["status"] == "failed" or report["total_exercise_issues"] else 0
 
 
 if __name__ == "__main__":
