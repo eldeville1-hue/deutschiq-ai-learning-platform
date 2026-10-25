@@ -2,6 +2,9 @@ name: Production smoke
 
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: ["v88 Release Evidence"]
+    types: [completed]
   schedule:
     - cron: "17 */6 * * *"
 
@@ -14,12 +17,31 @@ concurrency:
 
 jobs:
   verify:
+    # Only check successful release evidence from main. Scheduled/manual runs
+    # remain available for ongoing production monitoring.
+    if: ${{ github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Verify live DeutschIQ release
-        run: python backend/scripts/smoke_test.py https://deutschiq.onrender.com
+      - name: Wait for the production release to become healthy
+        shell: bash
+        run: |
+          # Render deployment starts asynchronously after a main push. Retry
+          # boundedly rather than checking the old instance immediately.
+          for attempt in {1..8}; do
+            if python backend/scripts/smoke_test.py https://deutschiq.onrender.com; then
+              exit 0
+            fi
+            if [ "$attempt" -eq 8 ]; then
+              echo "::error::Production smoke did not pass after 8 attempts"
+              exit 1
+            fi
+            echo "Production not ready (attempt $attempt/8); retrying in 30s"
+            sleep 30
+          done
