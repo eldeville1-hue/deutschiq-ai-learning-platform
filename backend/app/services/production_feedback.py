@@ -334,9 +334,12 @@ async def evaluate_production(answer: str, exercise: dict, lesson_content: dict,
     # Surface heuristics cannot verify B1+ grammar, meaning, or task fulfilment.
     # Never award a pass to an unverified advanced free response.
     requires_review = _requires_ai_task_review(exercise) or str(lesson_content.get("cefr", "A2")).upper() in {"B1", "B2", "C1", "C2"}
+    # Length, punctuation, and German-looking words are not evidence of
+    # grammar or communicative correctness, even at A1/A2. Keep the local
+    # rubric as guidance only; never persist it as a verified learner result.
     if not settings.OPENAI_API_KEY:
-        return _mark_review_pending(fallback, lang) if requires_review else fallback
+        return _mark_review_pending(fallback, lang)
     try:
         return await asyncio.wait_for(asyncio.to_thread(_ai_feedback, answer, exercise, lesson_content, lang), timeout=10)
     except Exception:
-        return _mark_review_pending(fallback, lang) if requires_review else fallback
+        return _mark_review_pending(fallback, lang)
