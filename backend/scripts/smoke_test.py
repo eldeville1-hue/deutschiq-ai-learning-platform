@@ -31,6 +31,12 @@ def header(headers: dict, name: str) -> str | None:
     return next((value for key, value in headers.items() if key.casefold() == wanted), None)
 
 
+def assert_database_release_ready(health: dict, expected_migration: str) -> None:
+    """Refuse unhealthy databases and migrations that differ from the checked-out release."""
+    if health.get("database") != "ok" or health.get("migrations") != expected_migration:
+        raise RuntimeError(f"Database is not release-ready: {health}; expected_migration={expected_migration}")
+
+
 def main() -> None:
     origin = (sys.argv[1] if len(sys.argv) > 1 else "https://deutschiq.onrender.com").rstrip("/")
     live = read_json(f"{origin}/api/health/live")
@@ -40,8 +46,7 @@ def main() -> None:
         raise RuntimeError(f"Unhealthy deployment: {health}")
     if release.get("version") != "80.0.5" or release.get("release") != "a2-content-review-v26":
         raise RuntimeError(f"Stale deployment: {release}")
-    if health.get("database") != "ok" or health.get("migrations") != "20261003_0011":
-        raise RuntimeError(f"Database is not release-ready: {health}")
+    assert_database_release_ready(health, "20261023_0012")
     html, headers = read(f"{origin}/")
     expected_security_headers = {
         "X-Content-Type-Options": "nosniff",
