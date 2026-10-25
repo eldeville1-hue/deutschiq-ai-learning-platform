@@ -20,6 +20,7 @@ from app.services.plan import generate_plan
 from app.services.tutor_context import build_tutor_learning_context, tutor_context_prompt
 from app.services.tutor_fallback import fallback_answer
 from app.services.tutor_writing_feedback import writing_length_feedback
+from app.services.tutor_writing_bank import WRITING_PROMPTS
 from app.services.tutor_turn_state import classify_tutor_turn, practice_turn_instruction
 from app.services.tutor_practice_session import update_practice_session
 from app.services.tutor_verified_practice import grade_reviewed_word_order, verified_retry_feedback, verified_specific_feedback, unverified_answer_feedback
@@ -146,6 +147,45 @@ async def ask_tutor(data: TutorRequest, db: Session = Depends(get_db), authentic
     if saved_practice and classify_tutor_turn(saved_practice.exercise_text, data.question) == "attempt":
         length_feedback = writing_length_feedback(saved_practice.exercise_text, data.question, lang)
         if length_feedback is not None:
+            # An AI review is available only when a provider is configured.
+            # The deterministic word/paragraph checks remain available offline.
+            if client and not _provider_quota_exhausted:
+                task = next(
+                    (row for row in WRITING_PROMPTS if row[2] in saved_practice.exercise_text),
+                    None,
+                )
+                if task is not None:
+                    review_language = {"ru": "Russian", "de": "German", "en": "English"}[lang]
+                    try:
+                        review = client.chat.completions.create(
+                            model=settings.OPENAI_MODEL or "gpt-4o-mini",
+                            messages=[
+                                {"role": "system", "content": (
+                                    "You are a careful German writing coach. Respond in " + review_language + ". "
+                                    "This is formative feedback, not a CEFR certification or exam score. "
+                                    "Use four short headings: Task completion, Grammar, Vocabulary, Coherence. "
+                                    "For each heading, describe only evidence visible in the student's text; "
+                                    "if uncertain, say so. Quote at most one short error example per heading "
+                                    "with a concrete correction and brief reason. "
+                                    "Do not invent mistakes, claims about learner ability, or a numerical grade. "
+                                    "Finish with one actionable revision request. Stay under 180 words."
+                                )},
+                                {"role": "user", "content": (
+                                    "Writing task: " + task[2] + " " + task[3]
+                                    + "\\nStudent text:\\n" + data.question[:5000]
+                                )},
+                            ],
+                            temperature=0.2,
+                            max_tokens=450,
+                        )
+                        if review.choices[0].message.content:
+                            return save_exchange(
+                                db, user.id, data.question,
+                                length_feedback + "\\n\\n" + review.choices[0].message.content,
+                                usage, daily_limit, "writing_ai_review", lang,
+                            )
+                    except Exception:
+                        logger.exception("Writing review provider unavailable; using objective feedback")
             return save_exchange(
                 db, user.id, data.question, length_feedback, usage, daily_limit,
                 "writing_length", lang,
