@@ -172,7 +172,7 @@ async def ask_tutor(data: TutorRequest, db: Session = Depends(get_db), authentic
                                 )},
                                 {"role": "user", "content": (
                                     "Writing task: " + task[2] + " " + task[3]
-                                    + "\\nStudent text:\\n" + data.question[:5000]
+                                    + "\nStudent text:\n" + data.question[:5000]
                                 )},
                             ],
                             temperature=0.2,
@@ -181,7 +181,7 @@ async def ask_tutor(data: TutorRequest, db: Session = Depends(get_db), authentic
                         if review.choices[0].message.content:
                             return save_exchange(
                                 db, user.id, data.question,
-                                length_feedback + "\\n\\n" + review.choices[0].message.content,
+                                length_feedback + "\n\n" + review.choices[0].message.content,
                                 usage, daily_limit, "writing_ai_review", lang,
                             )
                     except Exception:
