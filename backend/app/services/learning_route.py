@@ -46,7 +46,8 @@ def filter_roadmap_for_level(lessons, level: str | None):
     requested = curriculum_track_for_level(level)
     selected = [
         lesson for lesson in lessons
-        if ((lesson.content or {}).get("track") or "foundation") == requested
+        if getattr(lesson, "is_active", True)
+        and ((lesson.content or {}).get("track") or "foundation") == requested
     ]
     if selected:
         return selected
@@ -57,7 +58,7 @@ def filter_roadmap_for_level(lessons, level: str | None):
         "B2": ("B1", "A2", "A1", "foundation"),
     }
     for fallback in fallback_order.get(requested, ("foundation",)):
-        fallback_lessons = [lesson for lesson in lessons if ((lesson.content or {}).get("track") or "foundation") == fallback]
+        fallback_lessons = [lesson for lesson in lessons if getattr(lesson, "is_active", True) and ((lesson.content or {}).get("track") or "foundation") == fallback]
         if fallback_lessons:
             return fallback_lessons
     return []
@@ -98,6 +99,7 @@ def lesson_blockers(lesson, lessons, completed_ids: set[int], mastery: dict[str,
 
 def select_recommended_lesson(lessons, completed_ids: set[int], mastery: dict[str, float], weak_points: dict, priority_strength: dict[str, float] | None = None, focus_skill: str | None = None):
     """Adapt the next action without renumbering or reshuffling the route."""
+    lessons = [lesson for lesson in lessons if getattr(lesson, "is_active", True)]
     candidates = [
         lesson for lesson in lessons
         if lesson.id not in completed_ids
