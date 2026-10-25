@@ -2,7 +2,7 @@
 import unittest
 from types import SimpleNamespace
 
-from app.services.learning_route import select_recommended_lesson
+from app.services.learning_route import select_recommended_lesson, filter_roadmap_for_level
 from app.services.lesson_coaching import repeated_error_focus
 
 
@@ -21,6 +21,25 @@ class AdaptiveRouteGuardTests(unittest.TestCase):
         self.articles = lesson(2, "articles", 2)
         self.advanced = lesson(3, "relative_clauses", 3, ["articles"])
         self.lessons = [self.intro, self.articles, self.advanced]
+
+    def test_inactive_duplicate_is_not_recommended_even_when_focused(self):
+        duplicate = lesson(99, "articles", 2)
+        duplicate.is_active = False
+        self.articles.is_active = True
+        selected = select_recommended_lesson(
+            [duplicate, self.articles], set(), {}, {},
+            focus_skill="articles",
+        )
+        self.assertEqual(selected.id, self.articles.id)
+
+    def test_inactive_lessons_are_excluded_from_fallback_route(self):
+        inactive = lesson(99, "word_order", 1)
+        inactive.content["track"] = "foundation"
+        inactive.is_active = False
+        active = lesson(100, "articles", 2)
+        active.content["track"] = "foundation"
+        active.is_active = True
+        self.assertEqual(filter_roadmap_for_level([inactive, active], "B2"), [active])
 
     def test_repeated_errors_select_available_skill(self):
         history = [{"skill_id": "articles", "correct": False}] * 2
