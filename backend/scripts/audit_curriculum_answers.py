@@ -10,13 +10,13 @@ from collections import Counter
 
 from app.core.database import SessionLocal
 from app.models.lesson import Lesson
-from app.services.content_quality import exercise_answer_audit
+from app.services.content_quality import exercise_answer_audit, exercise_instruction_audit
 
 LEVELS = ("A1", "A2", "B1", "B2")
 
 
 def build_report(lessons):
-    report = {"levels": {}, "issues": [], "total_lessons": 0, "total_exercises": 0}
+    report = {"levels": {}, "issues": [], "total_lessons": 0, "total_exercises": 0, "answer_issues": 0, "instruction_issues": 0}
     report["tracks"] = {}
     report["duplicate_track_days"] = []
     seen_days = {}
@@ -45,16 +45,22 @@ def build_report(lessons):
         count = len(content.get("exercises") or [])
         stats["exercises"] += count
         report["total_exercises"] += count
-        problems = exercise_answer_audit(content)
+        answer_problems = exercise_answer_audit(content)
+        instruction_problems = exercise_instruction_audit(content)
+        problems = answer_problems + instruction_problems
+        report["answer_issues"] += len(answer_problems)
+        report["instruction_issues"] += len(instruction_problems)
         if problems:
             stats["affected_lessons"] += 1
         stats["issues"] += len(problems)
-        for problem in problems:
-            report["issues"].append({
+        for category, category_problems in (("answer", answer_problems), ("instruction", instruction_problems)):
+            for problem in category_problems:
+                report["issues"].append({
                 "level": lesson.level,
                 "lesson_id": lesson.id,
                 "topic": lesson.topic,
                 "issue": problem,
+                "category": category,
             })
     report["tracks"] = dict(sorted(report["tracks"].items()))
     report["issue_counts"] = dict(sorted(Counter(
@@ -81,6 +87,7 @@ def main():
             print(f"{level}: {stats['lessons']} lessons, {stats['exercises']} exercises, "
                   f"{stats['affected_lessons']} affected lessons, {stats['issues']} issues")
         print(f"TOTAL: {report['total_lessons']} lessons, {report['total_exercises']} exercises")
+        print(f"Answer issues: {report['answer_issues']}; instruction issues: {report['instruction_issues']}")
         for item in report["issues"]:
             print(f"{item['level']} lesson {item['lesson_id']} ({item['topic']}): {item['issue']}")
 
