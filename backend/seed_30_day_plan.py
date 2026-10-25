@@ -294,6 +294,32 @@ def seed():
                     estimated_time=15,
                     is_active=True,
                 ))
+        # Keep historical lesson IDs for attempts/progress, but remove stale
+        # duplicate roadmap days from the active learning catalogue. All
+        # updates happen in the same transaction as the canonical seed.
+        # Existing records are never deleted or reassigned to another day.
+        db.flush()
+        roadmap_days = {}
+        for item in db.query(Lesson).all():
+            data = item.content if isinstance(item.content, dict) else {}
+            if data.get("track") in ("A1", "A2", "B1", "B2"):
+                continue
+            day = data.get("day")
+            if isinstance(day, int) and 1 <= day <= 30:
+                roadmap_days.setdefault(day, []).append(item)
+        for day, items in roadmap_days.items():
+            if len(items) < 2:
+                continue
+            # Prefer the exact record selected by the legacy seed matcher,
+            # which is the one updated above; never replace its primary key.
+            authored_topic = CURRICULUM[day - 1][1]
+            canonical = find_roadmap_lesson(existing_lessons, day, authored_topic)
+            if canonical not in items:
+                canonical = min(items, key=lambda item: item.id)
+            for item in items:
+                if item.id != canonical.id:
+                    item.is_active = False
+
         for row in B1_CURRICULUM:
             day, _module, topic, pillar, *_copy = row
             content = build_b1_content(row)
