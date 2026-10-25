@@ -4,7 +4,7 @@ import unittest
 from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
-from sqlalchemy import ARRAY, create_engine
+from sqlalchemy import ARRAY, JSON, create_engine
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import Session
 
@@ -24,8 +24,9 @@ def sqlite_array(_type, _compiler, **kwargs):
 
 class PersistedAdaptiveTodayTests(unittest.TestCase):
     def setUp(self):
+        self._weak_tags_type = Lesson.__table__.c.weak_point_tags.type
+        Lesson.__table__.c.weak_point_tags.type = JSON()
         self._review_dates_type = UserProgress.__table__.c.review_dates.type
-        from sqlalchemy import JSON
         UserProgress.__table__.c.review_dates.type = JSON()
         self.engine = create_engine("sqlite:///:memory:")
         for model in (User, Lesson, LearningSession, ExerciseAttempt, TopicMastery,
@@ -56,6 +57,7 @@ class PersistedAdaptiveTodayTests(unittest.TestCase):
         self.db.close()
         self.engine.dispose()
         UserProgress.__table__.c.review_dates.type = self._review_dates_type
+        Lesson.__table__.c.weak_point_tags.type = self._weak_tags_type
 
     def answer(self, value, lesson_id=11):
         session = asyncio.run(start_lesson(
