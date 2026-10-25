@@ -53,13 +53,14 @@ def build_report(lessons):
         if problems:
             stats["affected_lessons"] += 1
         stats["issues"] += len(problems)
-        for problem in problems:
-            report["issues"].append({
+        for category, category_problems in (("answer", answer_problems), ("instruction", instruction_problems)):
+            for problem in category_problems:
+                report["issues"].append({
                 "level": lesson.level,
                 "lesson_id": lesson.id,
                 "topic": lesson.topic,
                 "issue": problem,
-                "category": "answer" if problem in answer_problems else "instruction",
+                "category": category,
             })
     report["tracks"] = dict(sorted(report["tracks"].items()))
     report["issue_counts"] = dict(sorted(Counter(
