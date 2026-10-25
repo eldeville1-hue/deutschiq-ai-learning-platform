@@ -310,10 +310,9 @@ def seed():
         for day, items in roadmap_days.items():
             if len(items) < 2:
                 continue
-            # Prefer the exact record selected by the legacy seed matcher,
-            # which is the one updated above; never replace its primary key.
-            authored_topic = CURRICULUM[day - 1][1]
-            canonical = find_roadmap_lesson(existing_lessons, day, authored_topic)
+            # The first matching row was updated in the seed loop. Preserve
+            # that row's ID; historical duplicate IDs remain queryable.
+            canonical = find_roadmap_lesson(existing_lessons, day, CURRICULUM[day - 1][1])
             if canonical not in items:
                 canonical = min(items, key=lambda item: item.id)
             for item in items:
