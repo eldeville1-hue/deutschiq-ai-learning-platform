@@ -5,7 +5,7 @@ progress may reference either ID. Audit before any destructive cleanup.
 """
 from types import SimpleNamespace
 
-from seed_30_day_plan import find_roadmap_lesson
+from seed_30_day_plan import find_roadmap_lesson, deactivate_duplicate_roadmap_days
 
 
 def lesson(lesson_id, day, track=None, topic="word_order"):
@@ -41,3 +41,25 @@ def test_duplicate_report_does_not_modify_lesson_ids():
     lessons = [lesson(10, 10), lesson(84, 10)]
     assert duplicate_roadmap_days(lessons) == {10: [10, 84]}
     assert [item.id for item in lessons] == [10, 84]
+
+
+def test_deactivation_keeps_one_active_and_preserves_historical_ids():
+    old = lesson(10, 10)
+    duplicate = lesson(84, 10)
+    cefr = lesson(110, 10, "A2")
+    for item in (old, duplicate, cefr):
+        item.is_active = True
+    original_ids = [item.id for item in (old, duplicate, cefr)]
+    deactivate_duplicate_roadmap_days([old, duplicate, cefr], [old, duplicate, cefr])
+    assert [item.id for item in (old, duplicate, cefr)] == original_ids
+    assert [old.is_active, duplicate.is_active, cefr.is_active] == [True, False, True]
+    deactivate_duplicate_roadmap_days([old, duplicate, cefr], [old, duplicate, cefr])
+    assert [old.is_active, duplicate.is_active, cefr.is_active] == [True, False, True]
+
+
+def test_deactivation_does_not_touch_unrelated_days():
+    one = lesson(1, 1)
+    two = lesson(2, 2)
+    one.is_active = two.is_active = True
+    deactivate_duplicate_roadmap_days([one, two], [one, two])
+    assert one.is_active and two.is_active

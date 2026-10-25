@@ -263,6 +263,28 @@ def find_roadmap_lesson(lessons, day, topic):
     )
 
 
+def deactivate_duplicate_roadmap_days(lessons, existing_lessons):
+    """Hide redundant roadmap rows without changing IDs or CEFR lessons."""
+    roadmap_days = {}
+    for item in lessons:
+        data = item.content if isinstance(item.content, dict) else {}
+        if data.get("track") in ("A1", "A2", "B1", "B2"):
+            continue
+        day = data.get("day")
+        if isinstance(day, int) and not isinstance(day, bool) and 1 <= day <= 30:
+            roadmap_days.setdefault(day, []).append(item)
+    for day, items in roadmap_days.items():
+        if len(items) < 2:
+            continue
+        canonical = find_roadmap_lesson(existing_lessons, day, CURRICULUM[day - 1][1])
+        if canonical not in items:
+            canonical = min(items, key=lambda item: item.id)
+        canonical.is_active = True
+        for item in items:
+            if item.id != canonical.id:
+                item.is_active = False
+
+
 def seed():
     validate_all_curriculum_before_seed()
     db = SessionLocal()
@@ -294,6 +316,13 @@ def seed():
                     estimated_time=15,
                     is_active=True,
                 ))
+        # Keep historical lesson IDs for attempts/progress, but remove stale
+        # duplicate roadmap days from the active learning catalogue. All
+        # updates happen in the same transaction as the canonical seed.
+        # Existing records are never deleted or reassigned to another day.
+        db.flush()
+        deactivate_duplicate_roadmap_days(db.query(Lesson).all(), existing_lessons)
+
         for row in B1_CURRICULUM:
             day, _module, topic, pillar, *_copy = row
             content = build_b1_content(row)
