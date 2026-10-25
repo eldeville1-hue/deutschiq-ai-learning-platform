@@ -378,6 +378,14 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
     common_mistakes = lesson_content.get("common_mistakes") or []
     error_type = None if correct else ((production_feedback or {}).get("error_type") or (structured_feedback or {}).get("error_type") or exercise.get("misconception") or exercise.get("error_type") or skill.pillar)
     retry_copy = misconception_feedback(error_type, normalize_language(data.language)) if not correct else None
+    # Prefer a verified, specific diagnosis over generic misconception copy.
+    # Never use candidate diagnoses from an uncertain evaluation here.
+    confirmed = (structured_feedback or {}).get("confirmed_errors", []) if not correct else []
+    if confirmed and isinstance(confirmed[0], dict):
+        specific_type = confirmed[0].get("type")
+        if specific_type and specific_type not in {"answer_mismatch", "empty_answer"}:
+            retry_copy = misconception_feedback(specific_type, normalize_language(data.language))
+
     retry_exercise = supported_retry_exercise(original_exercise, lesson_content, data.language) if not correct and not data.retry else None
     if retry_exercise:
         retry_exercise = {key: value for key, value in retry_exercise.items() if key not in {"answer", "accepted_answers", "explanation"}}
