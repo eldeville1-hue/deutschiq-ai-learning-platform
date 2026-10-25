@@ -143,7 +143,7 @@ async def get_plan(user_id: int, lang: str | None = None, track: str | None = No
         raise
     except SQLAlchemyError:
         db.rollback()
-        return []
+        raise HTTPException(status_code=503, detail="Learning plan is temporarily unavailable")
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
