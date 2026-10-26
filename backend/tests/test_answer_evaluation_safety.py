@@ -92,6 +92,45 @@ class AnswerEvaluationSafetyTests(unittest.TestCase):
         self.assertFalse(result["correct"])
         self.assertEqual(result["evaluation_status"], "verified")
 
+    def test_a1_time_adverbial_fronting_is_accepted_when_authored(self):
+        result = self.evaluate(
+            "Morgen fahre ich nach Berlin.", "Ich fahre morgen nach Berlin.",
+            accepted_answers=["Morgen fahre ich nach Berlin."],
+            target_feature="word_order",
+        )
+        self.assertTrue(result["correct"])
+        self.assertEqual("verified", result["evaluation_status"])
+
+    def test_a2_time_adverbial_fronting_without_authored_answer_is_uncertain(self):
+        result = self.evaluate(
+            "Am Samstag besuchen wir unsere Freunde.",
+            "Wir besuchen am Samstag unsere Freunde.",
+            target_feature="word_order",
+        )
+        self.assertFalse(result["correct"])
+        self.assertEqual("uncertain", result["evaluation_status"])
+        self.assertNotIn("word_order", result["candidate_error_types"])
+
+    def test_b1_subordinate_clause_fronting_is_accepted_when_authored(self):
+        result = self.evaluate(
+            "Weil es regnet, bleiben wir zu Hause.",
+            "Wir bleiben zu Hause, weil es regnet.",
+            accepted_answers=["Weil es regnet, bleiben wir zu Hause."],
+            target_feature="word_order",
+        )
+        self.assertTrue(result["correct"])
+        self.assertEqual("verified", result["evaluation_status"])
+
+    def test_b2_unlisted_clause_fronting_is_not_falsely_diagnosed(self):
+        result = self.evaluate(
+            "Obwohl die Frist abgelaufen ist, wird der Antrag geprüft.",
+            "Der Antrag wird geprüft, obwohl die Frist abgelaufen ist.",
+            target_feature="word_order",
+        )
+        self.assertFalse(result["correct"])
+        self.assertEqual("uncertain", result["evaluation_status"])
+        self.assertNotIn("word_order", result["candidate_error_types"])
+
     def test_unlisted_choice_is_not_accepted(self):
         result = self.evaluate("Ich trinke Milch.", "Ich trinke Wasser.", kind="choice")
         self.assertFalse(result["correct"])
