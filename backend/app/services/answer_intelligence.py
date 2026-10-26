@@ -268,6 +268,17 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
     if legacy["correct"] and not exact:
         legacy["correct"] = False
         legacy["error_type"] = "answer_mismatch"
+    # Reordering can yield more than one grammatical German sentence. When the
+    # same tokens form a different order, avoid a confident false negative.
+    reordered_alternative = (
+        exercise.get("type") == "reorder"
+        and not exact
+        and bool(normalize_text(answer))
+        and any(
+            Counter(normalize_text(answer).split()) == Counter(normalize_text(model).split())
+            for model in accepted
+        )
+    )
     open_ended = exercise.get("type") in {"translation", "translate", "free_text", "sentence", "writing", "dialogue"}
     empty_submission = not normalize_text(answer)
     # An authored exact alternative must be scored against its own model.
@@ -287,7 +298,7 @@ def evaluate_structured_answer(answer: str, exercise: dict) -> dict:
     # Only explicitly accepted text is deterministically verified for open tasks.
     punctuation_conflict = any(_semantic_punctuation_conflict(answer, model) for model in accepted)
     status = ("needs_review" if not accepted else
-              "uncertain" if punctuation_conflict and not exact else
+              "uncertain" if (punctuation_conflict and not exact) or reordered_alternative else
               "verified" if (empty_submission or exact or not open_ended) else "uncertain")
     errors = []
     if status == "verified" and empty_submission:
