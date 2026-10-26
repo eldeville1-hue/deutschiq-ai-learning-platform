@@ -17,6 +17,7 @@ def build_report():
         ("B2", B2_CURRICULUM, build_b2_content),
     ]
     exercise_issues = {}
+    exercise_findings = []
     for track, rows, builder in sources:
         findings = []
         for row in rows:
@@ -28,6 +29,17 @@ def build_report():
                 ):
                     for issue in issues:
                         findings.append({"day": row[0], "category": category, "issue": issue})
+                        parts = issue.split(":", 2)
+                        index = int(parts[1]) if len(parts) > 2 and parts[0] == "exercise" and parts[1].isdigit() else None
+                        exercises = content.get("exercises") or []
+                        exercise = exercises[index] if index is not None and index < len(exercises) else None
+                        exercise_findings.append({
+                            "track": track, "level": "A1" if track == "30-day roadmap" else track,
+                            "day": row[0], "exercise_index": index,
+                            "exercise_id": exercise.get("id") if isinstance(exercise, dict) else None,
+                            "category": category, "severity": "blocking",
+                            "issue": issue, "evidence": issue,
+                        })
             except Exception as exc:
                 findings.append({"day": row[0], "category": "build", "issue": f"{type(exc).__name__}:{exc}"})
         exercise_issues[track] = findings
@@ -37,6 +49,7 @@ def build_report():
         "affected_lessons": sum(len(lessons) for lessons in tracks.values()),
         "tracks": tracks,
         "exercise_issues": exercise_issues,
+        "exercise_findings": exercise_findings,
         "total_exercise_issues": sum(len(items) for items in exercise_issues.values()),
     }
 
