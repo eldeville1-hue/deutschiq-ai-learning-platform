@@ -28,7 +28,7 @@ CURRICULUM = [
     (14, "Wechselpräpositionen: wo/wohin", "Wo? требует Dativ; wohin? требует Akkusativ.", "dative_case", "Das Buch liegt auf dem Tisch. Ich lege es auf den Tisch.", "Wo? Das Bild hängt an ___ Wand.", "der"),
     # Неделя 3 — Artikel
     (15, "Род существительных: основы", "Артикль нужно учить вместе с существительным: der Tisch, die Lampe, das Buch.", "articles", "Das Buch liegt auf dem Tisch.", "Выберите артикль: ___ Buch", "das"),
-    (16, "Мужской род по окончаниям", "Существительные на -er, -ling, -ismus часто мужского рода.", "articles", "der Lehrer, der Frühling, der Tourismus", "Артикль: ___ Frühling", "der"),
+    (16, "Мужской род по окончаниям", "Существительные на -ling и -ismus обычно мужского рода; окончание -er само по себе род не определяет (der Lehrer, но das Fenster).", "articles", "der Lehrer, der Frühling, der Tourismus", "Артикль: ___ Frühling", "der"),
     (17, "Женский род по окончаниям", "Существительные на -ung, -heit, -keit, -schaft, -tion обычно женского рода.", "articles", "die Wohnung, die Freiheit, die Möglichkeit", "Артикль: ___ Wohnung", "die"),
     (18, "Средний род по окончаниям", "Уменьшительные на -chen/-lein и многие слова на -ment имеют das.", "articles", "das Mädchen, das Brötchen, das Instrument", "Артикль: ___ Brötchen", "das"),
     (19, "Неопределённый артикль", "ein используется с мужским и средним родом, eine — с женским.", "articles", "Das ist ein Tisch und eine Lampe.", "Вставьте: Das ist ___ Lampe.", "eine"),
