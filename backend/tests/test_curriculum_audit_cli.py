@@ -22,6 +22,20 @@ class CurriculumAuditCliTests(unittest.TestCase):
         self.assertGreater(report["total_exercise_issues"], 0)
         self.assertEqual(0, report["total_issues"])
 
+    def test_structured_exercise_finding_has_reproducible_location(self):
+        with patch.object(audit_curriculum, "curriculum_audit_report", return_value={"A1": [], "B2": []}), \
+             patch.object(audit_curriculum, "exercise_answer_audit", return_value=["exercise:0:no_usable_answer"]):
+            report = audit_curriculum.build_report()
+        self.assertEqual("failed", report["status"])
+        finding = next(item for item in report["exercise_findings"] if item["issue"] == "exercise:0:no_usable_answer")
+        self.assertEqual("answer", finding["category"])
+        self.assertEqual("blocking", finding["severity"])
+        self.assertEqual(0, finding["exercise_index"])
+        self.assertIn(finding["track"], ("30-day roadmap", "A1", "A2", "B1", "B2"))
+        self.assertIn(finding["level"], ("A1", "A2", "B1", "B2"))
+        self.assertIsNotNone(finding["day"])
+        self.assertEqual(finding["issue"], finding["evidence"])
+
     def test_failed_report_exits_nonzero_and_writes_json(self):
         problems = {"A1": [{"day": 3, "issues": ["missing:objective", "missing:rule"]}], "B2": []}
         with tempfile.TemporaryDirectory() as folder:
