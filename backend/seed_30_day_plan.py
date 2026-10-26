@@ -52,7 +52,7 @@ LESSON_DETAILS = {
     1: ("❌ Ich heute Deutsch lerne.", "✅ Ich lerne heute Deutsch.", "Расскажи, что ты делаешь сегодня.", ["lerne", "mache", "arbeite"]),
     2: ("❌ Am Montag ich arbeite zu Hause.", "✅ Am Montag arbeite ich zu Hause.", "Опиши свой план на конкретный день.", ["montag", "heute", "morgen"]),
     3: ("❌ Wann du kommst nach Hause?", "✅ Wann kommst du nach Hause?", "Задай собеседнику вопрос о времени.", ["wann", "kommst", "gehst"]),
-    4: ("❌ Du lernst heute Deutsch?", "✅ Lernst du heute Deutsch?", "Задай вопрос, на который отвечают ja или nein.", ["du"]),
+    4: ("❌ Lernst heute du Deutsch?", "✅ Lernst du heute Deutsch?", "Задай вопрос, на который отвечают ja или nein.", ["du"]),
     5: ("❌ Ich kann spreche Deutsch.", "✅ Ich kann Deutsch sprechen.", "Скажи, что ты можешь или должен сделать.", ["kann", "muss", "will"]),
     6: ("❌ Ich aufstehe um sieben Uhr.", "✅ Ich stehe um sieben Uhr auf.", "Опиши действие с отделяемым глаголом.", ["auf", "ein", "an"]),
     7: ("❌ Weil ich bin müde.", "✅ Weil ich müde bin.", "Объясни причину своего действия.", ["weil"]),
