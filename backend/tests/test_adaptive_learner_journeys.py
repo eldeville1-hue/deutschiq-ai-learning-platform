@@ -25,6 +25,30 @@ class AdaptiveLearnerJourneyTests(unittest.TestCase):
         self.assertLess(supported, independent)
         self.assertLess(supported, 50)
 
+    def test_retry_then_independent_retrieval_preserves_evidence_strength(self):
+        baseline = 55
+        after_error = adaptive_mastery_update(baseline, False, "sure")
+        supported = adaptive_mastery_update(after_error, True, "sure", retry=True)
+        independent = adaptive_mastery_update(after_error, True, "sure")
+        recalled = adaptive_mastery_update(supported, True, "sure", retrieval=True)
+        self.assertLess(after_error, baseline)
+        self.assertGreater(supported, after_error)
+        self.assertLess(supported, independent)
+        self.assertGreater(recalled, supported)
+        self.assertGreaterEqual(retrieval_review_interval(True, next_stability(1.0, True, "sure")), 3)
+
+    def test_failed_delayed_retrieval_reduces_stability_and_reschedules(self):
+        stable = next_stability(8.0, True, "sure")
+        forgotten = next_stability(stable, False, "sure")
+        self.assertLess(forgotten, stable)
+        self.assertEqual(1, retrieval_review_interval(False, forgotten))
+        self.assertLess(adaptive_mastery_update(80, False, "sure", retrieval=True), 80)
+
+    def test_production_score_evidence_changes_mastery_less_than_binary_success(self):
+        low = adaptive_mastery_update(60, True, "okay", production_score=70)
+        high = adaptive_mastery_update(60, True, "okay", production_score=95)
+        self.assertGreater(high, low)
+
     def test_delayed_retrieval_builds_stability_and_expands_spacing(self):
         mastery, stability = 58, 1.0
         mastery = adaptive_mastery_update(mastery, True, "sure", retrieval=True)
