@@ -766,7 +766,7 @@ const LessonScreen: React.FC = () => {
                 {tr(lang, 'Проверить ещё раз', 'Erneut prüfen', 'Try checking again')}
               </button>
               <button type="button" className="feedback-skip" disabled={checking} onClick={() => void skipExercise('unverified_answer')}>
-                {tr(lang, 'Продолжить без оценки', 'Ohne Bewertung weiter', 'Continue without a grade')}
+                {tr(lang, 'Дальше без оценки', 'Ohne Note weiter', 'Next without grading')}
               </button>
             </>}
           </div>}
