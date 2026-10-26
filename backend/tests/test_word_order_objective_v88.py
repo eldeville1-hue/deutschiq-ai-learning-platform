@@ -17,7 +17,8 @@ class WordOrderObjectiveV88Tests(unittest.TestCase):
             "target_feature": "word_order",
         })
         self.assertFalse(result["correct"])
-        self.assertIn("word_order", [error["type"] for error in result["errors"]])
+        self.assertEqual(result["evaluation_status"], "uncertain")
+        self.assertNotIn("word_order", [error["type"] for error in result["confirmed_errors"]])
 
     def test_unlisted_open_permutation_remains_uncertain_without_xp(self):
         result = evaluate_structured_answer("Heute lerne ich Deutsch.", {
