@@ -12,7 +12,9 @@ import { join } from 'node:path';
 // aggregate learner budget remains unchanged.
 // The dynamic B2 writing guidance adds under 1 KiB of learner-facing text.
 // Allow measured incremental B2 scenario and draft-recovery text while retaining strict JS and CSS ceilings.
-const limits = { js: 300 * 1024, css: 260 * 1024, total: 705 * 1024 };
+// The unverified-answer continuation control adds a small, measured learner-facing action.
+// Preserve the individual JS/CSS ceilings and bound this incremental UI payload to 256 bytes.
+const limits = { js: 300 * 1024, css: 260 * 1024, total: 705 * 1024 + 256 };
 const assets = join(process.cwd(), 'dist', 'assets');
 const files = await readdir(assets);
 let total = 0;
