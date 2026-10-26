@@ -25,7 +25,7 @@ CURRICULUM = [
     (11, "Предлоги с Akkusativ", "durch, für, gegen, ohne и um всегда требуют Akkusativ.", "prepositions", "Das Geschenk ist für meinen Bruder.", "Вставьте: Das ist für ___ Bruder. (mein)", "meinen"),
     (12, "Предлоги с Dativ", "aus, bei, mit, nach, seit, von и zu всегда требуют Dativ.", "prepositions", "Ich fahre mit dem Bus.", "Вставьте: Ich fahre mit ___ Bus.", "dem"),
     (13, "Личные местоимения в Dativ", "mir, dir, ihm, ihr, uns, euch, ihnen/Ihnen заменяют объект в Dativ.", "dative_pronouns", "Kannst du mir helfen?", "Замените dem Mann: Ich helfe ___.", "ihm"),
-    (14, "Wechselpräpositionen: wo/wohin", "Wo? требует Dativ; wohin? требует Akkusativ.", "dative_case", "Das Buch liegt auf dem Tisch. Ich lege es auf den Tisch.", "Wo? Das Bild hängt an ___ Wand.", "der"),
+    (14, "Wechselpräpositionen: wo/wohin", "С предлогами места двойного управления (in, an, auf и др.): где? (wo?) — Dativ, куда? (wohin?) — Akkusativ. Это правило не относится ко всем предлогам.", "dative_case", "Das Buch liegt auf dem Tisch. Ich lege es auf den Tisch.", "Wo? Das Bild hängt an ___ Wand.", "der"),
     # Неделя 3 — Artikel
     (15, "Род существительных: основы", "Артикль нужно учить вместе с существительным: der Tisch, die Lampe, das Buch.", "articles", "Das Buch liegt auf dem Tisch.", "Выберите артикль: ___ Buch", "das"),
     (16, "Мужской род по окончаниям", "Существительные на -ling и -ismus обычно мужского рода; окончание -er само по себе род не определяет (der Lehrer, но das Fenster).", "articles", "der Lehrer, der Frühling, der Tourismus", "Артикль: ___ Frühling", "der"),
