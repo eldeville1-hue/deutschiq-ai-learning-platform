@@ -128,8 +128,9 @@ class StructuredEvaluationV88Tests(unittest.TestCase):
         result = evaluate_structured_answer("Heute lernen wir Deutsch.", {
             "type": "reorder", "answer": "Wir lernen heute Deutsch.",
         })
-        self.assertEqual(result["evaluation_status"], "verified")
-        self.assertEqual(result["errors"][0]["type"], "word_order")
+        self.assertEqual(result["evaluation_status"], "uncertain")
+        self.assertFalse(result["correct"])
+        self.assertEqual(result["confirmed_errors"], [])
 
     def test_explicit_case_target_classifies_case(self):
         result = evaluate_structured_answer("Ich warte auf dem Bus.", {
