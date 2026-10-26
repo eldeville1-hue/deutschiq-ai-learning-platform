@@ -32,7 +32,7 @@ def build_report():
                 findings.append({"day": row[0], "category": "build", "issue": f"{type(exc).__name__}:{exc}"})
         exercise_issues[track] = findings
     return {
-        "status": "failed" if any(tracks.values()) else "passed",
+        "status": "failed" if any(tracks.values()) or any(exercise_issues.values()) else "passed",
         "total_issues": sum(len(item["issues"]) for lessons in tracks.values() for item in lessons),
         "affected_lessons": sum(len(lessons) for lessons in tracks.values()),
         "tracks": tracks,

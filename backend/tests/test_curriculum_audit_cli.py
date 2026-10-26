@@ -14,6 +14,14 @@ class CurriculumAuditCliTests(unittest.TestCase):
             self.assertEqual("passed", report["status"])
             self.assertEqual(0, report["total_issues"])
 
+    def test_exercise_findings_fail_even_when_track_structure_is_clean(self):
+        with patch.object(audit_curriculum, "curriculum_audit_report", return_value={"A1": [], "B2": []}), \
+             patch.object(audit_curriculum, "exercise_answer_audit", return_value=["exercise:missing_answer"]):
+            report = audit_curriculum.build_report()
+        self.assertEqual("failed", report["status"])
+        self.assertGreater(report["total_exercise_issues"], 0)
+        self.assertEqual(0, report["total_issues"])
+
     def test_failed_report_exits_nonzero_and_writes_json(self):
         problems = {"A1": [{"day": 3, "issues": ["missing:objective", "missing:rule"]}], "B2": []}
         with tempfile.TemporaryDirectory() as folder:
