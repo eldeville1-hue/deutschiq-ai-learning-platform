@@ -2,7 +2,7 @@
 import unittest
 from types import SimpleNamespace
 
-from app.services.assessment_insights import assessment_insights, evidence_gate
+from app.services.assessment_insights import assessment_insights, evidence_gate, independent_progression_evidence
 from app.services.lesson_coaching import repeated_error_focus
 from app.services.learning_engine import adaptive_mastery_update, adaptive_priority_score, next_stability, retrieval_review_interval
 from app.services.learning_route import curriculum_track_for_level, lesson_blockers, select_recommended_lesson
@@ -17,6 +17,25 @@ def production(topic, **dimensions):
 
 
 class AdaptiveLearnerJourneyTests(unittest.TestCase):
+    def test_checkpoint_requires_distinct_verified_independent_attempts(self):
+        def attempt(session, index, assistance, correct=True, verified=True):
+            return SimpleNamespace(
+                session_id=session, exercise_index=index, correct=correct,
+                assessment={
+                    "learning_evidence": {"assistance_level": assistance},
+                    "evaluation": {"evaluation_status": "verified" if verified else "uncertain"},
+                },
+            )
+        guided = [attempt("s1", i, "guided_retry") for i in range(5)]
+        self.assertFalse(independent_progression_evidence(guided)["eligible"])
+        independent = [attempt("s1", i, "independent") for i in range(3)]
+        self.assertTrue(independent_progression_evidence(independent)["eligible"])
+        duplicate = [independent[0], independent[0], independent[1]]
+        self.assertFalse(independent_progression_evidence(duplicate)["eligible"])
+        uncertain = independent[:2] + [attempt("s2", 0, "independent", verified=False)]
+        self.assertFalse(independent_progression_evidence(uncertain)["eligible"])
+        self.assertFalse(independent_progression_evidence(independent[:2] + [attempt("s2", 0, "independent", correct=False)])["eligible"])
+
     def test_supported_retry_does_not_fake_independent_mastery(self):
         after_error = adaptive_mastery_update(35, False, "okay")
         supported = adaptive_mastery_update(after_error, True, "sure", retry=True)
