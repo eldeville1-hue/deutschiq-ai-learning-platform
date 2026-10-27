@@ -129,6 +129,9 @@ def local_feedback(answer: str, exercise: dict, rule: str, lang: str = "en", cef
 # Learner-facing explanations for missing mandatory assessment requirements.
 # Keep these distinct from grammar and vocabulary scores.
 CRITERION_GUIDANCE = {
+    "formal_greeting": {"ru": "Начни письмо с официального обращения.", "de": "Beginne die Nachricht mit einer formellen Anrede.", "en": "Start the message with a formal greeting."},
+    "rescheduling_request": {"ru": "Чётко попроси перенести встречу или назначить другой срок.", "de": "Bitte ausdrücklich darum, den Termin zu verschieben.", "en": "Explicitly ask to reschedule the appointment."},
+    "formal_closing": {"ru": "Заверши письмо вежливой формулой прощания.", "de": "Schließe die Nachricht mit einer höflichen Grußformel ab.", "en": "End the message with a polite formal closing."},
     "overall_trend": {
         "ru": "Опиши направление изменения показателя: рост, снижение или отсутствие изменений.",
         "de": "Beschreibe die Entwicklung: Anstieg, Rückgang oder unveränderter Wert.",
@@ -299,7 +302,7 @@ def _ai_feedback(answer: str, exercise: dict, lesson_content: dict, lang: str) -
     corrected = str(result.get("corrected_answer") or exercise.get("answer", ""))
     return {
         "correct": passed, "score": score, "dimension_scores": scores,
-        "feedback": str(result.get("feedback") or _copy(lang)["grammar"]), "improvement": _criterion_improvement(missing_criteria, lang) or str(result.get("improvement") or _copy(lang)["expand"]),
+        "feedback": str(result.get("feedback") or _copy(lang)["grammar"]), "improvement": _criterion_improvement(missing_parts + missing_criteria, lang) or str(result.get("improvement") or _copy(lang)["expand"]),
         "corrected_answer": corrected, "source": "ai", "error_type": None if passed else (result.get("error_type") or "production_below_cefr"),
         "missing_words": [] if passed else word_diff(answer, corrected)["missing"], "extra_words": [] if passed else word_diff(answer, corrected)["extra"],
         "cefr_standard": cefr, "pass_mark": threshold, "missing_task_parts": list(dict.fromkeys(missing_parts + missing_criteria)),
