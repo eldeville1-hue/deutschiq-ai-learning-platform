@@ -29,7 +29,10 @@ class AdaptiveLearnerJourneyTests(unittest.TestCase):
         guided = [attempt("s1", i, "guided_retry") for i in range(5)]
         self.assertFalse(independent_progression_evidence(guided)["eligible"])
         independent = [attempt("s1", i, "independent") for i in range(3)]
-        self.assertTrue(independent_progression_evidence(independent)["eligible"])\n        independent[2].assessment["learning_evidence"]["attempt_number"] = 2\n        self.assertFalse(independent_progression_evidence(independent)["eligible"])\n        independent[2].assessment["learning_evidence"]["attempt_number"] = 1
+        self.assertTrue(independent_progression_evidence(independent)["eligible"])
+        independent[2].assessment["learning_evidence"]["attempt_number"] = 2
+        self.assertFalse(independent_progression_evidence(independent)["eligible"])
+        independent[2].assessment["learning_evidence"]["attempt_number"] = 1
         duplicate = [independent[0], independent[0], independent[1]]
         self.assertFalse(independent_progression_evidence(duplicate)["eligible"])
         uncertain = independent[:2] + [attempt("s2", 0, "independent", verified=False)]
