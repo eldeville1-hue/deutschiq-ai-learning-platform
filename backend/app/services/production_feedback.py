@@ -86,10 +86,6 @@ def local_feedback(answer: str, exercise: dict, rule: str, lang: str = "en", cef
     cefr = str(cefr or "A1").upper()
     scores, blocking_error = _local_scores(answer, exercise, cefr)
     model = exercise.get("model_answer") or exercise.get("answer", "")
-    if model and normalize_text(answer) == normalize_text(str(model)):
-        # Matching a model is not evidence of independent production or full mastery.
-        # Preserve the local heuristic scores and task-specific requirements.
-        blocking_error = None if blocking_error is None else blocking_error
     score = _overall(scores)
     threshold = PASS_MARKS.get(cefr, 70)
     passed = blocking_error is None and score >= threshold and scores["task_completion"] >= 60 and scores["grammar"] >= 50
