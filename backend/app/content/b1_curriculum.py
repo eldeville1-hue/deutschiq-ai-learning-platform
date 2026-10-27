@@ -141,7 +141,7 @@ def build_b1_content(row):
             {"question": f"Respond independently: {scenario_en}", "hint": rule_en, "explanation": "Your wording may differ: check the task, structure, and coherence."},
         ),
         _localized_exercise(
-            {"id": f"{topic}-speak", "type": "repeat", "stage": "transfer", "question": "Произнеси новую полезную фразу вслух.", "audio_text": alternatives[1], "answer": alternatives[1], "accepted_answers": [alternatives[1], alternatives[1].rstrip(".?!")], "explanation": "Произнеси новую фразу спокойно и связно.", "misconception": "fluency", "accessibility_label": "Произнести короткую немецкую фразу."},
+            {"id": f"{topic}-speak", "type": "repeat", "stage": "guided", "question": "Произнеси новую полезную фразу вслух.", "audio_text": alternatives[1], "answer": alternatives[1], "accepted_answers": [alternatives[1], alternatives[1].rstrip(".?!")], "explanation": "Произнеси новую фразу спокойно и связно.", "misconception": "fluency", "accessibility_label": "Произнести короткую немецкую фразу."},
             {"question": "Произнеси новую полезную фразу вслух.", "explanation": "Произнеси новую фразу спокойно и связно."},
             {"question": "Sprich den neuen nützlichen Satz laut.", "explanation": "Sprich den neuen Satz ruhig und zusammenhängend."},
             {"question": "Say the new useful sentence aloud.", "explanation": "Say the new sentence calmly and naturally."},
@@ -174,7 +174,7 @@ def build_b1_content(row):
                 {"question": "The trip was cancelled because of a strong storm. Explain it in one sentence.", "hint": "Start with Wegen + genitive.", "explanation": "Your sentence may differ if the reason and genitive are expressed correctly."},
             ),
             _localized_exercise(
-                {"id": "genitive-speak", "type": "repeat", "stage": "transfer", "question": "Произнеси полезную фразу.", "audio_text": "Aufgrund eines technischen Problems beginnt der Kurs später.", "answer": "Aufgrund eines technischen Problems beginnt der Kurs später.", "model_answer": "Aufgrund eines technischen Problems beginnt der Kurs später.", "accepted_answers": ["Aufgrund eines technischen Problems beginnt der Kurs später."], "explanation": "Aufgrund + Genitiv удобно для формальных объяснений.", "misconception": "fluency"},
+                {"id": "genitive-speak", "type": "repeat", "stage": "guided", "question": "Произнеси полезную фразу.", "audio_text": "Aufgrund eines technischen Problems beginnt der Kurs später.", "answer": "Aufgrund eines technischen Problems beginnt der Kurs später.", "model_answer": "Aufgrund eines technischen Problems beginnt der Kurs später.", "accepted_answers": ["Aufgrund eines technischen Problems beginnt der Kurs später."], "explanation": "Aufgrund + Genitiv удобно для формальных объяснений.", "misconception": "fluency"},
                 {"question": "Произнеси полезную фразу.", "explanation": "Aufgrund + Genitiv удобно для формальных объяснений."},
                 {"question": "Sprich den nützlichen Satz laut.", "explanation": "Aufgrund + Genitiv eignet sich gut für formelle Erklärungen."},
                 {"question": "Say the useful sentence aloud.", "explanation": "Aufgrund + genitive is useful for formal explanations."},
