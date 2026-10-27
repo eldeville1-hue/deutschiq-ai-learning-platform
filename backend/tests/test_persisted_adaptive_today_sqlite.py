@@ -98,6 +98,10 @@ class PersistedAdaptiveTodayTests(unittest.TestCase):
         due = asyncio.run(get_due_lesson_reviews(limit=10, db=self.db, authenticated_id=9001))
         self.assertIn(11, [item["lesson_id"] for item in due["reviews"]])
 
+        # The review is a separate attempt, not a resubmission of a
+        # completed learning exercise in its original session.
+        self.db.query(LearningSession).filter_by(user_id=1, lesson_id=11).update({"status": "completed"})
+        self.db.commit()
         session = asyncio.run(start_lesson(
             StartLessonRequest(user_id=9001, lesson_id=11),
             db=self.db, authenticated_id=9001,
