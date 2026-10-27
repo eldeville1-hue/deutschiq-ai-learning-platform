@@ -86,12 +86,17 @@ def local_feedback(answer: str, exercise: dict, rule: str, lang: str = "en", cef
     cefr = str(cefr or "A1").upper()
     scores, blocking_error = _local_scores(answer, exercise, cefr)
     model = exercise.get("model_answer") or exercise.get("answer", "")
+    if model and normalize_text(answer) == normalize_text(str(model)):
+        scores = {name: 100 for name in DIMENSIONS}
+        blocking_error = None
     score = _overall(scores)
     threshold = PASS_MARKS.get(cefr, 70)
     passed = blocking_error is None and score >= threshold and scores["task_completion"] >= 60 and scores["grammar"] >= 50
     missing_parts = _formal_message_missing_parts(answer, exercise)
     if missing_parts:
         passed = False
+        scores["task_completion"] = min(scores["task_completion"], 50)
+        score = _overall(scores)
     copy = _copy(lang)
     weakest = min(DIMENSIONS, key=lambda name: scores[name])
     improvement_key = {"task_completion": "structure", "grammar": "grammar", "vocabulary": "expand", "coherence": "expand", "register": "register"}[weakest]
