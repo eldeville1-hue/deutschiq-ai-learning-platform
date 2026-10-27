@@ -9,7 +9,7 @@ from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import Session
 
 from app.api.endpoints.learning import today
-from app.api.endpoints.lesson import CheckAnswerRequest, StartLessonRequest, check_answer, start_lesson
+from app.api.endpoints.lesson import CheckAnswerRequest, StartLessonRequest, check_answer, start_lesson, get_due_lesson_reviews
 from app.models.diagnostic import DiagnosticResult
 from app.models.learning import ExerciseAttempt, LearningSession, TopicMastery
 from app.models.lesson import Lesson
@@ -76,6 +76,44 @@ class PersistedAdaptiveTodayTests(unittest.TestCase):
              patch("app.api.endpoints.learning.normalize_lesson_content", side_effect=lambda content, *_: content), \
              patch("app.api.endpoints.learning.localize_lesson_content", side_effect=lambda content, *_: content):
             return asyncio.run(today(9001, db=self.db, authenticated_id=9001))
+
+    def test_persisted_error_repair_then_due_review(self):
+        """A real stored mistake changes Today, and a verified review clears its due item."""
+        self.assertEqual(10, self.recommendation()["next_lesson"]["id"])
+        self.assertFalse(self.answer("die")["correct"])
+        self.assertFalse(self.answer("die")["correct"])
+        self.assertEqual(11, self.recommendation()["next_lesson"]["id"])
+
+        # Complete an independent correct attempt and simulate the due date
+        # that the review scheduler will eventually reach.
+        self.assertTrue(self.answer("der")["correct"])
+        self.db.query(LearningSession).filter_by(user_id=1, lesson_id=11).update({"status": "completed"})
+        self.db.commit()
+        self.assertTrue(self.answer("der")["correct"])
+        self.db.add(UserProgress(
+            user_id=1, lesson_id=11, completed=True,
+            review_dates=[(datetime.now() - timedelta(days=1)).isoformat()],
+        ))
+        self.db.commit()
+        due = asyncio.run(get_due_lesson_reviews(limit=10, db=self.db, authenticated_id=9001))
+        self.assertIn(11, [item["lesson_id"] for item in due["reviews"]])
+
+        session = asyncio.run(start_lesson(
+            StartLessonRequest(user_id=9001, lesson_id=11),
+            db=self.db, authenticated_id=9001,
+        ))
+        review = asyncio.run(check_answer(
+            CheckAnswerRequest(
+                user_id=9001, lesson_id=11, exercise_index=0, answer="der",
+                session_id=session["session_id"], mode="review", language="en",
+            ),
+            db=self.db, authenticated_id=9001,
+        ))
+        self.assertTrue(review["correct"])
+        self.db.expire_all()
+        remaining = asyncio.run(get_due_lesson_reviews(limit=10, db=self.db, authenticated_id=9001))
+        self.assertNotIn(11, [item["lesson_id"] for item in remaining["reviews"]])
+        self.assertEqual(5, self.db.query(ExerciseAttempt).filter_by(user_id=1).count())
 
     def test_saved_errors_prioritize_skill_and_recovery_removes_focus(self):
         self.assertEqual(10, self.recommendation()["next_lesson"]["id"])
