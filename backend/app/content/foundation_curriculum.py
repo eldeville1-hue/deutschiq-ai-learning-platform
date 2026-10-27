@@ -902,7 +902,7 @@ def build_foundation_content(row: tuple, level: str) -> dict:
                 {"question":task_en,"hint":rule_en,"explanation":"The answer must fit the situation. Personal details may be different.","accessibility_label":"Complete a real mini dialogue","conversation_turns":mission_turns["en"]},
             ),
             _localized(
-                {"id":f"{exercise_prefix}-{day}-speak","type":"repeat","stage":"transfer","question":"Скажи фразу вслух.","answer":starter["alternate"],"accepted_answers":[starter["alternate"],starter["alternate"].rstrip(".?!")],"audio_text":starter["alternate"],"explanation":"Говори спокойно. Важно, чтобы ключевые слова были понятны.","misconception":"foundation_mission_fluency","accessibility_label":"Повтори немецкую фразу"},
+                {"id":f"{exercise_prefix}-{day}-speak","type":"repeat","stage":"guided","question":"Скажи фразу вслух.","answer":starter["alternate"],"accepted_answers":[starter["alternate"],starter["alternate"].rstrip(".?!")],"audio_text":starter["alternate"],"explanation":"Говори спокойно. Важно, чтобы ключевые слова были понятны.","misconception":"foundation_mission_fluency","accessibility_label":"Повтори немецкую фразу"},
                 {"question":"Скажи фразу вслух.","explanation":"Говори спокойно. Важно, чтобы ключевые слова были понятны.","accessibility_label":"Повтори немецкую фразу"},
                 {"question":"Sprich den Satz laut.","explanation":"Sprich ruhig. Die Schlüsselwörter sollen verständlich sein.","accessibility_label":"Deutschen Satz nachsprechen"},
                 {"question":"Say the sentence aloud.","explanation":"Speak calmly. The key words should be clear.","accessibility_label":"Repeat the German sentence"},
@@ -1054,7 +1054,7 @@ def build_foundation_content(row: tuple, level: str) -> dict:
             {"question":f"{scenario_en} {goals['en']}","hint":rules["en"],"explanation":"Compare meaning and structure; your wording may differ."},
         ),
         _localized(
-            {"type":"repeat","stage":"transfer","question":"Произнеси модель вслух.","answer":model,"accepted_answers":[model,model.rstrip(".")],"explanation":"Повтори спокойно и чётко.","misconception":"foundation_fluency"},
+            {"type":"repeat","stage":"guided","question":"Произнеси модель вслух.","answer":model,"accepted_answers":[model,model.rstrip(".")],"explanation":"Повтори спокойно и чётко.","misconception":"foundation_fluency"},
             {"question":"Произнеси модель вслух.","explanation":"Повтори спокойно и чётко."},
             {"question":"Sprich das Modell laut nach.","explanation":"Sprich ruhig und deutlich."},
             {"question":"Say the model aloud.","explanation":"Speak calmly and clearly."},
