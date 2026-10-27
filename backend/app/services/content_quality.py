@@ -353,6 +353,19 @@ def exercise_instruction_audit(content: dict) -> list[str]:
             value = item.get(field)
             if not isinstance(value, str) or not value.strip():
                 issues.append(f"exercise:{index}:missing_{field}")
+        # Blank localized copy must not silently replace a usable authored
+        # instruction with an empty screen in the learner's selected language.
+        localized = item.get("i18n")
+        if isinstance(localized, dict):
+            for language in ("ru", "de", "en"):
+                copy = localized.get(language)
+                if not isinstance(copy, dict):
+                    continue
+                for field in ("question", "explanation"):
+                    if field in copy and (
+                        not isinstance(copy[field], str) or not copy[field].strip()
+                    ):
+                        issues.append(f"exercise:{index}:empty_{language}_{field}")
         if item.get("type") in {"listening", "listening_choice"}:
             # Without source audio/text, a listening task cannot be completed.
             if not any(
