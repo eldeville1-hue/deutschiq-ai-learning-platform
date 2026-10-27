@@ -9,7 +9,7 @@ from app.models.progress import UserProgress
 from app.models.learning import ExerciseAttempt, TopicMastery
 from app.services.content_i18n import localize_lesson_content, normalize_language
 from app.services.learning_route import next_cefr_track, normalize_cefr
-from app.services.assessment_insights import evidence_gate
+from app.services.assessment_insights import evidence_gate, independent_progression_evidence
 from app.services.production_feedback import evaluate_production
 from app.services.checkpoint_graduation import checkpoint_outcome, final_mission
 from app.models.event import ProductEvent
@@ -40,7 +40,7 @@ def eligibility(db: Session, user: User, level: str) -> dict:
     mastery = round(sum(values) / len(values)) if values else 0
     attempts = db.query(ExerciseAttempt).filter(ExerciseAttempt.user_id == user.id, ExerciseAttempt.topic.in_(topics), ExerciseAttempt.assessment.isnot(None)).order_by(ExerciseAttempt.created_at.desc()).limit(100).all() if topics else []
     evidence = evidence_gate(attempts)
-    return {"eligible": completion >= 100 and mastery >= 60 and evidence["eligible"], "completion": completion, "mastery": mastery, "evidence": evidence}
+    return {"eligible": completion >= 100 and mastery >= 60 and evidence["eligible"] and independent_progression_evidence(attempts)["eligible"], "completion": completion, "mastery": mastery, "evidence": evidence, "independent_evidence": independent_progression_evidence(attempts)}
 
 @router.get("/{user_id}/{level}")
 async def get_checkpoint(user_id: int, level: str, lang: str = "en", db: Session = Depends(get_db), authenticated_id: int = Depends(telegram_user_id)):
