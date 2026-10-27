@@ -80,7 +80,7 @@ def independent_progression_evidence(attempts, required_samples: int = 3) -> dic
         evidence = assessment.get("learning_evidence") or {}
         if not getattr(attempt, "correct", False):
             continue
-        if evidence.get("assistance_level") != "independent":
+        if evidence.get("assistance_level") != "independent" or evidence.get("attempt_number") != 1:
             continue
         evaluation = assessment.get("evaluation") or {}
         if evaluation.get("evaluation_status") != "verified":
