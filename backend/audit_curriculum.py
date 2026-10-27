@@ -52,6 +52,7 @@ def build_report():
         for lesson in lessons:
             if lesson["issues"]:
                 repair_queue.append({"track": track, "day": lesson["day"], "issues": lesson["issues"]})
+    repair_queue.sort(key=lambda item: (-len(item["issues"]), item["track"], item["day"]))
     return {
         "repair_queue": repair_queue,
         "status": "failed" if any(tracks.values()) or any(exercise_issues.values()) else "passed",
