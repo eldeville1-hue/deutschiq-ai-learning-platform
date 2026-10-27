@@ -274,10 +274,12 @@ def _ai_feedback(answer: str, exercise: dict, lesson_content: dict, lang: str) -
     # criterion false; the server must not display that contradiction.
     if missing_criteria:
         scores["task_completion"] = min(scores["task_completion"], 59)
+    missing_parts = _formal_message_missing_parts(answer, exercise)
+    if missing_parts:
+        scores["task_completion"] = min(scores["task_completion"], 50)
     score = _overall(scores)
     threshold = PASS_MARKS.get(cefr, 70)
     passed = score >= threshold and scores["task_completion"] >= 60 and scores["grammar"] >= 50
-    missing_parts = _formal_message_missing_parts(answer, exercise)
     if missing_parts or missing_criteria:
         passed = False
     # Do not present a generic fallback as if it were specific, verified
