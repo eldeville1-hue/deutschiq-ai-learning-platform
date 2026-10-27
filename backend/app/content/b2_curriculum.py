@@ -152,10 +152,10 @@ def build_b2_content(row: tuple) -> dict:
             {"question": "What function does the sentence serve?", "answer": listening_function_en, "accepted_answers": [listening_function_en], "options": listening_options["en"], "explanation": alternatives[0]},
         ),
         _localized(
-            {"id": f"{topic}-dialogue", "type": "dialogue", "stage": "transfer", "mission_role": "final", "question": f"Сформулируй собственный ответ: {scenario_ru}", "answer": model, "model_answer": model, "accepted_answers": [model, model.rstrip(".")], "target_patterns": patterns, "hint": rule["ru"], "explanation": "Ответ может отличаться от модели: оцени выполнение задачи, связность и регистр.", "misconception": "transfer", "accessibility_label": scenario_ru},
+            {"id": f"{topic}-dialogue", "type": "dialogue", "stage": "transfer", "mission_role": "final", "question": f"Сформулируй собственный ответ: {scenario_ru} Приведи собственный пример.", "answer": model, "model_answer": model, "accepted_answers": [model, model.rstrip(".")], "target_patterns": patterns, "hint": rule["ru"], "explanation": "Ответ может отличаться от модели: оцени выполнение задачи, связность и регистр.", "misconception": "transfer", "accessibility_label": scenario_ru},
             {"question": f"Сформулируй собственный ответ: {scenario_ru}", "hint": rule["ru"], "explanation": "Ответ может отличаться от модели: оцени выполнение задачи, связность и регистр."},
             {"question": f"Formuliere eine eigene Antwort: {scenario_de} Nenne ein eigenes Beispiel.", "hint": rule["de"], "explanation": "Die Antwort darf abweichen: Prüfe Aufgabenerfüllung, Kohärenz und Register."},
-            {"question": f"Give your own response: {scenario_en}", "hint": rule["en"], "explanation": "The response may differ: check task completion, coherence, and register."},
+            {"question": f"Give your own response: {scenario_en} Add your own example.", "hint": rule["en"], "explanation": "The response may differ: check task completion, coherence, and register."},
         ),
         _localized(
             {"id": f"{topic}-repeat", "type": "repeat", "stage": "guided", "question": "Произнеси новую модель вслух.", "audio_text": alternatives[1], "answer": alternatives[1], "accepted_answers": [alternatives[1], alternatives[1].rstrip(".")], "explanation": "Сохраняй логическое ударение и темп.", "misconception": "fluency", "accessibility_label": "Произнести аргумент уровня B2."},
