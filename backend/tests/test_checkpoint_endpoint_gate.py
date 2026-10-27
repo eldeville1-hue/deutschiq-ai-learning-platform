@@ -1,0 +1,88 @@
+"""Checkpoint endpoint security regression: direct GET/POST cannot bypass evidence."""
+import asyncio
+import unittest
+from unittest.mock import patch
+
+from fastapi import HTTPException
+from sqlalchemy import ARRAY, create_engine
+from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.orm import Session
+
+from app.api.endpoints.checkpoint import CheckpointSubmission, get_checkpoint, submit_checkpoint
+from app.models.learning import ExerciseAttempt, TopicMastery
+from app.models.lesson import Lesson
+from app.models.progress import UserProgress
+from app.models.user import User
+
+
+@compiles(ARRAY, "sqlite")
+def sqlite_array(_type, _compiler, **kwargs):
+    return "TEXT"
+
+
+class CheckpointEndpointGateTests(unittest.TestCase):
+    def setUp(self):
+        self.engine = create_engine("sqlite:///:memory:")
+        for model in (User, Lesson, UserProgress, TopicMastery, ExerciseAttempt):
+            model.__table__.create(self.engine, checkfirst=True)
+        self.db = Session(self.engine)
+        self.user = User(telegram_id=92001, current_level="A1")
+        self.other = User(telegram_id=92002, current_level="A1")
+        self.lesson = Lesson(
+            id=920, level="A1", pillar="grammar", topic="connectors",
+            weak_point_tags="", is_active=True,
+            content={"track": "A1", "day": 1, "exercises": [
+                {"type": "dialogue", "mission_role": "final", "question": "Answer in German"}
+            ]},
+        )
+        self.db.add_all([self.user, self.other, self.lesson])
+        self.db.flush()
+        self.db.add(UserProgress(user_id=self.user.id, lesson_id=self.lesson.id, completed=True, score=100))
+        self.db.add(TopicMastery(user_id=self.user.id, topic="connectors", mastery=95))
+        self.db.commit()
+
+    def tearDown(self):
+        self.db.close()
+        self.engine.dispose()
+
+    def test_direct_get_and_submit_are_forbidden_without_independent_evidence(self):
+        for index in range(4):
+            self.db.add(ExerciseAttempt(
+                user_id=self.user.id, lesson_id=self.lesson.id,
+                session_id="assisted", exercise_index=index,
+                topic="connectors", answer="obwohl", correct=True,
+                assessment={
+                    "dimensions": {"task_completion": 95, "grammar": 95, "coherence": 95},
+                    "evaluation": {"evaluation_status": "verified"},
+                    "learning_evidence": {"assistance_level": "guided_retry", "attempt_number": 2},
+                },
+            ))
+        self.db.commit()
+        with self.assertRaises(HTTPException) as blocked_get:
+            asyncio.run(get_checkpoint(92001, "A1", db=self.db, authenticated_id=92001))
+        self.assertEqual(403, blocked_get.exception.status_code)
+        with patch("app.api.endpoints.checkpoint.evaluate_production") as scorer:
+            with self.assertRaises(HTTPException) as blocked_post:
+                asyncio.run(submit_checkpoint(
+                    CheckpointSubmission(user_id=92001, level="A1", answers=["perfect"]),
+                    db=self.db, authenticated_id=92001,
+                ))
+            self.assertEqual(403, blocked_post.exception.status_code)
+            scorer.assert_not_called()
+        self.db.refresh(self.user)
+        self.assertEqual("A1", self.user.current_level)
+
+    def test_other_user_cannot_fetch_or_submit_checkpoint(self):
+        with self.assertRaises(HTTPException) as blocked:
+            asyncio.run(get_checkpoint(92001, "A1", db=self.db, authenticated_id=92002))
+        self.assertEqual(403, blocked.exception.status_code)
+        with self.assertRaises(HTTPException) as blocked:
+            asyncio.run(submit_checkpoint(
+                CheckpointSubmission(user_id=92001, level="A1", answers=[]),
+                db=self.db, authenticated_id=92002,
+            ))
+        self.assertEqual(403, blocked.exception.status_code)
+
+
+if __name__ == "__main__":
+    unittest.main()
