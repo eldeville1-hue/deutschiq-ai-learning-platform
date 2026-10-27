@@ -188,7 +188,7 @@ def build_b2_content(row: tuple) -> dict:
         # Keep the actual scenario visible: a checklist alone is not a writing task.
         scenarios = {"ru": scenario_ru, "de": scenario_de, "en": scenario_en}
         for language, goal in zip(("ru", "de", "en"), writing_goals[topic]):
-            prompt = f"{scenarios[language]}\n\n{goal}"
+            own_example = {"ru": "Приведи собственный пример.", "de": "Nenne ein eigenes Beispiel.", "en": "Add your own example."}\n            prompt = f"{scenarios[language]}\n\n{goal}\n{own_example[language]}"
             if language == "ru":
                 dialogue["question"] = prompt
             dialogue["i18n"][language]["question"] = prompt
