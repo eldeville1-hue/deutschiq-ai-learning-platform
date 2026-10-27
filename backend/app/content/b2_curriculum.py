@@ -158,7 +158,7 @@ def build_b2_content(row: tuple) -> dict:
             {"question": f"Give your own response: {scenario_en}", "hint": rule["en"], "explanation": "The response may differ: check task completion, coherence, and register."},
         ),
         _localized(
-            {"id": f"{topic}-repeat", "type": "repeat", "stage": "transfer", "question": "Произнеси новую модель вслух.", "audio_text": alternatives[1], "answer": alternatives[1], "accepted_answers": [alternatives[1], alternatives[1].rstrip(".")], "explanation": "Сохраняй логическое ударение и темп.", "misconception": "fluency", "accessibility_label": "Произнести аргумент уровня B2."},
+            {"id": f"{topic}-repeat", "type": "repeat", "stage": "guided", "question": "Произнеси новую модель вслух.", "audio_text": alternatives[1], "answer": alternatives[1], "accepted_answers": [alternatives[1], alternatives[1].rstrip(".")], "explanation": "Сохраняй логическое ударение и темп.", "misconception": "fluency", "accessibility_label": "Произнести аргумент уровня B2."},
             {"question": "Произнеси модель вслух.", "explanation": "Сохраняй логическое ударение и темп."},
             {"question": "Sprich das Modell laut nach.", "explanation": "Achte auf Satzakzent und Tempo."},
             {"question": "Say the model aloud.", "explanation": "Keep the sentence stress and pace natural."},
