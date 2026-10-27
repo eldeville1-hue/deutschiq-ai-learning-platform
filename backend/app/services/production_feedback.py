@@ -244,7 +244,11 @@ def _ai_feedback(answer: str, exercise: dict, lesson_content: dict, lang: str) -
         ],
     )
     result = json.loads(response.choices[0].message.content or "{}")
-    raw_scores = result.get("dimension_scores") or {}
+    if not isinstance(result, dict):
+        raise ValueError("AI assessment must be a JSON object")
+    raw_scores = result.get("dimension_scores")
+    if not isinstance(raw_scores, dict):
+        raise ValueError("AI assessment omitted valid rubric dimensions")
     if not all(name in raw_scores for name in DIMENSIONS):
         raise ValueError("AI assessment omitted rubric dimensions")
     # An incomplete or malformed model rubric is not a verified assessment.
