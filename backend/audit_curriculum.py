@@ -47,7 +47,13 @@ def build_report():
             except Exception as exc:
                 findings.append({"day": row[0], "category": "build", "issue": f"{type(exc).__name__}:{exc}"})
         exercise_issues[track] = findings
+    repair_queue = []
+    for track, lessons in learning_evidence.items():
+        for lesson in lessons:
+            if lesson["issues"]:
+                repair_queue.append({"track": track, "day": lesson["day"], "issues": lesson["issues"]})
     return {
+        "repair_queue": repair_queue,
         "status": "failed" if any(tracks.values()) or any(exercise_issues.values()) else "passed",
         "total_issues": sum(len(item["issues"]) for lessons in tracks.values() for item in lessons),
         "affected_lessons": sum(len(lessons) for lessons in tracks.values()),
