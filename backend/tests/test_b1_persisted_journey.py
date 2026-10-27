@@ -57,11 +57,11 @@ class B1PersistedJourneyTests(unittest.TestCase):
             db=self.db, authenticated_id=learner,
         ))
 
-    def answer(self, learner, session_id, index, value):
+    def answer(self, learner, session_id, index, value, mode="lesson") :
         return asyncio.run(check_answer(
             CheckAnswerRequest(
                 user_id=learner, lesson_id=910, session_id=session_id,
-                exercise_index=index, answer=value, confidence="sure",
+                exercise_index=index, answer=value, confidence="sure", mode=mode,
             ), db=self.db, authenticated_id=learner,
         ))
 
@@ -100,6 +100,31 @@ class B1PersistedJourneyTests(unittest.TestCase):
         self.assertEqual(409, duplicate.exception.status_code)
         self.db.expire_all()
         self.assertEqual(3, self.db.query(ExerciseAttempt).filter_by(user_id=owner.id).count())
+
+    def test_failed_review_is_due_and_successful_review_is_rescheduled(self):
+        from datetime import datetime, timedelta
+
+        first = self.start(91001)
+        self.assertTrue(self.answer(91001, first["session_id"], 0, "obwohl")["correct"])
+        owner = self.db.query(User).filter_by(telegram_id=91001).one()
+        mastery = self.db.query(TopicMastery).filter_by(user_id=owner.id, topic="connectors").one()
+        mastery.next_review_at = datetime.utcnow() - timedelta(days=1)
+        self.db.commit()
+
+        due = asyncio.run(get_due_reviews(db=self.db, authenticated_id=91001))
+        self.assertEqual(1, due["count"])
+        self.assertEqual("connectors", due["reviews"][0]["topic"])
+        other_due = asyncio.run(get_due_reviews(db=self.db, authenticated_id=91002))
+        self.assertEqual(0, other_due["count"])
+
+        # Review uses a separate exercise to avoid replaying a completed answer.
+        failed = self.answer(91001, first["session_id"], 1, "obwohl", mode="review")
+        self.assertFalse(failed["correct"])
+        self.db.expire_all()
+        mastery = self.db.query(TopicMastery).filter_by(user_id=owner.id, topic="connectors").one()
+        self.assertGreater(mastery.lapse_count, 0)
+        self.assertIsNotNone(mastery.next_review_at)
+        self.assertGreater(mastery.next_review_at, datetime.utcnow())
 
     def test_other_learner_cannot_resume_or_submit_to_owner_session(self):
         owner_session = self.start(91001)["session_id"]
