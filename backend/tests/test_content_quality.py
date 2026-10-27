@@ -405,7 +405,7 @@ class ContentQualityTests(unittest.TestCase):
                         *(exercise.get("explanation", "") for exercise in localized["exercises"]),
                     ])
                     self.assertIsNone(re.search(r"[А-Яа-яЁё]", visible), f"Cyrillic leaked into {language} day {row[0]}")
-        self.assertEqual({"error_repair", "reorder"}, guided_types)
+        self.assertEqual({"error_repair", "reorder", "repeat"}, guided_types)
 
     def test_b1_genitive_reference_lesson_has_five_practical_interactions(self):
         row = next(item for item in B1_CURRICULUM if item[2] == "genitive_prepositions")
