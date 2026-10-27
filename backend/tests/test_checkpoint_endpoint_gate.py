@@ -30,7 +30,7 @@ class CheckpointEndpointGateTests(unittest.TestCase):
         self.other = User(telegram_id=92002, current_level="A1")
         self.lesson = Lesson(
             id=920, level="A1", pillar="grammar", topic="connectors",
-            weak_point_tags="", is_active=True,
+            weak_point_tags="[]", is_active=True,
             content={"track": "A1", "day": 1, "exercises": [
                 {"type": "dialogue", "mission_role": "final", "question": "Answer in German"}
             ]},
