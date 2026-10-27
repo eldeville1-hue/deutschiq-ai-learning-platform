@@ -18,6 +18,41 @@ class TargetedExplanationTests(unittest.TestCase):
         self.assertEqual(result["errors"][0]["type"], category)
         self.assertTrue(result["errors"][0]["explanation"])
 
+    def test_uncertain_free_text_never_exposes_confirmed_errors(self):
+        examples = [
+            ("Heute lernen wir Deutsch.", "Wir lernen heute Deutsch.", "word_order"),
+            ("Ich warte auf dem Bus.", "Ich warte auf den Bus.", "case"),
+            ("Obwohl es regnet, gehen wir spazieren.", "Wir gehen spazieren, obwohl es regnet.", "word_order"),
+        ]
+        for submitted, reference, feature in examples:
+            with self.subTest(submitted=submitted):
+                result = evaluate_structured_answer(submitted, {
+                    "type": "translation", "answer": reference, "target_feature": feature,
+                })
+                self.assertEqual("uncertain", result["evaluation_status"])
+                self.assertFalse(result["correct"])
+                self.assertEqual([], result["confirmed_errors"])
+                self.assertIsNotNone(result["learner_feedback"])
+                self.assertIn("review", result["learner_feedback"].lower())
+
+    def test_verified_choice_explanations_are_targeted_not_generic(self):
+        examples = [
+            ("Ich habe ein Hund.", "Ich habe einen Hund.", "article"),
+            ("Ich warte auf dem Bus.", "Ich warte auf den Bus.", "case"),
+            ("Ich interessiere mich an Musik.", "Ich interessiere mich für Musik.", "preposition"),
+            ("Ich habe gestern nach Hause gegangen.", "Ich bin gestern nach Hause gegangen.", "auxiliary"),
+        ]
+        for submitted, reference, feature in examples:
+            with self.subTest(feature=feature):
+                result = evaluate_structured_answer(submitted, {
+                    "type": "choice", "answer": reference, "target_feature": feature,
+                })
+                self.assertEqual("verified", result["evaluation_status"])
+                self.assertFalse(result["correct"])
+                self.assertEqual(feature, result["confirmed_errors"][0]["type"])
+                self.assertTrue(result["confirmed_errors"][0]["explanation"].strip())
+                self.assertIsNone(result["learner_feedback"])
+
     def test_a1_article(self):
         self.check_category("Ich habe ein Hund.", "Ich habe einen Hund.", "article")
 
