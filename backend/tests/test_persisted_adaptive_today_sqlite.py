@@ -119,6 +119,44 @@ class PersistedAdaptiveTodayTests(unittest.TestCase):
         self.assertNotIn(11, [item["lesson_id"] for item in remaining["reviews"]])
         self.assertEqual(5, self.db.query(ExerciseAttempt).filter_by(user_id=1).count())
 
+    def test_uncertain_answer_has_localized_feedback_without_persisted_error(self):
+        lesson = self.db.get(Lesson, 10)
+        lesson.content = {
+            "day": 1, "track": "A2",
+            "exercises": [{"type": "translation", "question": "Translate",
+                           "answer": "Wir lernen heute Deutsch.", "target_feature": "word_order"}],
+        }
+        from sqlalchemy.orm.attributes import flag_modified
+        flag_modified(lesson, "content")
+        self.db.commit()
+        expected = {
+            "ru": "Твой ответ может быть правильным",
+            "de": "Deine Antwort könnte richtig sein",
+            "en": "Your answer may be correct",
+        }
+        for lang, prefix in expected.items():
+            with self.subTest(language=lang):
+                session = asyncio.run(start_lesson(
+                    StartLessonRequest(user_id=9001, lesson_id=10),
+                    db=self.db, authenticated_id=9001,
+                ))
+                result = asyncio.run(check_answer(
+                    CheckAnswerRequest(
+                        user_id=9001, lesson_id=10, exercise_index=0,
+                        answer="Heute lernen wir Deutsch.",
+                        session_id=session["session_id"], language=lang,
+                    ),
+                    db=self.db, authenticated_id=9001,
+                ))
+                self.assertEqual("uncertain", result["evaluation_status"])
+                self.assertTrue(result["needs_support"])
+                self.assertEqual([], result["errors"])
+                self.assertIn(prefix, result["retry_instruction"])
+                self.assertEqual(0, self.db.query(ExerciseAttempt).filter_by(user_id=1).count())
+        self.db.expire_all()
+        self.assertEqual(85, self.db.query(TopicMastery).filter_by(
+            user_id=1, topic="word_order").one().mastery)
+
     def test_saved_errors_prioritize_skill_and_recovery_removes_focus(self):
         self.assertEqual(10, self.recommendation()["next_lesson"]["id"])
         self.assertFalse(self.answer("die")["correct"])
