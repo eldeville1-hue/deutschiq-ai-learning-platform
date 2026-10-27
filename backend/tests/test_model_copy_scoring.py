@@ -3,15 +3,17 @@ import unittest
 from app.services.production_feedback import local_feedback
 
 
-class ModelCopyScoringTests(unittest.TestCase):
-    def test_exact_model_copy_does_not_receive_perfect_dimension_scores(self):
-        model = 'Ich lerne Deutsch, weil ich in Deutschland studieren möchte.'
-        result = local_feedback(model, {'answer': model}, '', lang='de', cefr='B2')
-        self.assertLess(result['score'], 100)
-        self.assertTrue(any(value < 100 for value in result['dimension_scores'].values()))
-
-    def test_model_copy_cannot_bypass_minimum_response_length(self):
-        model = 'Hallo.'
-        result = local_feedback(model, {'answer': model}, '', lang='en', cefr='B2')
+class FormalTaskScoringTests(unittest.TestCase):
+    def test_exact_model_missing_formal_parts_cannot_receive_perfect_score(self):
+        model = 'Ich möchte den Termin verschieben.'
+        result = local_feedback(model, {'answer': model, 'assessment_criteria': ['formal_closing']}, '', lang='de', cefr='B2')
         self.assertFalse(result['correct'])
-        self.assertEqual(result['error_type'], 'response_too_short')
+        self.assertLess(result['score'], 100)
+        self.assertLess(result['dimension_scores']['task_completion'], 60)
+        self.assertIn('formal_greeting', result['missing_task_parts'])
+
+    def test_complete_authored_model_keeps_full_credit(self):
+        model = 'Sehr geehrte Frau Klein, ich möchte den Termin verschieben. Mit freundlichen Grüßen.'
+        result = local_feedback(model, {'answer': model, 'assessment_criteria': ['formal_closing']}, '', lang='de', cefr='B2')
+        self.assertTrue(result['correct'])
+        self.assertEqual(result['score'], 100)
