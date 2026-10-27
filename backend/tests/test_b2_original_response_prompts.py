@@ -7,4 +7,4 @@ def test_b2_transfer_prompts_request_own_examples():
         dialogue = next(item for item in lesson['exercises'] if item['type'] == 'dialogue')
         for language in ('ru', 'de', 'en'):
             prompt = dialogue['i18n'][language]['question']
-            assert prompt.strip()
+            assert prompt.strip()\n            assert {'ru': 'Приведи собственный пример.', 'de': 'Nenne ein eigenes Beispiel.', 'en': 'Add your own example.'}[language] in prompt
