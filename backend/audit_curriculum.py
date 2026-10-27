@@ -5,6 +5,7 @@ from pathlib import Path
 
 from seed_30_day_plan import curriculum_audit_report, CURRICULUM, B1_CURRICULUM, A1_CURRICULUM, A2_CURRICULUM, B2_CURRICULUM, build_content, build_b1_content, build_b2_content, build_foundation_content
 from app.services.content_quality import exercise_answer_audit, exercise_instruction_audit
+from app.services.learning_effectiveness_audit import learning_effectiveness_evidence
 
 
 def build_report():
@@ -18,11 +19,14 @@ def build_report():
     ]
     exercise_issues = {}
     exercise_findings = []
+    learning_evidence = {}
     for track, rows, builder in sources:
         findings = []
+        learning_evidence[track] = []
         for row in rows:
             try:
                 content = builder(row)
+                learning_evidence[track].append({"day": row[0], **learning_effectiveness_evidence(content)})
                 for category, issues in (
                     ("answer", exercise_answer_audit(content)),
                     ("instruction", exercise_instruction_audit(content)),
@@ -50,6 +54,7 @@ def build_report():
         "tracks": tracks,
         "exercise_issues": exercise_issues,
         "exercise_findings": exercise_findings,
+        "learning_effectiveness_evidence": learning_evidence,
         "total_exercise_issues": sum(len(items) for items in exercise_issues.values()),
     }
 
