@@ -95,6 +95,8 @@ def local_feedback(answer: str, exercise: dict, rule: str, lang: str = "en", cef
     missing_parts = _formal_message_missing_parts(answer, exercise)
     if missing_parts:
         passed = False
+        scores["task_completion"] = min(scores["task_completion"], 50)
+        score = _overall(scores)
     copy = _copy(lang)
     weakest = min(DIMENSIONS, key=lambda name: scores[name])
     improvement_key = {"task_completion": "structure", "grammar": "grammar", "vocabulary": "expand", "coherence": "expand", "register": "register"}[weakest]
