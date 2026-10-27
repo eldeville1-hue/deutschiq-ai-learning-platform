@@ -65,3 +65,34 @@ def evidence_gate(attempts, required_samples: int = 3) -> dict:
         if dimension in CORE_DIMENSIONS and topic["score"] < thresholds[dimension] and dimension not in gaps:
             gaps.append(dimension)
     return {"eligible": not gaps, "status": "ready" if not gaps else "repair_needed", "gaps": gaps, **insight}
+
+
+def independent_progression_evidence(attempts, required_samples: int = 3) -> dict:
+    """Fail closed unless distinct verified, first-try independent answers exist.
+
+    Guided retries and legacy attempts without explicit evidence cannot
+    qualify a learner for the next CEFR checkpoint.
+    """
+    seen = set()
+    eligible = []
+    for attempt in attempts:
+        assessment = getattr(attempt, "assessment", None) or {}
+        evidence = assessment.get("learning_evidence") or {}
+        if not getattr(attempt, "correct", False):
+            continue
+        if evidence.get("assistance_level") != "independent":
+            continue
+        evaluation = assessment.get("evaluation") or {}
+        if evaluation.get("evaluation_status") != "verified":
+            continue
+        key = (getattr(attempt, "session_id", None), getattr(attempt, "exercise_index", None))
+        if key[0] is None or key[1] is None or key in seen:
+            continue
+        seen.add(key)
+        eligible.append(attempt)
+    return {
+        "eligible": len(eligible) >= required_samples,
+        "status": "ready" if len(eligible) >= required_samples else "independent_evidence_needed",
+        "independent_samples": len(eligible),
+        "required_samples": required_samples,
+    }
