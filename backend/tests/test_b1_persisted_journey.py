@@ -12,7 +12,7 @@ from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import Session
 
 from app.api.endpoints.lesson import (
-    CheckAnswerRequest, StartLessonRequest, check_answer, start_lesson,
+    CheckAnswerRequest, StartLessonRequest, check_answer, start_lesson, get_due_reviews,
 )
 from app.models.learning import ExerciseAttempt, LearningSession, TopicMastery
 from app.models.lesson import Lesson
