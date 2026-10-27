@@ -37,7 +37,7 @@ class CheckpointEndpointGateTests(unittest.TestCase):
         )
         self.db.add_all([self.user, self.other, self.lesson])
         self.db.flush()
-        self.db.add(UserProgress(user_id=self.user.id, lesson_id=self.lesson.id, completed=True, score=100))
+        self.db.add(UserProgress(user_id=self.user.id, lesson_id=self.lesson.id, completed=True, score=100, review_dates="[]"))
         self.db.add(TopicMastery(user_id=self.user.id, topic="connectors", mastery=95))
         self.db.commit()
 
