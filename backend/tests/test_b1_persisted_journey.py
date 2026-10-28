@@ -7,6 +7,7 @@ import asyncio
 import unittest
 
 from fastapi import HTTPException
+from unittest.mock import AsyncMock, patch
 from sqlalchemy import ARRAY, create_engine
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import Session
@@ -17,6 +18,7 @@ from app.api.endpoints.lesson import (
 from app.models.learning import ExerciseAttempt, LearningSession, TopicMastery
 from app.models.lesson import Lesson
 from app.models.user import User
+from app.services.assessment_insights import independent_progression_evidence
 
 
 @compiles(ARRAY, "sqlite")
@@ -100,6 +102,41 @@ class B1PersistedJourneyTests(unittest.TestCase):
         self.assertEqual(409, duplicate.exception.status_code)
         self.db.expire_all()
         self.assertEqual(3, self.db.query(ExerciseAttempt).filter_by(user_id=owner.id).count())
+
+    def test_verified_production_persists_independent_evidence_and_retry_is_guided(self):
+        self.db.add(Lesson(
+            id=911, level="B1", pillar="writing", topic="formal_email",
+            weak_point_tags="", content={"exercises": [
+                {"type": "production", "question": "Write a short German email.",
+                 "answer": "Ich schreibe Ihnen wegen des Termins."},
+            ]},
+        ))
+        self.db.commit()
+        feedback = {
+            "correct": True, "score": 86, "dimension_scores": {
+                "grammar": 85, "task_completion": 90,
+            }, "cefr_standard": "B1", "source": "rubric",
+        }
+        with patch("app.api.endpoints.lesson.evaluate_production", new_callable=AsyncMock, return_value=feedback):
+            session = asyncio.run(start_lesson(
+                StartLessonRequest(user_id=91001, lesson_id=911),
+                db=self.db, authenticated_id=91001,
+            ))
+            response = asyncio.run(check_answer(
+                CheckAnswerRequest(
+                    user_id=91001, lesson_id=911, session_id=session["session_id"],
+                    exercise_index=0, answer="Ich schreibe Ihnen wegen des Termins.",
+                ), db=self.db, authenticated_id=91001,
+            ))
+        self.assertTrue(response["correct"])
+        owner = self.db.query(User).filter_by(telegram_id=91001).one()
+        attempt = self.db.query(ExerciseAttempt).filter_by(user_id=owner.id, lesson_id=911).one()
+        self.assertEqual(86, attempt.production_score)
+        self.assertEqual(85, attempt.assessment["dimensions"]["grammar"])
+        self.assertEqual("verified", attempt.assessment["evaluation"]["evaluation_status"])
+        self.assertEqual("independent", attempt.assessment["learning_evidence"]["assistance_level"])
+        self.assertEqual(1, attempt.assessment["learning_evidence"]["attempt_number"])
+        self.assertEqual(1, independent_progression_evidence([attempt])["independent_samples"])
 
     def test_failed_review_is_due_and_successful_review_is_rescheduled(self):
         from datetime import datetime, timedelta
