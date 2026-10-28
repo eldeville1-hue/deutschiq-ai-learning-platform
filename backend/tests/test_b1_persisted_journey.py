@@ -18,6 +18,8 @@ from app.api.endpoints.lesson import (
 from app.models.learning import ExerciseAttempt, LearningSession, TopicMastery
 from app.models.lesson import Lesson
 from app.models.user import User
+from app.models.progress import UserProgress
+from app.api.endpoints.checkpoint import CheckpointSubmission, submit_checkpoint
 from app.services.assessment_insights import independent_progression_evidence
 
 
@@ -193,6 +195,55 @@ class B1PersistedJourneyTests(unittest.TestCase):
         self.assertEqual(409, replay.exception.status_code)
         self.db.expire_all()
         self.assertEqual(2, self.db.query(ExerciseAttempt).filter_by(user_id=owner.id).count())
+
+    def test_lesson_completion_does_not_bypass_checkpoint_readiness_after_reload(self):
+        """Connect real lesson persistence to the real checkpoint eligibility gate."""
+        # Checkpoint content is server-owned and includes a final mission.
+        lesson = self.db.query(Lesson).filter_by(id=910).one()
+        lesson.content = {
+            "track": "B1", "day": 1,
+            "exercises": [
+                {"type": "choose", "question": "Choose", "answer": "obwohl",
+                 "accepted_answers": ["obwohl"], "options": ["obwohl", "weil"]},
+                {"type": "choose", "question": "Choose", "answer": "weil",
+                 "accepted_answers": ["weil"], "options": ["weil", "obwohl"]},
+                {"type": "dialogue", "mission_role": "final",
+                 "question": "Introduce yourself in German."},
+            ],
+        }
+        owner = self.db.query(User).filter_by(telegram_id=91001).one()
+        owner.current_level = "B1"
+        self.db.commit()
+
+        session = self.start(91001)
+        self.assertTrue(self.answer(91001, session["session_id"], 0, "obwohl")["correct"])
+        self.assertTrue(self.answer(91001, session["session_id"], 1, "weil")["correct"])
+        self.db.add(UserProgress(
+            user_id=owner.id, lesson_id=910, completed=True,
+            score=100, review_dates="[]",
+        ))
+        self.db.commit()
+        self.db.expire_all()
+        resumed = self.start(91001)
+        self.assertEqual(2, resumed["next_exercise_index"])
+
+        # Completion alone is not enough: independently verified production
+        # evidence is required before the final exam can be graded.
+        with patch("app.api.endpoints.checkpoint.evaluate_production") as scorer:
+            with self.assertRaises(HTTPException) as blocked:
+                asyncio.run(submit_checkpoint(
+                    CheckpointSubmission(
+                        user_id=91001, level="B1", answers=["Ich heiße Anna."],
+                    ),
+                    db=self.db, authenticated_id=91001,
+                ))
+            self.assertEqual(403, blocked.exception.status_code)
+            scorer.assert_not_called()
+        self.db.expire_all()
+        self.assertEqual("B1", self.db.query(User).filter_by(telegram_id=91001).one().current_level)
+        self.assertEqual(0, self.db.query(ExerciseAttempt).filter_by(
+            user_id=self.db.query(User).filter_by(telegram_id=91002).one().id,
+        ).count())
 
     def test_other_learner_cannot_resume_or_submit_to_owner_session(self):
         owner_session = self.start(91001)["session_id"]
