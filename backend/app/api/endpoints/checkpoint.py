@@ -83,12 +83,20 @@ async def submit_checkpoint(data: CheckpointSubmission, db: Session = Depends(ge
     level = normalize_cefr(data.level)
     if not user or normalize_cefr(user.current_level) != level or not eligibility(db, user, level)["eligible"]:
         raise HTTPException(status_code=403, detail="Checkpoint is not available")
-    results = []
     lessons = checkpoint_lessons(db, level)
-    for index, lesson in enumerate(lessons):
+    missions = [
+        (lesson, final_mission(localize_lesson_content(lesson.content or {}, normalize_language(data.language))))
+        for lesson in lessons
+    ]
+    missions = [(lesson, exercise) for lesson, exercise in missions if exercise]
+    if not missions:
+        raise HTTPException(status_code=409, detail="No checkpoint missions are available")
+    if len(data.answers) != len(missions) or any(not answer.strip() for answer in data.answers):
+        raise HTTPException(status_code=422, detail="Submit one non-empty answer for each checkpoint mission")
+    results = []
+    for index, (lesson, exercise) in enumerate(missions):
         content = localize_lesson_content(lesson.content or {}, normalize_language(data.language))
-        exercise = final_mission(content)
-        result = await evaluate_production(data.answers[index] if index < len(data.answers) else "", exercise, content, normalize_language(data.language))
+        result = await evaluate_production(data.answers[index], exercise, content, normalize_language(data.language))
         results.append({
             "correct": result["correct"], "score": result["score"], "topic": lesson.topic, "lesson_id": lesson.id,
             "dimensions": result["dimension_scores"], "feedback": result["feedback"],
