@@ -31,7 +31,7 @@ def sqlite_array(_type, _compiler, **kwargs):
 class B1PersistedJourneyTests(unittest.TestCase):
     def setUp(self):
         self.engine = create_engine("sqlite:///:memory:")
-        for model in (User, Lesson, LearningSession, ExerciseAttempt, TopicMastery):
+        for model in (User, Lesson, LearningSession, ExerciseAttempt, TopicMastery, UserProgress):
             model.__table__.create(self.engine, checkfirst=True)
         self.db = Session(self.engine)
         self.db.add_all([
