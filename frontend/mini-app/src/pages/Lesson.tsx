@@ -101,6 +101,11 @@ const LessonScreen: React.FC = () => {
   useEffect(() => {
     let cancelled = false;
     setLesson(null);
+    // Reset completion UI when a new lesson loads or a failed load is retried.
+    // Only the server's resumed cursor may restore the completion-retry state.
+    setCompletionState('idle');
+    setOutcome(null);
+    completedRef.current = false;
     saveDailySession(getUserId(), { nextLessonId: Number(id), stage: 'lesson' });
     Promise.all([
       api.getLesson(Number(id), lang),
