@@ -163,6 +163,37 @@ class B1PersistedJourneyTests(unittest.TestCase):
         self.assertIsNotNone(mastery.next_review_at)
         self.assertGreater(mastery.next_review_at, datetime.utcnow())
 
+    def test_reload_after_completion_does_not_duplicate_credit_or_leak_progress(self):
+        first = self.start(91001)
+        self.assertTrue(self.answer(91001, first["session_id"], 0, "obwohl")["correct"])
+        self.assertTrue(self.answer(91001, first["session_id"], 1, "weil")["correct"])
+        self.db.expire_all()
+
+        # Simulate repeated app restarts: progress must not rewind or multiply.
+        for _ in range(3):
+            resumed = self.start(91001)
+            self.assertTrue(resumed["resumed"])
+            self.assertEqual(first["session_id"], resumed["session_id"])
+            self.assertEqual(2, resumed["next_exercise_index"])
+        owner = self.db.query(User).filter_by(telegram_id=91001).one()
+        self.assertEqual(2, self.db.query(ExerciseAttempt).filter_by(user_id=owner.id).count())
+        mastery = self.db.query(TopicMastery).filter_by(user_id=owner.id, topic="connectors").one()
+        self.assertEqual(2, mastery.attempts)
+
+        # A separate Telegram account starts at exercise zero, with no evidence.
+        other_session = self.start(91002)
+        self.assertFalse(other_session["resumed"])
+        self.assertEqual(0, other_session["next_exercise_index"])
+        self.assertNotEqual(first["session_id"], other_session["session_id"])
+        other = self.db.query(User).filter_by(telegram_id=91002).one()
+        self.assertEqual(0, self.db.query(ExerciseAttempt).filter_by(user_id=other.id).count())
+        self.assertEqual(0, self.db.query(TopicMastery).filter_by(user_id=other.id).count())
+        with self.assertRaises(HTTPException) as replay:
+            self.answer(91001, first["session_id"], 0, "obwohl")
+        self.assertEqual(409, replay.exception.status_code)
+        self.db.expire_all()
+        self.assertEqual(2, self.db.query(ExerciseAttempt).filter_by(user_id=owner.id).count())
+
     def test_other_learner_cannot_resume_or_submit_to_owner_session(self):
         owner_session = self.start(91001)["session_id"]
         other = self.start(91002, resume=owner_session)
