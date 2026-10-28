@@ -151,6 +151,49 @@ class CheckpointEndpointGateTests(unittest.TestCase):
         self.db.expire_all()
         self.assertEqual("A1", self.db.query(User).filter_by(telegram_id=92001).one().current_level)
 
+    def test_scoring_service_failure_does_not_advance_or_record_graduation(self):
+        with patch("app.api.endpoints.checkpoint.eligibility", return_value={"eligible": True}):
+            with patch(
+                "app.api.endpoints.checkpoint.evaluate_production",
+                new_callable=AsyncMock,
+                side_effect=RuntimeError("evaluation temporarily unavailable"),
+            ):
+                with self.assertRaisesRegex(RuntimeError, "temporarily unavailable"):
+                    asyncio.run(submit_checkpoint(
+                        CheckpointSubmission(user_id=92001, level="A1", answers=["Guten Tag!"]),
+                        db=self.db, authenticated_id=92001,
+                    ))
+        self.db.expire_all()
+        owner = self.db.query(User).filter_by(telegram_id=92001).one()
+        self.assertEqual("A1", owner.current_level)
+        self.assertEqual(0, self.db.query(ProductEvent).filter_by(
+            user_id=owner.id, event_name="checkpoint_completed",
+        ).count())
+
+    def test_borderline_score_cannot_bypass_grammar_and_task_thresholds(self):
+        for dimensions in (
+            {"task_completion": 64, "grammar": 90},
+            {"task_completion": 90, "grammar": 54},
+        ):
+            with self.subTest(dimensions=dimensions):
+                feedback = {
+                    "correct": True, "score": 90, "dimension_scores": dimensions,
+                    "feedback": "Keep practising", "improvement": "Revise the task",
+                }
+                with patch("app.api.endpoints.checkpoint.eligibility", return_value={"eligible": True}):
+                    with patch(
+                        "app.api.endpoints.checkpoint.evaluate_production",
+                        new_callable=AsyncMock, return_value=feedback,
+                    ):
+                        result = asyncio.run(submit_checkpoint(
+                            CheckpointSubmission(user_id=92001, level="A1", answers=["Guten Tag!"]),
+                            db=self.db, authenticated_id=92001,
+                        ))
+                self.assertFalse(result["passed"])
+                self.assertIsNone(result["unlocked_level"])
+                self.db.expire_all()
+                self.assertEqual("A1", self.db.query(User).filter_by(telegram_id=92001).one().current_level)
+
     def test_other_user_cannot_fetch_or_submit_checkpoint(self):
         with self.assertRaises(HTTPException) as blocked:
             asyncio.run(get_checkpoint(92001, "A1", db=self.db, authenticated_id=92002))
