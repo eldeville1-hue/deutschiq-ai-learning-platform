@@ -194,6 +194,63 @@ class CheckpointEndpointGateTests(unittest.TestCase):
                 self.db.expire_all()
                 self.assertEqual("A1", self.db.query(User).filter_by(telegram_id=92001).one().current_level)
 
+    def test_b1_to_b2_graduation_persists_after_new_database_session(self):
+        """B1 graduation must survive a fresh ORM session and reject old-level replay."""
+        self.user.current_level = "B1"
+        self.lesson.level = "B1"
+        self.lesson.content = {
+            "track": "B1", "day": 1,
+            "exercises": [
+                {"type": "dialogue", "mission_role": "final",
+                 "question": "Explain your plans in German."},
+            ],
+        }
+        self.db.commit()
+        feedback = {
+            "correct": True, "score": 88,
+            "dimension_scores": {"task_completion": 91, "grammar": 86},
+            "feedback": "Good answer", "improvement": "",
+        }
+        with patch("app.api.endpoints.checkpoint.eligibility", return_value={"eligible": True}):
+            with patch(
+                "app.api.endpoints.checkpoint.evaluate_production",
+                new_callable=AsyncMock, return_value=feedback,
+            ):
+                result = asyncio.run(submit_checkpoint(
+                    CheckpointSubmission(
+                        user_id=92001, level="B1",
+                        answers=["Ich möchte Informatik studieren, weil ich gern programmiere."],
+                    ),
+                    db=self.db, authenticated_id=92001,
+                ))
+        self.assertTrue(result["passed"])
+        self.assertEqual("B2", result["unlocked_level"])
+        self.assertEqual("new_level", result["next_route"])
+
+        # A new SQLAlchemy session models reopening the app after a restart.
+        self.db.close()
+        self.db = Session(self.engine)
+        owner = self.db.query(User).filter_by(telegram_id=92001).one()
+        other = self.db.query(User).filter_by(telegram_id=92002).one()
+        self.assertEqual("B2", owner.current_level)
+        self.assertEqual("A1", other.current_level)
+        events = self.db.query(ProductEvent).filter_by(
+            user_id=owner.id, event_name="checkpoint_completed",
+        ).all()
+        self.assertEqual(1, len(events))
+        self.assertEqual("B2", events[0].properties["unlocked_level"])
+        with patch("app.api.endpoints.checkpoint.evaluate_production") as scorer:
+            with self.assertRaises(HTTPException) as blocked:
+                asyncio.run(submit_checkpoint(
+                    CheckpointSubmission(
+                        user_id=92001, level="B1",
+                        answers=["Ich möchte Informatik studieren."],
+                    ),
+                    db=self.db, authenticated_id=92001,
+                ))
+            self.assertEqual(403, blocked.exception.status_code)
+            scorer.assert_not_called()
+
     def test_other_user_cannot_fetch_or_submit_checkpoint(self):
         with self.assertRaises(HTTPException) as blocked:
             asyncio.run(get_checkpoint(92001, "A1", db=self.db, authenticated_id=92002))
