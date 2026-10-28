@@ -113,7 +113,7 @@ class B1PersistedJourneyTests(unittest.TestCase):
         ))
         self.db.commit()
         feedback = {
-            "correct": True, "score": 86, "dimension_scores": {
+            "correct": True, "corrected_answer": "Ich schreibe Ihnen wegen des Termins.", "score": 86, "dimension_scores": {
                 "grammar": 85, "task_completion": 90,
             }, "cefr_standard": "B1", "source": "rubric",
         }
