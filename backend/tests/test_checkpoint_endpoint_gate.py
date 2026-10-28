@@ -72,6 +72,36 @@ class CheckpointEndpointGateTests(unittest.TestCase):
         self.db.refresh(self.user)
         self.assertEqual("A1", self.user.current_level)
 
+    def test_checkpoint_rejects_missing_blank_or_extra_answers_before_scoring(self):
+        for answers in ([], [""], ["  "], ["first", "unexpected"]):
+            with self.subTest(answers=answers):
+                with patch("app.api.endpoints.checkpoint.eligibility", return_value={"eligible": True}):
+                    with patch("app.api.endpoints.checkpoint.evaluate_production") as scorer:
+                        with self.assertRaises(HTTPException) as blocked:
+                            asyncio.run(submit_checkpoint(
+                                CheckpointSubmission(user_id=92001, level="A1", answers=answers),
+                                db=self.db, authenticated_id=92001,
+                            ))
+                        self.assertEqual(422, blocked.exception.status_code)
+                        scorer.assert_not_called()
+        self.db.refresh(self.user)
+        self.assertEqual("A1", self.user.current_level)
+
+    def test_checkpoint_without_final_missions_does_not_score_or_graduate(self):
+        self.lesson.content = {"track": "A1", "day": 1, "exercises": [
+            {"type": "choose", "question": "Choose", "answer": "ja"},
+        ]}
+        self.db.commit()
+        with patch("app.api.endpoints.checkpoint.eligibility", return_value={"eligible": True}):
+            with patch("app.api.endpoints.checkpoint.evaluate_production") as scorer:
+                with self.assertRaises(HTTPException) as blocked:
+                    asyncio.run(submit_checkpoint(
+                        CheckpointSubmission(user_id=92001, level="A1", answers=["ja"]),
+                        db=self.db, authenticated_id=92001,
+                    ))
+                self.assertEqual(409, blocked.exception.status_code)
+                scorer.assert_not_called()
+
     def test_other_user_cannot_fetch_or_submit_checkpoint(self):
         with self.assertRaises(HTTPException) as blocked:
             asyncio.run(get_checkpoint(92001, "A1", db=self.db, authenticated_id=92002))
