@@ -1,7 +1,7 @@
 """Checkpoint endpoint security regression: direct GET/POST cannot bypass evidence."""
 import asyncio
 import unittest
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from fastapi import HTTPException
 from sqlalchemy import ARRAY, create_engine
@@ -13,6 +13,7 @@ from app.models.learning import ExerciseAttempt, TopicMastery
 from app.models.lesson import Lesson
 from app.models.progress import UserProgress
 from app.models.user import User
+from app.models.event import ProductEvent
 
 
 @compiles(ARRAY, "sqlite")
@@ -23,7 +24,7 @@ def sqlite_array(_type, _compiler, **kwargs):
 class CheckpointEndpointGateTests(unittest.TestCase):
     def setUp(self):
         self.engine = create_engine("sqlite:///:memory:")
-        for model in (User, Lesson, UserProgress, TopicMastery, ExerciseAttempt):
+        for model in (User, Lesson, UserProgress, TopicMastery, ExerciseAttempt, ProductEvent):
             model.__table__.create(self.engine, checkfirst=True)
         self.db = Session(self.engine)
         self.user = User(telegram_id=92001, current_level="A1")
@@ -101,6 +102,54 @@ class CheckpointEndpointGateTests(unittest.TestCase):
                     ))
                 self.assertEqual(409, blocked.exception.status_code)
                 scorer.assert_not_called()
+
+    def test_passing_checkpoint_graduates_only_owner_and_replay_is_blocked(self):
+        feedback = {
+            "correct": True, "score": 90, "dimension_scores": {
+                "task_completion": 95, "grammar": 90,
+            }, "feedback": "Well done", "improvement": "",
+        }
+        with patch("app.api.endpoints.checkpoint.eligibility", return_value={"eligible": True}):
+            with patch("app.api.endpoints.checkpoint.evaluate_production", new_callable=AsyncMock, return_value=feedback) as scorer:
+                result = asyncio.run(submit_checkpoint(
+                    CheckpointSubmission(user_id=92001, level="A1", answers=["Guten Tag!"]),
+                    db=self.db, authenticated_id=92001,
+                ))
+                self.assertTrue(result["passed"])
+                self.assertEqual("A2", result["unlocked_level"])
+                self.assertEqual(1, scorer.await_count)
+        self.db.expire_all()
+        owner = self.db.query(User).filter_by(telegram_id=92001).one()
+        other = self.db.query(User).filter_by(telegram_id=92002).one()
+        self.assertEqual("A2", owner.current_level)
+        self.assertEqual("A1", other.current_level)
+        self.assertEqual(1, self.db.query(ProductEvent).filter_by(user_id=owner.id, event_name="checkpoint_completed").count())
+        with patch("app.api.endpoints.checkpoint.evaluate_production") as scorer:
+            with self.assertRaises(HTTPException) as blocked:
+                asyncio.run(submit_checkpoint(
+                    CheckpointSubmission(user_id=92001, level="A1", answers=["Guten Tag!"]),
+                    db=self.db, authenticated_id=92001,
+                ))
+            self.assertEqual(403, blocked.exception.status_code)
+            scorer.assert_not_called()
+
+    def test_failed_checkpoint_keeps_level_and_records_recovery(self):
+        feedback = {
+            "correct": False, "score": 30, "dimension_scores": {
+                "task_completion": 30, "grammar": 25,
+            }, "feedback": "Try again", "improvement": "Add details",
+        }
+        with patch("app.api.endpoints.checkpoint.eligibility", return_value={"eligible": True}):
+            with patch("app.api.endpoints.checkpoint.evaluate_production", new_callable=AsyncMock, return_value=feedback):
+                result = asyncio.run(submit_checkpoint(
+                    CheckpointSubmission(user_id=92001, level="A1", answers=["Hallo"]),
+                    db=self.db, authenticated_id=92001,
+                ))
+        self.assertFalse(result["passed"])
+        self.assertEqual("repair", result["next_route"])
+        self.assertEqual([ "connectors" ], result["recovery_topics"])
+        self.db.expire_all()
+        self.assertEqual("A1", self.db.query(User).filter_by(telegram_id=92001).one().current_level)
 
     def test_other_user_cannot_fetch_or_submit_checkpoint(self):
         with self.assertRaises(HTTPException) as blocked:
