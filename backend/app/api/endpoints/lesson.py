@@ -335,11 +335,12 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
         topic=topic, answer=data.answer, correct=correct, confidence=data.confidence, response_ms=data.response_ms,
         production_score=(production_feedback or {}).get("score"),
         assessment={
-            "dimensions": (production_feedback or {}).get("dimension_scores", {}),
-            "cefr": (production_feedback or {}).get("cefr_standard"),
-            "source": (production_feedback or {}).get("source"),
-        } if production_feedback else {
-            "evaluation": evaluation,
+            **({
+                "dimensions": production_feedback.get("dimension_scores", {}),
+                "cefr": production_feedback.get("cefr_standard"),
+                "source": production_feedback.get("source"),
+            } if production_feedback else {}),
+            "evaluation": {**evaluation, "evaluation_status": "verified"},
             "learning_evidence": evidence,
         },
     ))
