@@ -44,8 +44,8 @@ test('accepted answer with lost confirmation recovers without resubmitting', asy
   let answerCalls = 0;
   await page.route('**/api/lesson/77?**', async route => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
-      id: 77, title: 'Network recovery', topic: 'connectors', level: 'B1',
-      content: { exercises: [
+      id: 77, title: 'Network recovery', topic: 'Practice', level: 'A1',
+      content: { title: 'Practice', examples: ['Hallo!'], exercises: [
         { type: 'choice', question: 'NETWORK FIRST MARKER', answer: 'obwohl', options: ['obwohl', 'weil'] },
         { type: 'choice', question: 'NETWORK SECOND MARKER', answer: 'weil', options: ['weil', 'obwohl'] },
       ] },
