@@ -131,7 +131,7 @@ test('mobile lesson preserves selected answer when server returns 500', async ({
   await expect(page.getByRole('heading', { name: 'First question' })).toBeVisible();
   await page.getByRole('radio', { name: 'Correct' }).click();
   await page.getByRole('button', { name: 'Check' }).click();
-  await expect(page.getByText('The server is unavailable or taking too long. Your answer was not confirmed; try again later.')).toBeVisible();
+  await expect(page.getByText('Could not confirm your answer. Reopen the lesson to check saved progress.')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'First question' })).toBeVisible();
   await expect(page.getByRole('radio', { name: 'Correct' })).toHaveAttribute('aria-checked', 'true');
   expect(checks).toBe(1);
