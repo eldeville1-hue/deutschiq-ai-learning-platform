@@ -42,9 +42,9 @@ test('mobile lesson reload restores the server cursor rather than a stale local 
 test('accepted answer with lost confirmation recovers without resubmitting', async ({ page }) => {
   let startCalls = 0;
   let answerCalls = 0;
-  await page.route('**/api/lesson/911?**', async route => {
+  await page.route('**/api/lesson/77?**', async route => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
-      id: 911, title: 'Network recovery', topic: 'connectors', level: 'B1',
+      id: 77, title: 'Network recovery', topic: 'connectors', level: 'B1',
       content: { exercises: [
         { type: 'choice', question: 'NETWORK FIRST MARKER', answer: 'obwohl', options: ['obwohl', 'weil'] },
         { type: 'choice', question: 'NETWORK SECOND MARKER', answer: 'weil', options: ['weil', 'obwohl'] },
@@ -54,7 +54,7 @@ test('accepted answer with lost confirmation recovers without resubmitting', asy
   await page.route('**/api/lesson/start', async route => {
     startCalls += 1;
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
-      session_id: 'network-recovery-911', resumed: startCalls > 1,
+      session_id: 'network-recovery-77', resumed: startCalls > 1,
       next_exercise_index: startCalls > 1 ? 1 : 0,
     }) });
   });
@@ -63,9 +63,9 @@ test('accepted answer with lost confirmation recovers without resubmitting', asy
     await route.abort('failed');
   });
   await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
-  await page.route('**/api/user/state/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ user_id: 9001, current_level: 'B1' }) }));
+
   await page.route('**/api/events', route => route.fulfill({ status: 204, body: '' }));
-  await page.goto('/lesson/911');
+  await page.goto('/lesson/77');
   await page.getByRole('button', { name: 'Understand with an example' }).click();
   await page.getByRole('button', { name: 'Start practice' }).click();
   await expect(page.getByText('NETWORK FIRST MARKER')).toBeVisible();
