@@ -58,7 +58,7 @@ test('accepted answer with lost confirmation recovers without resubmitting', asy
       next_exercise_index: startCalls > 1 ? 1 : 0,
     }) });
   });
-  await page.route('**/api/lesson/check', async route => {
+  await page.route('**/api/lesson/check-answer', async route => {
     answerCalls += 1;
     await route.abort('failed');
   });
