@@ -62,7 +62,10 @@ test('accepted answer with lost confirmation recovers without resubmitting', asy
     answerCalls += 1;
     await route.abort('failed');
   });
+  await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
   await page.goto('/lesson/911');
+  await page.getByRole('button', { name: 'Understand with an example' }).click();
+  await page.getByRole('button', { name: 'Start practice' }).click();
   await expect(page.getByText('NETWORK FIRST MARKER')).toBeVisible();
   await page.getByRole('radio', { name: 'obwohl' }).click();
   await page.getByRole('button', { name: /^(Check|Prüfen|Проверить)$/ }).click();
