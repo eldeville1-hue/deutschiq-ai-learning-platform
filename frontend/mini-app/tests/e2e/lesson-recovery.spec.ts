@@ -93,8 +93,8 @@ test('mobile lesson preserves selected answer when server returns 500', async ({
     await route.fulfill({
       status: 200, contentType: 'application/json',
       body: JSON.stringify({
-        session_id: 'saved-session', resumed: checks > 0,
-        next_exercise_index: checks > 0 ? 1 : 0,
+        session_id: 'saved-session', resumed: false,
+        next_exercise_index: 0,
       }),
     });
   });
