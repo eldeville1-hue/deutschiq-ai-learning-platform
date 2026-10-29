@@ -423,11 +423,6 @@ const LessonScreen: React.FC = () => {
             'Не удалось подтвердить вход через Telegram. Закрой приложение и открой его снова из бота.',
             'Die Telegram-Anmeldung konnte nicht bestätigt werden. Öffne die App erneut über den Bot.',
             'Telegram sign-in could not be verified. Reopen the app from the bot.'));
-        } else if (!error?.response || status >= 500) {
-          setCheckError(tr(lang,
-            'Сервер сейчас недоступен или отвечает слишком долго. Ответ не подтверждён — попробуй позже.',
-            'Der Server ist gerade nicht erreichbar oder antwortet zu langsam. Die Antwort ist nicht bestätigt.',
-            'The server is unavailable or taking too long. Your answer was not confirmed; try again later.'));
         } else {
           setCheckError(tr(lang,
             'Не удалось проверить ответ. Открой урок заново, если ошибка повторится.',
