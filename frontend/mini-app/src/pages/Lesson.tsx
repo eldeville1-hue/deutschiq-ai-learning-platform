@@ -385,7 +385,7 @@ const LessonScreen: React.FC = () => {
       } else {
         const status = error?.response?.status;
         const detail = error?.response?.data?.detail;
-        if (status === 409 && detail === 'Exercise already completed') {
+        if ((status === 409 && detail === 'Exercise already completed') || !error?.response || status >= 500) {
           // The server may have saved the answer before the network dropped.
           // Recover its authoritative cursor instead of asking for another submission.
           try {
@@ -409,9 +409,9 @@ const LessonScreen: React.FC = () => {
             setCheckError('');
           } catch {
             setCheckError(tr(lang,
-              'Ответ сохранён, но восстановить прогресс не удалось. Открой урок снова.',
-              'Die Antwort wurde gespeichert, aber der Fortschritt konnte nicht geladen werden. Öffne die Lektion erneut.',
-              'Your answer was saved, but progress could not be restored. Reopen the lesson.'));
+              'Не удалось подтвердить ответ. Открой урок заново, чтобы проверить сохранённый прогресс.',
+              'Die Antwort konnte nicht bestätigt werden. Öffne die Lektion erneut, um den gespeicherten Fortschritt zu prüfen.',
+              'Could not confirm your answer. Reopen the lesson to check saved progress.'));
           }
         } else if (status === 409 && detail === 'Learning session is missing or closed') {
           setCheckError(tr(lang,
@@ -423,11 +423,6 @@ const LessonScreen: React.FC = () => {
             'Не удалось подтвердить вход через Telegram. Закрой приложение и открой его снова из бота.',
             'Die Telegram-Anmeldung konnte nicht bestätigt werden. Öffne die App erneut über den Bot.',
             'Telegram sign-in could not be verified. Reopen the app from the bot.'));
-        } else if (!error?.response || status >= 500) {
-          setCheckError(tr(lang,
-            'Сервер сейчас недоступен или отвечает слишком долго. Ответ не подтверждён — попробуй позже.',
-            'Der Server ist gerade nicht erreichbar oder antwortet zu langsam. Die Antwort ist nicht bestätigt.',
-            'The server is unavailable or taking too long. Your answer was not confirmed; try again later.'));
         } else {
           setCheckError(tr(lang,
             'Не удалось проверить ответ. Открой урок заново, если ошибка повторится.',

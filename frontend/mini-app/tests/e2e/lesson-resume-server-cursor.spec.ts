@@ -38,3 +38,38 @@ test('mobile lesson reload restores the server cursor rather than a stale local 
   await expect(page.getByText('FIRST EXERCISE MARKER')).toHaveCount(0);
   expect(starts).toBeGreaterThanOrEqual(2);
 });
+
+test('accepted answer with lost confirmation recovers without resubmitting', async ({ page }) => {
+  let startCalls = 0;
+  let answerCalls = 0;
+  await page.route('**/api/lesson/910?**', async route => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
+      id: 910, title: 'Network recovery', topic: 'Practice', level: 'A1',
+      content: { title: 'Practice', examples: ['Hallo!'], exercises: [
+        { type: 'choose', question: 'NETWORK FIRST MARKER', answer: 'obwohl', options: ['obwohl', 'weil'] },
+        { type: 'choice', question: 'NETWORK SECOND MARKER', answer: 'weil', options: ['weil', 'obwohl'] },
+      ] },
+    }) });
+  });
+  await page.route('**/api/lesson/start', async route => {
+    startCalls += 1;
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
+      session_id: 'network-recovery-910', resumed: true,
+      next_exercise_index: startCalls > 2 ? 1 : 0,
+    }) });
+  });
+  await page.route('**/api/lesson/check-answer', async route => {
+    answerCalls += 1;
+    await route.abort('failed');
+  });
+  await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
+
+  await page.route('**/api/events', route => route.fulfill({ status: 204, body: '' }));
+  await page.goto('/lesson/910');
+  await expect(page.getByText('NETWORK FIRST MARKER')).toBeVisible();
+  await page.getByRole('radio', { name: 'obwohl' }).click();
+  await page.getByRole('button', { name: /^(Check|Prüfen|Проверить)$/ }).click();
+  await expect(page.getByText('NETWORK SECOND MARKER')).toBeVisible();
+  expect(startCalls).toBeGreaterThanOrEqual(2);
+  expect(answerCalls).toBe(1);
+});
