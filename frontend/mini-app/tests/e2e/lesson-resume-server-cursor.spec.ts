@@ -18,6 +18,18 @@ test('mobile lesson reload restores the server cursor rather than a stale local 
       session_id: 'resume-session-910', resumed: true, next_exercise_index: 1,
     }) });
   });
+  // A stale local draft claims the first exercise is current, but the backend
+  // has already accepted it. Server progress must win after an app restart.
+  await page.addInitScript(() => {
+    localStorage.setItem('deutschiq-lesson-draft-9001-910', JSON.stringify({
+      sessionId: 'resume-session-910',
+      step: 2,
+      answer: 'obwohl',
+      checked: true,
+      feedback: { correct: true },
+      savedAt: Date.now() - 60_000,
+    }));
+  });
   await page.goto('/lesson/910');
   await expect(page.getByText('SECOND EXERCISE MARKER')).toBeVisible();
   await expect(page.getByText('FIRST EXERCISE MARKER')).toHaveCount(0);
