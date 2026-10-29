@@ -66,6 +66,8 @@ test('accepted answer with lost confirmation recovers without resubmitting', asy
 
   await page.route('**/api/events', route => route.fulfill({ status: 204, body: '' }));
   await page.goto('/lesson/77');
+  await expect(page.getByRole('button', { name: 'Understand with an example' }),
+    'Lesson did not load: ' + (await page.locator('body').innerText()).slice(0, 1200)).toBeVisible();
   await page.getByRole('button', { name: 'Understand with an example' }).click();
   await page.getByRole('button', { name: 'Start practice' }).click();
   await expect(page.getByText('NETWORK FIRST MARKER')).toBeVisible();
