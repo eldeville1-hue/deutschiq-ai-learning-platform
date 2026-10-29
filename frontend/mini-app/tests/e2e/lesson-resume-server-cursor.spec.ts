@@ -42,11 +42,11 @@ test('mobile lesson reload restores the server cursor rather than a stale local 
 test('accepted answer with lost confirmation recovers without resubmitting', async ({ page }) => {
   let startCalls = 0;
   let answerCalls = 0;
-  await page.route('**/api/lesson/77?**', async route => {
+  await page.route('**/api/lesson/910?**', async route => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
-      id: 77, title: 'Network recovery', topic: 'Practice', level: 'A1',
+      id: 910, title: 'Network recovery', topic: 'Practice', level: 'A1',
       content: { title: 'Practice', examples: ['Hallo!'], exercises: [
-        { type: 'choice', question: 'NETWORK FIRST MARKER', answer: 'obwohl', options: ['obwohl', 'weil'] },
+        { type: 'choose', question: 'NETWORK FIRST MARKER', answer: 'obwohl', options: ['obwohl', 'weil'] },
         { type: 'choice', question: 'NETWORK SECOND MARKER', answer: 'weil', options: ['weil', 'obwohl'] },
       ] },
     }) });
@@ -54,7 +54,7 @@ test('accepted answer with lost confirmation recovers without resubmitting', asy
   await page.route('**/api/lesson/start', async route => {
     startCalls += 1;
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
-      session_id: 'network-recovery-77', resumed: true,
+      session_id: 'network-recovery-910', resumed: true,
       next_exercise_index: startCalls > 1 ? 1 : 0,
     }) });
   });
@@ -65,8 +65,7 @@ test('accepted answer with lost confirmation recovers without resubmitting', asy
   await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
 
   await page.route('**/api/events', route => route.fulfill({ status: 204, body: '' }));
-  await page.goto('/lesson/77');
-  await expect(page.getByText('NETWORK FIRST MARKER')).toBeVisible();
+  await page.goto('/lesson/910');
   await expect(page.getByText('NETWORK FIRST MARKER')).toBeVisible();
   await page.getByRole('radio', { name: 'obwohl' }).click();
   await page.getByRole('button', { name: /^(Check|Prüfen|Проверить)$/ }).click();
