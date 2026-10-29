@@ -45,7 +45,14 @@ def build_report():
                             "issue": issue, "evidence": issue,
                         })
             except Exception as exc:
-                findings.append({"day": row[0], "category": "build", "issue": f"{type(exc).__name__}:{exc}"})
+                issue = f"{type(exc).__name__}:{exc}"
+                findings.append({"day": row[0], "category": "build", "issue": issue})
+                exercise_findings.append({
+                    "track": track, "level": "A1" if track == "30-day roadmap" else track,
+                    "day": row[0], "exercise_index": None, "exercise_id": None,
+                    "category": "build", "severity": "blocking",
+                    "issue": issue, "evidence": issue,
+                })
         exercise_issues[track] = findings
     repair_queue = []
     for track, lessons in learning_evidence.items():
