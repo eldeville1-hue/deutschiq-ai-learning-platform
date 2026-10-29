@@ -7,11 +7,8 @@ import audit_curriculum
 
 class CurriculumBuildFindingsTests(unittest.TestCase):
     def test_build_exception_is_blocking_and_in_structured_findings(self):
-        def broken_builder(*args, **kwargs):
-            raise ValueError("deliberate broken lesson")
-
         with (
-            patch.object(audit_curriculum, "CURRICULUM", [(42,)]),
+            patch.object(audit_curriculum, "CURRICULUM", [(42, "test", "test", "test", "test", "test", "test")]),
             patch.object(audit_curriculum, "A1_CURRICULUM", []),
             patch.object(audit_curriculum, "A2_CURRICULUM", []),
             patch.object(audit_curriculum, "B1_CURRICULUM", []),
