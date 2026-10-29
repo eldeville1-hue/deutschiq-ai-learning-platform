@@ -66,7 +66,14 @@ test('accepted answer with lost confirmation recovers without resubmitting', asy
 
   await page.route('**/api/events', route => route.fulfill({ status: 204, body: '' }));
   await page.goto('/lesson/910');
-  await expect(page.getByText('NETWORK FIRST MARKER')).toBeVisible();
+  await page.waitForTimeout(1500);
+  const firstVisible = await page.getByText('NETWORK FIRST MARKER').isVisible();
+  if (!firstVisible) {
+    throw new Error('Lesson state: ' + JSON.stringify({
+      url: page.url(), body: (await page.locator('body').innerText()).slice(0, 2500),
+      startCalls,
+    }));
+  }
   await page.getByRole('radio', { name: 'obwohl' }).click();
   await page.getByRole('button', { name: /^(Check|Prüfen|Проверить)$/ }).click();
   await expect(page.getByText('NETWORK SECOND MARKER')).toBeVisible();
