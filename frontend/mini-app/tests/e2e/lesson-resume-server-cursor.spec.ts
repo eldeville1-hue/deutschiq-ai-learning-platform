@@ -63,6 +63,8 @@ test('accepted answer with lost confirmation recovers without resubmitting', asy
     await route.abort('failed');
   });
   await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
+  await page.route('**/api/user/state/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ user_id: 9001, current_level: 'B1' }) }));
+  await page.route('**/api/events', route => route.fulfill({ status: 204, body: '' }));
   await page.goto('/lesson/911');
   await page.getByRole('button', { name: 'Understand with an example' }).click();
   await page.getByRole('button', { name: 'Start practice' }).click();
