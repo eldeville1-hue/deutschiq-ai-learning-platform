@@ -374,6 +374,12 @@ def build_b1_content(row):
         if isinstance(sentence, str) and sentence.strip()
         and " ".join(sentence.split()).rstrip(".?!").casefold() not in used_answers
     ]
+    if topic == "subordinate_clauses":
+        # Recovery must not reveal the later independent-choice answer.
+        # This authored sentence uses a third, distinct context.
+        retry_examples = [
+            {"skill_id": topic, "sentence": "Obwohl der Bus spät kommt, warten wir."},
+        ]
     # Every authored exercise inherits its lesson's stable curriculum skill.
     # Distinct skill-matched retry examples can be added after editorial review.
     for exercise in exercises:
