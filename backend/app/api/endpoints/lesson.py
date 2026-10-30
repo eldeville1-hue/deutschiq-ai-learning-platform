@@ -16,7 +16,7 @@ from app.core.telegram_auth import telegram_user_id, assert_owner
 from app.services.srs import schedule_review
 from app.services.srs_due import due_reviews, due_review_dates, consume_due_review
 from app.models.learning import ExerciseAttempt, TopicMastery, LearningSession
-from app.services.learning_engine import adaptive_mastery_update, next_stability, retrieval_review_interval, retention_score, summarize_attempts, summarize_mission
+from app.services.learning_engine import adaptive_mastery_update, next_stability, retrieval_review_interval, retention_score, summarize_attempts, summarize_mission, mastery_evidence_modes
 from app.services.skill_graph import skill_for
 from app.services.content_quality import normalize_lesson_content
 from app.services.content_i18n import localize_lesson_content, normalize_language
@@ -318,7 +318,8 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
         ExerciseAttempt.session_id == session.id,
         ExerciseAttempt.exercise_index == data.exercise_index,
     ).count()
-    assistance = "guided_retry" if data.retry or prior_attempts else "independent"
+    assisted, independent_retrieval = mastery_evidence_modes(prior_attempts, data.retry, data.mode)
+    assistance = "guided_retry" if assisted else "independent"
     evidence_result = EvaluationResult(
         grammar_correct=evaluation.get("grammar_correct"),
         meaning_correct=evaluation.get("meaning_correct"),
@@ -355,8 +356,11 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
         correct,
         data.confidence,
         data.response_ms,
-        retry=data.retry,
-        retrieval=data.mode == "review",
+        # A second submission is assisted even when the frontend repeats the
+        # original task because no supported guided-retry variant exists.
+        # Only first-attempt independent recall earns the retrieval boost.
+        retry=assisted,
+        retrieval=independent_retrieval,
         production_score=(production_feedback or {}).get("score"),
     )
     mastery.correct_total = (mastery.correct_total or 0) + (1 if correct else 0)
