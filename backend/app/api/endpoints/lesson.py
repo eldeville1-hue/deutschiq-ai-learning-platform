@@ -355,8 +355,11 @@ async def check_answer(data: CheckAnswerRequest, db: Session = Depends(get_db), 
         correct,
         data.confidence,
         data.response_ms,
-        retry=data.retry,
-        retrieval=data.mode == "review",
+        # A second submission is assisted even when the frontend repeats the
+        # original task because no supported guided-retry variant exists.
+        # Only first-attempt independent recall earns the retrieval boost.
+        retry=assistance == "guided_retry",
+        retrieval=data.mode == "review" and assistance == "independent",
         production_score=(production_feedback or {}).get("score"),
     )
     mastery.correct_total = (mastery.correct_total or 0) + (1 if correct else 0)
