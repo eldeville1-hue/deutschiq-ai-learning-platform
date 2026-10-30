@@ -147,6 +147,25 @@ def build_b1_content(row):
             {"question": "Say the new useful sentence aloud.", "explanation": "Say the new sentence calmly and naturally."},
         ),
     ]
+    if topic == "subordinate_clauses":
+        # Independent practice must test a fresh context, not recall of the
+        # sentence already shown in the guided correction.
+        choice = exercises[1]
+        choice["question"] = "Ты устала, но всё равно идёшь на курсы. Выбери подходящую фразу."
+        choice["answer"] = alternatives[0]
+        choice["accepted_answers"] = [alternatives[0]]
+        choice["options"] = [
+            alternatives[0],
+            "Obwohl ich müde bin, ich gehe zum Kurs.",
+            "Weil ich müde bin, gehe ich zum Kurs.",
+        ]
+        choice["i18n"]["ru"]["question"] = choice["question"]
+        choice["i18n"]["de"]["question"] = "Du bist müde, gehst aber trotzdem zum Kurs. Welcher Satz passt?"
+        choice["i18n"]["en"]["question"] = "You are tired but still go to class. Which sentence fits?"
+        choice["explanation"] = "Obwohl обозначает уступку: несмотря на усталость, действие продолжается. Глагол придаточного стоит в конце."
+        choice["i18n"]["ru"]["explanation"] = choice["explanation"]
+        choice["i18n"]["de"]["explanation"] = "Obwohl drückt einen Gegensatz zur Erwartung aus; das Verb steht im Nebensatz am Ende."
+        choice["i18n"]["en"]["explanation"] = "Obwohl introduces an unexpected contrast; the subordinate clause has verb-final word order."
     if topic == "genitive_prepositions":
         exercises = [
             _localized_exercise(
