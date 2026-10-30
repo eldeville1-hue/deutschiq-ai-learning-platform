@@ -356,10 +356,15 @@ def exercise_instruction_audit(content: dict) -> list[str]:
         # Blank localized copy must not silently replace a usable authored
         # instruction with an empty screen in the learner's selected language.
         localized = item.get("i18n")
+        if localized is not None and not isinstance(localized, dict):
+            issues.append(f"exercise:{index}:invalid_i18n")
         if isinstance(localized, dict):
             for language in ("ru", "de", "en"):
-                copy = localized.get(language)
+                if language not in localized:
+                    continue
+                copy = localized[language]
                 if not isinstance(copy, dict):
+                    issues.append(f"exercise:{index}:invalid_{language}_i18n")
                     continue
                 for field in ("question", "explanation"):
                     if field in copy and (
