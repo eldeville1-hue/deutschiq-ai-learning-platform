@@ -13,7 +13,7 @@ def monthly_invoice_payload(telegram_id: int) -> str:
 def validate_pre_checkout(query) -> str | None:
     """Return a user-safe rejection reason, or None for a valid Pro order."""
     expected = monthly_invoice_payload(query.from_user.id)
-    if not settings.PAYMENTS_ENABLED:
+    if not settings.PAYMENTS_ENABLED or settings.BETA_FREE_ACCESS:
         return "Payments are not available yet."
     if query.invoice_payload != expected:
         return "This payment link is invalid or belongs to another account."
@@ -43,5 +43,5 @@ def subscription_payload(user) -> dict:
         "payments_enabled": settings.PAYMENTS_ENABLED,
         "beta_free": settings.BETA_FREE_ACCESS,
         "pro_price_stars": settings.PRO_PRICE_STARS,
-        "commerce_ready": bool(settings.PAYMENTS_ENABLED and settings.SELLER_LEGAL_NAME and settings.SELLER_POSTAL_ADDRESS and settings.SELLER_SUPPORT_EMAIL),
+        "commerce_ready": bool(settings.PAYMENTS_ENABLED and not settings.BETA_FREE_ACCESS and settings.SELLER_LEGAL_NAME and settings.SELLER_POSTAL_ADDRESS and settings.SELLER_SUPPORT_EMAIL),
     }
