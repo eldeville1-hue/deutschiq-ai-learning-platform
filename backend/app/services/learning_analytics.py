@@ -13,6 +13,17 @@ FUNNEL = (
 )
 
 
+def telemetry_true(value) -> bool:
+    """Accept real booleans and explicit true/false telemetry values only."""
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return value == 1
+    if isinstance(value, str):
+        return value.strip().lower() in {"true", "1"}
+    return False
+
+
 def learning_analytics(events, attempts, mastery_rows) -> dict:
     users = defaultdict(set)
     event_counts = Counter()
@@ -23,9 +34,9 @@ def learning_analytics(events, attempts, mastery_rows) -> dict:
         users[event.event_name].add(int(event.user_id))
         props = event.properties or {}
         if event.event_name == "exercise_answered":
-            bucket = "retry" if bool(props.get("retry")) else "first"
+            bucket = "retry" if telemetry_true(props.get("retry")) else "first"
             answer[bucket][0] += 1
-            answer[bucket][1] += int(bool(props.get("correct")))
+            answer[bucket][1] += int(telemetry_true(props.get("correct")))
         elif event.event_name == "review_answered":
             answer["review"][0] += 1
             answer["review"][1] += int(bool(props.get("correct")))
@@ -46,7 +57,7 @@ def learning_analytics(events, attempts, mastery_rows) -> dict:
 
     repaired = event_counts["mission_repair_completed"]
     repair_success = sum(
-        int(bool((event.properties or {}).get("repaired")))
+        int(telemetry_true((event.properties or {}).get("repaired")))
         for event in events if event.event_name == "mission_repair_completed"
     )
     at_risk = sum(float(row.mastery) >= 70 and getattr(row, "next_review_at", None) is not None for row in mastery_rows)
