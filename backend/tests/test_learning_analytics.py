@@ -21,6 +21,24 @@ class LearningAnalyticsTests(unittest.TestCase):
         self.assertEqual(result["effectiveness"]["supported_retry"]["accuracy"], 100)
         self.assertEqual(result["effectiveness"]["delayed_retrieval"]["accuracy"], 100)
 
+    def test_funnel_conversion_counts_same_learners_not_unrelated_population(self):
+        events = [
+            event("diagnostic_completed", user=1),
+            event("diagnostic_completed", user=2),
+            event("today_viewed", user=2),
+            event("today_viewed", user=3),
+            event("today_viewed", user=4),
+            event("lesson_started", user=3),
+            event("lesson_started", user=5),
+        ]
+        funnel = learning_analytics(events, [], [])["funnel"]
+        self.assertEqual(funnel[1]["users"], 3)
+        self.assertEqual(funnel[1]["from_previous"], 50)
+        self.assertEqual(funnel[2]["users"], 2)
+        self.assertEqual(funnel[2]["from_previous"], 33)
+        self.assertEqual(funnel[3]["from_previous"], 0)
+        self.assertIsNone(funnel[4]["from_previous"])
+
     def test_string_false_is_not_counted_as_correct_or_retry(self):
         events = [
             event("exercise_answered", correct="false", retry="false"),
