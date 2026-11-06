@@ -34,6 +34,27 @@ class SubscriptionTests(unittest.TestCase):
         with patch("app.services.subscription.settings.PAYMENTS_ENABLED", False):
             self.assertEqual(validate_pre_checkout(query), "Payments are not available yet.")
 
+    def test_checkout_rejects_stale_invoice_during_free_beta(self):
+        query = SimpleNamespace(
+            from_user=SimpleNamespace(id=123),
+            invoice_payload=monthly_invoice_payload(123),
+            currency="XTR",
+            total_amount=700,
+        )
+        with patch("app.services.subscription.settings.PAYMENTS_ENABLED", True), \
+             patch("app.services.subscription.settings.BETA_FREE_ACCESS", True), \
+             patch("app.services.subscription.settings.PRO_PRICE_STARS", 700):
+            self.assertEqual(validate_pre_checkout(query), "Payments are not available yet.")
+
+    def test_free_beta_cannot_advertise_commerce_ready(self):
+        user = SimpleNamespace(subscription_status="free", subscription_end_date=None)
+        with patch("app.services.subscription.settings.PAYMENTS_ENABLED", True), \
+             patch("app.services.subscription.settings.BETA_FREE_ACCESS", True), \
+             patch("app.services.subscription.settings.SELLER_LEGAL_NAME", "Seller"), \
+             patch("app.services.subscription.settings.SELLER_POSTAL_ADDRESS", "Address"), \
+             patch("app.services.subscription.settings.SELLER_SUPPORT_EMAIL", "support@example.org"):
+            self.assertFalse(subscription_payload(user)["commerce_ready"])
+
     def test_checkout_rejects_another_users_invoice(self):
         query = SimpleNamespace(
             from_user=SimpleNamespace(id=123),
