@@ -112,6 +112,16 @@ def next_stability(current: float, correct: bool, confidence: str | None) -> flo
     return min(120.0, max(1.0, current) * multiplier)
 
 
+def mastery_evidence_modes(prior_attempts: int, retry: bool, mode: str) -> tuple[bool, bool]:
+    """Return (assisted, independent_delayed_retrieval) for verified evidence.
+
+    Repeating the original exercise after a mistake is assisted even if the
+    client cannot request a separate guided retry exercise.
+    """
+    assisted = retry or prior_attempts > 0
+    return assisted, mode == "review" and not assisted
+
+
 def adaptive_mastery_update(
     current: float,
     correct: bool,

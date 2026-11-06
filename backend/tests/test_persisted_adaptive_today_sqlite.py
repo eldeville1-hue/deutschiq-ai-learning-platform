@@ -169,7 +169,17 @@ class PersistedAdaptiveTodayTests(unittest.TestCase):
         self.db.commit()
         self.assertTrue(self.answer("der")["correct"])
         self.assertEqual(4, self.db.query(ExerciseAttempt).filter_by(user_id=1).count())
-        self.assertEqual(10, self.recommendation()["next_lesson"]["id"])
+        # Two correct answers clear the repeated-error focus, but the first
+        # correction was assisted. Lower mastery can still prioritize articles
+        # for further independent practice; it is not durable mastery.
+        from app.services.lesson_coaching import repeated_error_focus
+        history = [
+            {"skill_id": attempt.topic, "correct": attempt.correct}
+            for attempt in self.db.query(ExerciseAttempt).filter_by(user_id=1)
+                .order_by(ExerciseAttempt.id.asc()).all()
+        ]
+        self.assertIsNone(repeated_error_focus(history))
+        self.assertEqual(11, self.recommendation()["next_lesson"]["id"])
 
 
 if __name__ == "__main__":
