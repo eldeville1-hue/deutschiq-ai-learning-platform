@@ -44,12 +44,15 @@ def learning_analytics(events, attempts, mastery_rows) -> dict:
             tutor_modes[str(props.get("mode") or "unknown")] += 1
 
     funnel = []
-    previous = None
+    previous_users = None
     for event_name, label in FUNNEL:
-        count = len(users[event_name])
-        conversion = round(count / previous * 100) if previous else None
+        current_users = users[event_name]
+        count = len(current_users)
+        # A step conversion requires the same learner at both stages.
+        # Independent population totals can otherwise exceed 100%.
+        conversion = round(len(current_users & previous_users) / len(previous_users) * 100) if previous_users else None
         funnel.append({"event": event_name, "label": label, "users": count, "from_previous": conversion})
-        previous = count
+        previous_users = current_users
 
     def rate(pair):
         total, correct = pair
