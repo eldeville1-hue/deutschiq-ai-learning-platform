@@ -62,7 +62,7 @@ class SubscriptionTests(unittest.TestCase):
             currency="XTR",
             total_amount=700,
         )
-        with patch("app.services.subscription.settings.PAYMENTS_ENABLED", True), patch("app.services.subscription.settings.PRO_PRICE_STARS", 700):
+        with patch("app.services.subscription.settings.PAYMENTS_ENABLED", True), patch("app.services.subscription.settings.BETA_FREE_ACCESS", False), patch("app.services.subscription.settings.PRO_PRICE_STARS", 700):
             self.assertIn("another account", validate_pre_checkout(query))
 
     def test_checkout_accepts_current_stars_price(self):
@@ -72,7 +72,7 @@ class SubscriptionTests(unittest.TestCase):
             currency="XTR",
             total_amount=700,
         )
-        with patch("app.services.subscription.settings.PAYMENTS_ENABLED", True), patch("app.services.subscription.settings.PRO_PRICE_STARS", 700):
+        with patch("app.services.subscription.settings.PAYMENTS_ENABLED", True), patch("app.services.subscription.settings.BETA_FREE_ACCESS", False), patch("app.services.subscription.settings.PRO_PRICE_STARS", 700):
             self.assertIsNone(validate_pre_checkout(query))
 
     def test_free_plan(self):
