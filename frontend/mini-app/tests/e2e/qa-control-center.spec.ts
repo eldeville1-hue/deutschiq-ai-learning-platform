@@ -4,6 +4,7 @@ const betaData = {
   audience: { total_users: 12, new_users: 3, active_learners: 7, languages: { ru: 7, de: 5 } },
   funnel: { completion_rate: 71, lesson_completed: 5, invite_claimed: 9, onboarding_completed: 8, diagnostic_started: 8, diagnostic_completed: 7, lesson_started: 7 },
   sessions: { abandoned_events: 1, started: 7 },
+  pro_funnel: { preview_users: 10, interest_users: 4, preview_to_interest_users: 3, conversion_percent: 30, preview_events: 15, interest_events: 6 },
   events: { reliability: { audio_failed: 1 }, recovery: { offline_recovered: 2 }, learning_modes: [], feedback: [] },
   exercise_health: [], retention: { d1: { rate: 70, eligible: 10 }, d3: { rate: 55, eligible: 8 }, d7: { rate: 40, eligible: 5 } },
   beta: { enrolled: 9, onboarded: 8, invites: [] }, testers: [],
@@ -122,4 +123,16 @@ test('owner records real-device acceptance without pretending automation passed 
   await page.getByPlaceholder('Device, OS, Telegram version, result or issue').first().fill('iPhone 15 · iOS 20 · Telegram 14');
   await page.getByRole('button', { name: 'Mark passed' }).first().click();
   await expect.poll(() => writes.some(item => item === 'PUT /api/internal/acceptance/iphone_journey')).toBe(true);
+});
+
+
+test('owner product signals show unique-user Pro conversion', async ({ page }) => {
+  await mockOwnerApi(page);
+  await unlock(page);
+  await page.getByRole('button', { name: 'Product signals' }).click();
+  const commercial = page.locator('.control-panel').filter({ hasText: 'Early demand' });
+  await expect(commercial.getByText('30%')).toBeVisible();
+  await expect(commercial.getByText('Preview → interest conversion · 30 days')).toBeVisible();
+  await expect(commercial.getByText('Unique preview visitors')).toBeVisible();
+  await expect(commercial.getByText('Preview → interest', { exact: true })).toBeVisible();
 });
