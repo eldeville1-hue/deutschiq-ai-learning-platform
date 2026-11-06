@@ -17,6 +17,7 @@ from app.services.beta_acceptance import ACCEPTANCE_CATALOG, acceptance_report
 from app.services.beta_insights import beta_readiness, exercise_health, lesson_content_health, retention_cohorts, soft_launch_gate, summarize_events, tester_progress
 from app.services.learning_analytics import learning_analytics, production_alerts
 from app.services.bot_links import telegram_beta_invite_url
+from app.services.pro_funnel import pro_interest_funnel
 from app.services.content_i18n import localize_lesson_content, normalize_language
 from app.services.content_quality import curriculum_journey_issues, normalize_lesson_content, publication_blockers
 
@@ -227,6 +228,7 @@ async def beta_control_center(
             "abandoned_events": event_summary["counts"].get("lesson_abandoned", 0),
         },
         "events": event_summary,
+        "pro_funnel": pro_interest_funnel(events),
         "learning_analytics": learning_metrics,
         "operational_alerts": operational_alerts,
         "exercise_health": exercise_health(attempts, {item.id: item.topic for item in lessons}),
