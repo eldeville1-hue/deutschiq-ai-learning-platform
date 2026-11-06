@@ -21,6 +21,20 @@ class LearningAnalyticsTests(unittest.TestCase):
         self.assertEqual(result["effectiveness"]["supported_retry"]["accuracy"], 100)
         self.assertEqual(result["effectiveness"]["delayed_retrieval"]["accuracy"], 100)
 
+    def test_string_false_is_not_counted_as_correct_or_retry(self):
+        events = [
+            event("exercise_answered", correct="false", retry="false"),
+            event("exercise_answered", correct="true", retry="true"),
+            event("review_answered", correct="false"),
+            event("mission_repair_completed", repaired="false"),
+            event("mission_repair_completed", repaired="true"),
+        ]
+        effectiveness = learning_analytics(events, [], [])["effectiveness"]
+        self.assertEqual(effectiveness["first_try"], {"answers": 1, "accuracy": 0})
+        self.assertEqual(effectiveness["supported_retry"], {"answers": 1, "accuracy": 100})
+        self.assertEqual(effectiveness["delayed_retrieval"], {"answers": 1, "accuracy": 0})
+        self.assertEqual(effectiveness["mission_repair"], {"attempts": 2, "success_rate": 50})
+
     def test_small_tutor_sample_does_not_create_noise(self):
         summary = {"reliability": {}, "reliability_detail": {"serious_errors": 0}}
         learning = {"tutor": {"answers": 2, "fallback": 2, "fallback_rate": 100}}
