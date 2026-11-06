@@ -39,7 +39,7 @@ def learning_analytics(events, attempts, mastery_rows) -> dict:
             answer[bucket][1] += int(telemetry_true(props.get("correct")))
         elif event.event_name == "review_answered":
             answer["review"][0] += 1
-            answer["review"][1] += int(bool(props.get("correct")))
+            answer["review"][1] += int(telemetry_true(props.get("correct")))
         elif event.event_name == "tutor_answered":
             tutor_modes[str(props.get("mode") or "unknown")] += 1
 
