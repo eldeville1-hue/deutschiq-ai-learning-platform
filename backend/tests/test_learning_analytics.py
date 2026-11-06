@@ -36,7 +36,8 @@ class LearningAnalyticsTests(unittest.TestCase):
         self.assertEqual(funnel[1]["from_previous"], 50)
         self.assertEqual(funnel[2]["users"], 2)
         self.assertEqual(funnel[2]["from_previous"], 33)
-        self.assertIsNone(funnel[3]["from_previous"])
+        self.assertEqual(funnel[3]["from_previous"], 0)
+        self.assertIsNone(funnel[4]["from_previous"])
 
     def test_string_false_is_not_counted_as_correct_or_retry(self):
         events = [
