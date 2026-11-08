@@ -169,6 +169,32 @@ class LearningAnalyticsTests(unittest.TestCase):
         self.assertEqual(windows["1"]["followup_rate"], 0)
         self.assertIsNone(windows["1"]["accuracy"])
 
+    def test_24h_followup_respects_reporting_window_and_cutoff(self):
+        t = datetime(2026, 11, 1, tzinfo=timezone.utc)
+        attempts = [
+            SimpleNamespace(user_id=1, topic="weil", created_at=t, correct=True),
+            SimpleNamespace(user_id=1, topic="weil", created_at=t + timedelta(days=2), correct=False),
+            SimpleNamespace(user_id=1, topic="weil", created_at=t + timedelta(days=8), correct=True),
+            SimpleNamespace(user_id=1, topic="weil", created_at=t + timedelta(days=12), correct=False),
+        ]
+        result = learning_analytics(
+            [], attempts, [], as_of=t + timedelta(days=10),
+            reporting_since=t + timedelta(days=7),
+        )["effectiveness"]["delayed_topic_followup"]
+        self.assertEqual(result, {"cohorts": 1, "accuracy": 100, "minimum_gap_hours": 24})
+
+    def test_24h_followup_ignores_only_pre_window_observations(self):
+        t = datetime(2026, 11, 1, tzinfo=timezone.utc)
+        attempts = [
+            SimpleNamespace(user_id=1, topic="weil", created_at=t, correct=True),
+            SimpleNamespace(user_id=1, topic="weil", created_at=t + timedelta(days=2), correct=False),
+        ]
+        result = learning_analytics(
+            [], attempts, [], as_of=t + timedelta(days=10),
+            reporting_since=t + timedelta(days=7),
+        )["effectiveness"]["delayed_topic_followup"]
+        self.assertEqual(result, {"cohorts": 0, "accuracy": None, "minimum_gap_hours": 24})
+
     def test_small_tutor_sample_does_not_create_noise(self):
         summary = {"reliability": {}, "reliability_detail": {"serious_errors": 0}}
         learning = {"tutor": {"answers": 2, "fallback": 2, "fallback_rate": 100}}
