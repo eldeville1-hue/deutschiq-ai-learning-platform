@@ -140,6 +140,35 @@ class LearningAnalyticsTests(unittest.TestCase):
         self.assertEqual(windows["3"], {"eligible_cohorts": 1, "awaiting_maturity": 1, "cohorts": 0, "followup_rate": 0, "accuracy": None})
         self.assertEqual(windows["7"], {"eligible_cohorts": 1, "awaiting_maturity": 1, "cohorts": 0, "followup_rate": 0, "accuracy": None})
 
+    def test_retention_uses_historical_baseline_but_only_in_window_followups(self):
+        t = datetime(2026, 11, 1, tzinfo=timezone.utc)
+        attempts = [
+            SimpleNamespace(user_id=1, topic="weil", created_at=t, correct=True),
+            SimpleNamespace(user_id=1, topic="weil", created_at=t + timedelta(days=3), correct=False),
+            SimpleNamespace(user_id=1, topic="weil", created_at=t + timedelta(days=9), correct=True),
+        ]
+        windows = learning_analytics(
+            [], attempts, [], as_of=t + timedelta(days=10),
+            reporting_since=t + timedelta(days=7),
+        )["effectiveness"]["delayed_topic_windows"]
+        for day in ("1", "3", "7"):
+            self.assertEqual(windows[day]["eligible_cohorts"], 1)
+            self.assertEqual(windows[day]["cohorts"], 1)
+            self.assertEqual(windows[day]["accuracy"], 100)
+
+    def test_retention_does_not_count_pre_window_followups(self):
+        t = datetime(2026, 11, 1, tzinfo=timezone.utc)
+        attempts = [
+            SimpleNamespace(user_id=1, topic="weil", created_at=t, correct=True),
+            SimpleNamespace(user_id=1, topic="weil", created_at=t + timedelta(days=3), correct=False),
+        ]
+        windows = learning_analytics(
+            [], attempts, [], as_of=t + timedelta(days=10),
+            reporting_since=t + timedelta(days=7),
+        )["effectiveness"]["delayed_topic_windows"]
+        self.assertEqual(windows["1"]["followup_rate"], 0)
+        self.assertIsNone(windows["1"]["accuracy"])
+
     def test_small_tutor_sample_does_not_create_noise(self):
         summary = {"reliability": {}, "reliability_detail": {"serious_errors": 0}}
         learning = {"tutor": {"answers": 2, "fallback": 2, "fallback_rate": 100}}

@@ -154,6 +154,21 @@ async def beta_control_center(
     since = datetime.now() - timedelta(days=days)
     events = db.query(ProductEvent).filter(ProductEvent.created_at >= since).order_by(ProductEvent.created_at.asc()).all()
     attempts = db.query(ExerciseAttempt).filter(ExerciseAttempt.created_at >= since).all()
+    # Retention baselines must predate the reporting window when the learner
+    # first practised the topic earlier. Restrict history to active learners;
+    # unrelated historical topics are excluded from the analytics below.
+    active_topic_keys = {(int(a.user_id), str(a.topic)) for a in attempts if a.user_id is not None and a.topic}
+    if active_topic_keys:
+        historical_attempts = db.query(ExerciseAttempt).filter(
+            ExerciseAttempt.created_at < since,
+            ExerciseAttempt.user_id.in_({user_id for user_id, _ in active_topic_keys}),
+        ).all()
+        retention_attempts = attempts + [
+            a for a in historical_attempts
+            if a.topic and (int(a.user_id), str(a.topic)) in active_topic_keys
+        ]
+    else:
+        retention_attempts = attempts
     sessions = db.query(LearningSession).filter(LearningSession.started_at >= since).all()
     users = db.query(User).all()
     lessons = db.query(Lesson).all()
@@ -162,7 +177,7 @@ async def beta_control_center(
     acceptance = acceptance_report(db.query(BetaAcceptanceCheck).all())
     event_summary = summarize_events(events)
     mastery_rows = db.query(TopicMastery).all()
-    learning_metrics = learning_analytics(events, attempts, mastery_rows, as_of=datetime.now())
+    learning_metrics = learning_analytics(events, retention_attempts, mastery_rows, as_of=datetime.now(), reporting_since=since)
     operational_alerts = production_alerts(event_summary, learning_metrics)
     cohort_user_ids = {item.user_id for item in enrollments}
     cohort_events = [item for item in events if item.user_id in cohort_user_ids]

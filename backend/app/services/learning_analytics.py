@@ -25,7 +25,7 @@ def telemetry_true(value) -> bool:
     return False
 
 
-def learning_analytics(events, attempts, mastery_rows, as_of=None) -> dict:
+def learning_analytics(events, attempts, mastery_rows, as_of=None, reporting_since=None) -> dict:
     users = defaultdict(set)
     event_times = defaultdict(lambda: defaultdict(list))
     event_counts = Counter()
@@ -101,7 +101,7 @@ def learning_analytics(events, attempts, mastery_rows, as_of=None) -> dict:
             if baseline + timedelta(days=days) > cutoff:
                 continue
             eligible += 1
-            followup = next((row for row in rows[1:] if row.created_at - baseline >= timedelta(days=days) and row.created_at <= cutoff), None)
+            followup = next((row for row in rows[1:] if row.created_at - baseline >= timedelta(days=days) and row.created_at <= cutoff and (reporting_since is None or row.created_at >= reporting_since)), None)
             if followup is not None:
                 observed.append(followup)
         followup_windows[str(days)] = {
