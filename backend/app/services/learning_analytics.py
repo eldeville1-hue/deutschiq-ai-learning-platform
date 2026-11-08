@@ -60,7 +60,7 @@ def learning_analytics(events, attempts, mastery_rows) -> dict:
             for user_id in current_users & previous_users:
                 before = event_times[previous_event][user_id]
                 after = event_times[event_name][user_id]
-                if not before or not after or any(a >= b for a in after for b in before):
+                if not before or not after or any(a > b for a in after for b in before):
                     progressed += 1
         conversion = round(progressed / len(previous_users) * 100) if previous_users else None
         funnel.append({"event": event_name, "label": label, "users": count, "from_previous": conversion})
