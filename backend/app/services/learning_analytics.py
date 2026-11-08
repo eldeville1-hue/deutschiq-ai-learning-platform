@@ -108,6 +108,7 @@ def learning_analytics(events, attempts, mastery_rows, as_of=None) -> dict:
             "eligible_cohorts": eligible,
             "awaiting_maturity": len(topic_attempts) - eligible,
             "cohorts": len(observed),
+            "followup_rate": round(len(observed) / eligible * 100) if eligible else None,
             "accuracy": round(sum(bool(row.correct) for row in observed) / len(observed) * 100) if observed else None,
         }
 
