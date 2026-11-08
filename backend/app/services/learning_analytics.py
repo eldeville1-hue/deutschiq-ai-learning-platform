@@ -26,12 +26,16 @@ def telemetry_true(value) -> bool:
 
 def learning_analytics(events, attempts, mastery_rows) -> dict:
     users = defaultdict(set)
+    event_times = defaultdict(lambda: defaultdict(list))
     event_counts = Counter()
     answer = {"first": [0, 0], "retry": [0, 0], "review": [0, 0]}
     tutor_modes = Counter()
     for event in events:
         event_counts[event.event_name] += 1
         users[event.event_name].add(int(event.user_id))
+        timestamp = getattr(event, "created_at", None)
+        if timestamp is not None:
+            event_times[event.event_name][int(event.user_id)].append(timestamp)
         props = event.properties or {}
         if event.event_name == "exercise_answered":
             bucket = "retry" if telemetry_true(props.get("retry")) else "first"
@@ -45,14 +49,23 @@ def learning_analytics(events, attempts, mastery_rows) -> dict:
 
     funnel = []
     previous_users = None
+    previous_event = None
     for event_name, label in FUNNEL:
         current_users = users[event_name]
         count = len(current_users)
-        # A step conversion requires the same learner at both stages.
-        # Independent population totals can otherwise exceed 100%.
-        conversion = round(len(current_users & previous_users) / len(previous_users) * 100) if previous_users else None
+        # Count only learners who reached the next step after the prior step.
+        # For legacy events without timestamps, retain the overlap estimate.
+        progressed = 0
+        if previous_users:
+            for user_id in current_users & previous_users:
+                before = event_times[previous_event][user_id]
+                after = event_times[event_name][user_id]
+                if not before or not after or any(a >= b for a in after for b in before):
+                    progressed += 1
+        conversion = round(progressed / len(previous_users) * 100) if previous_users else None
         funnel.append({"event": event_name, "label": label, "users": count, "from_previous": conversion})
         previous_users = current_users
+        previous_event = event_name
 
     def rate(pair):
         total, correct = pair
