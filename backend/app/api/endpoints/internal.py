@@ -177,7 +177,7 @@ async def beta_control_center(
     acceptance = acceptance_report(db.query(BetaAcceptanceCheck).all())
     event_summary = summarize_events(events)
     mastery_rows = db.query(TopicMastery).all()
-    learning_metrics = learning_analytics(events, retention_attempts, mastery_rows, as_of=datetime.now())
+    learning_metrics = learning_analytics(events, retention_attempts, mastery_rows, as_of=datetime.now(), reporting_since=since)
     operational_alerts = production_alerts(event_summary, learning_metrics)
     cohort_user_ids = {item.user_id for item in enrollments}
     cohort_events = [item for item in events if item.user_id in cohort_user_ids]
