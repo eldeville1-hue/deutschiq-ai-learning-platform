@@ -109,6 +109,27 @@ class LearningAnalyticsTests(unittest.TestCase):
         attempts = [SimpleNamespace(user_id=1, topic="weil", created_at=datetime(2026, 11, 8, tzinfo=timezone.utc), correct=True)]
         self.assertEqual(learning_analytics([], attempts, [])["effectiveness"]["delayed_topic_followup"]["accuracy"], None)
 
+    def test_delayed_topic_windows_use_first_qualifying_attempt(self):
+        t = datetime(2026, 11, 8, tzinfo=timezone.utc)
+        def attempt(user, days, correct):
+            return SimpleNamespace(user_id=user, topic="weil", created_at=t + timedelta(days=days), correct=correct)
+        attempts = [
+            attempt(1, 0, True), attempt(1, 1, False),
+            attempt(1, 3, True), attempt(1, 7, False), attempt(1, 8, True),
+            attempt(2, 0, False), attempt(2, 1, True),
+            attempt(2, 4, False),
+        ]
+        windows = learning_analytics([], attempts, [])["effectiveness"]["delayed_topic_windows"]
+        self.assertEqual(windows["1"], {"cohorts": 2, "accuracy": 50})
+        self.assertEqual(windows["3"], {"cohorts": 2, "accuracy": 50})
+        self.assertEqual(windows["7"], {"cohorts": 1, "accuracy": 0})
+
+    def test_delayed_topic_windows_without_eligible_followups(self):
+        t = datetime(2026, 11, 8, tzinfo=timezone.utc)
+        attempts = [SimpleNamespace(user_id=1, topic="weil", created_at=t, correct=True)]
+        windows = learning_analytics([], attempts, [])["effectiveness"]["delayed_topic_windows"]
+        self.assertTrue(all(value == {"cohorts": 0, "accuracy": None} for value in windows.values()))
+
     def test_small_tutor_sample_does_not_create_noise(self):
         summary = {"reliability": {}, "reliability_detail": {"serious_errors": 0}}
         learning = {"tutor": {"answers": 2, "fallback": 2, "fallback_rate": 100}}
