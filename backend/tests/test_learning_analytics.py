@@ -88,6 +88,27 @@ class LearningAnalyticsTests(unittest.TestCase):
         self.assertEqual(effectiveness["delayed_retrieval"], {"answers": 1, "accuracy": 0})
         self.assertEqual(effectiveness["mission_repair"], {"attempts": 2, "success_rate": 50})
 
+    def test_delayed_topic_followup_requires_24_hours_and_one_followup_per_topic(self):
+        t = datetime(2026, 11, 8, tzinfo=timezone.utc)
+        def attempt(user, topic, hours, correct):
+            return SimpleNamespace(user_id=user, topic=topic, created_at=t + timedelta(hours=hours), correct=correct)
+        attempts = [
+            attempt(1, "obwohl", 0, True),
+            attempt(1, "obwohl", 2, True),
+            attempt(1, "obwohl", 25, False),
+            attempt(1, "obwohl", 50, True),
+            attempt(2, "obwohl", 0, False),
+            attempt(2, "obwohl", 24, True),
+            attempt(3, "weil", 0, True),
+            attempt(3, "weil", 23, True),
+        ]
+        result = learning_analytics([], attempts, [])["effectiveness"]["delayed_topic_followup"]
+        self.assertEqual(result, {"cohorts": 2, "accuracy": 50, "minimum_gap_hours": 24})
+
+    def test_delayed_topic_followup_without_followups_is_undefined(self):
+        attempts = [SimpleNamespace(user_id=1, topic="weil", created_at=datetime(2026, 11, 8, tzinfo=timezone.utc), correct=True)]
+        self.assertEqual(learning_analytics([], attempts, [])["effectiveness"]["delayed_topic_followup"]["accuracy"], None)
+
     def test_small_tutor_sample_does_not_create_noise(self):
         summary = {"reliability": {}, "reliability_detail": {"serious_errors": 0}}
         learning = {"tutor": {"answers": 2, "fallback": 2, "fallback_rate": 100}}

@@ -1,5 +1,6 @@
 """DeutschIQ 86 privacy-safe learning and production analytics."""
 from collections import Counter, defaultdict
+from datetime import timedelta
 
 
 FUNNEL = (
@@ -71,6 +72,23 @@ def learning_analytics(events, attempts, mastery_rows) -> dict:
         total, correct = pair
         return round(correct / total * 100) if total else None
 
+    # Observed delayed topic attempts are distinct from client-reported review answers.
+    # Count only the first follow-up per learner/topic, at least 24h after baseline.
+    topic_attempts = defaultdict(list)
+    for attempt in attempts:
+        timestamp = getattr(attempt, "created_at", None)
+        topic = getattr(attempt, "topic", None)
+        user_id = getattr(attempt, "user_id", None)
+        if timestamp is not None and topic and user_id is not None:
+            topic_attempts[(int(user_id), str(topic))].append(attempt)
+    delayed_followups = []
+    for rows in topic_attempts.values():
+        rows.sort(key=lambda row: row.created_at)
+        baseline = rows[0].created_at
+        followup = next((row for row in rows[1:] if row.created_at - baseline >= timedelta(hours=24)), None)
+        if followup is not None:
+            delayed_followups.append(followup)
+
     repaired = event_counts["mission_repair_completed"]
     repair_success = sum(
         int(telemetry_true((event.properties or {}).get("repaired")))
@@ -83,6 +101,7 @@ def learning_analytics(events, attempts, mastery_rows) -> dict:
             "first_try": {"answers": answer["first"][0], "accuracy": rate(answer["first"])},
             "supported_retry": {"answers": answer["retry"][0], "accuracy": rate(answer["retry"])},
             "delayed_retrieval": {"answers": answer["review"][0], "accuracy": rate(answer["review"])},
+            "delayed_topic_followup": {"cohorts": len(delayed_followups), "accuracy": round(sum(bool(row.correct) for row in delayed_followups) / len(delayed_followups) * 100) if delayed_followups else None, "minimum_gap_hours": 24},
             "mission_repair": {"attempts": repaired, "success_rate": round(repair_success / repaired * 100) if repaired else None},
             "mastery_topics": len(mastery_rows),
             "scheduled_retention_topics": at_risk,
