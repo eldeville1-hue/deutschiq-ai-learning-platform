@@ -46,7 +46,7 @@ def main() -> None:
         raise RuntimeError(f"Unhealthy deployment: {health}")
     if release.get("version") != "80.0.5" or release.get("release") != "a2-content-review-v26":
         raise RuntimeError(f"Stale deployment: {release}")
-    assert_database_release_ready(health, "20261023_0012")
+    assert_database_release_ready(health, "20261108_0013")
     html, headers = read(f"{origin}/")
     expected_security_headers = {
         "X-Content-Type-Options": "nosniff",
