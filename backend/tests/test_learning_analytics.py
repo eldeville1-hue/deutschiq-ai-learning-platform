@@ -119,16 +119,26 @@ class LearningAnalyticsTests(unittest.TestCase):
             attempt(2, 0, False), attempt(2, 1, True),
             attempt(2, 4, False),
         ]
-        windows = learning_analytics([], attempts, [])["effectiveness"]["delayed_topic_windows"]
-        self.assertEqual(windows["1"], {"cohorts": 2, "accuracy": 50})
-        self.assertEqual(windows["3"], {"cohorts": 2, "accuracy": 50})
-        self.assertEqual(windows["7"], {"cohorts": 1, "accuracy": 0})
+        windows = learning_analytics([], attempts, [], as_of=t + timedelta(days=9))["effectiveness"]["delayed_topic_windows"]
+        self.assertEqual(windows["1"], {"eligible_cohorts": 2, "awaiting_maturity": 0, "cohorts": 2, "accuracy": 50})
+        self.assertEqual(windows["3"], {"eligible_cohorts": 2, "awaiting_maturity": 0, "cohorts": 2, "accuracy": 50})
+        self.assertEqual(windows["7"], {"eligible_cohorts": 2, "awaiting_maturity": 0, "cohorts": 1, "accuracy": 0})
 
     def test_delayed_topic_windows_without_eligible_followups(self):
         t = datetime(2026, 11, 8, tzinfo=timezone.utc)
         attempts = [SimpleNamespace(user_id=1, topic="weil", created_at=t, correct=True)]
-        windows = learning_analytics([], attempts, [])["effectiveness"]["delayed_topic_windows"]
-        self.assertTrue(all(value == {"cohorts": 0, "accuracy": None} for value in windows.values()))
+        windows = learning_analytics([], attempts, [], as_of=t + timedelta(hours=12))["effectiveness"]["delayed_topic_windows"]
+        self.assertTrue(all(value == {"eligible_cohorts": 0, "awaiting_maturity": 1, "cohorts": 0, "accuracy": None} for value in windows.values()))
+
+    def test_delayed_topic_windows_distinguish_missing_followup_from_immature_cohort(self):
+        t = datetime(2026, 11, 1, tzinfo=timezone.utc)
+        attempts = [
+            SimpleNamespace(user_id=1, topic="weil", created_at=t, correct=True),
+            SimpleNamespace(user_id=2, topic="weil", created_at=t + timedelta(days=6), correct=False),
+        ]
+        windows = learning_analytics([], attempts, [], as_of=t + timedelta(days=8))["effectiveness"]["delayed_topic_windows"]
+        self.assertEqual(windows["3"], {"eligible_cohorts": 1, "awaiting_maturity": 1, "cohorts": 0, "accuracy": None})
+        self.assertEqual(windows["7"], {"eligible_cohorts": 1, "awaiting_maturity": 1, "cohorts": 0, "accuracy": None})
 
     def test_small_tutor_sample_does_not_create_noise(self):
         summary = {"reliability": {}, "reliability_detail": {"serious_errors": 0}}
