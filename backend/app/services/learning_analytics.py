@@ -1,6 +1,6 @@
 """DeutschIQ 86 privacy-safe learning and production analytics."""
 from collections import Counter, defaultdict
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 
 FUNNEL = (
@@ -25,7 +25,7 @@ def telemetry_true(value) -> bool:
     return False
 
 
-def learning_analytics(events, attempts, mastery_rows) -> dict:
+def learning_analytics(events, attempts, mastery_rows, as_of=None) -> dict:
     users = defaultdict(set)
     event_times = defaultdict(lambda: defaultdict(list))
     event_counts = Counter()
@@ -94,12 +94,19 @@ def learning_analytics(events, attempts, mastery_rows) -> dict:
     followup_windows = {}
     for days in (1, 3, 7):
         observed = []
+        eligible = 0
         for rows in topic_attempts.values():
             baseline = rows[0].created_at
-            followup = next((row for row in rows[1:] if row.created_at - baseline >= timedelta(days=days)), None)
+            cutoff = as_of if as_of is not None else datetime.now(tz=baseline.tzinfo)
+            if baseline + timedelta(days=days) > cutoff:
+                continue
+            eligible += 1
+            followup = next((row for row in rows[1:] if row.created_at - baseline >= timedelta(days=days) and row.created_at <= cutoff), None)
             if followup is not None:
                 observed.append(followup)
         followup_windows[str(days)] = {
+            "eligible_cohorts": eligible,
+            "awaiting_maturity": len(topic_attempts) - eligible,
             "cohorts": len(observed),
             "accuracy": round(sum(bool(row.correct) for row in observed) / len(observed) * 100) if observed else None,
         }
