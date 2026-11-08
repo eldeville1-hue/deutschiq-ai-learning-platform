@@ -67,6 +67,13 @@ class LearningAnalyticsTests(unittest.TestCase):
             item.created_at = stamp
         self.assertEqual(learning_analytics(events, [], [])["funnel"][1]["from_previous"], 100)
 
+    def test_same_timestamp_does_not_prove_funnel_progress(self):
+        t = datetime(2026, 11, 8, tzinfo=timezone.utc)
+        events = [event("diagnostic_completed"), event("today_viewed")]
+        for item in events:
+            item.created_at = t
+        self.assertEqual(learning_analytics(events, [], [])["funnel"][1]["from_previous"], 0)
+
     def test_string_false_is_not_counted_as_correct_or_retry(self):
         events = [
             event("exercise_answered", correct="false", retry="false"),
