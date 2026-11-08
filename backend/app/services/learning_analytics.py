@@ -89,6 +89,21 @@ def learning_analytics(events, attempts, mastery_rows) -> dict:
         if followup is not None:
             delayed_followups.append(followup)
 
+    # Independent first qualifying follow-up for each minimum elapsed window.
+    # Windows are cumulative (>= 1, >= 3, >= 7 days), not exclusive buckets.
+    followup_windows = {}
+    for days in (1, 3, 7):
+        observed = []
+        for rows in topic_attempts.values():
+            baseline = rows[0].created_at
+            followup = next((row for row in rows[1:] if row.created_at - baseline >= timedelta(days=days)), None)
+            if followup is not None:
+                observed.append(followup)
+        followup_windows[str(days)] = {
+            "cohorts": len(observed),
+            "accuracy": round(sum(bool(row.correct) for row in observed) / len(observed) * 100) if observed else None,
+        }
+
     repaired = event_counts["mission_repair_completed"]
     repair_success = sum(
         int(telemetry_true((event.properties or {}).get("repaired")))
@@ -102,6 +117,7 @@ def learning_analytics(events, attempts, mastery_rows) -> dict:
             "supported_retry": {"answers": answer["retry"][0], "accuracy": rate(answer["retry"])},
             "delayed_retrieval": {"answers": answer["review"][0], "accuracy": rate(answer["review"])},
             "delayed_topic_followup": {"cohorts": len(delayed_followups), "accuracy": round(sum(bool(row.correct) for row in delayed_followups) / len(delayed_followups) * 100) if delayed_followups else None, "minimum_gap_hours": 24},
+            "delayed_topic_windows": followup_windows,
             "mission_repair": {"attempts": repaired, "success_rate": round(repair_success / repaired * 100) if repaired else None},
             "mastery_topics": len(mastery_rows),
             "scheduled_retention_topics": at_risk,
