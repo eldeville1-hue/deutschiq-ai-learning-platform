@@ -85,7 +85,7 @@ def learning_analytics(events, attempts, mastery_rows, as_of=None, reporting_sin
     for rows in topic_attempts.values():
         rows.sort(key=lambda row: row.created_at)
         baseline = rows[0].created_at
-        followup = next((row for row in rows[1:] if row.created_at - baseline >= timedelta(hours=24)), None)
+        followup = next((row for row in rows[1:] if row.created_at - baseline >= timedelta(hours=24) and (as_of is None or row.created_at <= as_of) and (reporting_since is None or row.created_at >= reporting_since)), None)
         if followup is not None:
             delayed_followups.append(followup)
 
