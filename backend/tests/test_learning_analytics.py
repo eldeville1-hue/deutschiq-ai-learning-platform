@@ -1,4 +1,5 @@
 import unittest
+from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 from app.services.learning_analytics import learning_analytics, production_alerts
 
@@ -38,6 +39,33 @@ class LearningAnalyticsTests(unittest.TestCase):
         self.assertEqual(funnel[2]["from_previous"], 33)
         self.assertEqual(funnel[3]["from_previous"], 0)
         self.assertIsNone(funnel[4]["from_previous"])
+
+    def test_funnel_excludes_events_that_precede_prior_stage(self):
+        t = datetime(2026, 11, 8, tzinfo=timezone.utc)
+        events = [
+            event("diagnostic_completed", user=1),
+            event("diagnostic_completed", user=2),
+            event("today_viewed", user=1),
+            event("today_viewed", user=2),
+        ]
+        events[0].created_at = t
+        events[1].created_at = t
+        events[2].created_at = t - timedelta(minutes=1)
+        events[3].created_at = t + timedelta(minutes=1)
+        funnel = learning_analytics(events, [], [])["funnel"]
+        self.assertEqual(funnel[1]["users"], 2)
+        self.assertEqual(funnel[1]["from_previous"], 50)
+
+    def test_funnel_accepts_later_repeat_after_early_visit(self):
+        t = datetime(2026, 11, 8, tzinfo=timezone.utc)
+        events = [
+            event("diagnostic_completed"),
+            event("today_viewed"),
+            event("today_viewed"),
+        ]
+        for item, stamp in zip(events, [t, t - timedelta(minutes=1), t + timedelta(minutes=1)]):
+            item.created_at = stamp
+        self.assertEqual(learning_analytics(events, [], [])["funnel"][1]["from_previous"], 100)
 
     def test_string_false_is_not_counted_as_correct_or_retry(self):
         events = [
