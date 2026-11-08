@@ -4,6 +4,7 @@ import secrets
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from pydantic import BaseModel, Field
+from sqlalchemy import tuple_
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -154,19 +155,15 @@ async def beta_control_center(
     since = datetime.now() - timedelta(days=days)
     events = db.query(ProductEvent).filter(ProductEvent.created_at >= since).order_by(ProductEvent.created_at.asc()).all()
     attempts = db.query(ExerciseAttempt).filter(ExerciseAttempt.created_at >= since).all()
-    # Retention baselines must predate the reporting window when the learner
-    # first practised the topic earlier. Restrict history to active learners;
-    # unrelated historical topics are excluded from the analytics below.
+    # Fetch history only for learner-topic pairs active in the report window.
+    # A composite SQL predicate avoids loading unrelated topics for active users.
     active_topic_keys = {(int(a.user_id), str(a.topic)) for a in attempts if a.user_id is not None and a.topic}
     if active_topic_keys:
         historical_attempts = db.query(ExerciseAttempt).filter(
             ExerciseAttempt.created_at < since,
-            ExerciseAttempt.user_id.in_({user_id for user_id, _ in active_topic_keys}),
+            tuple_(ExerciseAttempt.user_id, ExerciseAttempt.topic).in_(sorted(active_topic_keys)),
         ).all()
-        retention_attempts = attempts + [
-            a for a in historical_attempts
-            if a.topic and (int(a.user_id), str(a.topic)) in active_topic_keys
-        ]
+        retention_attempts = attempts + historical_attempts
     else:
         retention_attempts = attempts
     sessions = db.query(LearningSession).filter(LearningSession.started_at >= since).all()
