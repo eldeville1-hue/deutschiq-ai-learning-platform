@@ -1,10 +1,11 @@
-from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, JSON, String, UniqueConstraint
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, JSON, String, UniqueConstraint, Index
 from sqlalchemy.sql import func
 from .base import Base
 
 
 class ExerciseAttempt(Base):
     __tablename__ = "exercise_attempts"
+    __table_args__ = (Index("ix_exercise_attempts_user_topic_created", "user_id", "topic", "created_at"),)
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
     lesson_id = Column(Integer, ForeignKey("lessons.id", ondelete="CASCADE"), index=True, nullable=False)
