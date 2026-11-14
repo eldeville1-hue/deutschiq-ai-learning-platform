@@ -134,7 +134,7 @@ export const api = {
   getQuestions: (lang: AppLanguage = 'en') => {
     return cachedGet(`deutschiq-questions-${lang}`, () => apiClient.get(`/api/diagnostic/questions?lang=${lang}`).then(r => r.data));
   },
-  submitDiagnostic: (payload: { user_id: number; answers: Record<number, string>; language: AppLanguage }) => {
+  submitDiagnostic: (payload: { user_id: number; answers: Record<number, string>; language: AppLanguage; attempt_id?: string }) => {
     return apiClient.post('/api/diagnostic/submit', payload).then(r => {
       invalidateLearningData(payload.user_id);
       return r.data;
