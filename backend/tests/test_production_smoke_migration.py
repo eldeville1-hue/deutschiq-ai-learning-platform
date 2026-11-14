@@ -1,11 +1,14 @@
 """Release smoke must reject unhealthy or mismatched database revisions."""
 import unittest
 
-from scripts.smoke_test import assert_database_release_ready
+from scripts.smoke_test import assert_database_release_ready, expected_migration_head
 
 
 class ProductionSmokeMigrationTests(unittest.TestCase):
-    EXPECTED = "20261023_0012"
+    EXPECTED = expected_migration_head()
+
+    def test_head_tracks_latest_release(self):
+        self.assertEqual(self.EXPECTED, "20261108_0013")
 
     def test_current_migration_is_release_ready(self):
         assert_database_release_ready(
@@ -16,7 +19,7 @@ class ProductionSmokeMigrationTests(unittest.TestCase):
     def test_old_migration_is_rejected(self):
         with self.assertRaisesRegex(RuntimeError, "Database is not release-ready"):
             assert_database_release_ready(
-                {"status": "ok", "database": "ok", "migrations": "20261003_0011"},
+                {"status": "ok", "database": "ok", "migrations": "20261023_0012"},
                 self.EXPECTED,
             )
 

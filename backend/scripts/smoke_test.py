@@ -1,5 +1,9 @@
 """Public post-deploy check: python backend/scripts/smoke_test.py https://deutschiq.onrender.com"""
 import json
+from pathlib import Path
+
+from alembic.config import Config
+from alembic.script import ScriptDirectory
 import re
 import sys
 import time
@@ -37,6 +41,17 @@ def assert_database_release_ready(health: dict, expected_migration: str) -> None
         raise RuntimeError(f"Database is not release-ready: {health}; expected_migration={expected_migration}")
 
 
+def expected_migration_head() -> str:
+    """Resolve the sole Alembic head from the checked-out release."""
+    backend_dir = Path(__file__).resolve().parents[1]
+    config = Config(str(backend_dir / "alembic.ini"))
+    config.set_main_option("script_location", str(backend_dir / "migrations"))
+    heads = ScriptDirectory.from_config(config).get_heads()
+    if len(heads) != 1:
+        raise RuntimeError(f"Expected one migration head, got {heads}")
+    return heads[0]
+
+
 def main() -> None:
     origin = (sys.argv[1] if len(sys.argv) > 1 else "https://deutschiq.onrender.com").rstrip("/")
     live = read_json(f"{origin}/api/health/live")
@@ -46,7 +61,7 @@ def main() -> None:
         raise RuntimeError(f"Unhealthy deployment: {health}")
     if release.get("version") != "80.0.5" or release.get("release") != "a2-content-review-v26":
         raise RuntimeError(f"Stale deployment: {release}")
-    assert_database_release_ready(health, "20261023_0012")
+    assert_database_release_ready(health, expected_migration_head())
     html, headers = read(f"{origin}/")
     expected_security_headers = {
         "X-Content-Type-Options": "nosniff",
