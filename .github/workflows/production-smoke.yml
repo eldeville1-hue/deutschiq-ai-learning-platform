@@ -37,7 +37,7 @@ jobs:
           # Render deployment starts asynchronously after a main push. Retry
           # boundedly rather than checking the old instance immediately.
           for attempt in {1..8}; do
-            if python backend/scripts/smoke_test.py https://deutschiq.onrender.com; then
+            if PYTHONPATH=backend python backend/scripts/smoke_test.py https://deutschiq.onrender.com; then
               exit 0
             fi
             if [ "$attempt" -eq 8 ]; then
