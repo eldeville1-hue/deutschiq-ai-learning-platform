@@ -52,6 +52,43 @@ test('new user sees onboarding and can enter diagnostics', async ({ page }) => {
   await expectNoHorizontalOverflow(page);
 });
 
+test('new learner completes placement and returns to their saved dashboard', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
+  await mockApi(page, { completed: false });
+  let saved = false;
+  let submissions = 0;
+  await page.route('**/api/user/state/**', route => route.fulfill({ json: userState(saved) }));
+  await page.route('**/api/diagnostic/questions?*', route => route.fulfill({ json: [
+    { id: 1, pillar: 'grammar', text: 'PLACEMENT QUESTION ONE', options: ['bin', 'bist'] },
+    { id: 2, pillar: 'vocabulary', text: 'PLACEMENT QUESTION TWO', options: ['Haus', 'Hund'] },
+  ] }));
+  await page.route('**/api/diagnostic/submit', async route => {
+    const payload = route.request().postDataJSON();
+    expect(payload.answers).toEqual({ '1': 'bin', '2': 'Haus' });
+    submissions += 1;
+    saved = true;
+    await route.fulfill({ json: {
+      persisted: true, level: 'B1', overall_score: 82, confidence: 'medium',
+      pillars: { grammar: 80, vocabulary: 84 }, mistakes: [],
+      placement: { track: 'B1', status: 'provisional' },
+    } });
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: /Find my level/i }).click();
+  await expect(page.getByRole('heading', { name: 'PLACEMENT QUESTION ONE' })).toBeVisible();
+  await page.getByRole('button', { name: /bin/i }).click();
+  await expect(page.getByRole('heading', { name: 'PLACEMENT QUESTION TWO' })).toBeVisible();
+  await page.getByRole('button', { name: /Haus/i }).click();
+  await expect(page).toHaveURL(/\/result/);
+  await expect(page.getByText('Preliminary level estimate')).toBeVisible();
+  await page.getByRole('button', { name: /Start B1/i }).click();
+  await expect(page).toHaveURL(/\/dashboard/);
+  await page.reload();
+  await expect(page.getByText('YOUR STEP TODAY')).toBeVisible();
+  expect(submissions).toBe(1);
+  await expectNoHorizontalOverflow(page);
+});
+
 test('returning user stays out of diagnostics after reload', async ({ page }) => {
   await mockApi(page, { completed: true });
   await page.goto('/');
