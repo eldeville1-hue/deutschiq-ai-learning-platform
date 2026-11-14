@@ -3,12 +3,14 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Dict
 from copy import deepcopy
+import hashlib
+import json
 from app.core.database import get_db
 from app.models.user import User
 from app.models.diagnostic import DiagnosticResult, DiagnosticMistake
 from app.models.event import ProductEvent
 from app.services.diagnostic import calculate_level_and_scores
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from app.core.telegram_auth import telegram_user_id, assert_owner
 
 router = APIRouter(prefix="/api/diagnostic", tags=["diagnostic"])
@@ -116,6 +118,10 @@ async def submit_diagnostic(data: SubmitAnswers, db: Session = Depends(get_db), 
     questions = localized_questions(data.language)
     result = calculate_level_and_scores(data.answers, questions)
     persisted = False
+    request_hash = hashlib.sha256(json.dumps(
+        {"user_id": data.user_id, "answers": data.answers, "language": data.language},
+        sort_keys=True, ensure_ascii=False,
+    ).encode("utf-8")).hexdigest()
     try:
         user = db.query(User).filter(User.telegram_id == data.user_id).first()
         if not user:
@@ -128,9 +134,12 @@ async def submit_diagnostic(data: SubmitAnswers, db: Session = Depends(get_db), 
                 DiagnosticResult.user_id == user.id,
             ).first()
             if existing:
+                if existing.attempt_hash != request_hash:
+                    raise HTTPException(status_code=409, detail="Diagnostic attempt already used with different answers.")
                 return _diagnostic_response(result, questions, data.answers, persisted=True)
         diag = DiagnosticResult(
             attempt_id=data.attempt_id,
+            attempt_hash=request_hash if data.attempt_id else None,
             user_id=user.id,
             overall_score=result["overall_score"],
             grammar_score=result["pillars"]["grammar"],
@@ -156,6 +165,17 @@ async def submit_diagnostic(data: SubmitAnswers, db: Session = Depends(get_db), 
         db.add(ProductEvent(user_id=user.id, event_name="diagnostic_completed", properties={"level": result["level"], "score": result["overall_score"], "language": data.language}))
         db.commit()
         persisted = True
+    except IntegrityError as exc:
+        db.rollback()
+        # Concurrent requests can race on the unique attempt ID. The winner
+        # commits; the loser reads the committed attempt rather than writing twice.
+        if data.attempt_id:
+            existing = db.query(DiagnosticResult).filter_by(attempt_id=data.attempt_id).first()
+            if existing:
+                if existing.attempt_hash != request_hash:
+                    raise HTTPException(status_code=409, detail="Diagnostic attempt already used with different answers.") from exc
+                return _diagnostic_response(result, questions, data.answers, persisted=True)
+        raise HTTPException(status_code=503, detail="Diagnostic could not be saved. Please try again.") from exc
     except SQLAlchemyError as exc:
         db.rollback()
         # Never report a completed diagnostic if its level and progress were not saved.
