@@ -41,6 +41,21 @@ class DiagnosticLearningJourneyTests(unittest.TestCase):
         self.db.close()
         self.engine.dispose()
 
+    def test_same_attempt_does_not_duplicate_results_mistakes_or_events(self):
+        payload = SubmitAnswers(
+            user_id=9001, answers={1: "habe", 2: "Der"},
+            language="en", attempt_id="attempt-retry-9001",
+        )
+        first = asyncio.run(submit_diagnostic(payload, db=self.db, authenticated_id=9001))
+        second = asyncio.run(submit_diagnostic(payload, db=self.db, authenticated_id=9001))
+        self.assertEqual(first["level"], second["level"])
+        self.assertTrue(second["persisted"])
+        user = self.db.query(User).filter_by(telegram_id=9001).one()
+        self.assertEqual(1, self.db.query(DiagnosticResult).filter_by(user_id=user.id).count())
+        self.assertEqual(1, self.db.query(DiagnosticMistake).count())
+        self.assertEqual(1, self.db.query(ProductEvent).filter_by(
+            user_id=user.id, event_name="diagnostic_completed").count())
+
     def test_diagnostic_result_and_lesson_attempt_survive_reload(self):
         diagnostic = asyncio.run(submit_diagnostic(
             SubmitAnswers(user_id=9001, answers={1: "habe", 2: "Der"}, language="en"),
