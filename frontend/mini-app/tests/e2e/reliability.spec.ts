@@ -269,6 +269,28 @@ for (const [language, kicker] of [['ru', 'ТВОЙ ШАГ НА СЕГОДНЯ'],
   });
 }
 
+test('daily learner journey survives return to dashboard after a completed mission', async ({ page }) => {
+  await mockApi(page, { completed: true });
+  await page.goto('/');
+  await expect(page).toHaveURL(/\/dashboard/);
+  await expect(page.getByText('YOUR STEP TODAY')).toBeVisible();
+
+  await page.getByRole('button', { name: /Start (my|today|learning|lesson|session)/i }).first().click();
+  await expect(page).toHaveURL(/\/lesson\/77/);
+  await page.getByRole('button', { name: /Understand with an example/i }).click();
+  await page.getByRole('button', { name: /Start practice/i }).click();
+  await page.getByRole('textbox').fill('Du solltest früher schlafen gehen, weil du oft müde bist.');
+  await page.getByRole('button', { name: /^Check$/i }).click();
+  await expect(page.getByText('B1 ASSESSMENT')).toBeVisible();
+  await page.locator('.answer-feedback > button').click();
+  await expect(page.getByRole('heading', { name: 'This is your German now' })).toBeVisible();
+  await page.getByRole('button', { name: /Continue my path/i }).click();
+  await expect(page).toHaveURL(/\/dashboard/);
+  await page.reload();
+  await expect(page.getByText('YOUR STEP TODAY')).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+});
+
 test('learner completes a mission and sees their own usable German', async ({ page }) => {
   await mockApi(page, { completed: true });
   await page.goto('/lesson/77');
