@@ -100,6 +100,7 @@ class SubmitAnswers(BaseModel):
     user_id: int
     answers: Dict[int, str]
     language: str = "en"
+    attempt_id: str | None = None
 
 @router.get("/questions")
 async def get_questions(lang: str = "en", authenticated_id: int = Depends(telegram_user_id)):
@@ -121,7 +122,15 @@ async def submit_diagnostic(data: SubmitAnswers, db: Session = Depends(get_db), 
             user = User(telegram_id=data.user_id)
             db.add(user)
             db.flush()
+        if data.attempt_id:
+            existing = db.query(DiagnosticResult).filter(
+                DiagnosticResult.attempt_id == data.attempt_id,
+                DiagnosticResult.user_id == user.id,
+            ).first()
+            if existing:
+                return _diagnostic_response(result, questions, data.answers, persisted=True)
         diag = DiagnosticResult(
+            attempt_id=data.attempt_id,
             user_id=user.id,
             overall_score=result["overall_score"],
             grammar_score=result["pillars"]["grammar"],
@@ -133,12 +142,12 @@ async def submit_diagnostic(data: SubmitAnswers, db: Session = Depends(get_db), 
         db.add(diag)
         db.flush()
         for question in questions:
-            if question["id"] in data.answers and data.answers.get(question["id"]) != question["correct_answer"]:
+            if question["id"] in answers and answers.get(question["id"]) != question["correct_answer"]:
                 db.add(DiagnosticMistake(
                     diagnostic_id=diag.id,
                     topic=question.get("weak_tags", ["grammar"])[0],
                     question=question["text"],
-                    user_answer=data.answers.get(question["id"], "—"),
+                    user_answer=answers.get(question["id"], "—"),
                     correct_answer=question["correct_answer"],
                     explanation=question.get("explanation", ""),
                 ))
@@ -152,6 +161,10 @@ async def submit_diagnostic(data: SubmitAnswers, db: Session = Depends(get_db), 
         # Never report a completed diagnostic if its level and progress were not saved.
         # The client can retry instead of silently losing the result on refresh.
         raise HTTPException(status_code=503, detail="Diagnostic could not be saved. Please try again.") from exc
+    return _diagnostic_response(result, questions, data.answers, persisted=persisted)
+
+
+def _diagnostic_response(result, questions, answers, persisted):
     return {
         "level": result["level"],
         "overall_score": result["overall_score"],
