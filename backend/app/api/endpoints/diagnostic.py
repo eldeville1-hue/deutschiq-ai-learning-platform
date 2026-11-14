@@ -192,11 +192,11 @@ def _diagnostic_response(result, questions, answers, persisted):
             {
                 "tag": question.get("weak_tags", ["grammar"])[0],
                 "question": question["text"],
-                "user_answer": data.answers.get(question["id"], "—"),
+                "user_answer": answers.get(question["id"], "—"),
                 "correct_answer": question["correct_answer"],
                 "explanation": question.get("explanation", ""),
             }
             for question in questions
-            if question["id"] in data.answers and data.answers.get(question["id"]) != question["correct_answer"]
+            if question["id"] in answers and answers.get(question["id"]) != question["correct_answer"]
         ],
     }
