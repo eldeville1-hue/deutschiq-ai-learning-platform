@@ -89,6 +89,36 @@ test('new learner completes placement and returns to their saved dashboard', asy
   await expectNoHorizontalOverflow(page);
 });
 
+test('diagnostic preserves answers after a failed save and retries once', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
+  await mockApi(page, { completed: false });
+  let attempts = 0;
+  await page.route('**/api/diagnostic/questions?*', route => route.fulfill({ json: [
+    { id: 1, pillar: 'grammar', text: 'SAVE RECOVERY QUESTION', options: ['richtig', 'falsch'] },
+  ] }));
+  await page.route('**/api/diagnostic/submit', async route => {
+    expect(route.request().postDataJSON().answers).toEqual({ '1': 'richtig' });
+    attempts += 1;
+    if (attempts === 1) return route.fulfill({ status: 503, json: { detail: 'Temporarily unavailable' } });
+    return route.fulfill({ json: {
+      persisted: true, level: 'A1', overall_score: 70, confidence: 'low',
+      pillars: { grammar: 70 }, mistakes: [], placement: { track: 'A1', status: 'provisional' },
+    } });
+  });
+  await page.goto('/diagnostic');
+  await expect(page.getByRole('heading', { name: 'SAVE RECOVERY QUESTION' })).toBeVisible();
+  await page.getByRole('button', { name: /richtig/i }).click();
+  await expect(page.getByText(/Could not submit the test/i)).toBeVisible();
+  await page.reload();
+  await expect(page.getByText(/answers were restored/i)).toBeVisible();
+  await expect(page.getByRole('button', { name: /Retry saving/i })).toBeVisible();
+  await page.getByRole('button', { name: /Retry saving/i }).click();
+  await expect(page).toHaveURL(/\/result/);
+  expect(attempts).toBe(2);
+  await expect.poll(() => page.evaluate(() =>
+    localStorage.getItem('deutschiq-pending-diagnostic-9001'))).toBeNull();
+});
+
 test('returning user stays out of diagnostics after reload', async ({ page }) => {
   await mockApi(page, { completed: true });
   await page.goto('/');
