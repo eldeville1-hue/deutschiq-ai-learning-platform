@@ -14,9 +14,11 @@ depends_on = None
 
 def upgrade():
     op.add_column("diagnostic_results", sa.Column("attempt_id", sa.String(length=64), nullable=True))
+    op.add_column("diagnostic_results", sa.Column("attempt_hash", sa.String(length=64), nullable=True))
     op.create_index("ix_diagnostic_results_attempt_id", "diagnostic_results", ["attempt_id"], unique=True)
 
 
 def downgrade():
     op.drop_index("ix_diagnostic_results_attempt_id", table_name="diagnostic_results")
+    op.drop_column("diagnostic_results", "attempt_hash")
     op.drop_column("diagnostic_results", "attempt_id")
