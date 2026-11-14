@@ -3,6 +3,7 @@ import asyncio
 import unittest
 
 from sqlalchemy import ARRAY, create_engine
+from fastapi import HTTPException
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import Session
 
@@ -55,6 +56,23 @@ class DiagnosticLearningJourneyTests(unittest.TestCase):
         self.assertEqual(1, self.db.query(DiagnosticMistake).count())
         self.assertEqual(1, self.db.query(ProductEvent).filter_by(
             user_id=user.id, event_name="diagnostic_completed").count())
+
+    def test_reusing_attempt_with_different_answers_is_rejected(self):
+        original = SubmitAnswers(
+            user_id=9001, answers={1: "habe"}, language="en",
+            attempt_id="same-attempt",
+        )
+        changed = SubmitAnswers(
+            user_id=9001, answers={1: "bin"}, language="en",
+            attempt_id="same-attempt",
+        )
+        asyncio.run(submit_diagnostic(original, db=self.db, authenticated_id=9001))
+        with self.assertRaises(HTTPException) as error:
+            asyncio.run(submit_diagnostic(changed, db=self.db, authenticated_id=9001))
+        self.assertEqual(409, error.exception.status_code)
+        self.assertEqual(1, self.db.query(DiagnosticResult).count())
+        self.assertEqual(1, self.db.query(ProductEvent).filter_by(
+            event_name="diagnostic_completed").count())
 
     def test_diagnostic_result_and_lesson_attempt_survive_reload(self):
         diagnostic = asyncio.run(submit_diagnostic(
