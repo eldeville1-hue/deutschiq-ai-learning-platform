@@ -142,12 +142,12 @@ async def submit_diagnostic(data: SubmitAnswers, db: Session = Depends(get_db), 
         db.add(diag)
         db.flush()
         for question in questions:
-            if question["id"] in answers and answers.get(question["id"]) != question["correct_answer"]:
+            if question["id"] in data.answers and data.answers.get(question["id"]) != question["correct_answer"]:
                 db.add(DiagnosticMistake(
                     diagnostic_id=diag.id,
                     topic=question.get("weak_tags", ["grammar"])[0],
                     question=question["text"],
-                    user_answer=answers.get(question["id"], "—"),
+                    user_answer=data.answers.get(question["id"], "—"),
                     correct_answer=question["correct_answer"],
                     explanation=question.get("explanation", ""),
                 ))
