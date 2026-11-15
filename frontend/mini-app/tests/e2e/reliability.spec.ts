@@ -119,6 +119,31 @@ test('diagnostic preserves answers after a failed save and retries once', async 
     localStorage.getItem('deutschiq-pending-diagnostic-9001'))).toBeNull();
 });
 
+test('changing an answer after failed diagnostic submission creates a fresh attempt ID', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
+  await mockApi(page, { completed: false });
+  await page.route('**/api/diagnostic/questions?*', route => route.fulfill({ json: [
+    { id: 1, pillar: 'grammar', text: 'CHANGE ANSWER QUESTION', options: ['richtig', 'falsch'] },
+  ] }));
+  const submissions: any[] = [];
+  await page.route('**/api/diagnostic/submit', route => {
+    submissions.push(route.request().postDataJSON());
+    if (submissions.length === 1) return route.fulfill({ status: 503, json: { detail: 'Unavailable' } });
+    return route.fulfill({ json: {
+      persisted: true, level: 'A1', overall_score: 80, confidence: 'medium',
+      pillars: { grammar: 80 }, mistakes: [], placement: { track: 'A1', status: 'provisional' },
+    } });
+  });
+  await page.goto('/diagnostic');
+  await page.getByRole('button', { name: 'richtig' }).click();
+  await expect(page.getByText(/Could not submit the test/i)).toBeVisible();
+  await page.getByRole('button', { name: 'falsch' }).click();
+  await expect(page).toHaveURL(/\/result/);
+  expect(submissions).toHaveLength(2);
+  expect(submissions[0].attempt_id).not.toBe(submissions[1].attempt_id);
+  expect(submissions[1].answers).toEqual({ '1': 'falsch' });
+});
+
 test('diagnostic resumes the first unanswered question after a reload', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
   await mockApi(page, { completed: false });
