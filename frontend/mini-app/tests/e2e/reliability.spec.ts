@@ -144,6 +144,24 @@ test('changing an answer after failed diagnostic submission creates a fresh atte
   expect(submissions[1].answers).toEqual({ '1': 'falsch' });
 });
 
+test('explicit diagnostic retake discards stale saved answers', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('deutschiq_lang', 'en');
+    localStorage.setItem('deutschiq-pending-diagnostic-9001', JSON.stringify({
+      language: 'en', answers: { 1: 'old' }, attemptId: 'stale-attempt',
+    }));
+  });
+  await mockApi(page, { completed: true });
+  await page.route('**/api/diagnostic/questions?*', route => route.fulfill({ json: [
+    { id: 1, pillar: 'grammar', text: 'FRESH RETAKE QUESTION', options: ['old', 'new'] },
+  ] }));
+  await page.goto('/diagnostic?retake=true');
+  await expect(page.getByRole('heading', { name: 'FRESH RETAKE QUESTION' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Retry saving' })).toHaveCount(0);
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('deutschiq-pending-diagnostic-9001'))).toBeNull();
+  await expect(page.getByRole('button', { name: 'old' })).toBeEnabled();
+});
+
 test('diagnostic resumes the first unanswered question after a reload', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
   await mockApi(page, { completed: false });

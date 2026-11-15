@@ -29,6 +29,7 @@ export const Diagnostic: React.FC = () => {
     const params = new URLSearchParams(window.location.search);
     const resolvedId = getUserId();
     const isRetake = params.get('retake') === 'true';
+    if (isRetake) try { localStorage.removeItem(`deutschiq-pending-diagnostic-${resolvedId}`); } catch { /* Storage may be unavailable. */ }
     api.getUserState(resolvedId).then(state => {
       if (state?.diagnostic_completed && !isRetake) {
         navigate(withUser('/dashboard'), { replace: true });
@@ -99,7 +100,7 @@ export const Diagnostic: React.FC = () => {
       navigate(withUser('/result'), { replace: true, state: { result } });
     } catch {
       setPendingRecovery(true);
-      setSubmitError(tr(lang, 'Не удалось отправить тест. Проверь соединение и попробуй ещё раз.', 'Die Auswertung konnte nicht geladen werden. Bitte versuche es erneut.', 'Could not submit the test. Try again.'));
+      setSubmitError(tr(lang, 'Не удалось отправить тест. Повтори попытку.', 'Auswertung fehlgeschlagen. Erneut versuchen.', 'Could not submit the test. Try again.'));
       setSubmitting(false);
       setAnswerLocked(false);
     }
@@ -141,7 +142,7 @@ export const Diagnostic: React.FC = () => {
   if (questions.length === 0) {
     return (
       <main className="diagnostic-shell diagnostic-empty">
-        <p>{questionError ? tr(lang, 'Не удалось загрузить вопросы.', 'Fragen konnten nicht geladen werden.', 'Could not load the questions.') : t.diagnostic.noQuestions}</p>
+        <p>{questionError ? tr(lang, 'Не удалось загрузить вопросы.', 'Fragen konnten nicht geladen werden.', 'Questions unavailable.') : t.diagnostic.noQuestions}</p>
         {questionError
           ? <button type="button" onClick={() => setQuestionRetry(value => value + 1)} className="btn-gold">{tr(lang, 'Повторить', 'Erneut versuchen', 'Try again')}</button>
           : <button type="button" onClick={() => navigate('/')} className="btn-gold">{t.common.back}</button>}
@@ -170,7 +171,7 @@ export const Diagnostic: React.FC = () => {
       </div>
 
       <section className="diagnostic-question" key={q.id}>
-        <div className="diagnostic-skill"><span>{pillar.icon}{pillar.label}</span><small>{tr(lang, 'Сложность меняется по твоим ответам', 'Die Schwierigkeit passt sich deinen Antworten an', 'Difficulty adapts to your answers')}</small></div>
+        <div className="diagnostic-skill"><span>{pillar.icon}{pillar.label}</span><small>{tr(lang, 'Сложность меняется по твоим ответам', 'Die Schwierigkeit passt sich deinen Antworten an', 'Adaptive difficulty')}</small></div>
         <h1>{q.text}</h1>
         {q.pillar === 'listening' && <button type="button" className="diagnostic-listen" onClick={playListeningPrompt}><FaVolumeUp />{tr(lang, 'Прослушать ещё раз', 'Noch einmal anhören', 'Listen again')}</button>}
         <div className="diagnostic-options">
