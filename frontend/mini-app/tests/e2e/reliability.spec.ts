@@ -119,6 +119,43 @@ test('diagnostic preserves answers after a failed save and retries once', async 
     localStorage.getItem('deutschiq-pending-diagnostic-9001'))).toBeNull();
 });
 
+test('diagnostic resumes the first unanswered question after a reload', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
+  await mockApi(page, { completed: false });
+  await page.route('**/api/diagnostic/questions?*', route => route.fulfill({ json: [
+    { id: 1, pillar: 'grammar', text: 'RESUME QUESTION ONE', options: ['bin', 'bist'] },
+    { id: 2, pillar: 'vocabulary', text: 'RESUME QUESTION TWO', options: ['Haus', 'Hund'] },
+    { id: 3, pillar: 'grammar', text: 'RESUME QUESTION THREE', options: ['ist', 'sind'] },
+  ] }));
+  let submitted: Record<string, unknown> | null = null;
+  await page.route('**/api/diagnostic/submit', route => {
+    submitted = route.request().postDataJSON();
+    return route.fulfill({ json: {
+      persisted: true, level: 'A1', overall_score: 80, confidence: 'medium',
+      pillars: { grammar: 80 }, mistakes: [], placement: { track: 'A1', status: 'provisional' },
+    } });
+  });
+  await page.goto('/diagnostic');
+  await expect(page.getByRole('heading', { name: 'RESUME QUESTION ONE' })).toBeVisible();
+  await page.getByRole('button', { name: 'bin' }).click();
+  await expect(page.getByRole('heading', { name: 'RESUME QUESTION TWO' })).toBeVisible();
+  const draftBefore = await page.evaluate(() => JSON.parse(localStorage.getItem('deutschiq-pending-diagnostic-9001') || 'null'));
+  expect(draftBefore.answers).toEqual({ '1': 'bin' });
+  expect(draftBefore.attemptId).toBeTruthy();
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'RESUME QUESTION TWO' })).toBeVisible();
+  await page.getByRole('button', { name: 'Haus' }).click();
+  await expect(page.getByRole('heading', { name: 'RESUME QUESTION THREE' })).toBeVisible();
+  await page.getByRole('button', { name: 'ist' }).click();
+  await expect(page).toHaveURL(/\/result/);
+  expect(submitted).toMatchObject({
+    answers: { '1': 'bin', '2': 'Haus', '3': 'ist' },
+    attempt_id: draftBefore.attemptId,
+  });
+  await expect.poll(() => page.evaluate(() =>
+    localStorage.getItem('deutschiq-pending-diagnostic-9001'))).toBeNull();
+});
+
 test('returning user stays out of diagnostics after reload', async ({ page }) => {
   await mockApi(page, { completed: true });
   await page.goto('/');
