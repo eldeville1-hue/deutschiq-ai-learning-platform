@@ -81,7 +81,7 @@ export const Diagnostic: React.FC = () => {
     try {
       const key = `deutschiq-pending-diagnostic-${userId}`;
       const pending = JSON.parse(localStorage.getItem(key) || 'null');
-      attemptId = pending?.language === lang && JSON.stringify(pending.answers) === JSON.stringify(finalAnswers) ? pending.attemptId || crypto.randomUUID() : crypto.randomUUID();
+      attemptId = pending?.language === lang && JSON.stringify(pending.answers) === JSON.stringify(finalAnswers) && pending.attemptId || crypto.randomUUID();
       localStorage.setItem(key, JSON.stringify({ answers: finalAnswers, attemptId, language: lang, savedAt: Date.now() }));
     } catch { attemptId = crypto.randomUUID(); }
     try {
@@ -114,7 +114,7 @@ export const Diagnostic: React.FC = () => {
     try {
       const key = `deutschiq-pending-diagnostic-${userId}`;
       const previous = JSON.parse(localStorage.getItem(key) || 'null');
-      localStorage.setItem(key, JSON.stringify({ answers: nextAnswers, attemptId: previous?.language === lang && (!previous.savedAt || JSON.stringify(previous.answers) === JSON.stringify(nextAnswers)) ? previous.attemptId || crypto.randomUUID() : crypto.randomUUID(), language: lang }));
+      localStorage.setItem(key, JSON.stringify({ answers: nextAnswers, attemptId: previous?.language === lang && !previous.savedAt && previous.attemptId || crypto.randomUUID(), language: lang }));
     } catch { /* Local storage may be unavailable. */ }
     if (current < questions.length - 1) {
       setTimeout(() => {
