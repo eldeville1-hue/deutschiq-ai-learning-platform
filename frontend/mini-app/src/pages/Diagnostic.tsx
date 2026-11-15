@@ -52,13 +52,12 @@ export const Diagnostic: React.FC = () => {
         setQuestions(loaded);
         try {
           const pending = JSON.parse(localStorage.getItem(`deutschiq-pending-diagnostic-${userId}`) || 'null');
-          if (pending?.answers && pending.language === lang && loaded.length > 0) {
+          if (pending?.language === lang && pending.answers && loaded.length) {
             const restored = pending.answers as Record<number, string>;
-            const answeredCount = Object.keys(restored).length;
-            if (answeredCount > 0) {
+            if (Object.keys(restored).length) {
               setAnswers(restored);
               const nextUnanswered = loaded.findIndex(q => !q.options.includes(restored[q.id]));
-              if (nextUnanswered === -1) {
+              if (nextUnanswered < 0) {
                 setCurrent(loaded.length - 1);
                 setAnswerLocked(true);
                 setPendingRecovery(true);
@@ -68,7 +67,7 @@ export const Diagnostic: React.FC = () => {
               }
             }
           }
-        } catch { /* A damaged recovery draft should not block a fresh test. */ }
+        } catch {}
         setLoading(false);
       })
       .catch(() => { setQuestions([]); setQuestionError(true); setLoading(false); });
@@ -116,7 +115,7 @@ export const Diagnostic: React.FC = () => {
       const key = `deutschiq-pending-diagnostic-${userId}`;
       const previous = JSON.parse(localStorage.getItem(key) || 'null');
       localStorage.setItem(key, JSON.stringify({ answers: nextAnswers, attemptId: previous?.attemptId || crypto.randomUUID(), language: lang }));
-    } catch { /* Optional storage. */ }
+    } catch {}
     if (current < questions.length - 1) {
       setTimeout(() => {
         setCurrent(prev => prev + 1);
