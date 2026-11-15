@@ -67,7 +67,7 @@ export const Diagnostic: React.FC = () => {
               }
             }
           }
-        } catch {}
+        } catch { /* Local storage may be unavailable. */ }
         setLoading(false);
       })
       .catch(() => { setQuestions([]); setQuestionError(true); setLoading(false); });
@@ -115,7 +115,7 @@ export const Diagnostic: React.FC = () => {
       const key = `deutschiq-pending-diagnostic-${userId}`;
       const previous = JSON.parse(localStorage.getItem(key) || 'null');
       localStorage.setItem(key, JSON.stringify({ answers: nextAnswers, attemptId: previous?.attemptId || crypto.randomUUID(), language: lang }));
-    } catch {}
+    } catch { /* Local storage may be unavailable. */ }
     if (current < questions.length - 1) {
       setTimeout(() => {
         setCurrent(prev => prev + 1);
