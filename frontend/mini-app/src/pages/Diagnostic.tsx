@@ -52,12 +52,24 @@ export const Diagnostic: React.FC = () => {
         setQuestions(loaded);
         try {
           const pending = JSON.parse(localStorage.getItem(`deutschiq-pending-diagnostic-${userId}`) || 'null');
-          if (pending?.answers && Object.keys(pending.answers).length === loaded.length) {
-            setAnswers(pending.answers);
-            setCurrent(Math.max(0, loaded.length - 1));
-            setAnswerLocked(true);
-            setPendingRecovery(true);
-            setSubmitError(tr(lang, 'Результат ещё не сохранён. Ответы восстановлены.', 'Das Ergebnis ist noch nicht gespeichert. Deine Antworten wurden wiederhergestellt.', 'The result is not saved yet. Your answers were restored.'));
+          if (pending?.answers && pending.language === lang && loaded.length > 0) {
+            const restored = Object.fromEntries(
+              loaded.filter(q => typeof pending.answers[q.id] === 'string' && q.options.includes(pending.answers[q.id]))
+                .map(q => [q.id, pending.answers[q.id]])
+            ) as Record<number, string>;
+            const answeredCount = Object.keys(restored).length;
+            if (answeredCount > 0) {
+              setAnswers(restored);
+              const nextUnanswered = loaded.findIndex(q => restored[q.id] === undefined);
+              if (nextUnanswered === -1) {
+                setCurrent(loaded.length - 1);
+                setAnswerLocked(true);
+                setPendingRecovery(true);
+                setSubmitError(tr(lang, 'Ответы восстановлены. Повтори сохранение результата.', 'Antworten wiederhergestellt. Bitte speichere das Ergebnis erneut.', 'Answers restored. Retry saving your result.'));
+              } else {
+                setCurrent(nextUnanswered);
+              }
+            }
           }
         } catch { /* A damaged recovery draft should not block a fresh test. */ }
         setLoading(false);
@@ -74,7 +86,7 @@ export const Diagnostic: React.FC = () => {
       const key = `deutschiq-pending-diagnostic-${userId}`;
       const pending = JSON.parse(localStorage.getItem(key) || 'null');
       attemptId = pending?.attemptId || crypto.randomUUID();
-      localStorage.setItem(key, JSON.stringify({ answers: finalAnswers, attemptId, savedAt: Date.now() }));
+      localStorage.setItem(key, JSON.stringify({ answers: finalAnswers, attemptId, language: lang, savedAt: Date.now() }));
     } catch { attemptId = crypto.randomUUID(); }
     try {
       const result = await api.submitDiagnostic({ user_id: userId, answers: finalAnswers, language: lang, attempt_id: attemptId });
@@ -103,6 +115,16 @@ export const Diagnostic: React.FC = () => {
     setAnswerLocked(true);
     const nextAnswers = { ...answers, [q.id]: option };
     setAnswers(nextAnswers);
+    // Persist each answer before advancing so closing Telegram cannot lose progress.
+    try {
+      const key = `deutschiq-pending-diagnostic-${userId}`;
+      const previous = JSON.parse(localStorage.getItem(key) || 'null');
+      const attemptId = previous?.language === lang && previous?.attemptId
+        ? previous.attemptId : crypto.randomUUID();
+      localStorage.setItem(key, JSON.stringify({
+        answers: nextAnswers, attemptId, language: lang, savedAt: Date.now(),
+      }));
+    } catch { /* Storage may be disabled; the in-memory test still works. */ }
     if (current < questions.length - 1) {
       setTimeout(() => {
         setCurrent(prev => prev + 1);
