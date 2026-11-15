@@ -61,7 +61,7 @@ export const Diagnostic: React.FC = () => {
                 setCurrent(loaded.length - 1);
                 setAnswerLocked(true);
                 setPendingRecovery(true);
-                setSubmitError(tr(lang, 'Ответы восстановлены. Сохрани результат.', 'Antworten wiederhergestellt. Erneut speichern.', 'The result is not saved yet. Your answers were restored.'));
+                setSubmitError(tr(lang, 'Ответы восстановлены.', 'Antworten wiederhergestellt.', 'The result is not saved yet. Your answers were restored.'));
               } else {
                 setCurrent(nextUnanswered);
               }
