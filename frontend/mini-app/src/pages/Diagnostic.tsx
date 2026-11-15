@@ -29,12 +29,12 @@ export const Diagnostic: React.FC = () => {
     const params = new URLSearchParams(window.location.search);
     const resolvedId = getUserId();
     const isRetake = params.get('retake') === 'true';
+    if (isRetake) try { localStorage.removeItem(`deutschiq-pending-diagnostic-${resolvedId}`); } catch { /* Storage may be unavailable. */ }
     api.getUserState(resolvedId).then(state => {
       if (state?.diagnostic_completed && !isRetake) {
         navigate(withUser('/dashboard'), { replace: true });
         return;
       }
-      if (isRetake) try { localStorage.removeItem(`deutschiq-pending-diagnostic-${resolvedId}`); } catch { /* Storage may be unavailable. */ }
       setUserId(resolvedId);
     }).catch(() => setUserId(resolvedId));
   }, [navigate]);
