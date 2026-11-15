@@ -52,14 +52,22 @@ export const Diagnostic: React.FC = () => {
         setQuestions(loaded);
         try {
           const pending = JSON.parse(localStorage.getItem(`deutschiq-pending-diagnostic-${userId}`) || 'null');
-          if (pending?.answers && Object.keys(pending.answers).length === loaded.length) {
-            setAnswers(pending.answers);
-            setCurrent(Math.max(0, loaded.length - 1));
-            setAnswerLocked(true);
-            setPendingRecovery(true);
-            setSubmitError(tr(lang, 'Результат ещё не сохранён. Ответы восстановлены.', 'Das Ergebnis ist noch nicht gespeichert. Deine Antworten wurden wiederhergestellt.', 'The result is not saved yet. Your answers were restored.'));
+          if (pending?.language === lang && pending.answers && loaded.length) {
+            const restored = pending.answers as Record<number, string>;
+            if (Object.keys(restored).length) {
+              setAnswers(restored);
+              const nextUnanswered = loaded.findIndex(q => !q.options.includes(restored[q.id]));
+              if (nextUnanswered < 0) {
+                setCurrent(loaded.length - 1);
+                setAnswerLocked(true);
+                setPendingRecovery(true);
+                setSubmitError(tr(lang, 'Ответы восстановлены.', 'Antworten wiederhergestellt.', 'The result is not saved yet. Your answers were restored.'));
+              } else {
+                setCurrent(nextUnanswered);
+              }
+            }
           }
-        } catch { /* A damaged recovery draft should not block a fresh test. */ }
+        } catch { /* Local storage may be unavailable. */ }
         setLoading(false);
       })
       .catch(() => { setQuestions([]); setQuestionError(true); setLoading(false); });
@@ -74,7 +82,7 @@ export const Diagnostic: React.FC = () => {
       const key = `deutschiq-pending-diagnostic-${userId}`;
       const pending = JSON.parse(localStorage.getItem(key) || 'null');
       attemptId = pending?.attemptId || crypto.randomUUID();
-      localStorage.setItem(key, JSON.stringify({ answers: finalAnswers, attemptId, savedAt: Date.now() }));
+      localStorage.setItem(key, JSON.stringify({ answers: finalAnswers, attemptId, language: lang, savedAt: Date.now() }));
     } catch { attemptId = crypto.randomUUID(); }
     try {
       const result = await api.submitDiagnostic({ user_id: userId, answers: finalAnswers, language: lang, attempt_id: attemptId });
@@ -103,6 +111,11 @@ export const Diagnostic: React.FC = () => {
     setAnswerLocked(true);
     const nextAnswers = { ...answers, [q.id]: option };
     setAnswers(nextAnswers);
+    try {
+      const key = `deutschiq-pending-diagnostic-${userId}`;
+      const previous = JSON.parse(localStorage.getItem(key) || 'null');
+      localStorage.setItem(key, JSON.stringify({ answers: nextAnswers, attemptId: previous?.attemptId || crypto.randomUUID(), language: lang }));
+    } catch { /* Local storage may be unavailable. */ }
     if (current < questions.length - 1) {
       setTimeout(() => {
         setCurrent(prev => prev + 1);
