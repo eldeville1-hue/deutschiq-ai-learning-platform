@@ -110,7 +110,7 @@ test('diagnostic preserves answers after a failed save and retries once', async 
   await page.getByRole('button', { name: /richtig/i }).click();
   await expect(page.getByText(/Could not submit the test/i)).toBeVisible();
   await page.reload();
-  await expect(page.getByText(/answers were restored/i)).toBeVisible();
+  await expect(page.getByText(/Answers restored/i)).toBeVisible();
   await expect(page.getByRole('button', { name: /Retry saving/i })).toBeVisible();
   await page.getByRole('button', { name: /Retry saving/i }).click();
   await expect(page).toHaveURL(/\/result/);
