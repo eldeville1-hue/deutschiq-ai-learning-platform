@@ -53,14 +53,11 @@ export const Diagnostic: React.FC = () => {
         try {
           const pending = JSON.parse(localStorage.getItem(`deutschiq-pending-diagnostic-${userId}`) || 'null');
           if (pending?.answers && pending.language === lang && loaded.length > 0) {
-            const restored = Object.fromEntries(
-              loaded.filter(q => typeof pending.answers[q.id] === 'string' && q.options.includes(pending.answers[q.id]))
-                .map(q => [q.id, pending.answers[q.id]])
-            ) as Record<number, string>;
+            const restored = pending.answers as Record<number, string>;
             const answeredCount = Object.keys(restored).length;
             if (answeredCount > 0) {
               setAnswers(restored);
-              const nextUnanswered = loaded.findIndex(q => restored[q.id] === undefined);
+              const nextUnanswered = loaded.findIndex(q => !q.options.includes(restored[q.id]));
               if (nextUnanswered === -1) {
                 setCurrent(loaded.length - 1);
                 setAnswerLocked(true);
@@ -119,10 +116,10 @@ export const Diagnostic: React.FC = () => {
     try {
       const key = `deutschiq-pending-diagnostic-${userId}`;
       const previous = JSON.parse(localStorage.getItem(key) || 'null');
-      const attemptId = previous?.language === lang && previous?.attemptId
-        ? previous.attemptId : crypto.randomUUID();
       localStorage.setItem(key, JSON.stringify({
-        answers: nextAnswers, attemptId, language: lang, savedAt: Date.now(),
+        answers: nextAnswers,
+        attemptId: previous?.language === lang ? previous.attemptId || crypto.randomUUID() : crypto.randomUUID(),
+        language: lang,
       }));
     } catch { /* Storage may be disabled; the in-memory test still works. */ }
     if (current < questions.length - 1) {
