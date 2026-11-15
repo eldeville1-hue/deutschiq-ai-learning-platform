@@ -6,6 +6,8 @@ class DiagnosticResult(Base):
     __tablename__ = 'diagnostic_results'
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey('users.id', ondelete="CASCADE"))
+    attempt_id = Column(String(64), unique=True, nullable=True, index=True)
+    attempt_hash = Column(String(64), nullable=True)
     overall_score = Column(Float)
     grammar_score = Column(Float)
     vocabulary_score = Column(Float)

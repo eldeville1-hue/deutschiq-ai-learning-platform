@@ -69,9 +69,15 @@ export const Diagnostic: React.FC = () => {
     if (!userId || submitting) return;
     setSubmitting(true);
     setSubmitError('');
-    try { localStorage.setItem(`deutschiq-pending-diagnostic-${userId}`, JSON.stringify({ answers: finalAnswers, savedAt: Date.now() })); } catch { /* Retry still works in memory. */ }
+    let attemptId = '';
     try {
-      const result = await api.submitDiagnostic({ user_id: userId, answers: finalAnswers, language: lang });
+      const key = `deutschiq-pending-diagnostic-${userId}`;
+      const pending = JSON.parse(localStorage.getItem(key) || 'null');
+      attemptId = pending?.attemptId || crypto.randomUUID();
+      localStorage.setItem(key, JSON.stringify({ answers: finalAnswers, attemptId, savedAt: Date.now() }));
+    } catch { attemptId = crypto.randomUUID(); }
+    try {
+      const result = await api.submitDiagnostic({ user_id: userId, answers: finalAnswers, language: lang, attempt_id: attemptId });
       if (!result?.persisted) {
         setPendingRecovery(true);
         setSubmitError(tr(lang, 'Результат рассчитан, но не сохранён.', 'Das Ergebnis wurde berechnet, aber nicht gespeichert.', 'The result was calculated but not saved.'));
