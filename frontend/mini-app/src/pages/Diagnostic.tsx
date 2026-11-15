@@ -61,7 +61,7 @@ export const Diagnostic: React.FC = () => {
                 setCurrent(loaded.length - 1);
                 setAnswerLocked(true);
                 setPendingRecovery(true);
-                setSubmitError(tr(lang, 'Ответы восстановлены.', 'Antworten wiederhergestellt.', 'The result is not saved yet. Your answers were restored.'));
+                setSubmitError(tr(lang, 'Ответы восстановлены.', 'Antworten wiederhergestellt.', 'Answers restored. Retry saving.'));
               } else {
                 setCurrent(nextUnanswered);
               }
@@ -81,14 +81,14 @@ export const Diagnostic: React.FC = () => {
     try {
       const key = `deutschiq-pending-diagnostic-${userId}`;
       const pending = JSON.parse(localStorage.getItem(key) || 'null');
-      attemptId = pending?.attemptId || crypto.randomUUID();
+      attemptId = pending?.language === lang && JSON.stringify(pending.answers) === JSON.stringify(finalAnswers) && pending.attemptId || crypto.randomUUID();
       localStorage.setItem(key, JSON.stringify({ answers: finalAnswers, attemptId, language: lang, savedAt: Date.now() }));
     } catch { attemptId = crypto.randomUUID(); }
     try {
       const result = await api.submitDiagnostic({ user_id: userId, answers: finalAnswers, language: lang, attempt_id: attemptId });
       if (!result?.persisted) {
         setPendingRecovery(true);
-        setSubmitError(tr(lang, 'Результат рассчитан, но не сохранён.', 'Das Ergebnis wurde berechnet, aber nicht gespeichert.', 'The result was calculated but not saved.'));
+        setSubmitError(tr(lang, 'Результат рассчитан, но не сохранён.', 'Das Ergebnis wurde berechnet, aber nicht gespeichert.', 'Result not saved.'));
         setSubmitting(false);
         setAnswerLocked(true);
         return;
@@ -99,7 +99,7 @@ export const Diagnostic: React.FC = () => {
       navigate(withUser('/result'), { replace: true, state: { result } });
     } catch {
       setPendingRecovery(true);
-      setSubmitError(tr(lang, 'Не удалось отправить тест. Проверь соединение и попробуй ещё раз.', 'Die Auswertung konnte nicht geladen werden. Bitte versuche es erneut.', 'Could not submit the test. Check your connection and try again.'));
+      setSubmitError(tr(lang, 'Не удалось отправить тест. Проверь соединение и попробуй ещё раз.', 'Die Auswertung konnte nicht geladen werden. Bitte versuche es erneut.', 'Could not submit the test. Try again.'));
       setSubmitting(false);
       setAnswerLocked(false);
     }
@@ -114,7 +114,7 @@ export const Diagnostic: React.FC = () => {
     try {
       const key = `deutschiq-pending-diagnostic-${userId}`;
       const previous = JSON.parse(localStorage.getItem(key) || 'null');
-      localStorage.setItem(key, JSON.stringify({ answers: nextAnswers, attemptId: previous?.attemptId || crypto.randomUUID(), language: lang }));
+      localStorage.setItem(key, JSON.stringify({ answers: nextAnswers, attemptId: !previous?.savedAt && previous?.attemptId || crypto.randomUUID(), language: lang }));
     } catch { /* Local storage may be unavailable. */ }
     if (current < questions.length - 1) {
       setTimeout(() => {
