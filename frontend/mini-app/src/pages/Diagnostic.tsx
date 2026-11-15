@@ -29,7 +29,7 @@ export const Diagnostic: React.FC = () => {
     const params = new URLSearchParams(window.location.search);
     const resolvedId = getUserId();
     const isRetake = params.get('retake') === 'true';
-    if (isRetake) localStorage.removeItem(`deutschiq-pending-diagnostic-${resolvedId}`);
+    if (isRetake) try { localStorage.removeItem(`deutschiq-pending-diagnostic-${resolvedId}`); } catch { /* Storage may be unavailable. */ }
     api.getUserState(resolvedId).then(state => {
       if (state?.diagnostic_completed && !isRetake) {
         navigate(withUser('/dashboard'), { replace: true });
@@ -100,7 +100,7 @@ export const Diagnostic: React.FC = () => {
       navigate(withUser('/result'), { replace: true, state: { result } });
     } catch {
       setPendingRecovery(true);
-      setSubmitError(tr(lang, 'Не удалось отправить тест. Проверь соединение и попробуй ещё раз.', 'Die Auswertung konnte nicht geladen werden. Bitte versuche es erneut.', 'Could not submit the test. Try again.'));
+      setSubmitError(tr(lang, 'Не удалось отправить тест. Повтори попытку.', 'Auswertung fehlgeschlagen. Erneut versuchen.', 'Could not submit the test. Try again.'));
       setSubmitting(false);
       setAnswerLocked(false);
     }
