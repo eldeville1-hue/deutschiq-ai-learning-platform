@@ -34,6 +34,7 @@ export const Diagnostic: React.FC = () => {
         navigate(withUser('/dashboard'), { replace: true });
         return;
       }
+      if (isRetake) try { localStorage.removeItem(`deutschiq-pending-diagnostic-${resolvedId}`); } catch { /* Storage may be unavailable. */ }
       setUserId(resolvedId);
     }).catch(() => setUserId(resolvedId));
   }, [navigate]);
