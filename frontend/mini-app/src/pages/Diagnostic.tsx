@@ -112,16 +112,11 @@ export const Diagnostic: React.FC = () => {
     setAnswerLocked(true);
     const nextAnswers = { ...answers, [q.id]: option };
     setAnswers(nextAnswers);
-    // Persist each answer before advancing so closing Telegram cannot lose progress.
     try {
       const key = `deutschiq-pending-diagnostic-${userId}`;
       const previous = JSON.parse(localStorage.getItem(key) || 'null');
-      localStorage.setItem(key, JSON.stringify({
-        answers: nextAnswers,
-        attemptId: previous?.language === lang ? previous.attemptId || crypto.randomUUID() : crypto.randomUUID(),
-        language: lang,
-      }));
-    } catch { /* Storage may be disabled; the in-memory test still works. */ }
+      localStorage.setItem(key, JSON.stringify({ answers: nextAnswers, attemptId: previous?.attemptId || crypto.randomUUID(), language: lang }));
+    } catch { /* Optional storage. */ }
     if (current < questions.length - 1) {
       setTimeout(() => {
         setCurrent(prev => prev + 1);
