@@ -327,6 +327,22 @@ test('daily start connects due review to the recommended lesson', async ({ page 
   await expectNoHorizontalOverflow(page);
 });
 
+test('B1 daily review route survives reload on a 360px mobile screen', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 640 });
+  await mockApi(page, { completed: true, dueCount: 2, reviews: [] });
+  await page.goto('/dashboard');
+  await expect(page.getByText('YOUR STEP TODAY')).toBeVisible();
+  await page.getByRole('button', { name: /Start with review/i }).click();
+  await expect(page).toHaveURL(/\/review\?nextLesson=77/);
+  await page.reload();
+  await expect(page.getByRole('button', { name: /Continue to new skill/i })).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+  await page.getByRole('button', { name: /Continue to new skill/i }).click();
+  await expect(page).toHaveURL(/\/lesson\/77/);
+  await expect(page.getByText('NEW SKILL')).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+});
+
 test('daily session resumes the lesson after an interruption', async ({ page }) => {
   await mockApi(page, { completed: true, dueCount: 2, reviews: [] });
   await page.goto('/dashboard');
