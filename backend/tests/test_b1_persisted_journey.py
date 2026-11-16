@@ -296,7 +296,8 @@ class B1PersistedJourneyTests(unittest.TestCase):
         self.assertEqual(0, asyncio.run(get_due_reviews(db=self.db, authenticated_id=91001))["count"])
         attempts = self.db.query(ExerciseAttempt).filter_by(user_id=owner.id, lesson_id=910).all()
         self.assertEqual(3, len(attempts))
-        self.assertEqual(0, independent_progression_evidence(attempts)["independent_samples"])
+        self.assertEqual(1, independent_progression_evidence(attempts)["independent_samples"])
+        self.assertFalse(independent_progression_evidence(attempts)["eligible"])
 
         with patch("app.api.endpoints.checkpoint.evaluate_production") as scorer:
             with self.assertRaises(HTTPException) as blocked:
