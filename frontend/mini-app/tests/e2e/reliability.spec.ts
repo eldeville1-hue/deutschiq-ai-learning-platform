@@ -548,6 +548,30 @@ test('learner completes a mission and sees their own usable German', async ({ pa
   await expectNoHorizontalOverflow(page);
 });
 
+test('B1 mobile mission retains verified feedback through reload and completion', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 640 });
+  await mockApi(page, { completed: true });
+  let checks = 0;
+  page.on('request', request => {
+    if (new URL(request.url()).pathname === '/api/lesson/check-answer') checks++;
+  });
+  await page.goto('/lesson/77');
+  await page.getByRole('button', { name: /Understand with an example/i }).click();
+  await page.getByRole('button', { name: /Start practice/i }).click();
+  await page.getByRole('textbox').fill('Du solltest früher schlafen gehen, weil du oft müde bist.');
+  await page.getByRole('button', { name: /^Check$/i }).click();
+  await expect(page.getByText('B1 ASSESSMENT')).toBeVisible();
+  await expect(page.getByText('82%')).toBeVisible();
+  await page.reload();
+  await expect(page.getByText('B1 ASSESSMENT')).toBeVisible();
+  await expect(page.getByText('82%')).toBeVisible();
+  expect(checks).toBe(1);
+  await page.locator('.answer-feedback > button').click();
+  await expect(page.getByText('MISSION COMPLETE')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'This is your German now' })).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+});
+
 test('wrong answer gives one focused repair before revealing the model', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
   await mockApi(page, { completed: true });
