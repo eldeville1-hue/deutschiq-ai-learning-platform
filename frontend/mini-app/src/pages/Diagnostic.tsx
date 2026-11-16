@@ -111,7 +111,9 @@ export const Diagnostic: React.FC = () => {
   };
 
   const handleSelect = (option: string) => {
-    if (answerLocked) return;
+    if (answerLocked || submitting) return;
+    setSubmitError('');
+    setPendingRecovery(false);
     const q = questions[current];
     setAnswerLocked(true);
     const nextAnswers = { ...answers, [q.id]: option };
