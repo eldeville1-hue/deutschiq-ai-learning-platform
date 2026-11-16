@@ -266,6 +266,49 @@ class B1PersistedJourneyTests(unittest.TestCase):
             user_id=self.db.query(User).filter_by(telegram_id=91002).one().id,
         ).count())
 
+    def test_b1_reference_journey_recovery_review_and_checkpoint_gate(self):
+        """One persisted B1 path; API/service integration, not Telegram browser E2E."""
+        from datetime import datetime, timedelta
+
+        owner = self.db.query(User).filter_by(telegram_id=91001).one()
+        owner.current_level = "B1"
+        self.db.commit()
+
+        session = self.start(91001)
+        self.assertFalse(self.answer(91001, session["session_id"], 0, "weil")["correct"])
+        self.db.expire_all()
+        self.assertEqual(0, self.start(91001)["next_exercise_index"])
+
+        guided = self.answer(91001, session["session_id"], 0, "obwohl")
+        self.assertEqual("guided_retry", guided["learning_evidence"]["assistance_level"])
+        self.db.expire_all()
+        self.assertEqual(1, self.start(91001)["next_exercise_index"])
+
+        owner = self.db.query(User).filter_by(telegram_id=91001).one()
+        mastery = self.db.query(TopicMastery).filter_by(user_id=owner.id, topic="connectors").one()
+        mastery.next_review_at = datetime.utcnow() - timedelta(days=2)
+        self.db.commit()
+        self.assertEqual(1, asyncio.run(get_due_reviews(db=self.db, authenticated_id=91001))["count"])
+
+        reviewed = self.answer(91001, session["session_id"], 1, "weil", mode="review")
+        self.assertTrue(reviewed["correct"])
+        self.db.expire_all()
+        self.assertEqual(0, asyncio.run(get_due_reviews(db=self.db, authenticated_id=91001))["count"])
+        attempts = self.db.query(ExerciseAttempt).filter_by(user_id=owner.id, lesson_id=910).all()
+        self.assertEqual(3, len(attempts))
+        self.assertEqual(0, independent_progression_evidence(attempts)["independent_samples"])
+
+        with patch("app.api.endpoints.checkpoint.evaluate_production") as scorer:
+            with self.assertRaises(HTTPException) as blocked:
+                asyncio.run(submit_checkpoint(
+                    CheckpointSubmission(user_id=91001, level="B1", answers=["Ich heiße Anna."]),
+                    db=self.db, authenticated_id=91001,
+                ))
+            self.assertEqual(403, blocked.exception.status_code)
+            scorer.assert_not_called()
+        self.assertEqual("B1", self.db.query(User).filter_by(telegram_id=91001).one().current_level)
+        self.assertEqual(0, asyncio.run(get_due_reviews(db=self.db, authenticated_id=91002))["count"])
+
     def test_other_learner_cannot_resume_or_submit_to_owner_session(self):
         owner_session = self.start(91001)["session_id"]
         other = self.start(91002, resume=owner_session)
