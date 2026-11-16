@@ -162,6 +162,24 @@ test('explicit diagnostic retake discards stale saved answers', async ({ page })
   await expect(page.getByRole('button', { name: 'old' })).toBeEnabled();
 });
 
+test('changed diagnostic questions discard invalid saved answers', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('deutschiq_lang', 'en');
+    localStorage.setItem('deutschiq-pending-diagnostic-9001', JSON.stringify({
+      language: 'en', answers: { 1: 'obsolete', 2: 'Hund', 999: 'ghost' }, attemptId: 'old-attempt',
+    }));
+  });
+  await mockApi(page, { completed: false });
+  await page.route('**/api/diagnostic/questions?*', route => route.fulfill({ json: [
+    { id: 1, pillar: 'grammar', text: 'UPDATED FIRST QUESTION', options: ['bin', 'bist'] },
+    { id: 2, pillar: 'vocabulary', text: 'UPDATED SECOND QUESTION', options: ['Haus', 'Hund'] },
+  ] }));
+  await page.goto('/diagnostic');
+  await expect(page.getByRole('heading', { name: 'UPDATED FIRST QUESTION' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'bin' })).toBeEnabled();
+  await expect(page.getByText('Answers restored. Retry saving.')).toHaveCount(0);
+});
+
 test('diagnostic resumes the first unanswered question after a reload', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
   await mockApi(page, { completed: false });
