@@ -47,6 +47,8 @@ export const Diagnostic: React.FC = () => {
     setCurrent(0);
     setAnswers({});
     setAnswerLocked(false);
+    setPendingRecovery(false);
+    setSubmitError('');
     api.getQuestions(lang)
       .then(data => {
         const loaded = Array.isArray(data) ? data : [];
@@ -91,7 +93,7 @@ export const Diagnostic: React.FC = () => {
       const result = await api.submitDiagnostic({ user_id: userId, answers: finalAnswers, language: lang, attempt_id: attemptId });
       if (!result?.persisted) {
         setPendingRecovery(true);
-        setSubmitError(tr(lang, 'Результат не сохранён.', 'Das Ergebnis wurde berechnet, aber nicht gespeichert.', 'Result not saved.'));
+        setSubmitError(tr(lang, 'Не сохранено.', 'Ergebnis nicht gespeichert.', 'Result not saved.'));
         setSubmitting(false);
         setAnswerLocked(true);
         return;
