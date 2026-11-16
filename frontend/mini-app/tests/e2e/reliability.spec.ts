@@ -89,6 +89,25 @@ test('new learner completes placement and returns to their saved dashboard', asy
   await expectNoHorizontalOverflow(page);
 });
 
+test('diagnostic question fetch failure offers retry and loads fresh questions', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
+  await mockApi(page, { completed: false });
+  let requests = 0;
+  await page.route('**/api/diagnostic/questions?*', route => {
+    requests++;
+    if (requests === 1) return route.fulfill({ status: 400, json: { detail: 'Unavailable' } });
+    return route.fulfill({ json: [
+      { id: 1, pillar: 'grammar', text: 'RETRIED QUESTION', options: ['bin', 'bist'] },
+    ] });
+  });
+  await page.goto('/diagnostic');
+  await expect(page.getByText('Questions unavailable.')).toBeVisible();
+  await page.getByRole('button', { name: 'Try again' }).click();
+  await expect(page.getByRole('heading', { name: 'RETRIED QUESTION' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'bin' })).toBeEnabled();
+  expect(requests).toBe(2);
+});
+
 test('diagnostic preserves answers after a failed save and retries once', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
   await mockApi(page, { completed: false });
