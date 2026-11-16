@@ -144,6 +144,30 @@ test('changing an answer after failed diagnostic submission creates a fresh atte
   expect(submissions[1].answers).toEqual({ '1': 'falsch' });
 });
 
+test('editing an answer clears stale diagnostic save error and retry action', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
+  await mockApi(page, { completed: false });
+  await page.route('**/api/diagnostic/questions?*', route => route.fulfill({ json: [
+    { id: 1, pillar: 'grammar', text: 'EDIT AFTER FAILURE', options: ['first', 'second'] },
+  ] }));
+  let submissions = 0;
+  await page.route('**/api/diagnostic/submit', async route => {
+    submissions++;
+    if (submissions === 1) return route.fulfill({ status: 503, json: { detail: 'Unavailable' } });
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return route.fulfill({ status: 503, json: { detail: 'Unavailable again' } });
+  });
+  await page.goto('/diagnostic');
+  await page.getByRole('button', { name: 'first' }).click();
+  await expect(page.getByText(/Could not submit the test/i)).toBeVisible();
+  await expect(page.getByRole('button', { name: /Retry saving/i })).toBeVisible();
+  await page.getByRole('button', { name: 'second' }).click();
+  await expect(page.getByText(/Could not submit the test/i)).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /Retry saving/i })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'first' })).toBeDisabled();
+  await expect.poll(() => submissions).toBe(2);
+});
+
 test('explicit diagnostic retake discards stale saved answers', async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('deutschiq_lang', 'en');
