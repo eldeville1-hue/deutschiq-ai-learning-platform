@@ -68,7 +68,7 @@ export const Diagnostic: React.FC = () => {
                 setCurrent(loaded.length - 1);
                 setAnswerLocked(true);
                 setPendingRecovery(true);
-                setSubmitError(tr(lang, 'Ответы загружены.', 'Antworten geladen.', 'Answers restored. Retry.'));
+                setSubmitError(tr(lang, 'Ответы загружены.', 'Antworten geladen.', 'Answers restored. Retry saving.'));
               } else {
                 setCurrent(nextUnanswered);
               }
@@ -107,7 +107,7 @@ export const Diagnostic: React.FC = () => {
       navigate(withUser('/result'), { replace: true, state: { result } });
     } catch {
       setPendingRecovery(true);
-      setSubmitError(tr(lang, 'Ошибка отправки. Повтори попытку.', 'Auswertung fehlgeschlagen.', 'Submission failed. Try again.'));
+      setSubmitError(tr(lang, 'Ошибка отправки. Повтори попытку.', 'Auswertung fehlgeschlagen.', 'Could not submit the test. Try again.'));
       setSubmitting(false);
       setAnswerLocked(false);
     }
@@ -180,7 +180,7 @@ export const Diagnostic: React.FC = () => {
       </div>
 
       <section className="diagnostic-question" key={q.id}>
-        <div className="diagnostic-skill"><span>{pillar.icon}{pillar.label}</span><small>{tr(lang, 'Адаптивная сложность', 'Adaptive Schwierigkeit', 'Adaptive difficulty')}</small></div>
+        <div className="diagnostic-skill"><span>{pillar.icon}{pillar.label}</span><small>{tr(lang, 'Сложность', 'Adaptiv', 'Adaptive')}</small></div>
         <h1>{q.text}</h1>
         {q.pillar === 'listening' && <button type="button" className="diagnostic-listen" onClick={playListeningPrompt}><FaVolumeUp />{tr(lang, 'Прослушать ещё раз', 'Noch einmal anhören', 'Listen again')}</button>}
         <div className="diagnostic-options">
