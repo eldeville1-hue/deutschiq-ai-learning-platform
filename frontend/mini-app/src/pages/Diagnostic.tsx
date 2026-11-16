@@ -55,7 +55,9 @@ export const Diagnostic: React.FC = () => {
           const pending = JSON.parse(localStorage.getItem(`deutschiq-pending-diagnostic-${userId}`) || 'null');
           if (pending?.language === lang && pending.answers && loaded.length) {
             const restored = pending.answers as Record<number, string>;
+            const savedCount = Object.keys(restored).length;
             for (const id in restored) if (!loaded.find(q => q.id == +id)?.options.includes(restored[id])) delete restored[id];
+            if (Object.keys(restored).length !== savedCount) localStorage.setItem(`deutschiq-pending-diagnostic-${userId}`, JSON.stringify({ answers: restored, language: lang }));
             if (Object.keys(restored).length) {
               setAnswers(restored);
               const nextUnanswered = loaded.findIndex(q => !q.options.includes(restored[q.id]));
