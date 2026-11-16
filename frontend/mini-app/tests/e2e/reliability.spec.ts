@@ -637,6 +637,41 @@ test('B1 mobile wrong-answer repair survives reload without duplicate grading', 
   await expectNoHorizontalOverflow(page);
 });
 
+test('B1 guided repair opens a changed task and persists across mobile reload', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 640 });
+  await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
+  await mockApi(page, { completed: true });
+  let checks = 0;
+  await page.route('**/api/lesson/check-answer', route => {
+    checks++;
+    return route.fulfill({ json: {
+      correct: false,
+      correct_answer: 'Du solltest früher schlafen gehen.',
+      feedback_focus: 'Add: solltest.',
+      error_type: 'missing_words',
+      missing_words: ['solltest'],
+      extra_words: [],
+      retry_instruction: 'Use sollte to give advice.',
+      repair_steps: ['Name the lesson rule.', 'Add solltest.', 'Check the word order.'],
+      retry_exercise: { id: 'advice-retry', type: 'reorder', question: 'Build a fresh example.', tokens: ['mehr', 'Du', 'schlafen', 'solltest'], hint: 'Use sollte for advice.' },
+    } });
+  });
+  await page.goto('/lesson/77');
+  await page.getByRole('button', { name: /Understand with an example/i }).click();
+  await page.getByRole('button', { name: /Start practice/i }).click();
+  await page.getByRole('textbox').fill('Du früher schlafen gehen.');
+  await page.getByRole('button', { name: /^Check$/i }).click();
+  await expect(page.getByText('ONE FIX')).toBeVisible();
+  await page.getByRole('button', { name: 'Try again' }).click();
+  await expect(page.getByText('Build a fresh example.')).toBeVisible();
+  await expect(page.locator('.reorder-bank').getByRole('button', { name: 'solltest' })).toBeVisible();
+  await page.reload();
+  await expect(page.getByText('Build a fresh example.')).toBeVisible();
+  await expect(page.locator('.reorder-bank').getByRole('button', { name: 'solltest' })).toBeVisible();
+  expect(checks).toBe(1);
+  await expectNoHorizontalOverflow(page);
+});
+
 test('graduation checkpoint uses independent dialogue and opens the next level', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await mockApi(page, { completed: true });
