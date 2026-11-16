@@ -95,7 +95,7 @@ test('diagnostic question fetch failure offers retry and loads fresh questions',
   let requests = 0;
   await page.route('**/api/diagnostic/questions?*', route => {
     requests++;
-    if (requests === 1) return route.fulfill({ status: 503, json: { detail: 'Unavailable' } });
+    if (requests === 1) return route.fulfill({ status: 400, json: { detail: 'Unavailable' } });
     return route.fulfill({ json: [
       { id: 1, pillar: 'grammar', text: 'RETRIED QUESTION', options: ['bin', 'bist'] },
     ] });
