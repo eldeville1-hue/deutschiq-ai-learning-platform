@@ -68,7 +68,7 @@ export const Diagnostic: React.FC = () => {
                 setCurrent(loaded.length - 1);
                 setAnswerLocked(true);
                 setPendingRecovery(true);
-                setSubmitError(tr(lang, 'Ответы загружены.', 'Antworten geladen.', 'Answers restored. Retry saving.'));
+                setSubmitError(tr(lang, 'Ответы загружены.', 'Antworten geladen.', 'Answers restored. Retry.'));
               } else {
                 setCurrent(nextUnanswered);
               }
@@ -77,7 +77,7 @@ export const Diagnostic: React.FC = () => {
         } catch { /* Local storage may be unavailable. */ }
         setLoading(false);
       })
-      .catch(() => { if (!active) return; setQuestions([]); setQuestionError(true); setLoading(false); });
+      .catch(() => { if (active) { setQuestions([]); setQuestionError(true); setLoading(false); } });
     return () => { active = false; };
   }, [userId, lang, questionRetry]);
 
@@ -107,7 +107,7 @@ export const Diagnostic: React.FC = () => {
       navigate(withUser('/result'), { replace: true, state: { result } });
     } catch {
       setPendingRecovery(true);
-      setSubmitError(tr(lang, 'Ошибка отправки. Повтори попытку.', 'Auswertung fehlgeschlagen.', 'Could not submit the test. Try again.'));
+      setSubmitError(tr(lang, 'Ошибка отправки. Повтори попытку.', 'Auswertung fehlgeschlagen.', 'Submission failed. Try again.'));
       setSubmitting(false);
       setAnswerLocked(false);
     }
