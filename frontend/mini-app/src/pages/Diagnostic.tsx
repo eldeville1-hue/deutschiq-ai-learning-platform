@@ -55,7 +55,7 @@ export const Diagnostic: React.FC = () => {
           const pending = JSON.parse(localStorage.getItem(`deutschiq-pending-diagnostic-${userId}`) || 'null');
           if (pending?.language === lang && pending.answers && loaded.length) {
             const restored = pending.answers as Record<number, string>;
-            for (const id in restored) if (!loaded.some(q => q.id == +id && q.options.includes(restored[+id]))) delete restored[+id];
+            for (const id in restored) if (!loaded.some(q => q.id == +id && q.options.includes(restored[id]))) delete restored[id];
             if (Object.keys(restored).length) {
               setAnswers(restored);
               const nextUnanswered = loaded.findIndex(q => !q.options.includes(restored[q.id]));
@@ -63,7 +63,7 @@ export const Diagnostic: React.FC = () => {
                 setCurrent(loaded.length - 1);
                 setAnswerLocked(true);
                 setPendingRecovery(true);
-                setSubmitError(tr(lang, 'Ответы восстановлены.', 'Antworten wiederhergestellt.', 'Answers restored. Retry saving.'));
+                setSubmitError(tr(lang, 'Ответы загружены.', 'Antworten geladen.', 'Answers restored. Retry saving.'));
               } else {
                 setCurrent(nextUnanswered);
               }
