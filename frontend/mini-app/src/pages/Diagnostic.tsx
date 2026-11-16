@@ -55,7 +55,8 @@ export const Diagnostic: React.FC = () => {
           const pending = JSON.parse(localStorage.getItem(`deutschiq-pending-diagnostic-${userId}`) || 'null');
           if (pending?.language === lang && pending.answers && loaded.length) {
             const restored = pending.answers as Record<number, string>;
-            for (const id in restored) if (!loaded.find(q => q.id == +id)?.options.includes(restored[id])) delete restored[id];
+            for (const id in restored) if (!loaded.find(q => q.id == +id)?.options.includes(restored[id])) { delete restored[id]; delete pending.attemptId; delete pending.savedAt; }
+            localStorage.setItem(`deutschiq-pending-diagnostic-${userId}`, JSON.stringify(pending));
             if (Object.keys(restored).length) {
               setAnswers(restored);
               const nextUnanswered = loaded.findIndex(q => !q.options.includes(restored[q.id]));
@@ -101,7 +102,7 @@ export const Diagnostic: React.FC = () => {
       navigate(withUser('/result'), { replace: true, state: { result } });
     } catch {
       setPendingRecovery(true);
-      setSubmitError(tr(lang, 'Не удалось отправить тест. Повтори попытку.', 'Auswertung fehlgeschlagen. Erneut versuchen.', 'Could not submit the test. Try again.'));
+      setSubmitError(tr(lang, 'Ошибка отправки. Повтори попытку.', 'Auswertung fehlgeschlagen.', 'Could not submit the test. Try again.'));
       setSubmitting(false);
       setAnswerLocked(false);
     }
@@ -143,7 +144,7 @@ export const Diagnostic: React.FC = () => {
   if (questions.length === 0) {
     return (
       <main className="diagnostic-shell diagnostic-empty">
-        <p>{questionError ? tr(lang, 'Не удалось загрузить вопросы.', 'Fragen konnten nicht geladen werden.', 'Questions unavailable.') : t.diagnostic.noQuestions}</p>
+        <p>{questionError ? tr(lang, 'Ошибка загрузки вопросов.', 'Fragen nicht geladen.', 'Questions unavailable.') : t.diagnostic.noQuestions}</p>
         {questionError
           ? <button type="button" onClick={() => setQuestionRetry(value => value + 1)} className="btn-gold">{tr(lang, 'Повторить', 'Erneut versuchen', 'Try again')}</button>
           : <button type="button" onClick={() => navigate('/')} className="btn-gold">{t.common.back}</button>}
@@ -172,7 +173,7 @@ export const Diagnostic: React.FC = () => {
       </div>
 
       <section className="diagnostic-question" key={q.id}>
-        <div className="diagnostic-skill"><span>{pillar.icon}{pillar.label}</span><small>{tr(lang, 'Сложность меняется по твоим ответам', 'Die Schwierigkeit passt sich deinen Antworten an', 'Adaptive difficulty')}</small></div>
+        <div className="diagnostic-skill"><span>{pillar.icon}{pillar.label}</span><small>{tr(lang, 'Адаптивная сложность', 'Adaptive Schwierigkeit', 'Adaptive difficulty')}</small></div>
         <h1>{q.text}</h1>
         {q.pillar === 'listening' && <button type="button" className="diagnostic-listen" onClick={playListeningPrompt}><FaVolumeUp />{tr(lang, 'Прослушать ещё раз', 'Noch einmal anhören', 'Listen again')}</button>}
         <div className="diagnostic-options">
