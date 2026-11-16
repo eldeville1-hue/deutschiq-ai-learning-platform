@@ -174,6 +174,8 @@ test('changed diagnostic questions discard invalid saved answers', async ({ page
     { id: 1, pillar: 'grammar', text: 'UPDATED FIRST QUESTION', options: ['bin', 'bist'] },
     { id: 2, pillar: 'vocabulary', text: 'UPDATED SECOND QUESTION', options: ['Haus', 'Hund'] },
   ] }));
+  let submitted: any;
+  await page.route('**/api/diagnostic/submit', route => { submitted = route.request().postDataJSON(); return route.fulfill({ status: 503, json: { detail: 'Unavailable' } }); });
   await page.goto('/diagnostic');
   await expect(page.getByRole('heading', { name: 'UPDATED FIRST QUESTION' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'bin' })).toBeEnabled();
@@ -184,9 +186,9 @@ test('changed diagnostic questions discard invalid saved answers', async ({ page
   await page.getByRole('button', { name: 'bin' }).click();
   await expect(page.getByRole('heading', { name: 'UPDATED SECOND QUESTION' })).toBeVisible();
   await page.getByRole('button', { name: 'Haus' }).click();
-  const fresh = await page.evaluate(() => JSON.parse(localStorage.getItem('deutschiq-pending-diagnostic-9001') || 'null'));
-  expect(fresh.attemptId).toBeTruthy();
-  expect(fresh.attemptId).not.toBe('old-attempt');
+  await expect.poll(() => submitted?.attempt_id).toBeTruthy();
+  expect(submitted.attempt_id).not.toBe('old-attempt');
+  expect(submitted.answers).toEqual({ '1': 'bin', '2': 'Haus' });
 });
 
 test('diagnostic resumes the first unanswered question after a reload', async ({ page }) => {
