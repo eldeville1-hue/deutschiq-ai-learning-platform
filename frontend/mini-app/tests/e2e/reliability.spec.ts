@@ -178,6 +178,15 @@ test('changed diagnostic questions discard invalid saved answers', async ({ page
   await expect(page.getByRole('heading', { name: 'UPDATED FIRST QUESTION' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'bin' })).toBeEnabled();
   await expect(page.getByText('Answers restored. Retry saving.')).toHaveCount(0);
+  const draft = await page.evaluate(() => JSON.parse(localStorage.getItem('deutschiq-pending-diagnostic-9001') || 'null'));
+  expect(draft.answers).toEqual({ '2': 'Hund' });
+  expect(draft.attemptId).toBeUndefined();
+  await page.getByRole('button', { name: 'bin' }).click();
+  await expect(page.getByRole('heading', { name: 'UPDATED SECOND QUESTION' })).toBeVisible();
+  await page.getByRole('button', { name: 'Haus' }).click();
+  const fresh = await page.evaluate(() => JSON.parse(localStorage.getItem('deutschiq-pending-diagnostic-9001') || 'null'));
+  expect(fresh.attemptId).toBeTruthy();
+  expect(fresh.attemptId).not.toBe('old-attempt');
 });
 
 test('diagnostic resumes the first unanswered question after a reload', async ({ page }) => {
