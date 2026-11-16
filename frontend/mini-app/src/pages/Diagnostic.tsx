@@ -49,8 +49,10 @@ export const Diagnostic: React.FC = () => {
     setAnswerLocked(false);
     setPendingRecovery(false);
     setSubmitError('');
+    let active = true;
     api.getQuestions(lang)
       .then(data => {
+        if (!active) return;
         const loaded = Array.isArray(data) ? data : [];
         setQuestions(loaded);
         try {
@@ -75,7 +77,8 @@ export const Diagnostic: React.FC = () => {
         } catch { /* Local storage may be unavailable. */ }
         setLoading(false);
       })
-      .catch(() => { setQuestions([]); setQuestionError(true); setLoading(false); });
+      .catch(() => { if (!active) return; setQuestions([]); setQuestionError(true); setLoading(false); });
+    return () => { active = false; };
   }, [userId, lang, questionRetry]);
 
   const submitTest = async (finalAnswers: Record<number, string>) => {
