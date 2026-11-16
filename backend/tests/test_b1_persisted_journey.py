@@ -165,6 +165,27 @@ class B1PersistedJourneyTests(unittest.TestCase):
         self.assertIsNotNone(mastery.next_review_at)
         self.assertGreater(mastery.next_review_at, datetime.utcnow())
 
+    def test_successful_delayed_review_increases_stability_and_clears_due_queue(self):
+        from datetime import datetime, timedelta
+
+        session = self.start(91001)
+        self.assertTrue(self.answer(91001, session["session_id"], 0, "obwohl")["correct"])
+        owner = self.db.query(User).filter_by(telegram_id=91001).one()
+        mastery = self.db.query(TopicMastery).filter_by(user_id=owner.id, topic="connectors").one()
+        before_stability = mastery.stability_days or 1
+        mastery.next_review_at = datetime.utcnow() - timedelta(days=2)
+        self.db.commit()
+        self.assertEqual(1, asyncio.run(get_due_reviews(db=self.db, authenticated_id=91001))["count"])
+
+        reviewed = self.answer(91001, session["session_id"], 1, "weil", mode="review")
+        self.assertTrue(reviewed["correct"])
+        self.db.expire_all()
+        mastery = self.db.query(TopicMastery).filter_by(user_id=owner.id, topic="connectors").one()
+        self.assertGreater(mastery.stability_days, before_stability)
+        self.assertGreater(mastery.next_review_at, datetime.utcnow() + timedelta(days=1))
+        self.assertEqual(0, asyncio.run(get_due_reviews(db=self.db, authenticated_id=91001))["count"])
+        self.assertEqual(0, asyncio.run(get_due_reviews(db=self.db, authenticated_id=91002))["count"])
+
     def test_reload_after_completion_does_not_duplicate_credit_or_leak_progress(self):
         first = self.start(91001)
         self.assertTrue(self.answer(91001, first["session_id"], 0, "obwohl")["correct"])
