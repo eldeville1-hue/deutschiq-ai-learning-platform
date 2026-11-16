@@ -49,8 +49,10 @@ export const Diagnostic: React.FC = () => {
     setAnswerLocked(false);
     setPendingRecovery(false);
     setSubmitError('');
+    let active = true;
     api.getQuestions(lang)
       .then(data => {
+        if (!active) return;
         const loaded = Array.isArray(data) ? data : [];
         setQuestions(loaded);
         try {
@@ -75,7 +77,8 @@ export const Diagnostic: React.FC = () => {
         } catch { /* Local storage may be unavailable. */ }
         setLoading(false);
       })
-      .catch(() => { setQuestions([]); setQuestionError(true); setLoading(false); });
+      .catch(() => { if (active) { setQuestions([]); setQuestionError(true); setLoading(false); } });
+    return () => { active = false; };
   }, [userId, lang, questionRetry]);
 
   const submitTest = async (finalAnswers: Record<number, string>) => {
@@ -177,7 +180,7 @@ export const Diagnostic: React.FC = () => {
       </div>
 
       <section className="diagnostic-question" key={q.id}>
-        <div className="diagnostic-skill"><span>{pillar.icon}{pillar.label}</span><small>{tr(lang, 'Адаптивная сложность', 'Adaptive Schwierigkeit', 'Adaptive difficulty')}</small></div>
+        <div className="diagnostic-skill"><span>{pillar.icon}{pillar.label}</span><small>{tr(lang, 'Сложность', 'Adaptiv', 'Adaptive')}</small></div>
         <h1>{q.text}</h1>
         {q.pillar === 'listening' && <button type="button" className="diagnostic-listen" onClick={playListeningPrompt}><FaVolumeUp />{tr(lang, 'Прослушать ещё раз', 'Noch einmal anhören', 'Listen again')}</button>}
         <div className="diagnostic-options">
