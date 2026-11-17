@@ -752,6 +752,51 @@ test('B1 wrong answer to guided repair to independent mission completion', async
   await expectNoHorizontalOverflow(page);
 });
 
+test('B1 completed mission leads to due review with independent retrieval', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 640 });
+  await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
+  await mockApi(page, { completed: true });
+  let completed = false;
+  const reviewChecks: any[] = [];
+  await page.route('**/api/lesson/complete', async route => {
+    completed = true;
+    await route.fallback();
+  });
+  await page.route('**/api/learning/reviews/**', route => route.fulfill({ json: { reviews: completed ? [{
+    lesson_id: 77, exercise_index: 0, topic: 'konjunktiv_ii',
+    question: 'Give polite advice to a friend.', type: 'dialogue',
+    review_reason: 'Scheduled retrieval after your mission.',
+    can_do: 'Give polite advice without hints.',
+  }] : [] } }));
+  await page.route('**/api/lesson/check-answer', route => {
+    const body = route.request().postDataJSON();
+    if (body.mode === 'review') reviewChecks.push(body);
+    return route.fulfill({ json: {
+      correct: true, explanation: 'Verified independent retrieval.',
+      correct_answer: 'Du solltest früher schlafen gehen.',
+      production: true, production_score: 82, cefr_standard: 'B1', pass_mark: 70,
+      dimension_scores: { task_completion: 85, grammar: 80, vocabulary: 78, coherence: 80, register: 86 },
+    } });
+  });
+  await page.goto('/lesson/77');
+  await page.getByRole('button', { name: /Understand with an example/i }).click();
+  await page.getByRole('button', { name: /Start practice/i }).click();
+  await page.getByRole('textbox').fill('Du solltest früher schlafen gehen.');
+  await page.getByRole('button', { name: /^Check$/i }).click();
+  await page.locator('.answer-feedback > button').click();
+  await expect(page.getByText('MISSION COMPLETE')).toBeVisible();
+  await page.goto('/review');
+  await expect(page.getByText('Scheduled retrieval after your mission.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Give polite advice to a friend.' })).toBeVisible();
+  await page.getByRole('textbox').fill('Du solltest jeden Tag Deutsch üben.');
+  await page.getByRole('button', { name: /^Check$/i }).click();
+  await expect(page.locator('.rc-review-feedback.correct')).toBeVisible();
+  expect(reviewChecks).toHaveLength(1);
+  expect(reviewChecks[0].mode).toBe('review');
+  expect(reviewChecks[0].retry).toBe(false);
+  await expectNoHorizontalOverflow(page);
+});
+
 test('graduation checkpoint uses independent dialogue and opens the next level', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await mockApi(page, { completed: true });
