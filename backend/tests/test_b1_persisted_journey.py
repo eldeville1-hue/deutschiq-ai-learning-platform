@@ -250,6 +250,43 @@ class B1PersistedJourneyTests(unittest.TestCase):
         self.assertEqual(0, asyncio.run(get_due_reviews(db=self.db, authenticated_id=91001))["count"])
         self.assertEqual(0, asyncio.run(get_due_reviews(db=self.db, authenticated_id=91002))["count"])
 
+    def test_delayed_b1_review_survives_new_database_sessions(self):
+        """A due review must remain due after reconnect, then persist its reschedule."""
+        from datetime import datetime, timedelta
+
+        session = self.start(91001)
+        self.assertTrue(self.answer(91001, session["session_id"], 0, "obwohl")["correct"])
+        owner = self.db.query(User).filter_by(telegram_id=91001).one()
+        mastery = self.db.query(TopicMastery).filter_by(user_id=owner.id, topic="connectors").one()
+        old_stability = mastery.stability_days or 1
+        mastery.next_review_at = datetime.utcnow() - timedelta(days=2)
+        self.db.commit()
+
+        self.db.close()
+        self.db = Session(self.engine)
+        due = asyncio.run(get_due_reviews(db=self.db, authenticated_id=91001))
+        self.assertEqual(1, due["count"])
+        self.assertEqual("connectors", due["reviews"][0]["topic"])
+        self.assertEqual(0, asyncio.run(get_due_reviews(
+            db=self.db, authenticated_id=91002,
+        ))["count"])
+
+        review = self.answer(91001, session["session_id"], 1, "weil", mode="review")
+        self.assertTrue(review["correct"])
+        self.db.close()
+        self.db = Session(self.engine)
+
+        owner = self.db.query(User).filter_by(telegram_id=91001).one()
+        mastery = self.db.query(TopicMastery).filter_by(user_id=owner.id, topic="connectors").one()
+        self.assertGreater(mastery.stability_days, old_stability)
+        self.assertGreater(mastery.next_review_at, datetime.utcnow() + timedelta(days=1))
+        self.assertEqual(0, asyncio.run(get_due_reviews(
+            db=self.db, authenticated_id=91001,
+        ))["count"])
+        self.assertEqual(0, asyncio.run(get_due_reviews(
+            db=self.db, authenticated_id=91002,
+        ))["count"])
+
     def test_successful_review_replay_cannot_award_duplicate_mastery(self):
         """A committed review cannot be replayed on the same session."""
         from datetime import datetime, timedelta
