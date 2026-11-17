@@ -797,6 +797,40 @@ test('B1 completed mission leads to due review with independent retrieval', asyn
   await expectNoHorizontalOverflow(page);
 });
 
+test('B1 failed due review stays missed after successful guided retry', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 640 });
+  await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
+  await mockApi(page, { completed: true });
+  const checks: any[] = [];
+  await page.route('**/api/learning/reviews/**', route => route.fulfill({ json: { reviews: [{
+    lesson_id: 77, exercise_index: 0, topic: 'konjunktiv_ii',
+    question: 'Give advice without a hint.', type: 'dialogue',
+  }] } }));
+  await page.route('**/api/lesson/check-answer', route => {
+    const body = route.request().postDataJSON();
+    checks.push(body);
+    return route.fulfill({ json: {
+      correct: Boolean(body.retry),
+      correct_answer: 'Du solltest früher schlafen gehen.',
+      explanation: body.retry ? 'Correct after support.' : 'Missing solltest.',
+    } });
+  });
+  await page.goto('/review');
+  await page.getByRole('textbox').fill('Du früher schlafen gehen.');
+  await page.getByRole('button', { name: /^Check$/i }).click();
+  await expect(page.locator('.rc-review-feedback.wrong')).toBeVisible();
+  await page.getByRole('button', { name: /Try again/i }).click();
+  await page.getByRole('textbox').fill('Du solltest früher schlafen gehen.');
+  await page.getByRole('button', { name: /^Check$/i }).click();
+  await expect(page.locator('.rc-review-feedback.correct')).toBeVisible();
+  expect(checks.map(item => [item.mode, item.retry])).toEqual([['review', false], ['review', true]]);
+  await page.getByRole('button', { name: /Finish/i }).click();
+  await expect(page.getByRole('heading', { name: 'Review complete' })).toBeVisible();
+  await expect(page.getByText(/0 of 1 correct on the first try/)).toBeVisible();
+  await expect(page.getByRole('button', { name: /Practice missed cards/i })).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+});
+
 test('graduation checkpoint uses independent dialogue and opens the next level', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await mockApi(page, { completed: true });
