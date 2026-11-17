@@ -864,6 +864,37 @@ test('B1 due review prevents duplicate submission while grading is pending', asy
   await expectNoHorizontalOverflow(page);
 });
 
+test('B1 review conflict blocks replay and reloads fresh due cards', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 640 });
+  await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
+  await mockApi(page, { completed: true });
+  let dueFetches = 0;
+  let checks = 0;
+  await page.route('**/api/learning/reviews/**', route => {
+    dueFetches++;
+    return route.fulfill({ json: { reviews: [{
+      lesson_id: 77, exercise_index: 0, topic: 'konjunktiv_ii',
+      question: 'Give advice without a hint.', type: 'dialogue',
+    }] } });
+  });
+  await page.route('**/api/lesson/check-answer', route => {
+    checks++;
+    return route.fulfill({ status: 409, json: { detail: 'Session already processed.' } });
+  });
+  await page.goto('/review');
+  await page.getByRole('textbox').fill('Du solltest früher schlafen gehen.');
+  await page.getByRole('button', { name: /^Check$/i }).click();
+  await expect(page.getByText('The session changed. Reload reviews to continue.')).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Check$/i })).toBeDisabled();
+  expect(checks).toBe(1);
+  await page.getByRole('button', { name: /^Reload$/i }).click();
+  await expect.poll(() => dueFetches).toBeGreaterThan(1);
+  await expect(page.getByRole('heading', { name: 'Give advice without a hint.' })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Check$/i })).toBeDisabled();
+  expect(checks).toBe(1);
+  await expectNoHorizontalOverflow(page);
+});
+
 test('graduation checkpoint uses independent dialogue and opens the next level', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await mockApi(page, { completed: true });
