@@ -105,6 +105,43 @@ class B1PersistedJourneyTests(unittest.TestCase):
         self.db.expire_all()
         self.assertEqual(3, self.db.query(ExerciseAttempt).filter_by(user_id=owner.id).count())
 
+    def test_b1_wrong_answer_resumes_with_fresh_database_session(self):
+        """A new DB session must resume the same learner's guided repair."""
+        first = self.start(91001)
+        wrong = self.answer(91001, first["session_id"], 0, "weil")
+        self.assertFalse(wrong["correct"])
+
+        # Simulate a backend request ending, not merely an ORM identity-map
+        # expiration: all subsequent requests use a new SQLAlchemy Session.
+        self.db.close()
+        self.db = Session(self.engine)
+
+        resumed = self.start(91001)
+        self.assertTrue(resumed["resumed"])
+        self.assertEqual(first["session_id"], resumed["session_id"])
+        self.assertEqual(0, resumed["next_exercise_index"])
+
+        guided = self.answer(91001, resumed["session_id"], 0, "obwohl")
+        self.assertTrue(guided["correct"])
+        self.assertEqual("guided_retry", guided["learning_evidence"]["assistance_level"])
+        self.assertEqual(2, guided["learning_evidence"]["attempt_number"])
+
+        self.db.close()
+        self.db = Session(self.engine)
+        self.assertEqual(1, self.start(91001)["next_exercise_index"])
+        other = self.start(91002)
+        self.assertFalse(other["resumed"])
+        self.assertEqual(0, other["next_exercise_index"])
+        self.assertNotEqual(first["session_id"], other["session_id"])
+
+        owner = self.db.query(User).filter_by(telegram_id=91001).one()
+        attempts = self.db.query(ExerciseAttempt).filter_by(user_id=owner.id).all()
+        self.assertEqual(2, len(attempts))
+        self.assertEqual(1, sum(bool(attempt.correct) for attempt in attempts))
+        mastery = self.db.query(TopicMastery).filter_by(user_id=owner.id, topic="connectors").one()
+        self.assertEqual(2, mastery.attempts)
+        self.assertEqual(1, mastery.correct_total)
+
     def test_verified_production_persists_independent_evidence_and_retry_is_guided(self):
         self.db.add(Lesson(
             id=911, level="B1", pillar="writing", topic="formal_email",
