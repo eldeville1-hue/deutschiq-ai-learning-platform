@@ -142,6 +142,33 @@ class B1PersistedJourneyTests(unittest.TestCase):
         self.assertEqual(2, mastery.attempts)
         self.assertEqual(1, mastery.correct_total)
 
+    def test_completed_b1_answer_replay_after_new_db_session_keeps_credit_unchanged(self):
+        """A retry from a new request session must not grade an already committed answer."""
+        session = self.start(91001)
+        accepted = self.answer(91001, session["session_id"], 0, "obwohl")
+        self.assertTrue(accepted["correct"])
+        owner = self.db.query(User).filter_by(telegram_id=91001).one()
+        mastery = self.db.query(TopicMastery).filter_by(user_id=owner.id, topic="connectors").one()
+        before = (mastery.attempts, mastery.correct_total)
+        count = self.db.query(ExerciseAttempt).filter_by(user_id=owner.id).count()
+
+        # The original request has ended; replay arrives with a fresh DB session.
+        self.db.close()
+        self.db = Session(self.engine)
+        with self.assertRaises(HTTPException) as duplicate:
+            self.answer(91001, session["session_id"], 0, "obwohl")
+        self.assertEqual(409, duplicate.exception.status_code)
+        self.db.rollback()
+        self.db.expire_all()
+
+        owner = self.db.query(User).filter_by(telegram_id=91001).one()
+        mastery = self.db.query(TopicMastery).filter_by(user_id=owner.id, topic="connectors").one()
+        self.assertEqual(before, (mastery.attempts, mastery.correct_total))
+        self.assertEqual(count, self.db.query(ExerciseAttempt).filter_by(user_id=owner.id).count())
+        self.assertEqual(1, self.start(91001)["next_exercise_index"])
+        other = self.start(91002)
+        self.assertEqual(0, other["next_exercise_index"])
+
     def test_verified_production_persists_independent_evidence_and_retry_is_guided(self):
         self.db.add(Lesson(
             id=911, level="B1", pillar="writing", topic="formal_email",
