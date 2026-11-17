@@ -706,6 +706,52 @@ test('B1 repair submission is marked retry and returns to independent mission', 
   await expectNoHorizontalOverflow(page);
 });
 
+test('B1 wrong answer to guided repair to independent mission completion', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 640 });
+  await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
+  await mockApi(page, { completed: true });
+  const submissions: any[] = [];
+  await page.route('**/api/lesson/check-answer', route => {
+    const body = route.request().postDataJSON();
+    submissions.push(body);
+    if (body.retry) return route.fulfill({ json: {
+      correct: true, explanation: 'Repair completed.', correct_answer: 'Du solltest mehr schlafen.',
+    } });
+    if (submissions.length === 1) return route.fulfill({ json: {
+      correct: false, correct_answer: 'Du solltest früher schlafen gehen.',
+      feedback_focus: 'Add: solltest.', error_type: 'missing_words',
+      retry_exercise: { id: 'advice-retry', type: 'reorder', question: 'Build a fresh example.', tokens: ['mehr', 'Du', 'schlafen', 'solltest'] },
+    } });
+    return route.fulfill({ json: {
+      correct: true, explanation: 'Independent answer verified.',
+      correct_answer: 'Du solltest früher schlafen gehen.',
+      production: true, production_score: 82, cefr_standard: 'B1', pass_mark: 70,
+      dimension_scores: { task_completion: 85, grammar: 80, vocabulary: 78, coherence: 80, register: 86 },
+    } });
+  });
+  await page.goto('/lesson/77');
+  await page.getByRole('button', { name: /Understand with an example/i }).click();
+  await page.getByRole('button', { name: /Start practice/i }).click();
+  await page.getByRole('textbox').fill('Du früher schlafen gehen.');
+  await page.getByRole('button', { name: /^Check$/i }).click();
+  await expect(page.getByText('ONE FIX')).toBeVisible();
+  await page.getByRole('button', { name: 'Try again' }).click();
+  for (const word of ['Du', 'solltest', 'mehr', 'schlafen']) {
+    await page.locator('.reorder-bank').getByRole('button', { name: word, exact: true }).click();
+  }
+  await page.getByRole('button', { name: /^Check$/i }).click();
+  await expect(page.locator('.answer-feedback.correct')).toBeVisible();
+  await page.getByRole('button', { name: /Retry the mission independently/i }).click();
+  await page.getByRole('textbox').fill('Du solltest früher schlafen gehen, weil du oft müde bist.');
+  await page.getByRole('button', { name: /^Check$/i }).click();
+  await expect(page.getByText('B1 ASSESSMENT')).toBeVisible();
+  expect(submissions.map(item => item.retry)).toEqual([false, true, false]);
+  await page.locator('.answer-feedback > button').click();
+  await expect(page.getByText('MISSION COMPLETE')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'This is your German now' })).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+});
+
 test('graduation checkpoint uses independent dialogue and opens the next level', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await mockApi(page, { completed: true });
