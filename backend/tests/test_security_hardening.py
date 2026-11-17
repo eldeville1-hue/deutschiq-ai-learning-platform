@@ -74,6 +74,27 @@ class SecurityHardeningTests(unittest.TestCase):
         self.assertEqual(401, raised.exception.status_code)
         self.assertEqual("Ambiguous Telegram authentication data", raised.exception.detail)
 
+    def test_percent_encoded_duplicate_key_is_rejected_before_signature_check(self):
+        token = "123456:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghi"
+        payload = signed_init_data(token, 9981, 1_000_000)
+        # parse_qsl decodes %75ser to user: the encoded alias must not
+        # bypass the duplicate-field check.
+        with patch("app.core.telegram_auth.settings.BOT_TOKEN", token):
+            with self.assertRaises(HTTPException) as raised:
+                verify_telegram_init_data(payload + "&%75ser=other", now=1_000_001)
+        self.assertEqual(401, raised.exception.status_code)
+        self.assertEqual("Ambiguous Telegram authentication data", raised.exception.detail)
+
+    def test_empty_duplicate_auth_date_is_rejected_before_signature_check(self):
+        token = "123456:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghi"
+        payload = signed_init_data(token, 9981, 1_000_000)
+        # Blank values are retained so duplicate signed fields cannot hide.
+        with patch("app.core.telegram_auth.settings.BOT_TOKEN", token):
+            with self.assertRaises(HTTPException) as raised:
+                verify_telegram_init_data(payload + "&auth_date=", now=1_000_001)
+        self.assertEqual(401, raised.exception.status_code)
+        self.assertEqual("Ambiguous Telegram authentication data", raised.exception.detail)
+
     def test_security_headers_include_hsts_only_for_https(self):
         insecure = SimpleNamespace(headers={})
         secure = SimpleNamespace(headers={})
