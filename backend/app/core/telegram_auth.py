@@ -10,7 +10,12 @@ from app.core.config import settings
 
 
 def verify_telegram_init_data(init_data: str, now: int | None = None) -> int:
-    values = dict(parse_qsl(init_data, keep_blank_values=True))
+    pairs = parse_qsl(init_data, keep_blank_values=True)
+    values = dict(pairs)
+    # Duplicate keys make the payload ambiguous for downstream consumers.
+    # Do not silently let the last value overwrite earlier signed fields.
+    if len(values) != len(pairs):
+        raise HTTPException(status_code=401, detail="Ambiguous Telegram authentication data")
     received_hash = values.pop("hash", "")
     if not received_hash:
         raise HTTPException(status_code=401, detail="Telegram authentication required")

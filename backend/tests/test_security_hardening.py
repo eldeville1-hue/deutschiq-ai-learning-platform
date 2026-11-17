@@ -55,6 +55,25 @@ class SecurityHardeningTests(unittest.TestCase):
                 verify_telegram_init_data(payload, now=1_000_001)
         self.assertEqual("Invalid Telegram signature", raised.exception.detail)
 
+    def test_duplicate_signed_fields_are_rejected(self):
+        token = "123456:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghi"
+        payload = signed_init_data(token, 9981, 1_000_000)
+        with patch("app.core.telegram_auth.settings.BOT_TOKEN", token):
+            with self.assertRaises(HTTPException) as raised:
+                verify_telegram_init_data(payload + "&user=%7B%22id%22%3A9981%7D", now=1_000_001)
+        self.assertEqual(401, raised.exception.status_code)
+        self.assertEqual("Ambiguous Telegram authentication data", raised.exception.detail)
+
+    def test_duplicate_hash_fields_are_rejected(self):
+        token = "123456:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghi"
+        payload = signed_init_data(token, 9981, 1_000_000)
+        duplicated_hash = payload + "&" + payload.rsplit("&", 1)[-1]
+        with patch("app.core.telegram_auth.settings.BOT_TOKEN", token):
+            with self.assertRaises(HTTPException) as raised:
+                verify_telegram_init_data(duplicated_hash, now=1_000_001)
+        self.assertEqual(401, raised.exception.status_code)
+        self.assertEqual("Ambiguous Telegram authentication data", raised.exception.detail)
+
     def test_security_headers_include_hsts_only_for_https(self):
         insecure = SimpleNamespace(headers={})
         secure = SimpleNamespace(headers={})
