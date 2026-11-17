@@ -186,6 +186,39 @@ class B1PersistedJourneyTests(unittest.TestCase):
         self.assertEqual(0, asyncio.run(get_due_reviews(db=self.db, authenticated_id=91001))["count"])
         self.assertEqual(0, asyncio.run(get_due_reviews(db=self.db, authenticated_id=91002))["count"])
 
+    def test_successful_review_replay_cannot_award_duplicate_mastery(self):
+        """A committed review cannot be replayed on the same session."""
+        from datetime import datetime, timedelta
+
+        session = self.start(91001)
+        self.assertTrue(self.answer(91001, session["session_id"], 0, "obwohl")["correct"])
+        owner = self.db.query(User).filter_by(telegram_id=91001).one()
+        mastery = self.db.query(TopicMastery).filter_by(user_id=owner.id, topic="connectors").one()
+        mastery.next_review_at = datetime.utcnow() - timedelta(days=1)
+        self.db.commit()
+
+        reviewed = self.answer(91001, session["session_id"], 1, "weil", mode="review")
+        self.assertTrue(reviewed["correct"])
+        self.db.expire_all()
+        mastery = self.db.query(TopicMastery).filter_by(user_id=owner.id, topic="connectors").one()
+        before = (mastery.attempts, mastery.correct_total, mastery.stability_days,
+                  mastery.next_review_at, mastery.lapse_count)
+        count = self.db.query(ExerciseAttempt).filter_by(user_id=owner.id).count()
+
+        for _ in range(2):
+            with self.assertRaises(HTTPException) as replay:
+                self.answer(91001, session["session_id"], 1, "weil", mode="review")
+            self.assertEqual(409, replay.exception.status_code)
+            self.db.rollback()
+        self.db.expire_all()
+        mastery = self.db.query(TopicMastery).filter_by(user_id=owner.id, topic="connectors").one()
+        self.assertEqual(before, (mastery.attempts, mastery.correct_total,
+                                  mastery.stability_days, mastery.next_review_at,
+                                  mastery.lapse_count))
+        self.assertEqual(count, self.db.query(ExerciseAttempt).filter_by(user_id=owner.id).count())
+        self.assertEqual(0, asyncio.run(get_due_reviews(db=self.db, authenticated_id=91001))["count"])
+        self.assertEqual(0, asyncio.run(get_due_reviews(db=self.db, authenticated_id=91002))["count"])
+
     def test_reload_after_completion_does_not_duplicate_credit_or_leak_progress(self):
         first = self.start(91001)
         self.assertTrue(self.answer(91001, first["session_id"], 0, "obwohl")["correct"])
