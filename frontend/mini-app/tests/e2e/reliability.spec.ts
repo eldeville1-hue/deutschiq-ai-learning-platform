@@ -831,6 +831,39 @@ test('B1 failed due review stays missed after successful guided retry', async ({
   await expectNoHorizontalOverflow(page);
 });
 
+test('B1 due review prevents duplicate submission while grading is pending', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 640 });
+  await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
+  await mockApi(page, { completed: true });
+  const checks: any[] = [];
+  let release!: () => void;
+  const pending = new Promise<void>(resolve => { release = resolve; });
+  await page.route('**/api/learning/reviews/**', route => route.fulfill({ json: { reviews: [{
+    lesson_id: 77, exercise_index: 0, topic: 'konjunktiv_ii',
+    question: 'Give advice without a hint.', type: 'dialogue',
+  }] } }));
+  await page.route('**/api/lesson/check-answer', async route => {
+    checks.push(route.request().postDataJSON());
+    await pending;
+    await route.fulfill({ json: {
+      correct: true, correct_answer: 'Du solltest früher schlafen gehen.',
+      explanation: 'Verified independent retrieval.',
+    } });
+  });
+  await page.goto('/review');
+  await page.getByRole('textbox').fill('Du solltest früher schlafen gehen.');
+  const checkButton = page.getByRole('button', { name: /^Check$/i });
+  await checkButton.dblclick({ delay: 40 });
+  await expect(page.getByRole('button', { name: /Checking/i })).toBeDisabled();
+  await expect.poll(() => checks.length).toBe(1);
+  release();
+  await expect(page.locator('.rc-review-feedback.correct')).toBeVisible();
+  expect(checks).toHaveLength(1);
+  expect(checks[0].mode).toBe('review');
+  expect(checks[0].retry).toBe(false);
+  await expectNoHorizontalOverflow(page);
+});
+
 test('graduation checkpoint uses independent dialogue and opens the next level', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await mockApi(page, { completed: true });
