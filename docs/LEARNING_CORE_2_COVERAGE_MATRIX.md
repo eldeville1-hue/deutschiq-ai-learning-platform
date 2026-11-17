@@ -1,6 +1,6 @@
 # Learning Core 2.0 — evidence coverage matrix (initial inventory)
 
-Date: 2026-11-16. Scope: issue #253. **Partial** means a relevant test exists, not that the full end-to-end requirement has been verified.
+Date: 2026-11-17 (updated evidence inventory). Scope: issue #253. **Partial** means a relevant test exists, not that the full end-to-end requirement has been verified.
 
 | Acceptance scenario | Evidence inspected | Status | Missing proof |
 | --- | --- | --- | --- |
@@ -19,6 +19,21 @@ Date: 2026-11-16. Scope: issue #253. **Partial** means a relevant test exists, n
 - `test_learning_effectiveness_evidence.py` checks that missing independent/transfer stages are reported; it does not certify the whole curriculum.
 - `test_b1_persisted_journey.py` explicitly identifies itself as an API/service integration test, **not** a Telegram browser E2E test.
 - Technical release baseline `d0454cd16454668a04a1ff33846fa9027acde2e0`: CI 43939304065, v88 Release Evidence 43940270499, Production smoke 43940345420 all passed; Render live. This does not establish CEFR or pedagogical validity.
+
+## Evidence added since the initial inventory
+
+These changes strengthen individual edge-case assertions, **not** full A1–B2 end-to-end coverage. Every acceptance row above remains **Partial**.
+
+| Evidence | What it demonstrates | What it does not demonstrate |
+| --- | --- | --- |
+| [#315](https://github.com/eldeville1-hue/deutschiq-ai-learning-platform/pull/315) | Persisted B1 wrong answer → guided retry → resume → due review → independent retrieval; checkpoint refuses insufficient independent evidence; account isolation | Browser-level full first-time B1 journey |
+| [#317](https://github.com/eldeville1-hue/deutschiq-ai-learning-platform/pull/317)–[#325](https://github.com/eldeville1-hue/deutschiq-ai-learning-platform/pull/325) | Mobile Playwright B1 assessment/reload, guided repair, independent attempt, due review, duplicate-click prevention and HTTP 409 conflict recovery | A1/A2/B2, actual Telegram webview/safe-area on physical iPhone |
+| [#326](https://github.com/eldeville1-hue/deutschiq-ai-learning-platform/pull/326) | Successful B1 review replay returns HTTP 409 without duplicate mastery credit | Simultaneous HTTP requests or all review types |
+| [#327](https://github.com/eldeville1-hue/deutschiq-ai-learning-platform/pull/327) | Real PostgreSQL learner-row lock serialization with NOWAIT | Full endpoint behavior under concurrent writes |
+| [#328](https://github.com/eldeville1-hue/deutschiq-ai-learning-platform/pull/328) | Two overlapping `check_answer` function calls using independent PostgreSQL sessions: one correct result, one HTTP 409, one credited attempt | Real HTTP transport concurrency, interrupted-request recovery |
+| [#329](https://github.com/eldeville1-hue/deutschiq-ai-learning-platform/pull/329)–[#330](https://github.com/eldeville1-hue/deutschiq-ai-learning-platform/pull/330) | Telegram initData duplicate-key rejection including percent-encoded aliases and blank values | Real Telegram onboarding on all target devices |
+
+The #328 exact release SHA `e18436348be2d3bf6f8408db459501a0ad513fae` had post-merge CI, release evidence, production smoke and Render Live confirmed. The #329 exact release SHA `7ff9ade45fd774dacee44584dc664ca4098383dd` had the same gates confirmed. These are technical release checks, not language-learning outcome evidence.
 
 ## Next evidence gate
 
