@@ -757,8 +757,29 @@ test('B1 wrong answer to guided repair to independent mission completion', async
   await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
   await mockApi(page, { completed: true });
   const submissions: any[] = [];
+  const reviewChecks: any[] = [];
+  let completed = false;
+  await page.route('**/api/lesson/complete', async route => {
+    completed = true;
+    await route.fallback();
+  });
+  await page.route('**/api/learning/reviews/**', route => route.fulfill({ json: {
+    reviews: completed ? [{
+      lesson_id: 77, exercise_index: 0, topic: 'konjunktiv_ii',
+      question: 'Give polite advice to a friend.', type: 'dialogue',
+      review_reason: 'Scheduled retrieval after your mission.',
+      can_do: 'Give polite advice without hints.',
+    }] : [],
+  } }));
   await page.route('**/api/lesson/check-answer', route => {
     const body = route.request().postDataJSON();
+    if (body.mode === 'review') {
+      reviewChecks.push(body);
+      return route.fulfill({ json: {
+        correct: true, explanation: 'Verified independent retrieval.',
+        correct_answer: 'Du solltest jeden Tag Deutsch ueben.',
+      } });
+    }
     submissions.push(body);
     if (body.retry) return route.fulfill({ json: {
       correct: true, explanation: 'Repair completed.', correct_answer: 'Du solltest mehr schlafen.',
@@ -795,6 +816,16 @@ test('B1 wrong answer to guided repair to independent mission completion', async
   await page.locator('.answer-feedback > button').click();
   await expect(page.getByText('MISSION COMPLETE')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'This is your German now' })).toBeVisible();
+  await page.goto('/review');
+  await expect(page.getByText('Scheduled retrieval after your mission.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Give polite advice to a friend.' })).toBeVisible();
+  await page.getByRole('textbox').fill('Du solltest jeden Tag Deutsch ueben.');
+  await page.getByRole('button', { name: /^Check$/i }).click();
+  await expect(page.locator('.rc-review-feedback.correct')).toBeVisible();
+  expect(reviewChecks).toHaveLength(1);
+  expect(reviewChecks[0].mode).toBe('review');
+  expect(reviewChecks[0].retry).toBe(false);
+  expect(submissions.map(item => item.retry)).toEqual([false, true, false]);
   await expectNoHorizontalOverflow(page);
 });
 
