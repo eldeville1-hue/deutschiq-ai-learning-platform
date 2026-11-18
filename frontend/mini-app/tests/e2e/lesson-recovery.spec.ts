@@ -147,14 +147,18 @@ test('mobile lesson keeps the draft when an uncommitted request loses its respon
   let starts = 0;
   let checks = 0;
   await page.route('**/api/lesson/77?*', route => route.fulfill({
-    json: { id: 77, level: 'A1', topic: 'Practice',
-      content: { title: 'Practice', examples: ['Hallo!'], exercises: questions } },
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({ id: 77, level: 'A1', topic: 'Practice',
+      content: { title: 'Practice', examples: ['Hallo!'], exercises: questions } }),
   }));
   await page.route('**/api/lesson/start', route => {
     starts++;
-    return route.fulfill({ json: {
-      session_id: 'saved-session', resumed: starts > 1, next_exercise_index: 0,
-    } });
+    return route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify({
+        session_id: 'saved-session', resumed: starts > 1, next_exercise_index: 0,
+      }),
+    });
   });
   await page.route('**/api/lesson/check-answer', route => {
     checks++;
