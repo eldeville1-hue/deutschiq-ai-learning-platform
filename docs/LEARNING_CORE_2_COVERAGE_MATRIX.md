@@ -1,6 +1,6 @@
 # Learning Core 2.0 — evidence coverage matrix (initial inventory)
 
-Date: 2026-11-17 (updated evidence inventory). Scope: issue #253. **Partial** means a relevant test exists, not that the full end-to-end requirement has been verified.
+Date: 2026-11-18 (updated evidence inventory). Scope: issue #253. **Partial** means a relevant test exists, not that the full end-to-end requirement has been verified.
 
 | Acceptance scenario | Evidence inspected | Status | Missing proof |
 | --- | --- | --- | --- |
@@ -32,6 +32,11 @@ These changes strengthen individual edge-case assertions, **not** full A1–B2 e
 | [#327](https://github.com/eldeville1-hue/deutschiq-ai-learning-platform/pull/327) | Real PostgreSQL learner-row lock serialization with NOWAIT | Full endpoint behavior under concurrent writes |
 | [#328](https://github.com/eldeville1-hue/deutschiq-ai-learning-platform/pull/328) | Two overlapping `check_answer` function calls using independent PostgreSQL sessions: one correct result, one HTTP 409, one credited attempt | Real HTTP transport concurrency, interrupted-request recovery |
 | [#329](https://github.com/eldeville1-hue/deutschiq-ai-learning-platform/pull/329)–[#330](https://github.com/eldeville1-hue/deutschiq-ai-learning-platform/pull/330) | Telegram initData duplicate-key rejection including percent-encoded aliases and blank values | Real Telegram onboarding on all target devices |
+
+| [#332](https://github.com/eldeville1-hue/deutschiq-ai-learning-platform/pull/332)–[#334](https://github.com/eldeville1-hue/deutschiq-ai-learning-platform/pull/334) | Persisted B1 wrong-answer resume, completed-answer replay protection, and delayed review across fresh database sessions | Browser-level continuity, multi-day real-user retention, or other CEFR levels |
+| [#335](https://github.com/eldeville1-hue/deutschiq-ai-learning-platform/pull/335)–[#337](https://github.com/eldeville1-hue/deutschiq-ai-learning-platform/pull/337) | First-time mobile B1 diagnostic placement → dashboard → recommended lesson → practice → saved 82% assessment visible after reload at 360×640 | Wrong-answer repair and delayed review in that same continuous browser journey; A1/A2/B2 |
+| [#338](https://github.com/eldeville1-hue/deutschiq-ai-learning-platform/pull/338)–[#339](https://github.com/eldeville1-hue/deutschiq-ai-learning-platform/pull/339) | Fresh-database-session account isolation and lost-response server-committed answer recovery without duplicate mastery | Physical Telegram WebView or cross-account browser E2E |
+| [#340](https://github.com/eldeville1-hue/deutschiq-ai-learning-platform/pull/340)–[#343](https://github.com/eldeville1-hue/deutschiq-ai-learning-platform/pull/343) | Mobile Playwright lost-answer-response recovery, both committed and uncommitted server outcomes, and reload behavior without automatic duplicate grading | Full B1 first-time learner journey or proof of physical iPhone process-kill persistence |
 
 The #328 exact release SHA `e18436348be2d3bf6f8408db459501a0ad513fae` had post-merge CI, release evidence, production smoke and Render Live confirmed. The #329 exact release SHA `7ff9ade45fd774dacee44584dc664ca4098383dd` had the same gates confirmed. These are technical release checks, not language-learning outcome evidence.
 
