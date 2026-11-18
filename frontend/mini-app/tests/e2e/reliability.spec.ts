@@ -53,6 +53,7 @@ test('new user sees onboarding and can enter diagnostics', async ({ page }) => {
 });
 
 test('new learner completes placement and returns to their saved dashboard', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 640 });
   await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
   await mockApi(page, { completed: false });
   let saved = false;
@@ -81,6 +82,7 @@ test('new learner completes placement and returns to their saved dashboard', asy
   await page.getByRole('button', { name: /Haus/i }).click();
   await expect(page).toHaveURL(/\/result/);
   await expect(page.getByText('Preliminary level estimate')).toBeVisible();
+  await expectNoHorizontalOverflow(page);
   await page.getByRole('button', { name: /Start B1/i }).click();
   await expect(page).toHaveURL(/\/dashboard/);
   await page.reload();
