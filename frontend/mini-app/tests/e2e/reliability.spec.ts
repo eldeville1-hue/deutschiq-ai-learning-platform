@@ -89,6 +89,13 @@ test('new learner completes placement and returns to their saved dashboard', asy
   await expect(page.getByText('YOUR STEP TODAY')).toBeVisible();
   expect(submissions).toBe(1);
   await expectNoHorizontalOverflow(page);
+  await page.getByRole('button', { name: /^Start lesson$/i }).click();
+  await expect(page).toHaveURL(/\/lesson\/77/);
+  await expect(page.getByText('NEW SKILL')).toBeVisible();
+  await page.getByRole('button', { name: /Understand with an example/i }).click();
+  await page.getByRole('button', { name: /Start practice/i }).click();
+  await expect(page.getByRole('textbox')).toBeVisible();
+  await expectNoHorizontalOverflow(page);
 });
 
 test('diagnostic question fetch failure offers retry and loads fresh questions', async ({ page }) => {
