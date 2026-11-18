@@ -381,7 +381,7 @@ const LessonScreen: React.FC = () => {
         setCheckError(tr(lang,
           'Дополнительное задание недоступно. Повтори исходное упражнение.',
           'Die Zusatzaufgabe ist nicht verfügbar. Wiederhole die ursprüngliche Aufgabe.',
-          'The extra task is unavailable. Try the original exercise again.'));
+          'Extra task unavailable. Try the original exercise again.'));
       } else {
         const status = error?.response?.status;
         const detail = error?.response?.data?.detail;
@@ -407,6 +407,7 @@ const LessonScreen: React.FC = () => {
             setRetried({});
             setRetryExercises({});
             setCheckError('');
+            if (cursor === exerciseCount) await completeSession();
           } catch {
             setCheckError(tr(lang,
               'Не удалось подтвердить ответ. Открой урок заново, чтобы проверить сохранённый прогресс.',

@@ -588,6 +588,36 @@ test('B1 mobile mission retains verified feedback through reload and completion'
   await expectNoHorizontalOverflow(page);
 });
 
+test('B1 mobile recovers a committed answer after its network response is lost', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 640 });
+  await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
+  await mockApi(page, { completed: true });
+  let checks = 0;
+  let starts = 0;
+  let committed = false;
+  await page.route('**/api/lesson/start', route => {
+    starts++;
+    return route.fulfill({ json: {
+      session_id: 'test-session', resumed: committed,
+      next_exercise_index: committed ? 1 : 0,
+    } });
+  });
+  await page.route('**/api/lesson/check-answer', route => {
+    checks++;
+    committed = true; // The server saved it, but the response never arrived.
+    return route.abort('failed');
+  });
+  await page.goto('/lesson/77');
+  await page.getByRole('button', { name: /Understand with an example/i }).click();
+  await page.getByRole('button', { name: /Start practice/i }).click();
+  await page.getByRole('textbox').fill('Du solltest früher schlafen gehen.');
+  await page.getByRole('button', { name: /^Check$/i }).click();
+  await expect.poll(() => starts).toBeGreaterThan(1);
+  await expect(page.getByText('MISSION COMPLETE')).toBeVisible();
+  expect(checks).toBe(1);
+  await expectNoHorizontalOverflow(page);
+});
+
 test('wrong answer gives one focused repair before revealing the model', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
   await mockApi(page, { completed: true });
