@@ -444,6 +444,35 @@ class B1PersistedJourneyTests(unittest.TestCase):
         self.assertEqual("B1", self.db.query(User).filter_by(telegram_id=91001).one().current_level)
         self.assertEqual(0, asyncio.run(get_due_reviews(db=self.db, authenticated_id=91002))["count"])
 
+    def test_fresh_database_session_rejects_cross_account_answer_without_mutation(self):
+        """A stolen session ID must not award credit across backend requests."""
+        owner_session = self.start(91001)["session_id"]
+        self.assertTrue(self.answer(91001, owner_session, 0, "obwohl")["correct"])
+        owner = self.db.query(User).filter_by(telegram_id=91001).one()
+        owner_id = owner.id
+        other_id = self.db.query(User).filter_by(telegram_id=91002).one().id
+
+        self.db.close()
+        self.db = Session(self.engine)
+
+        with self.assertRaises(HTTPException) as forbidden:
+            self.answer(91002, owner_session, 1, "weil")
+        self.assertEqual(409, forbidden.exception.status_code)
+        self.db.close()
+        self.db = Session(self.engine)
+
+        self.assertEqual(1, self.db.query(ExerciseAttempt).filter_by(user_id=owner_id).count())
+        self.assertEqual(0, self.db.query(ExerciseAttempt).filter_by(user_id=other_id).count())
+        self.assertEqual(0, self.db.query(TopicMastery).filter_by(user_id=other_id).count())
+        self.assertEqual(1, self.start(91001)["next_exercise_index"])
+        other_session = self.start(91002)
+        self.assertFalse(other_session["resumed"])
+        self.assertNotEqual(owner_session, other_session["session_id"])
+        self.assertEqual(0, other_session["next_exercise_index"])
+        self.assertTrue(self.answer(91001, owner_session, 1, "weil")["correct"])
+        self.assertEqual(2, self.db.query(ExerciseAttempt).filter_by(user_id=owner_id).count())
+        self.assertEqual(0, self.db.query(ExerciseAttempt).filter_by(user_id=other_id).count())
+
     def test_other_learner_cannot_resume_or_submit_to_owner_session(self):
         owner_session = self.start(91001)["session_id"]
         other = self.start(91002, resume=owner_session)
