@@ -407,12 +407,12 @@ const LessonScreen: React.FC = () => {
             setRetried({});
             setRetryExercises({});
             setCheckError('');
-            if (cursor >= exerciseCount) await completeSession();
+            if (cursor === exerciseCount) await completeSession();
           } catch {
             setCheckError(tr(lang,
               'Не удалось подтвердить ответ. Открой урок заново, чтобы проверить сохранённый прогресс.',
               'Die Antwort konnte nicht bestätigt werden. Öffne die Lektion erneut, um den gespeicherten Fortschritt zu prüfen.',
-              'Answer not confirmed. Reopen the lesson to check saved progress.'));
+              'Could not confirm your answer. Reopen the lesson to check saved progress.'));
           }
         } else if (status === 409 && detail === 'Learning session is missing or closed') {
           setCheckError(tr(lang,
