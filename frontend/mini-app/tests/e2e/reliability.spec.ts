@@ -95,6 +95,13 @@ test('new learner completes placement and returns to their saved dashboard', asy
   await page.getByRole('button', { name: /Understand with an example/i }).click();
   await page.getByRole('button', { name: /Start practice/i }).click();
   await expect(page.getByRole('textbox')).toBeVisible();
+  await page.getByRole('textbox').fill('Du solltest früher schlafen gehen, weil du oft müde bist.');
+  await page.getByRole('button', { name: /^Check$/i }).click();
+  await expect(page.getByText('B1 ASSESSMENT')).toBeVisible();
+  await expect(page.getByText('82%')).toBeVisible();
+  await page.reload();
+  await expect(page.getByText('B1 ASSESSMENT')).toBeVisible();
+  await expect(page.getByText('82%')).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
 
