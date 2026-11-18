@@ -412,7 +412,7 @@ const LessonScreen: React.FC = () => {
             setCheckError(tr(lang,
               'Не удалось подтвердить ответ. Открой урок заново, чтобы проверить сохранённый прогресс.',
               'Die Antwort konnte nicht bestätigt werden. Öffne die Lektion erneut, um den gespeicherten Fortschritt zu prüfen.',
-              'Could not confirm your answer. Reopen the lesson to check saved progress.'));
+              'Answer not confirmed. Reopen the lesson to check saved progress.'));
           }
         } else if (status === 409 && detail === 'Learning session is missing or closed') {
           setCheckError(tr(lang,
