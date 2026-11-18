@@ -165,7 +165,14 @@ test('mobile lesson keeps the draft when an uncommitted request loses its respon
     return route.abort('failed');
   });
   await page.route('**/api/events', route => route.fulfill({ status: 204, body: '' }));
-  await page.goto('/lesson/77');
+  const navigation = await page.goto('/lesson/77');
+  await page.waitForTimeout(1500);
+  if (!(await page.getByRole('button', { name: 'Understand with an example' }).count())) {
+    throw new Error(JSON.stringify({
+      status: navigation?.status(), url: page.url(),
+      body: (await page.locator('body').innerText()).slice(0, 1000), starts,
+    }));
+  }
   await page.getByRole('button', { name: 'Understand with an example' }).click();
   await page.getByRole('button', { name: 'Start practice' }).click();
   await page.getByRole('radio', { name: 'Correct' }).click();
