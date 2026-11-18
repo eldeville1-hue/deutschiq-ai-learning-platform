@@ -169,6 +169,47 @@ class B1PersistedJourneyTests(unittest.TestCase):
         other = self.start(91002)
         self.assertEqual(0, other["next_exercise_index"])
 
+    def test_lost_answer_response_recovers_from_server_progress_without_double_credit(self):
+        """A successful commit with a lost response must not be counted twice."""
+        session = self.start(91001)
+        # The backend commits successfully, but the client never receives the response.
+        self.assertTrue(self.answer(91001, session["session_id"], 0, "obwohl")["correct"])
+        self.db.close()
+        self.db = Session(self.engine)
+
+        # The client retries the request because it cannot know whether it landed.
+        with self.assertRaises(HTTPException) as replay:
+            self.answer(91001, session["session_id"], 0, "obwohl")
+        self.assertEqual(409, replay.exception.status_code)
+        self.db.rollback()
+        self.db.close()
+        self.db = Session(self.engine)
+
+        # Fetching authoritative server progress recovers the correct next task.
+        recovered = self.start(91001)
+        self.assertTrue(recovered["resumed"])
+        self.assertEqual(session["session_id"], recovered["session_id"])
+        self.assertEqual(1, recovered["next_exercise_index"])
+        owner_id = self.db.query(User).filter_by(telegram_id=91001).one().id
+        mastery = self.db.query(TopicMastery).filter_by(
+            user_id=owner_id, topic="connectors",
+        ).one()
+        self.assertEqual((1, 1), (mastery.attempts, mastery.correct_total))
+        self.assertEqual(1, self.db.query(ExerciseAttempt).filter_by(user_id=owner_id).count())
+
+        # A legitimate next answer remains possible after recovery.
+        self.assertTrue(self.answer(91001, recovered["session_id"], 1, "weil")["correct"])
+        self.db.close()
+        self.db = Session(self.engine)
+        self.assertEqual(2, self.start(91001)["next_exercise_index"])
+        mastery = self.db.query(TopicMastery).filter_by(
+            user_id=owner_id, topic="connectors",
+        ).one()
+        self.assertEqual((2, 2), (mastery.attempts, mastery.correct_total))
+        self.assertEqual(2, self.db.query(ExerciseAttempt).filter_by(user_id=owner_id).count())
+        other = self.start(91002)
+        self.assertEqual(0, other["next_exercise_index"])
+
     def test_verified_production_persists_independent_evidence_and_retry_is_guided(self):
         self.db.add(Lesson(
             id=911, level="B1", pillar="writing", topic="formal_email",
