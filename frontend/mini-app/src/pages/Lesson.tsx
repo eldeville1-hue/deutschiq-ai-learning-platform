@@ -407,6 +407,9 @@ const LessonScreen: React.FC = () => {
             setRetried({});
             setRetryExercises({});
             setCheckError('');
+            // Recovery can land beyond the final exercise; finish the persisted
+            // session just as the normal advance() path would.
+            if (cursor >= exerciseCount) await completeSession();
           } catch {
             setCheckError(tr(lang,
               'Не удалось подтвердить ответ. Открой урок заново, чтобы проверить сохранённый прогресс.',
