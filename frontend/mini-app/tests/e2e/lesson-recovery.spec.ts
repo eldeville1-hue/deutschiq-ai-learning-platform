@@ -137,6 +137,50 @@ test('mobile lesson preserves selected answer when server returns 500', async ({
   expect(checks).toBe(1);
 });
 
+test('mobile lesson keeps the draft when an uncommitted request loses its response', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 640 });
+  await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
+  const questions = [
+    { type: 'choice', question: 'First question', options: ['Correct', 'Wrong'], answer: 'Correct' },
+    { type: 'choice', question: 'Second question', options: ['Next', 'Other'], answer: 'Next' },
+  ];
+  let starts = 0;
+  let checks = 0;
+  await page.route('**/api/lesson/77?*', route => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({ id: 77, level: 'A1', topic: 'Practice',
+      content: { title: 'Practice', examples: ['Hallo!'], exercises: questions } }),
+  }));
+  await page.route('**/api/lesson/start', route => {
+    starts++;
+    return route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify({
+        session_id: 'saved-session', resumed: starts > 1, next_exercise_index: 0,
+      }),
+    });
+  });
+  await page.route('**/api/lesson/check-answer', route => {
+    checks++;
+    return route.abort('failed');
+  });
+  await page.route('**/api/events', route => route.fulfill({ status: 204, body: '' }));
+  await page.goto('/lesson/77');
+  if (await page.getByRole('button', { name: 'Understand with an example' }).count()) {
+    await page.getByRole('button', { name: 'Understand with an example' }).click();
+    await page.getByRole('button', { name: 'Start practice' }).click();
+  }
+  await expect(page.getByRole('heading', { name: 'First question' })).toBeVisible();
+  await page.getByRole('radio', { name: 'Correct' }).click();
+  await page.getByRole('button', { name: 'Check' }).click();
+  await expect.poll(() => starts).toBeGreaterThan(1);
+  await expect(page.getByText('Could not confirm your answer. Reopen the lesson to check saved progress.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'First question' })).toBeVisible();
+  await expect(page.getByRole('radio', { name: 'Correct' })).toHaveAttribute('aria-checked', 'true');
+  await expect(page.getByRole('heading', { name: 'Second question' })).toHaveCount(0);
+  expect(checks).toBe(1);
+});
+
 test('mobile lesson reload restores the server-authoritative exercise cursor', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
 
