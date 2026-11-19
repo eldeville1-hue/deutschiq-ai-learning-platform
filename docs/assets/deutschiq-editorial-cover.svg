@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" role="img" aria-labelledby="title desc">
+<title id="title">DeutschIQ — adaptive learning systems</title>
+<desc id="desc">A restrained editorial banner in deep midnight blue, ivory and teal with a subtle learning graph motif.</desc>
+<rect width="1200" height="360" fill="#14232c"/>
+<path d="M68 65H1132M68 281H1132" stroke="#425760" stroke-width="1"/>
+<g stroke="#527c79" stroke-width="1.5" fill="none" opacity=".72">
+<path d="M866 203L953 124L1040 167L1118 100M866 203L948 238L1040 167L1111 243"/>
+<circle cx="866" cy="203" r="6" fill="#7bb7ad"/>
+<circle cx="953" cy="124" r="6" fill="#7bb7ad"/>
+<circle cx="1040" cy="167" r="9" fill="#14232c" stroke="#c4e1d8"/>
+<circle cx="1118" cy="100" r="6" fill="#7bb7ad"/>
+<circle cx="948" cy="238" r="6" fill="#7bb7ad"/>
+<circle cx="1111" cy="243" r="6" fill="#7bb7ad"/>
+</g>
+<text x="68" y="107" font-family="Arial,Helvetica,sans-serif" font-size="14" font-weight="bold" letter-spacing="4" fill="#8ebeb8">SOFTWARE ENGINEERING / LANGUAGE LEARNING</text>
+<text x="64" y="214" font-family="Georgia,Times New Roman,serif" font-size="96" letter-spacing="-4" fill="#f4f2e9">DeutschIQ</text>
+<text x="68" y="258" font-family="Arial,Helvetica,sans-serif" font-size="18" fill="#c5d4d1" letter-spacing="1.1">Adaptive practice. Persistent progress. Thoughtful feedback.</text>
+<text x="68" y="316" font-family="Arial,Helvetica,sans-serif" font-size="13" fill="#9eb3b0" letter-spacing="2">REACT / TYPESCRIPT / FASTAPI / POSTGRESQL</text>
+<text x="1132" y="316" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="13" fill="#9eb3b0" letter-spacing="1.2">PORTFOLIO CASE STUDY</text>
+</svg>
