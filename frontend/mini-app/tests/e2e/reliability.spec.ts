@@ -749,8 +749,11 @@ test('B1 repair submission is marked retry and returns to independent mission', 
   await expect(page.getByRole('textbox')).toBeVisible();
   await expect(page.getByRole('button', { name: /^Check$/i })).toBeVisible();
   expect(submissions).toHaveLength(2);
+  const independentDraft = 'Du solltest früher schlafen gehen, weil du oft müde bist.';
+  await page.getByRole('textbox').fill(independentDraft);
+  await expect(page.getByRole('textbox')).toHaveValue(independentDraft);
   await page.reload();
-  await expect(page.getByRole('textbox')).toBeVisible();
+  await expect(page.getByRole('textbox')).toHaveValue(independentDraft);
   await expect(page.getByRole('button', { name: /^Check$/i })).toBeVisible();
   await expect(page.getByText('Build a fresh example.')).toHaveCount(0);
   expect(submissions.map(item => item.retry)).toEqual([false, true]);
