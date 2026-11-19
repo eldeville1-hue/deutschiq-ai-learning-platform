@@ -1,27 +1,38 @@
-# DeutschIQ
-
-> v19 Launch Hardening combines an adaptive A1–B2 learning journey with
-> contextual beta feedback, privacy-safe product analytics, explicit payment
-> evidence gates, and an owner-only quality center.
-
 <p align="center">
-  <img src="docs/screenshots/deutschiq-cover.png" alt="DeutschIQ — adaptive German learning inside Telegram">
+  <img src="docs/assets/deutschiq-editorial-cover.svg" alt="DeutschIQ — adaptive language learning, React, FastAPI and PostgreSQL" width="100%">
 </p>
 
 <p align="center">
-  <a href="https://deutschiq.onrender.com/"><strong>Live Web App</strong></a>
-  ·
-  <a href="https://t.me/DeutschIQ_bot"><strong>Open Telegram Bot</strong></a>
-  ·
-  <a href="docs/DEPLOYMENT.md"><strong>Deployment Guide</strong></a>
+  <strong>A full-stack learning platform for German A1–B2.</strong><br>
+  Personalized diagnostics, adaptive daily practice and persistent progress — designed for Telegram and mobile web.
 </p>
 
 <p align="center">
-  <img alt="CI" src="https://github.com/eldeville1-hue/deutschiq-ai-learning-platform/actions/workflows/ci.yml/badge.svg">
-  <img alt="Python 3.12" src="https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white">
-  <img alt="React TypeScript" src="https://img.shields.io/badge/React-TypeScript-3178C6?logo=react&logoColor=white">
-  <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-API-009688?logo=fastapi&logoColor=white">
+  <a href="https://deutschiq.onrender.com/"><strong>Live application</strong></a>
+  &nbsp;·&nbsp;
+  <a href="https://t.me/DeutschIQ_bot">Telegram Mini App</a>
+  &nbsp;·&nbsp;
+  <a href="docs/PORTFOLIO_CASE_STUDY.md">Engineering case study</a>
+  &nbsp;·&nbsp;
+  <a href="docs/DEPLOYMENT.md">Deployment</a>
 </p>
+
+<p align="center">
+  <img alt="CI status" src="https://github.com/eldeville1-hue/deutschiq-ai-learning-platform/actions/workflows/ci.yml/badge.svg">
+  <img alt="Python" src="https://img.shields.io/badge/Python-3.12-334155?logo=python&logoColor=white">
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-React-334155?logo=typescript&logoColor=white">
+  <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-Backend-334155?logo=fastapi&logoColor=white">
+</p>
+
+## At a glance
+
+| Product | Engineering | Delivery |
+| :--- | :--- | :--- |
+| German learning from A1–B2, with diagnostic and personalized 30-day route | React, TypeScript, FastAPI, SQLAlchemy and PostgreSQL | Docker, Render, GitHub Actions |
+| Mastery-based exercises, spaced repetition and contextual feedback | Server-side validation, Telegram authentication, database migrations | Automated backend, frontend and mobile checks |
+| AI tutor with deterministic fallback and progress tracking | Explainable learning logic, error recovery, data-export controls | Invite-only beta; payments intentionally disabled |
+
+> **Portfolio note:** This repository is an active engineering project, not an independently validated language-learning efficacy study. Review the [case study](docs/PORTFOLIO_CASE_STUDY.md) and [testing report](docs/TESTING_REPORT.md) for implementation and verification scope.
 
 ## About
 
