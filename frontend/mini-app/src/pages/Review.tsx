@@ -36,6 +36,10 @@ export const Review: React.FC = () => {
   useEffect(() => {
     let cancelled = false;
     setItems(null); setError('');
+    setIndex(0); setAnswer(''); setFeedback(null); setSessionId('');
+    setCorrectCount(0); setFirstAttemptMissed(false); setMissedIndices([]);
+    setMissedRound(false); setRetryCount(0); setReinforce(false);
+    setSessionConflict(false); setStartedAt(Date.now());
     if (nextLesson) saveDailySession(userId, { nextLessonId: nextLesson, stage: 'review' });
     void api.trackEvent({ user_id: userId, event_name: 'review_started' });
     api.getReviews(userId, lang).then(data => { if (!cancelled) setItems(data.reviews || []); }).catch(() => { if (!cancelled) { setItems([]); setError(tr(lang, 'Не удалось загрузить повторения.', 'Wiederholungen konnten nicht geladen werden.', 'Could not load reviews.')); } });
