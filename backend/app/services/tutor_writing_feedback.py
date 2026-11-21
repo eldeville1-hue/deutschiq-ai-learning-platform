@@ -42,4 +42,17 @@ def writing_length_feedback(exercise_text: str, answer: str, language: str):
         "en": ("Consider separate paragraphs for introduction, arguments and conclusion.", "Paragraph breaks found; coherence is not assessed."),
     }[lang]
     paragraph_note = structure[0] if is_argumentative and paragraph_count == 1 else structure[1] if paragraph_count > 1 else ""
+    # Only flag an absent greeting in the reviewed formal email tasks.
+    # This is a surface check, not a judgment of politeness or content.
+    if matches[0][0] in ("b1-w01", "b1-w03", "b2-w03"):
+        greetings = (
+            "sehr geehrte", "guten tag", "hallo", "liebe ", "lieber ",
+        )
+        has_greeting = answer.lstrip().casefold().startswith(greetings)
+        if not has_greeting:
+            paragraph_note += " " + {
+                "ru": "Проверь начало письма: возможно, не хватает обращения.",
+                "de": "Pruefe die Anrede am Anfang des Briefs.",
+                "en": "Check the start of the email: a greeting may be missing.",
+            }[lang]
     return f"{count} / {low}-{high} words. {localized[status]} {paragraph_note} {localized['note']}".strip()
