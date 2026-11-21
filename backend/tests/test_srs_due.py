@@ -47,3 +47,20 @@ def test_consuming_missing_review_is_noop():
     db.query.return_value.filter.return_value.first.return_value = None
     assert consume_due_review(db, 1, 77, as_of=datetime(2026, 10, 14)) is False
     db.commit.assert_not_called()
+
+
+def test_malformed_dates_do_not_crash_due_review_queue():
+    now = datetime(2026, 10, 14, 10, 0)
+    overdue = now - timedelta(days=1)
+    assert due_review_dates(["not-a-date", None, overdue.isoformat(), 123], as_of=now) == [overdue]
+
+
+def test_consume_skips_malformed_dates_without_losing_future_schedule():
+    now = datetime(2026, 10, 14, 10, 0)
+    future = now + timedelta(days=3)
+    progress = MagicMock(review_dates=["broken", now.isoformat(), future.isoformat()])
+    db = MagicMock()
+    db.query.return_value.filter.return_value.first.return_value = progress
+    assert consume_due_review(db, 1, 77, as_of=now) is True
+    assert progress.review_dates == [future.isoformat()]
+    db.commit.assert_not_called()

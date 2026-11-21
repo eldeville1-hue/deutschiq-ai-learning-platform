@@ -3,6 +3,18 @@ from datetime import datetime
 from app.models.progress import UserProgress
 
 
+def _valid_review_date(value):
+    """Ignore malformed stored dates instead of breaking the review queue."""
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, str):
+        try:
+            return datetime.fromisoformat(value)
+        except ValueError:
+            return None
+    return None
+
+
 def due_review_dates(review_dates, *, as_of=None):
     """Return review timestamps due on or before as_of, oldest first.
 
@@ -12,8 +24,8 @@ def due_review_dates(review_dates, *, as_of=None):
     now = as_of or datetime.now()
     if not review_dates:
         return []
-    dates = [datetime.fromisoformat(date) if isinstance(date, str) else date for date in review_dates]
-    return sorted(date for date in dates if date <= now)
+    dates = (_valid_review_date(date) for date in review_dates)
+    return sorted(date for date in dates if date is not None and date.tzinfo == now.tzinfo and date <= now)
 
 
 def due_reviews(db, user_id: int, *, as_of=None):
@@ -47,7 +59,8 @@ def consume_due_review(db, user_id: int, lesson_id: int, *, as_of=None):
     if progress is None or not progress.review_dates:
         return False
     remaining = [date for date in progress.review_dates
-                 if (datetime.fromisoformat(date) if isinstance(date, str) else date) > now]
+                 if (parsed := _valid_review_date(date)) is not None
+                 and (parsed.tzinfo != now.tzinfo or parsed > now)]
     if len(remaining) == len(progress.review_dates):
         return False
     progress.review_dates = remaining
