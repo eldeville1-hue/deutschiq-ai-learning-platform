@@ -8,7 +8,7 @@ class ProductionSmokeMigrationTests(unittest.TestCase):
     EXPECTED = expected_migration_head()
 
     def test_head_tracks_latest_release(self):
-        self.assertEqual(self.EXPECTED, "20261115_0014")
+        self.assertEqual(self.EXPECTED, "20261127_0015")
 
     def test_current_migration_is_release_ready(self):
         assert_database_release_ready(
