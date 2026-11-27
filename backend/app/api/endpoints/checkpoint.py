@@ -79,7 +79,8 @@ class CheckpointSubmission(BaseModel):
 @router.post("/submit")
 async def submit_checkpoint(data: CheckpointSubmission, db: Session = Depends(get_db), authenticated_id: int = Depends(telegram_user_id)):
     assert_owner(authenticated_id, data.user_id)
-    user = db.query(User).filter(User.telegram_id == data.user_id).first()
+    # Serialize checkpoint submissions for the same learner until commit.
+    user = db.query(User).filter(User.telegram_id == data.user_id).with_for_update().first()
     level = normalize_cefr(data.level)
     if not user or normalize_cefr(user.current_level) != level or not eligibility(db, user, level)["eligible"]:
         raise HTTPException(status_code=403, detail="Checkpoint is not available")
