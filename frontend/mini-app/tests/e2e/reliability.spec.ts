@@ -760,10 +760,28 @@ test('B1 repair submission is marked retry and returns to independent mission', 
   await expectNoHorizontalOverflow(page);
 });
 
-test('B1 wrong answer to guided repair to independent mission completion', async ({ page }) => {
+test('new B1 learner progresses from placement through repair and independent review', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 640 });
   await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
-  await mockApi(page, { completed: true });
+  await mockApi(page, { completed: false });
+  let saved = false;
+  let placementSubmissions = 0;
+  await page.route('**/api/user/state/**', route => route.fulfill({ json: userState(saved) }));
+  await page.route('**/api/diagnostic/questions?*', route => route.fulfill({ json: [
+    { id: 1, pillar: 'grammar', text: 'PLACEMENT QUESTION ONE', options: ['bin', 'bist'] },
+    { id: 2, pillar: 'vocabulary', text: 'PLACEMENT QUESTION TWO', options: ['Haus', 'Hund'] },
+  ] }));
+  await page.route('**/api/diagnostic/submit', async route => {
+    const payload = route.request().postDataJSON();
+    expect(payload.answers).toEqual({ '1': 'bin', '2': 'Haus' });
+    placementSubmissions += 1;
+    saved = true;
+    await route.fulfill({ json: {
+      persisted: true, level: 'B1', overall_score: 82, confidence: 'medium',
+      pillars: { grammar: 80, vocabulary: 84 }, mistakes: [],
+      placement: { track: 'B1', status: 'provisional' },
+    } });
+  });
   const submissions: any[] = [];
   const reviewChecks: any[] = [];
   let completed = false;
@@ -804,7 +822,24 @@ test('B1 wrong answer to guided repair to independent mission completion', async
       dimension_scores: { task_completion: 85, grammar: 80, vocabulary: 78, coherence: 80, register: 86 },
     } });
   });
-  await page.goto('/lesson/77');
+  await page.goto('/');
+  await page.getByRole('button', { name: /Find my level/i }).click();
+  await expect(page.getByRole('heading', { name: 'PLACEMENT QUESTION ONE' })).toBeVisible();
+  await page.getByRole('button', { name: /bin/i }).click();
+  await expect(page.getByRole('heading', { name: 'PLACEMENT QUESTION TWO' })).toBeVisible();
+  await page.getByRole('button', { name: /Haus/i }).click();
+  await expect(page).toHaveURL(/\/result/);
+  await expect(page.getByText('Preliminary level estimate')).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+  await page.getByRole('button', { name: /Start B1/i }).click();
+  await expect(page).toHaveURL(/\/dashboard/);
+  await page.reload();
+  await expect(page.getByText('YOUR STEP TODAY')).toBeVisible();
+  expect(placementSubmissions).toBe(1);
+  await expectNoHorizontalOverflow(page);
+  await page.getByRole('button', { name: /^Start lesson$/i }).click();
+  await expect(page).toHaveURL(/\/lesson\/77/);
+  await expect(page.getByText('NEW SKILL')).toBeVisible();
   await page.getByRole('button', { name: /Understand with an example/i }).click();
   await page.getByRole('button', { name: /Start practice/i }).click();
   await page.getByRole('textbox').fill('Du früher schlafen gehen.');
