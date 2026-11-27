@@ -251,6 +251,34 @@ class CheckpointEndpointGateTests(unittest.TestCase):
             self.assertEqual(403, blocked.exception.status_code)
             scorer.assert_not_called()
 
+    def test_pending_b1_assessment_never_records_graduation_even_with_high_scores(self):
+        self.user.current_level = "B1"
+        self.lesson.level = "B1"
+        self.lesson.content = {"track": "B1", "day": 1, "exercises": [
+            {"type": "dialogue", "mission_role": "final", "question": "Explain your plans."},
+        ]}
+        self.db.commit()
+        feedback = {
+            "correct": False, "assessment_pending": True, "score": 95,
+            "dimension_scores": {"task_completion": 95, "grammar": 95},
+            "feedback": "Assessment pending", "improvement": "",
+        }
+        with patch("app.api.endpoints.checkpoint.eligibility", return_value={"eligible": True}):
+            with patch("app.api.endpoints.checkpoint.evaluate_production",
+                       new_callable=AsyncMock, return_value=feedback):
+                with self.assertRaises(HTTPException) as blocked:
+                    asyncio.run(submit_checkpoint(
+                        CheckpointSubmission(user_id=92001, level="B1", answers=["Ich möchte studieren."]),
+                        db=self.db, authenticated_id=92001,
+                    ))
+                self.assertEqual(503, blocked.exception.status_code)
+        self.db.close()
+        self.db = Session(self.engine)
+        owner = self.db.query(User).filter_by(telegram_id=92001).one()
+        self.assertEqual("B1", owner.current_level)
+        self.assertEqual(0, self.db.query(ProductEvent).filter_by(
+            user_id=owner.id, event_name="checkpoint_completed").count())
+
     def test_other_user_cannot_fetch_or_submit_checkpoint(self):
         with self.assertRaises(HTTPException) as blocked:
             asyncio.run(get_checkpoint(92001, "A1", db=self.db, authenticated_id=92002))
