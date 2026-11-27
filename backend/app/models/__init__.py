@@ -5,3 +5,5 @@ from .event import ProductEvent
 from .beta import BetaAcceptanceCheck, BetaInvite, BetaEnrollment
 
 from .tutor_practice import TutorPracticeSession
+
+from .checkpoint import CheckpointReceipt

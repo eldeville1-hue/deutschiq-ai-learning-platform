@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+import hashlib
+import json
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.telegram_auth import telegram_user_id, assert_owner
@@ -13,6 +15,7 @@ from app.services.assessment_insights import evidence_gate, independent_progress
 from app.services.production_feedback import evaluate_production
 from app.services.checkpoint_graduation import checkpoint_outcome, final_mission
 from app.models.event import ProductEvent
+from app.models.checkpoint import CheckpointReceipt
 
 router = APIRouter(prefix="/api/checkpoint", tags=["checkpoint"])
 
@@ -75,6 +78,7 @@ class CheckpointSubmission(BaseModel):
     level: str
     answers: list[str]
     language: str = "en"
+    attempt_id: str | None = Field(default=None, min_length=1, max_length=64)
 
 @router.post("/submit")
 async def submit_checkpoint(data: CheckpointSubmission, db: Session = Depends(get_db), authenticated_id: int = Depends(telegram_user_id)):
@@ -82,6 +86,19 @@ async def submit_checkpoint(data: CheckpointSubmission, db: Session = Depends(ge
     # Serialize checkpoint submissions for the same learner until commit.
     user = db.query(User).filter(User.telegram_id == data.user_id).with_for_update().first()
     level = normalize_cefr(data.level)
+    request_hash = None
+    if user and data.attempt_id:
+        request_hash = hashlib.sha256(json.dumps(
+            [level, normalize_language(data.language), data.answers],
+            ensure_ascii=False, separators=(",", ":"),
+        ).encode("utf-8")).hexdigest()
+        receipt = db.query(CheckpointReceipt).filter_by(
+            user_id=user.id, attempt_id=data.attempt_id,
+        ).first()
+        if receipt:
+            if receipt.request_hash != request_hash:
+                raise HTTPException(status_code=409, detail="Checkpoint attempt payload changed")
+            return receipt.response
     if not user or normalize_cefr(user.current_level) != level or not eligibility(db, user, level)["eligible"]:
         raise HTTPException(status_code=403, detail="Checkpoint is not available")
     lessons = checkpoint_lessons(db, level)
@@ -119,11 +136,15 @@ async def submit_checkpoint(data: CheckpointSubmission, db: Session = Depends(ge
         "level": level, "passed": passed, "score": score, "unlocked_level": unlocked,
         "dimensions": dimension_scores, "recovery_topics": recovery_topics,
     }))
-    db.commit()
-    return {
+    response = {
         "passed": passed, "score": score, "required": 70, "unlocked_level": unlocked,
         "completed_level": level if passed else None, "results": results,
         "dimensions": dimension_scores, "recovery_topics": recovery_topics,
         "recovery_lesson_id": recovery_lesson_id,
         "next_route": "new_level" if passed else "repair",
     }
+    if data.attempt_id:
+        db.add(CheckpointReceipt(user_id=user.id, attempt_id=data.attempt_id,
+                                 request_hash=request_hash, response=response))
+    db.commit()
+    return response

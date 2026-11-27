@@ -167,7 +167,7 @@ export const api = {
   },
   getJourney: (userId: number, forceRefresh = false) => cachedGet(userCacheKey('journey', userId), () => apiClient.get(`/api/plan/journey/${userId}`).then(r => r.data), forceRefresh ? 0 : 30_000, true),
   getCheckpoint: (userId: number, level: string, lang?: AppLanguage) => apiClient.get(`/api/checkpoint/${userId}/${level}${lang ? `?lang=${lang}` : ''}`).then(r => r.data),
-  submitCheckpoint: (payload: { user_id: number; level: string; answers: string[]; language: AppLanguage }) => apiClient.post('/api/checkpoint/submit', payload).then(r => r.data),
+  submitCheckpoint: (payload: { user_id: number; level: string; answers: string[]; language: AppLanguage; attempt_id?: string }) => apiClient.post('/api/checkpoint/submit', payload).then(r => r.data),
 
   // Уроки
   getLesson: (lessonId: number, lang: AppLanguage) => {
