@@ -1264,14 +1264,19 @@ for (const width of [320, 375, 390, 430]) {
 }
 
 
-test('checkpoint restores completed dialogue after failed submission and retries explicitly', async ({ page }) => {
+test('checkpoint restores completed dialogue after lost response and retries explicitly', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
   await mockApi(page, { completed: true });
   const submissions: any[] = [];
+  await page.route('**/api/checkpoint/**', route => {
+    if (route.request().method() === 'GET' && submissions.length)
+      return route.fulfill({ status: 403, json: { detail: 'Already graduated' } });
+    return route.fallback();
+  });
   await page.route('**/api/checkpoint/submit', route => {
     submissions.push(route.request().postDataJSON());
-    if (submissions.length === 1) return route.fulfill({ status: 503, json: { detail: 'Unavailable' } });
+    if (submissions.length === 1) return route.abort('failed');
     return route.fulfill({ json: { passed: true, score: 82, required: 70,
       completed_level: 'A1', unlocked_level: 'A2', recovery_topics: [], dimensions: { grammar: 80 } } });
   });
@@ -1283,6 +1288,7 @@ test('checkpoint restores completed dialogue after failed submission and retries
   await page.getByRole('button', { name: /Complete level/i }).click();
   await expect(page.getByText('Submission failed. Answers saved.')).toBeVisible();
   expect(submissions).toHaveLength(1);
+  expect(submissions[0].attempt_id).toBeTruthy();
   expect(submissions[0].answers[0]).toContain('Wo wohnst du?');
   await page.reload();
   await expect(page.getByRole('button', { name: 'Retry submission' })).toBeEnabled();
