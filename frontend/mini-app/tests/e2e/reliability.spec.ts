@@ -1035,6 +1035,55 @@ test('graduation checkpoint uses independent dialogue and opens the next level',
   await expectNoHorizontalOverflow(page);
 });
 
+for (const passed of [false, true]) {
+  test(`B1 checkpoint ${passed ? 'unlocks B2' : 'directs to targeted repair'} after independent submission`, async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 640 });
+    await page.addInitScript(() => localStorage.setItem('deutschiq_lang', 'en'));
+    await mockApi(page, { completed: true });
+    const submissions: any[] = [];
+    await page.route('**/api/checkpoint/**', route => {
+      if (route.request().method() !== 'GET') return route.fallback();
+      return route.fulfill({ json: { level: 'B1', pass_score: 70, format: 'independent_missions', items: [
+        { id: 0, lesson_id: 77, topic: 'konjunktiv_ii', type: 'dialogue', stage: 'checkpoint', question: 'Advise a friend and ask a follow-up question.', conversation_turns: [
+          { partner: 'Ich bin immer müde.', goal: 'Give advice.', placeholder: 'Reply independently in German…' },
+          { partner: 'Was möchtest du noch wissen?', goal: 'Ask a follow-up question.', placeholder: 'Reply independently in German…' },
+        ] },
+      ] } });
+    });
+    await page.route('**/api/checkpoint/submit', route => {
+      submissions.push(route.request().postDataJSON());
+      return route.fulfill({ json: { passed, score: passed ? 82 : 58, required: 70,
+        completed_level: passed ? 'B1' : null, unlocked_level: passed ? 'B2' : null,
+        recovery_topics: passed ? [] : ['konjunktiv_ii'], recovery_lesson_id: passed ? null : 77,
+        dimensions: { grammar: passed ? 80 : 48 },
+      } });
+    });
+    await page.goto('/checkpoint/B1');
+    await expect(page.getByText('B1 · GRADUATION MISSION')).toBeVisible();
+    await page.getByRole('textbox').fill('Du solltest früher schlafen gehen.');
+    await page.getByRole('button', { name: /Send reply/i }).click();
+    await page.getByRole('textbox').fill('Wann gehst du normalerweise ins Bett?');
+    await page.getByRole('button', { name: /Finish dialogue/i }).click();
+    await page.getByRole('button', { name: /Complete level/i }).click();
+    await expect(page.getByRole('heading', { name: passed ? /handled it independently/i : /Almost there/i })).toBeVisible();
+    expect(submissions).toHaveLength(1);
+    expect(submissions[0].level).toBe('B1');
+    expect(submissions[0].answers).toHaveLength(1);
+    expect(submissions[0].answers[0]).toContain('Du solltest früher schlafen gehen.');
+    expect(submissions[0].answers[0]).toContain('Wann gehst du normalerweise ins Bett?');
+    if (passed) {
+      await expect(page.getByText('B1 ✓ · 0% → B2')).toBeVisible();
+      await expect(page.getByRole('button', { name: /Start B2/i })).toBeVisible();
+    } else {
+      await expect(page.getByRole('button', { name: /Start B2/i })).toHaveCount(0);
+      await expect(page.getByText('konjunktiv_ii', { exact: true })).toBeVisible();
+      await page.getByRole('button', { name: /Repair weakest mission/i }).click();
+      await expect(page).toHaveURL(/\/lesson\/77/);
+    }
+    await expectNoHorizontalOverflow(page);
+  });
+}
+
 for (const width of [320, 375, 390, 430]) {
   test(`lesson v2 stays focused and usable at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 740 });
