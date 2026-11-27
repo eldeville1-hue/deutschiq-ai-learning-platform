@@ -16,6 +16,7 @@ export const Checkpoint: React.FC = () => {
   if (initialDraft.current === null) {
     try { initialDraft.current = JSON.parse(localStorage.getItem(draftKey) || 'false') || {}; } catch { initialDraft.current = {}; }
   }
+  const receipt = useRef<{ attemptId: string; language: typeof lang } | null>(initialDraft.current.receipt || null);
   const restored = useRef(Boolean(initialDraft.current.savedAt));
   const [data, setData] = useState<any>(null);
   const [index, setIndex] = useState(() => Number(initialDraft.current.index || 0));
@@ -26,6 +27,7 @@ export const Checkpoint: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    if (receipt.current) return;
     api.getCheckpoint(getUserId(), level, lang).then(value => {
       setData(value);
       if (restored.current) {
@@ -36,29 +38,37 @@ export const Checkpoint: React.FC = () => {
   }, [lang, level]);
 
   useEffect(() => {
-    if (!data || result) return;
+    if (!data || result || receipt.current) return;
     try { localStorage.setItem(draftKey, JSON.stringify({ index, answers, answer, savedAt: Date.now() })); } catch { /* Recovery is best-effort. */ }
   }, [answer, answers, data, draftKey, index, result]);
 
   const item = data?.items?.[index];
+  const submit = async (updated: string[]) => {
+    if (submitting) return;
+    setSubmitting(true);
+    setError('');
+    receipt.current ||= { attemptId: crypto.randomUUID?.() || Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join(''), language: lang };
+    try { localStorage.setItem(draftKey, JSON.stringify({ index, answers: updated, answer, receipt: receipt.current, savedAt: Date.now() })); } catch { /* Recovery is best-effort. */ }
+    try {
+      const value = await api.submitCheckpoint({ user_id: getUserId(), level, answers: updated, language: receipt.current.language, attempt_id: receipt.current.attemptId });
+      setResult(value);
+      try { localStorage.removeItem(draftKey); } catch { /* Ignore unavailable storage. */ }
+    } catch {
+      setError(tr(lang, 'Ошибка отправки. Ответы сохранены.', 'Senden fehlgeschlagen. Antworten gespeichert.', 'Submission failed. Answers saved.'));
+    } finally { setSubmitting(false); }
+  };
+  const pending = Boolean((receipt.current || (data?.items?.length && answers.length === data.items.length)) && answers.length && answers.every(value => typeof value === 'string' && value.trim()));
   const next = async () => {
     const updated = [...answers];
     updated[index] = answer;
     setAnswers(updated);
-    setAnswer('');
-    if (index + 1 < (data?.items?.length || 0)) { setIndex(index + 1); return; }
-    setSubmitting(true);
-    try {
-      const value = await api.submitCheckpoint({ user_id: getUserId(), level, answers: updated, language: lang });
-      setResult(value);
-      try { localStorage.removeItem(draftKey); } catch { /* Ignore unavailable storage. */ }
-    } catch {
-      setError(tr(lang, 'Не удалось сохранить результат. Ответы остались на устройстве — попробуй ещё раз.', 'Das Ergebnis konnte nicht gespeichert werden. Deine Antworten bleiben auf dem Gerät – versuche es erneut.', 'Could not save the result. Your answers remain on this device—try again.'));
-    } finally { setSubmitting(false); }
+    if (index + 1 < data.items.length) { setAnswer(''); setIndex(index + 1); return; }
+    try { localStorage.setItem(draftKey, JSON.stringify({ index, answers: updated, answer, savedAt: Date.now() })); } catch { /* Recovery is best-effort. */ }
+    await submit(updated);
   };
 
-  if (error) return <main className="app-shell checkpoint-page"><div className="rc-notice error">{error}</div><button className="rc-primary" onClick={() => navigate(withUser('/plan'))}>{tr(lang, 'Вернуться к плану', 'Zurück zum Plan', 'Back to plan')}</button></main>;
-  if (!data) return <main className="app-shell checkpoint-page"><div className="skeleton rc-hero-skeleton" /></main>;
+  if (error || (!result && pending)) return <main className="app-shell checkpoint-page"><div className="rc-notice error">{error || tr(lang, 'Ответы сохранены.', 'Antworten gespeichert.', 'Answers saved.')}</div>{pending && <button className="rc-primary" disabled={submitting} onClick={() => submit(answers)}>{tr(lang, 'Повторить отправку', 'Erneut senden', 'Retry submission')}</button>}<button className="rc-primary" disabled={submitting} onClick={() => navigate(withUser('/plan'))}>{tr(lang, 'Вернуться к плану', 'Zurück zum Plan', 'Back to plan')}</button></main>;
+  if (!data && !result) return <main className="app-shell checkpoint-page"><div className="skeleton rc-hero-skeleton" /></main>;
   if (result) {
     const dimensionLabels: Record<string, string> = {
       task_completion: tr(lang, 'Задача', 'Aufgabe', 'Task'), grammar: tr(lang, 'Грамматика', 'Grammatik', 'Grammar'),
