@@ -14,6 +14,7 @@ from app.models.lesson import Lesson
 from app.models.progress import UserProgress
 from app.models.user import User
 from app.models.event import ProductEvent
+from app.models.checkpoint import CheckpointReceipt
 
 
 @compiles(ARRAY, "sqlite")
@@ -24,7 +25,7 @@ def sqlite_array(_type, _compiler, **kwargs):
 class CheckpointEndpointGateTests(unittest.TestCase):
     def setUp(self):
         self.engine = create_engine("sqlite:///:memory:")
-        for model in (User, Lesson, UserProgress, TopicMastery, ExerciseAttempt, ProductEvent):
+        for model in (User, Lesson, UserProgress, TopicMastery, ExerciseAttempt, ProductEvent, CheckpointReceipt):
             model.__table__.create(self.engine, checkfirst=True)
         self.db = Session(self.engine)
         self.user = User(telegram_id=92001, current_level="A1")
@@ -289,6 +290,33 @@ class CheckpointEndpointGateTests(unittest.TestCase):
                 db=self.db, authenticated_id=92002,
             ))
         self.assertEqual(403, blocked.exception.status_code)
+
+
+    def test_receipt_replays_after_graduation_without_scoring(self):
+        feedback = {"correct": True, "score": 90,
+                    "dimension_scores": {"task_completion": 95, "grammar": 90},
+                    "feedback": "Good answer", "improvement": ""}
+        data = CheckpointSubmission(user_id=92001, level="A1",
+                                    answers=["Guten Tag!"], attempt_id="receipt-1")
+        with patch("app.api.endpoints.checkpoint.eligibility", return_value={"eligible": True}), \
+             patch("app.api.endpoints.checkpoint.evaluate_production",
+                   new_callable=AsyncMock, return_value=feedback) as scorer:
+            first = asyncio.run(submit_checkpoint(data, db=self.db, authenticated_id=92001))
+            self.db.close()
+            self.db = Session(self.engine)
+            replay = asyncio.run(submit_checkpoint(data, db=self.db, authenticated_id=92001))
+            self.assertEqual(first, replay)
+            self.assertEqual(1, scorer.await_count)
+            self.assertEqual("A2", replay["unlocked_level"])
+            self.assertEqual(1, self.db.query(CheckpointReceipt).count())
+            self.assertEqual(1, self.db.query(ProductEvent).filter_by(event_name="checkpoint_completed").count())
+            with self.assertRaises(HTTPException) as conflict:
+                asyncio.run(submit_checkpoint(CheckpointSubmission(user_id=92001, level="A1",
+                    answers=["Changed"], attempt_id="receipt-1"), db=self.db, authenticated_id=92001))
+            self.assertEqual(409, conflict.exception.status_code)
+            with self.assertRaises(HTTPException) as forbidden:
+                asyncio.run(submit_checkpoint(data, db=self.db, authenticated_id=92002))
+            self.assertEqual(403, forbidden.exception.status_code)
 
 
 if __name__ == "__main__":
