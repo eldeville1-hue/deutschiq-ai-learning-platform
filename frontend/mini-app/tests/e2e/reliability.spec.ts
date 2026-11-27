@@ -817,7 +817,11 @@ test('B1 wrong answer to guided repair to independent mission completion', async
   await page.getByRole('button', { name: /^Check$/i }).click();
   await expect(page.locator('.answer-feedback.correct')).toBeVisible();
   await page.getByRole('button', { name: /Retry the mission independently/i }).click();
-  await page.getByRole('textbox').fill('Du solltest früher schlafen gehen, weil du oft müde bist.');
+  const independentAnswer = 'Du solltest früher schlafen gehen, weil du oft müde bist.';
+  await page.getByRole('textbox').fill(independentAnswer);
+  await page.reload();
+  await expect(page.getByRole('textbox')).toHaveValue(independentAnswer);
+  expect(submissions.map(item => item.retry)).toEqual([false, true]);
   await page.getByRole('button', { name: /^Check$/i }).click();
   await expect(page.getByText('B1 ASSESSMENT')).toBeVisible();
   expect(submissions.map(item => item.retry)).toEqual([false, true, false]);
