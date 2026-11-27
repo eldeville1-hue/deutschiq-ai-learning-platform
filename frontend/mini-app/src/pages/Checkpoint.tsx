@@ -50,7 +50,7 @@ export const Checkpoint: React.FC = () => {
       setResult(value);
       try { localStorage.removeItem(draftKey); } catch { /* Ignore unavailable storage. */ }
     } catch {
-      setError(tr(lang, 'Не удалось сохранить результат. Ответы остались на устройстве — попробуй ещё раз.', 'Das Ergebnis konnte nicht gespeichert werden. Deine Antworten bleiben auf dem Gerät – versuche es erneut.', 'Could not save the result. Your answers remain on this device—try again.'));
+      setError(tr(lang, 'Ошибка отправки. Ответы сохранены.', 'Senden fehlgeschlagen. Antworten gespeichert.', 'Submission failed. Answers saved.'));
     } finally { setSubmitting(false); }
   };
   const pending = Boolean(data?.items?.length && answers.length === data.items.length && answers.every(value => typeof value === 'string' && value.trim()));
@@ -63,8 +63,7 @@ export const Checkpoint: React.FC = () => {
     await submit(updated);
   };
 
-  if (!result && pending) return <main className="app-shell checkpoint-page"><div className="rc-notice">{error || tr(lang, 'Ответы готовы к отправке.', 'Deine Antworten sind bereit.', 'Your answers are ready.')}</div><button className="rc-primary" disabled={submitting} onClick={() => submit(answers)}>{submitting ? tr(lang, 'Оцениваем…', 'Wird bewertet…', 'Evaluating…') : tr(lang, 'Повторить отправку', 'Erneut senden', 'Retry submission')}</button><button className="rc-primary" disabled={submitting} onClick={() => navigate(withUser('/plan'))}>{tr(lang, 'Вернуться к плану', 'Zurück zum Plan', 'Back to plan')}</button></main>;
-  if (error) return <main className="app-shell checkpoint-page"><div className="rc-notice error">{error}</div><button className="rc-primary" onClick={() => navigate(withUser('/plan'))}>{tr(lang, 'Вернуться к плану', 'Zurück zum Plan', 'Back to plan')}</button></main>;
+  if (error || (!result && pending)) return <main className="app-shell checkpoint-page"><div className="rc-notice error">{error || tr(lang, 'Ответы сохранены.', 'Antworten gespeichert.', 'Answers saved.')}</div>{pending && <button className="rc-primary" disabled={submitting} onClick={() => submit(answers)}>{tr(lang, 'Повторить отправку', 'Erneut senden', 'Retry submission')}</button>}<button className="rc-primary" disabled={submitting} onClick={() => navigate(withUser('/plan'))}>{tr(lang, 'Вернуться к плану', 'Zurück zum Plan', 'Back to plan')}</button></main>;
   if (!data) return <main className="app-shell checkpoint-page"><div className="skeleton rc-hero-skeleton" /></main>;
   if (result) {
     const dimensionLabels: Record<string, string> = {
