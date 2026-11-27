@@ -319,5 +319,42 @@ class CheckpointEndpointGateTests(unittest.TestCase):
             self.assertEqual(403, forbidden.exception.status_code)
 
 
+    def test_failed_receipt_replays_and_new_attempt_is_scored(self):
+        feedback = {"correct": False, "score": 30,
+                    "dimension_scores": {"task_completion": 30, "grammar": 25},
+                    "feedback": "Try again", "improvement": "Add details"}
+        with patch("app.api.endpoints.checkpoint.eligibility", return_value={"eligible": True}), \
+             patch("app.api.endpoints.checkpoint.evaluate_production",
+                   new_callable=AsyncMock, return_value=feedback) as scorer:
+            data = CheckpointSubmission(user_id=92001, level="A1", answers=["Hallo"], attempt_id="failed-1")
+            first = asyncio.run(submit_checkpoint(data, db=self.db, authenticated_id=92001))
+            self.assertFalse(first["passed"])
+            self.assertEqual(first, asyncio.run(submit_checkpoint(data, db=self.db, authenticated_id=92001)))
+            self.assertEqual(1, scorer.await_count)
+            new = CheckpointSubmission(user_id=92001, level="A1", answers=["Hallo"], attempt_id="failed-2")
+            asyncio.run(submit_checkpoint(new, db=self.db, authenticated_id=92001))
+            self.assertEqual(2, scorer.await_count)
+            self.assertEqual(2, self.db.query(CheckpointReceipt).count())
+            self.assertEqual(2, self.db.query(ProductEvent).filter_by(event_name="checkpoint_completed").count())
+
+    def test_pending_attempt_can_retry_without_receipt(self):
+        data = CheckpointSubmission(user_id=92001, level="A1", answers=["Hallo"], attempt_id="pending-1")
+        verified = {"correct": True, "score": 90,
+                    "dimension_scores": {"task_completion": 95, "grammar": 90},
+                    "feedback": "Good answer", "improvement": ""}
+        with patch("app.api.endpoints.checkpoint.eligibility", return_value={"eligible": True}), \
+             patch("app.api.endpoints.checkpoint.evaluate_production",
+                   new_callable=AsyncMock, side_effect=[{"assessment_pending": True}, verified]) as scorer:
+            with self.assertRaises(HTTPException) as pending:
+                asyncio.run(submit_checkpoint(data, db=self.db, authenticated_id=92001))
+            self.assertEqual(503, pending.exception.status_code)
+            self.assertEqual(0, self.db.query(CheckpointReceipt).count())
+            self.assertEqual(0, self.db.query(ProductEvent).filter_by(event_name="checkpoint_completed").count())
+            result = asyncio.run(submit_checkpoint(data, db=self.db, authenticated_id=92001))
+            self.assertTrue(result["passed"])
+            self.assertEqual(2, scorer.await_count)
+            self.assertEqual(1, self.db.query(CheckpointReceipt).count())
+
+
 if __name__ == "__main__":
     unittest.main()
