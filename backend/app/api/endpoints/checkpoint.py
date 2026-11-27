@@ -98,6 +98,9 @@ async def submit_checkpoint(data: CheckpointSubmission, db: Session = Depends(ge
     for index, (lesson, exercise) in enumerate(missions):
         content = localize_lesson_content(lesson.content or {}, normalize_language(data.language))
         result = await evaluate_production(data.answers[index], exercise, content, normalize_language(data.language))
+        if result.get("assessment_pending"):
+            db.rollback()
+            raise HTTPException(status_code=503, detail="Checkpoint assessment temporarily unavailable")
         results.append({
             "correct": result["correct"], "score": result["score"], "topic": lesson.topic, "lesson_id": lesson.id,
             "dimensions": result["dimension_scores"], "feedback": result["feedback"],
