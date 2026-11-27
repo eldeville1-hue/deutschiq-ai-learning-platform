@@ -41,13 +41,10 @@ export const Checkpoint: React.FC = () => {
   }, [answer, answers, data, draftKey, index, result]);
 
   const item = data?.items?.[index];
-  const next = async () => {
-    const updated = [...answers];
-    updated[index] = answer;
-    setAnswers(updated);
-    setAnswer('');
-    if (index + 1 < (data?.items?.length || 0)) { setIndex(index + 1); return; }
+  const submit = async (updated: string[]) => {
+    if (submitting) return;
     setSubmitting(true);
+    setError('');
     try {
       const value = await api.submitCheckpoint({ user_id: getUserId(), level, answers: updated, language: lang });
       setResult(value);
@@ -56,7 +53,17 @@ export const Checkpoint: React.FC = () => {
       setError(tr(lang, 'Не удалось сохранить результат. Ответы остались на устройстве — попробуй ещё раз.', 'Das Ergebnis konnte nicht gespeichert werden. Deine Antworten bleiben auf dem Gerät – versuche es erneut.', 'Could not save the result. Your answers remain on this device—try again.'));
     } finally { setSubmitting(false); }
   };
+  const pending = Boolean(data?.items?.length && answers.length === data.items.length && answers.every(value => typeof value === 'string' && value.trim()));
+  const next = async () => {
+    const updated = [...answers];
+    updated[index] = answer;
+    setAnswers(updated);
+    if (index + 1 < data.items.length) { setAnswer(''); setIndex(index + 1); return; }
+    try { localStorage.setItem(draftKey, JSON.stringify({ index, answers: updated, answer, savedAt: Date.now() })); } catch { /* Recovery is best-effort. */ }
+    await submit(updated);
+  };
 
+  if (!result && pending) return <main className="app-shell checkpoint-page"><div className="rc-notice">{error || tr(lang, 'Ответы готовы к отправке.', 'Deine Antworten sind bereit.', 'Your answers are ready.')}</div><button className="rc-primary" disabled={submitting} onClick={() => submit(answers)}>{submitting ? tr(lang, 'Оцениваем…', 'Wird bewertet…', 'Evaluating…') : tr(lang, 'Повторить отправку', 'Erneut senden', 'Retry submission')}</button><button className="rc-primary" disabled={submitting} onClick={() => navigate(withUser('/plan'))}>{tr(lang, 'Вернуться к плану', 'Zurück zum Plan', 'Back to plan')}</button></main>;
   if (error) return <main className="app-shell checkpoint-page"><div className="rc-notice error">{error}</div><button className="rc-primary" onClick={() => navigate(withUser('/plan'))}>{tr(lang, 'Вернуться к плану', 'Zurück zum Plan', 'Back to plan')}</button></main>;
   if (!data) return <main className="app-shell checkpoint-page"><div className="skeleton rc-hero-skeleton" /></main>;
   if (result) {
