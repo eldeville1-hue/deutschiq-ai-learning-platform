@@ -84,6 +84,162 @@ B1_TRANSFER = {
 
 # Meaning-focused questions for the existing listening recordings.
 B1_LISTENING_COMPREHENSION = {
+    "formal_email": {
+        "ru": [
+            "О чём вежливо просит человек?",
+            [
+                "Подтвердить встречу",
+                "Перенести встречу",
+                "Отменить встречу"
+            ]
+        ],
+        "de": [
+            "Worum bittet die Person höflich?",
+            [
+                "Den Termin zu bestätigen",
+                "Den Termin zu verschieben",
+                "Den Termin abzusagen"
+            ]
+        ],
+        "en": [
+            "What is the speaker politely requesting?",
+            [
+                "Confirmation of the appointment",
+                "Rescheduling the appointment",
+                "Cancellation of the appointment"
+            ]
+        ]
+    },
+    "opinion": {
+        "ru": [
+            "Почему человек поддерживает гибкую работу?",
+            [
+                "Она облегчает жизнь семьям",
+                "Она повышает зарплату",
+                "Она сокращает отпуск"
+            ]
+        ],
+        "de": [
+            "Warum befürwortet die Person flexible Arbeit?",
+            [
+                "Sie entlastet Familien",
+                "Sie erhöht das Gehalt",
+                "Sie verkürzt den Urlaub"
+            ]
+        ],
+        "en": [
+            "Why does the speaker support flexible working?",
+            [
+                "It eases the burden on families",
+                "It increases salaries",
+                "It reduces holiday time"
+            ]
+        ]
+    },
+    "argumentation": {
+        "ru": [
+            "Какой недостаток называет человек?",
+            [
+                "Не хватает личного общения",
+                "Теряется много времени",
+                "Слишком высокие расходы"
+            ]
+        ],
+        "de": [
+            "Welchen Nachteil nennt die Person?",
+            [
+                "Der persönliche Kontakt fehlt",
+                "Man verliert viel Zeit",
+                "Die Kosten sind zu hoch"
+            ]
+        ],
+        "en": [
+            "Which disadvantage does the speaker mention?",
+            [
+                "Personal contact is missing",
+                "A lot of time is lost",
+                "The costs are too high"
+            ]
+        ]
+    },
+    "listening_attitude": {
+        "ru": [
+            "Какова позиция выступающей?",
+            [
+                "Согласна лишь частично",
+                "Полностью согласна",
+                "Полностью отвергает предложение"
+            ]
+        ],
+        "de": [
+            "Welche Haltung hat die Sprecherin?",
+            [
+                "Sie stimmt nur teilweise zu",
+                "Sie stimmt vollständig zu",
+                "Sie lehnt den Vorschlag vollständig ab"
+            ]
+        ],
+        "en": [
+            "What is the speaker's attitude?",
+            [
+                "She agrees only partly",
+                "She agrees completely",
+                "She rejects the proposal completely"
+            ]
+        ]
+    },
+    "spoken_narrative": {
+        "ru": [
+            "Что человек сделал после отмены поезда?",
+            [
+                "Сел в автобус",
+                "Вернулся домой",
+                "Взял такси"
+            ]
+        ],
+        "de": [
+            "Was tat die Person, nachdem der Zug ausgefallen war?",
+            [
+                "Sie nahm einen Bus",
+                "Sie fuhr nach Hause zurück",
+                "Sie nahm ein Taxi"
+            ]
+        ],
+        "en": [
+            "What did the speaker do after the train was cancelled?",
+            [
+                "Took a bus",
+                "Returned home",
+                "Took a taxi"
+            ]
+        ]
+    },
+    "b1_final": {
+        "ru": [
+            "Какой недостаток городской жизни упоминается?",
+            [
+                "Высокая арендная плата",
+                "Мало предложений",
+                "Плохой общественный транспорт"
+            ]
+        ],
+        "de": [
+            "Welcher Nachteil des Stadtlebens wird genannt?",
+            [
+                "Hohe Mieten",
+                "Ein geringes Angebot",
+                "Schlechter Nahverkehr"
+            ]
+        ],
+        "en": [
+            "Which disadvantage of city life is mentioned?",
+            [
+                "High rents",
+                "Limited offerings",
+                "Poor public transport"
+            ]
+        ]
+    },
     "adjective_declension": {
         "ru": [
             "С кем работает женщина?",
