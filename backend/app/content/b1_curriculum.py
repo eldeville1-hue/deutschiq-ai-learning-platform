@@ -84,6 +84,136 @@ B1_TRANSFER = {
 
 # Meaning-focused questions for the existing listening recordings.
 B1_LISTENING_COMPREHENSION = {
+    "adjective_declension": {
+        "ru": [
+            "С кем работает женщина?",
+            [
+                "С опытной коллегой",
+                "С новой клиенткой",
+                "С начинающим стажёром"
+            ]
+        ],
+        "de": [
+            "Mit wem arbeitet die Frau?",
+            [
+                "Mit einer erfahrenen Kollegin",
+                "Mit einer neuen Kundin",
+                "Mit einem unerfahrenen Praktikanten"
+            ]
+        ],
+        "en": [
+            "Who does the woman work with?",
+            [
+                "An experienced colleague",
+                "A new customer",
+                "An inexperienced intern"
+            ]
+        ]
+    },
+    "verb_prepositions": {
+        "ru": [
+            "Чего человек ждёт с радостью?",
+            [
+                "Выходных",
+                "Начала рабочего дня",
+                "Экзамена"
+            ]
+        ],
+        "de": [
+            "Worauf freut sich die Person?",
+            [
+                "Auf das Wochenende",
+                "Auf den Arbeitsbeginn",
+                "Auf die Prüfung"
+            ]
+        ],
+        "en": [
+            "What is the speaker looking forward to?",
+            [
+                "The weekend",
+                "The start of work",
+                "The exam"
+            ]
+        ]
+    },
+    "noun_verb_connections": {
+        "ru": [
+            "Что руководство сделает завтра?",
+            [
+                "Примет решение",
+                "Проведёт собеседование",
+                "Опубликует отчёт"
+            ]
+        ],
+        "de": [
+            "Was macht die Leitung morgen?",
+            [
+                "Sie trifft eine Entscheidung",
+                "Sie führt ein Bewerbungsgespräch",
+                "Sie veröffentlicht einen Bericht"
+            ]
+        ],
+        "en": [
+            "What will management do tomorrow?",
+            [
+                "Make a decision",
+                "Conduct a job interview",
+                "Publish a report"
+            ]
+        ]
+    },
+    "pronoun_adverbs": {
+        "ru": [
+            "Чему радуется говорящий?",
+            [
+                "Снова увидеть собеседника",
+                "Познакомиться с новым коллегой",
+                "Поехать в отпуск"
+            ]
+        ],
+        "de": [
+            "Worauf freut sich die sprechende Person?",
+            [
+                "Die andere Person wiederzusehen",
+                "Einen neuen Kollegen kennenzulernen",
+                "In den Urlaub zu fahren"
+            ]
+        ],
+        "en": [
+            "What is the speaker looking forward to?",
+            [
+                "Seeing the other person again",
+                "Meeting a new colleague",
+                "Going on holiday"
+            ]
+        ]
+    },
+    "nominalization": {
+        "ru": [
+            "Что изменилось после внедрения системы?",
+            [
+                "Количество ошибок уменьшилось",
+                "Количество ошибок выросло",
+                "Количество ошибок не изменилось"
+            ]
+        ],
+        "de": [
+            "Was änderte sich nach der Einführung des Systems?",
+            [
+                "Die Fehlerzahl sank",
+                "Die Fehlerzahl stieg",
+                "Die Fehlerzahl blieb gleich"
+            ]
+        ],
+        "en": [
+            "What changed after the system was introduced?",
+            [
+                "The number of errors decreased",
+                "The number of errors increased",
+                "The number of errors stayed the same"
+            ]
+        ]
+    },
     "passive_voice": {
         "ru": [
             "Как обрабатывают заявления?",
