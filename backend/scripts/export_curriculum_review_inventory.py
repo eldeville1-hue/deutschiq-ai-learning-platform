@@ -6,7 +6,13 @@ German, translations, answer keys, or CEFR alignment as linguistically approved.
 """
 import argparse
 import json
+import sys
 from pathlib import Path
+
+# Support direct execution from backend/scripts as used by GitHub Actions.
+BACKEND_ROOT = Path(__file__).resolve().parents[1]
+if str(BACKEND_ROOT) not in sys.path:
+    sys.path.insert(0, str(BACKEND_ROOT))
 
 from app.content.foundation_curriculum import (
     A1_CURRICULUM, A2_CURRICULUM, build_foundation_content,
