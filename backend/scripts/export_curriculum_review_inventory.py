@@ -41,6 +41,11 @@ def _lesson(level, row, builder):
             "answer": exercise.get("answer"),
             "accepted_answers": exercise.get("accepted_answers"),
             "explanation": exercise.get("explanation"),
+            "audio_text": exercise.get("audio_text"),
+            "audio_url": exercise.get("audio_url"),
+            "options": exercise.get("options"),
+            "i18n": exercise.get("i18n"),
+            "hint": exercise.get("hint"),
             "review_status": "not_independently_reviewed",
             "review_notes": [],
         })
@@ -89,7 +94,7 @@ def build_inventory():
     for level, rows, builder in tracks:
         lessons.extend(_lesson(level, row, builder) for row in rows)
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "purpose": "editorial_review_inventory",
         "limitations": [
             "Structural indicators are not independent linguistic validation.",
