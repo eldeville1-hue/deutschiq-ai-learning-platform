@@ -63,6 +63,14 @@ jobs:
           name: curriculum-quality-audit
           path: backend/curriculum-audit.json
           retention-days: 30
+      - name: Export A1-B2 editorial review inventory
+        run: python scripts/export_curriculum_review_inventory.py --output curriculum-review-inventory.json
+      - name: Upload A1-B2 editorial review inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: a1-b2-editorial-review-inventory
+          path: backend/curriculum-review-inventory.json
+          retention-days: 30
       - name: A1-B2 provisional linguistic challenge audit
         run: python -m tests.linguistic_challenge_suite
       - name: Run provisional v88 evaluation audit
