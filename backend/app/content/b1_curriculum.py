@@ -82,6 +82,166 @@ B1_TRANSFER = {
 }
 
 
+# Meaning-focused questions for the existing listening recordings.
+B1_LISTENING_COMPREHENSION = {
+    "subordinate_clauses": {
+        "ru": [
+            "Что делает человек, несмотря на усталость?",
+            [
+                "Идёт на курс",
+                "Остаётся дома",
+                "Отменяет курс"
+            ]
+        ],
+        "de": [
+            "Was tut die Person trotz Müdigkeit?",
+            [
+                "Sie geht zum Kurs",
+                "Sie bleibt zu Hause",
+                "Sie sagt den Kurs ab"
+            ]
+        ],
+        "en": [
+            "What does the person do despite being tired?",
+            [
+                "Goes to class",
+                "Stays home",
+                "Cancels the class"
+            ]
+        ]
+    },
+    "temporal_clauses": {
+        "ru": [
+            "Что было верно при переезде в Берлин?",
+            [
+                "Никого не знал",
+                "Уже имел много друзей",
+                "Переезжал каждую неделю"
+            ]
+        ],
+        "de": [
+            "Was traf beim Umzug nach Berlin zu?",
+            [
+                "Die Person kannte niemanden",
+                "Sie hatte schon viele Freunde",
+                "Sie zog jede Woche um"
+            ]
+        ],
+        "en": [
+            "What was true when the speaker moved to Berlin?",
+            [
+                "The speaker knew nobody",
+                "The speaker already had many friends",
+                "The speaker moved every week"
+            ]
+        ]
+    },
+    "indirect_questions": {
+        "ru": [
+            "Какую информацию хочет получить человек?",
+            [
+                "Время отправления поезда",
+                "Стоимость билета",
+                "Номер платформы"
+            ]
+        ],
+        "de": [
+            "Welche Information möchte die Person bekommen?",
+            [
+                "Die Abfahrtszeit des Zuges",
+                "Den Fahrpreis",
+                "Die Gleisnummer"
+            ]
+        ],
+        "en": [
+            "What information does the speaker want?",
+            [
+                "The train departure time",
+                "The ticket price",
+                "The platform number"
+            ]
+        ]
+    },
+    "purpose_clauses": {
+        "ru": [
+            "Зачем человек звонит?",
+            [
+                "Подтвердить встречу",
+                "Отменить встречу",
+                "Попросить адрес"
+            ]
+        ],
+        "de": [
+            "Warum ruft die Person an?",
+            [
+                "Um den Termin zu bestätigen",
+                "Um den Termin abzusagen",
+                "Um nach der Adresse zu fragen"
+            ]
+        ],
+        "en": [
+            "Why is the speaker calling?",
+            [
+                "To confirm the appointment",
+                "To cancel the appointment",
+                "To ask for the address"
+            ]
+        ]
+    },
+    "relative_clauses": {
+        "ru": [
+            "Кого представляет говорящий?",
+            [
+                "Коллегу, с которой работает",
+                "Соседку",
+                "Начальницу, которую не знает"
+            ]
+        ],
+        "de": [
+            "Wen stellt die Person vor?",
+            [
+                "Eine Kollegin, mit der sie arbeitet",
+                "Eine Nachbarin",
+                "Eine unbekannte Vorgesetzte"
+            ]
+        ],
+        "en": [
+            "Who is the speaker introducing?",
+            [
+                "A colleague they work with",
+                "A neighbour",
+                "An unfamiliar supervisor"
+            ]
+        ]
+    },
+    "double_connectors": {
+        "ru": [
+            "Какие качества описаны?",
+            [
+                "Надёжность и креативность",
+                "Пунктуальность и терпение",
+                "Креативность без надёжности"
+            ]
+        ],
+        "de": [
+            "Welche Eigenschaften werden genannt?",
+            [
+                "Zuverlässigkeit und Kreativität",
+                "Pünktlichkeit und Geduld",
+                "Kreativität ohne Zuverlässigkeit"
+            ]
+        ],
+        "en": [
+            "Which qualities are mentioned?",
+            [
+                "Reliability and creativity",
+                "Punctuality and patience",
+                "Creativity without reliability"
+            ]
+        ]
+    }
+}
+
 def _localized_exercise(base: dict, ru: dict, de: dict, en: dict) -> dict:
     return {**base, "i18n": {"ru": ru, "de": de, "en": en}}
 
@@ -333,6 +493,14 @@ def build_b1_content(row):
 
     listening = next(item for item in exercises if item["type"] == "listening_choice")
     repeat = next(item for item in exercises if item["type"] == "repeat")
+    if topic in B1_LISTENING_COMPREHENSION:
+        for language, (question, choices) in B1_LISTENING_COMPREHENSION[topic].items():
+            offset = day % len(choices)
+            localized = {"question": question, "answer": choices[0], "accepted_answers": [choices[0]], "options": choices[offset:] + choices[:offset], "explanation": f"{choices[0]} — {listening['audio_text']}", "hint": {"ru": "Слушай смысл фразы.", "de": "Achte auf die Bedeutung des Satzes.", "en": "Listen for the meaning of the sentence."}[language]}
+            listening["i18n"][language].update(localized)
+            if language == "ru":
+                listening.update(localized)
+                listening["accessibility_label"] = question
     listening["audio_url"] = f"/media/audio/b1/{topic}/listen.mp3?v=14"
     repeat["audio_url"] = f"/media/audio/b1/{topic}/repeat.mp3?v=14"
 
