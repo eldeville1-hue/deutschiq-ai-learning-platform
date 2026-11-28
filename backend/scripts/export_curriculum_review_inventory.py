@@ -110,7 +110,7 @@ def main():
     parser.add_argument("--output", type=Path, default=Path("curriculum-review-inventory.json"))
     args = parser.parse_args()
     inventory = build_inventory()
-    args.output.write_text(json.dumps(inventory, ensure_ascii=False, indent=2) + "\\n", encoding="utf-8")
+    args.output.write_text(json.dumps(inventory, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(inventory["summary"], ensure_ascii=False, indent=2))
     print(f"Editorial inventory saved to {args.output}")
 
