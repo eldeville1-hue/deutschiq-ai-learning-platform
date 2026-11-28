@@ -84,6 +84,162 @@ B1_TRANSFER = {
 
 # Meaning-focused questions for the existing listening recordings.
 B1_LISTENING_COMPREHENSION = {
+    "passive_voice": {
+        "ru": [
+            "Как обрабатывают заявления?",
+            [
+                "Онлайн",
+                "Только по почте",
+                "Лично в офисе"
+            ]
+        ],
+        "de": [
+            "Wie werden die Anträge bearbeitet?",
+            [
+                "Online",
+                "Nur per Post",
+                "Persönlich im Büro"
+            ]
+        ],
+        "en": [
+            "How are the applications processed?",
+            [
+                "Online",
+                "Only by post",
+                "In person at the office"
+            ]
+        ]
+    },
+    "passive_past": {
+        "ru": [
+            "Когда открыли мост?",
+            [
+                "В мае",
+                "В марте",
+                "В июне"
+            ]
+        ],
+        "de": [
+            "Wann wurde die Brücke eröffnet?",
+            [
+                "Im Mai",
+                "Im März",
+                "Im Juni"
+            ]
+        ],
+        "en": [
+            "When was the bridge opened?",
+            [
+                "In May",
+                "In March",
+                "In June"
+            ]
+        ]
+    },
+    "modal_past": {
+        "ru": [
+            "Что человек говорит о своём немецком в прошлом?",
+            [
+                "Ещё не говорил хорошо",
+                "Уже говорил свободно",
+                "Не хотел учить немецкий"
+            ]
+        ],
+        "de": [
+            "Was sagt die Person über ihre früheren Deutschkenntnisse?",
+            [
+                "Sie konnte noch nicht gut Deutsch",
+                "Sie sprach bereits fließend Deutsch",
+                "Sie wollte kein Deutsch lernen"
+            ]
+        ],
+        "en": [
+            "What does the speaker say about their German in the past?",
+            [
+                "They could not speak German well yet",
+                "They already spoke German fluently",
+                "They did not want to learn German"
+            ]
+        ]
+    },
+    "konjunktiv_ii": {
+        "ru": [
+            "Что советует говорящий?",
+            [
+                "Чаще делать перерывы",
+                "Работать без перерывов",
+                "Раньше начинать работу"
+            ]
+        ],
+        "de": [
+            "Was rät die Person?",
+            [
+                "Öfter eine Pause machen",
+                "Ohne Pausen arbeiten",
+                "Früher mit der Arbeit beginnen"
+            ]
+        ],
+        "en": [
+            "What does the speaker suggest?",
+            [
+                "Take breaks more often",
+                "Work without breaks",
+                "Start work earlier"
+            ]
+        ]
+    },
+    "lassen": {
+        "ru": [
+            "Что человек отдаёт в ремонт?",
+            [
+                "Велосипед",
+                "Автомобиль",
+                "Телефон"
+            ]
+        ],
+        "de": [
+            "Was lässt die Person reparieren?",
+            [
+                "Das Fahrrad",
+                "Das Auto",
+                "Das Handy"
+            ]
+        ],
+        "en": [
+            "What is the speaker having repaired?",
+            [
+                "The bicycle",
+                "The car",
+                "The phone"
+            ]
+        ]
+    },
+    "subjective_modals": {
+        "ru": [
+            "Что сообщается о компании?",
+            [
+                "По имеющимся сведениям, она планирует новые рабочие места",
+                "Она уже закрыла все вакансии",
+                "Она обязана уволить сотрудников"
+            ]
+        ],
+        "de": [
+            "Was wird über die Firma berichtet?",
+            [
+                "Sie soll neue Stellen planen",
+                "Sie hat bereits alle Stellen gestrichen",
+                "Sie muss Mitarbeiter entlassen"
+            ]
+        ],
+        "en": [
+            "What is reported about the company?",
+            [
+                "It is reportedly planning new positions",
+                "It has already eliminated all positions",
+                "It is required to dismiss employees"
+            ]
+        ]
+    },
     "subordinate_clauses": {
         "ru": [
             "Что делает человек, несмотря на усталость?",
