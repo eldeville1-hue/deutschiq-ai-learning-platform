@@ -82,6 +82,608 @@ B1_TRANSFER = {
 }
 
 
+# Meaning-focused questions for the existing listening recordings.
+B1_LISTENING_COMPREHENSION = {
+    "formal_email": {
+        "ru": [
+            "О чём вежливо просит человек?",
+            [
+                "Подтвердить встречу",
+                "Перенести встречу",
+                "Отменить встречу"
+            ]
+        ],
+        "de": [
+            "Worum bittet die Person höflich?",
+            [
+                "Den Termin zu bestätigen",
+                "Den Termin zu verschieben",
+                "Den Termin abzusagen"
+            ]
+        ],
+        "en": [
+            "What is the speaker politely requesting?",
+            [
+                "Confirmation of the appointment",
+                "Rescheduling the appointment",
+                "Cancellation of the appointment"
+            ]
+        ]
+    },
+    "opinion": {
+        "ru": [
+            "Почему человек поддерживает гибкую работу?",
+            [
+                "Она облегчает жизнь семьям",
+                "Она повышает зарплату",
+                "Она сокращает отпуск"
+            ]
+        ],
+        "de": [
+            "Warum befürwortet die Person flexible Arbeit?",
+            [
+                "Sie entlastet Familien",
+                "Sie erhöht das Gehalt",
+                "Sie verkürzt den Urlaub"
+            ]
+        ],
+        "en": [
+            "Why does the speaker support flexible working?",
+            [
+                "It eases the burden on families",
+                "It increases salaries",
+                "It reduces holiday time"
+            ]
+        ]
+    },
+    "argumentation": {
+        "ru": [
+            "Какой недостаток называет человек?",
+            [
+                "Не хватает личного общения",
+                "Теряется много времени",
+                "Слишком высокие расходы"
+            ]
+        ],
+        "de": [
+            "Welchen Nachteil nennt die Person?",
+            [
+                "Der persönliche Kontakt fehlt",
+                "Man verliert viel Zeit",
+                "Die Kosten sind zu hoch"
+            ]
+        ],
+        "en": [
+            "Which disadvantage does the speaker mention?",
+            [
+                "Personal contact is missing",
+                "A lot of time is lost",
+                "The costs are too high"
+            ]
+        ]
+    },
+    "listening_attitude": {
+        "ru": [
+            "Какова позиция выступающей?",
+            [
+                "Согласна лишь частично",
+                "Полностью согласна",
+                "Полностью отвергает предложение"
+            ]
+        ],
+        "de": [
+            "Welche Haltung hat die Sprecherin?",
+            [
+                "Sie stimmt nur teilweise zu",
+                "Sie stimmt vollständig zu",
+                "Sie lehnt den Vorschlag vollständig ab"
+            ]
+        ],
+        "en": [
+            "What is the speaker's attitude?",
+            [
+                "She agrees only partly",
+                "She agrees completely",
+                "She rejects the proposal completely"
+            ]
+        ]
+    },
+    "spoken_narrative": {
+        "ru": [
+            "Что человек сделал после отмены поезда?",
+            [
+                "Сел в автобус",
+                "Вернулся домой",
+                "Взял такси"
+            ]
+        ],
+        "de": [
+            "Was tat die Person, nachdem der Zug ausgefallen war?",
+            [
+                "Sie nahm einen Bus",
+                "Sie fuhr nach Hause zurück",
+                "Sie nahm ein Taxi"
+            ]
+        ],
+        "en": [
+            "What did the speaker do after the train was cancelled?",
+            [
+                "Took a bus",
+                "Returned home",
+                "Took a taxi"
+            ]
+        ]
+    },
+    "b1_final": {
+        "ru": [
+            "Какой недостаток городской жизни упоминается?",
+            [
+                "Высокая арендная плата",
+                "Мало предложений",
+                "Плохой общественный транспорт"
+            ]
+        ],
+        "de": [
+            "Welcher Nachteil des Stadtlebens wird genannt?",
+            [
+                "Hohe Mieten",
+                "Ein geringes Angebot",
+                "Schlechter Nahverkehr"
+            ]
+        ],
+        "en": [
+            "Which disadvantage of city life is mentioned?",
+            [
+                "High rents",
+                "Limited offerings",
+                "Poor public transport"
+            ]
+        ]
+    },
+    "adjective_declension": {
+        "ru": [
+            "С кем работает женщина?",
+            [
+                "С опытной коллегой",
+                "С новой клиенткой",
+                "С начинающим стажёром"
+            ]
+        ],
+        "de": [
+            "Mit wem arbeitet die Frau?",
+            [
+                "Mit einer erfahrenen Kollegin",
+                "Mit einer neuen Kundin",
+                "Mit einem unerfahrenen Praktikanten"
+            ]
+        ],
+        "en": [
+            "Who does the woman work with?",
+            [
+                "An experienced colleague",
+                "A new customer",
+                "An inexperienced intern"
+            ]
+        ]
+    },
+    "verb_prepositions": {
+        "ru": [
+            "Чего человек ждёт с радостью?",
+            [
+                "Выходных",
+                "Начала рабочего дня",
+                "Экзамена"
+            ]
+        ],
+        "de": [
+            "Worauf freut sich die Person?",
+            [
+                "Auf das Wochenende",
+                "Auf den Arbeitsbeginn",
+                "Auf die Prüfung"
+            ]
+        ],
+        "en": [
+            "What is the speaker looking forward to?",
+            [
+                "The weekend",
+                "The start of work",
+                "The exam"
+            ]
+        ]
+    },
+    "noun_verb_connections": {
+        "ru": [
+            "Что руководство сделает завтра?",
+            [
+                "Примет решение",
+                "Проведёт собеседование",
+                "Опубликует отчёт"
+            ]
+        ],
+        "de": [
+            "Was macht die Leitung morgen?",
+            [
+                "Sie trifft eine Entscheidung",
+                "Sie führt ein Bewerbungsgespräch",
+                "Sie veröffentlicht einen Bericht"
+            ]
+        ],
+        "en": [
+            "What will management do tomorrow?",
+            [
+                "Make a decision",
+                "Conduct a job interview",
+                "Publish a report"
+            ]
+        ]
+    },
+    "pronoun_adverbs": {
+        "ru": [
+            "Чему радуется говорящий?",
+            [
+                "Снова увидеть собеседника",
+                "Познакомиться с новым коллегой",
+                "Поехать в отпуск"
+            ]
+        ],
+        "de": [
+            "Worauf freut sich die sprechende Person?",
+            [
+                "Die andere Person wiederzusehen",
+                "Einen neuen Kollegen kennenzulernen",
+                "In den Urlaub zu fahren"
+            ]
+        ],
+        "en": [
+            "What is the speaker looking forward to?",
+            [
+                "Seeing the other person again",
+                "Meeting a new colleague",
+                "Going on holiday"
+            ]
+        ]
+    },
+    "nominalization": {
+        "ru": [
+            "Что изменилось после внедрения системы?",
+            [
+                "Количество ошибок уменьшилось",
+                "Количество ошибок выросло",
+                "Количество ошибок не изменилось"
+            ]
+        ],
+        "de": [
+            "Was änderte sich nach der Einführung des Systems?",
+            [
+                "Die Fehlerzahl sank",
+                "Die Fehlerzahl stieg",
+                "Die Fehlerzahl blieb gleich"
+            ]
+        ],
+        "en": [
+            "What changed after the system was introduced?",
+            [
+                "The number of errors decreased",
+                "The number of errors increased",
+                "The number of errors stayed the same"
+            ]
+        ]
+    },
+    "passive_voice": {
+        "ru": [
+            "Как обрабатывают заявления?",
+            [
+                "Онлайн",
+                "Только по почте",
+                "Лично в офисе"
+            ]
+        ],
+        "de": [
+            "Wie werden die Anträge bearbeitet?",
+            [
+                "Online",
+                "Nur per Post",
+                "Persönlich im Büro"
+            ]
+        ],
+        "en": [
+            "How are the applications processed?",
+            [
+                "Online",
+                "Only by post",
+                "In person at the office"
+            ]
+        ]
+    },
+    "passive_past": {
+        "ru": [
+            "Когда открыли мост?",
+            [
+                "В мае",
+                "В марте",
+                "В июне"
+            ]
+        ],
+        "de": [
+            "Wann wurde die Brücke eröffnet?",
+            [
+                "Im Mai",
+                "Im März",
+                "Im Juni"
+            ]
+        ],
+        "en": [
+            "When was the bridge opened?",
+            [
+                "In May",
+                "In March",
+                "In June"
+            ]
+        ]
+    },
+    "modal_past": {
+        "ru": [
+            "Что человек говорит о своём немецком в прошлом?",
+            [
+                "Ещё не говорил хорошо",
+                "Уже говорил свободно",
+                "Не хотел учить немецкий"
+            ]
+        ],
+        "de": [
+            "Was sagt die Person über ihre früheren Deutschkenntnisse?",
+            [
+                "Sie konnte noch nicht gut Deutsch",
+                "Sie sprach bereits fließend Deutsch",
+                "Sie wollte kein Deutsch lernen"
+            ]
+        ],
+        "en": [
+            "What does the speaker say about their German in the past?",
+            [
+                "They could not speak German well yet",
+                "They already spoke German fluently",
+                "They did not want to learn German"
+            ]
+        ]
+    },
+    "konjunktiv_ii": {
+        "ru": [
+            "Что советует говорящий?",
+            [
+                "Чаще делать перерывы",
+                "Работать без перерывов",
+                "Раньше начинать работу"
+            ]
+        ],
+        "de": [
+            "Was rät die Person?",
+            [
+                "Öfter eine Pause machen",
+                "Ohne Pausen arbeiten",
+                "Früher mit der Arbeit beginnen"
+            ]
+        ],
+        "en": [
+            "What does the speaker suggest?",
+            [
+                "Take breaks more often",
+                "Work without breaks",
+                "Start work earlier"
+            ]
+        ]
+    },
+    "lassen": {
+        "ru": [
+            "Что человек отдаёт в ремонт?",
+            [
+                "Велосипед",
+                "Автомобиль",
+                "Телефон"
+            ]
+        ],
+        "de": [
+            "Was lässt die Person reparieren?",
+            [
+                "Das Fahrrad",
+                "Das Auto",
+                "Das Handy"
+            ]
+        ],
+        "en": [
+            "What is the speaker having repaired?",
+            [
+                "The bicycle",
+                "The car",
+                "The phone"
+            ]
+        ]
+    },
+    "subjective_modals": {
+        "ru": [
+            "Что сообщается о компании?",
+            [
+                "По имеющимся сведениям, она планирует новые рабочие места",
+                "Она уже закрыла все вакансии",
+                "Она обязана уволить сотрудников"
+            ]
+        ],
+        "de": [
+            "Was wird über die Firma berichtet?",
+            [
+                "Sie soll neue Stellen planen",
+                "Sie hat bereits alle Stellen gestrichen",
+                "Sie muss Mitarbeiter entlassen"
+            ]
+        ],
+        "en": [
+            "What is reported about the company?",
+            [
+                "It is reportedly planning new positions",
+                "It has already eliminated all positions",
+                "It is required to dismiss employees"
+            ]
+        ]
+    },
+    "subordinate_clauses": {
+        "ru": [
+            "Что делает человек, несмотря на усталость?",
+            [
+                "Идёт на курс",
+                "Остаётся дома",
+                "Отменяет курс"
+            ]
+        ],
+        "de": [
+            "Was tut die Person trotz Müdigkeit?",
+            [
+                "Sie geht zum Kurs",
+                "Sie bleibt zu Hause",
+                "Sie sagt den Kurs ab"
+            ]
+        ],
+        "en": [
+            "What does the person do despite being tired?",
+            [
+                "Goes to class",
+                "Stays home",
+                "Cancels the class"
+            ]
+        ]
+    },
+    "temporal_clauses": {
+        "ru": [
+            "Что было верно при переезде в Берлин?",
+            [
+                "Никого не знал",
+                "Уже имел много друзей",
+                "Переезжал каждую неделю"
+            ]
+        ],
+        "de": [
+            "Was traf beim Umzug nach Berlin zu?",
+            [
+                "Die Person kannte niemanden",
+                "Sie hatte schon viele Freunde",
+                "Sie zog jede Woche um"
+            ]
+        ],
+        "en": [
+            "What was true when the speaker moved to Berlin?",
+            [
+                "The speaker knew nobody",
+                "The speaker already had many friends",
+                "The speaker moved every week"
+            ]
+        ]
+    },
+    "indirect_questions": {
+        "ru": [
+            "Какую информацию хочет получить человек?",
+            [
+                "Время отправления поезда",
+                "Стоимость билета",
+                "Номер платформы"
+            ]
+        ],
+        "de": [
+            "Welche Information möchte die Person bekommen?",
+            [
+                "Die Abfahrtszeit des Zuges",
+                "Den Fahrpreis",
+                "Die Gleisnummer"
+            ]
+        ],
+        "en": [
+            "What information does the speaker want?",
+            [
+                "The train departure time",
+                "The ticket price",
+                "The platform number"
+            ]
+        ]
+    },
+    "purpose_clauses": {
+        "ru": [
+            "Зачем человек звонит?",
+            [
+                "Подтвердить встречу",
+                "Отменить встречу",
+                "Попросить адрес"
+            ]
+        ],
+        "de": [
+            "Warum ruft die Person an?",
+            [
+                "Um den Termin zu bestätigen",
+                "Um den Termin abzusagen",
+                "Um nach der Adresse zu fragen"
+            ]
+        ],
+        "en": [
+            "Why is the speaker calling?",
+            [
+                "To confirm the appointment",
+                "To cancel the appointment",
+                "To ask for the address"
+            ]
+        ]
+    },
+    "relative_clauses": {
+        "ru": [
+            "Кого представляет говорящий?",
+            [
+                "Коллегу, с которой работает",
+                "Соседку",
+                "Начальницу, которую не знает"
+            ]
+        ],
+        "de": [
+            "Wen stellt die Person vor?",
+            [
+                "Eine Kollegin, mit der sie arbeitet",
+                "Eine Nachbarin",
+                "Eine unbekannte Vorgesetzte"
+            ]
+        ],
+        "en": [
+            "Who is the speaker introducing?",
+            [
+                "A colleague they work with",
+                "A neighbour",
+                "An unfamiliar supervisor"
+            ]
+        ]
+    },
+    "double_connectors": {
+        "ru": [
+            "Какие качества описаны?",
+            [
+                "Надёжность и креативность",
+                "Пунктуальность и терпение",
+                "Креативность без надёжности"
+            ]
+        ],
+        "de": [
+            "Welche Eigenschaften werden genannt?",
+            [
+                "Zuverlässigkeit und Kreativität",
+                "Pünktlichkeit und Geduld",
+                "Kreativität ohne Zuverlässigkeit"
+            ]
+        ],
+        "en": [
+            "Which qualities are mentioned?",
+            [
+                "Reliability and creativity",
+                "Punctuality and patience",
+                "Creativity without reliability"
+            ]
+        ]
+    }
+}
+
 def _localized_exercise(base: dict, ru: dict, de: dict, en: dict) -> dict:
     return {**base, "i18n": {"ru": ru, "de": de, "en": en}}
 
@@ -333,6 +935,14 @@ def build_b1_content(row):
 
     listening = next(item for item in exercises if item["type"] == "listening_choice")
     repeat = next(item for item in exercises if item["type"] == "repeat")
+    if topic in B1_LISTENING_COMPREHENSION:
+        for language, (question, choices) in B1_LISTENING_COMPREHENSION[topic].items():
+            offset = day % len(choices)
+            localized = {"question": question, "answer": choices[0], "accepted_answers": [choices[0]], "options": choices[offset:] + choices[:offset], "explanation": f"{choices[0]} — {listening['audio_text']}", "hint": {"ru": "Слушай смысл фразы.", "de": "Achte auf die Bedeutung des Satzes.", "en": "Listen for the meaning of the sentence."}[language]}
+            listening["i18n"][language].update(localized)
+            if language == "ru":
+                listening.update(localized)
+                listening["accessibility_label"] = question
     listening["audio_url"] = f"/media/audio/b1/{topic}/listen.mp3?v=14"
     repeat["audio_url"] = f"/media/audio/b1/{topic}/repeat.mp3?v=14"
 
